@@ -1,29 +1,352 @@
 {
   "GSE123813_bccHmCancer": {
-    "text": "Single-cell RNA sequencing with cancer from human (GSE123813).",
-    "tissue": "inferred",
-    "disease": "inferred",
-    "organism": "human",
-    "n_cells": 2000,
+    "text": "Single-cell RNA sequencing of human basal cell carcinoma (BCC) skin tumor samples. This dataset profiles the tumor microenvironment of cutaneous basal cell carcinoma, capturing malignant keratinocytes, infiltrating immune cells, and stromal populations in human skin cancer.",
+    "n_cells": 3000,
     "n_genes": 2000,
-    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE123813_bccHmCancer.h5ad"
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE123813_bccHmCancer.h5ad",
+    "source_dir": "CancerDatasets"
   },
   "GSE123813_sccHmCancer": {
-    "text": "Single-cell RNA sequencing with cancer from human (GSE123813).",
-    "tissue": "inferred",
-    "disease": "inferred",
-    "organism": "human",
-    "n_cells": 2000,
+    "text": "Single-cell RNA sequencing of human cutaneous squamous cell carcinoma (SCC). This dataset characterizes the transcriptomic landscape of squamous cell carcinoma of the skin, including tumor cells, tumor-infiltrating lymphocytes, and the surrounding microenvironment.",
+    "n_cells": 3000,
     "n_genes": 2000,
-    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE123813_sccHmCancer.h5ad"
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE123813_sccHmCancer.h5ad",
+    "source_dir": "CancerDatasets"
   },
   "GSE123902_LungAdreHmCancer": {
-    "text": "Single-cell RNA sequencing of lung tissue with cancer from human (GSE123902).",
-    "tissue": "inferred",
-    "disease": "inferred",
-    "organism": "human",
-    "n_cells": 1833,
+    "text": "Single-cell RNA sequencing of human lung adenocarcinoma. This dataset profiles malignant epithelial cells, immune infiltrates, and stromal components within the tumor microenvironment of non-small cell lung cancer (adenocarcinoma subtype).",
+    "n_cells": 2753,
     "n_genes": 2000,
-    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE123902_LungAdreHmCancer.h5ad"
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE123902_LungAdreHmCancer.h5ad",
+    "source_dir": "CancerDatasets"
+  },
+  "GSE132509_acutelymluekPBMCHmCancer": {
+    "text": "Single-cell RNA sequencing of peripheral blood mononuclear cells (PBMCs) from human patients with acute myeloid leukemia (AML). This dataset captures circulating leukemic blasts and immune cell populations in the blood of AML patients, providing insight into hematopoietic malignancy.",
+    "n_cells": 2984,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE132509_acutelymluekPBMCHmCancer.h5ad",
+    "source_dir": "CancerDatasets"
+  },
+  "GSE143423_lbm_CancerBrainHm": {
+    "text": "Single-cell RNA sequencing of human leptomeningeal brain metastasis. This dataset profiles the cerebrospinal fluid and meningeal tumor microenvironment in patients with leptomeningeal carcinomatosis, capturing metastatic cancer cells and immune populations.",
+    "n_cells": 3000,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE143423_lbm_CancerBrainHm.h5ad",
+    "source_dir": "CancerDatasets"
+  },
+  "GSE143423_tnbc_CancerBrainHm": {
+    "text": "Single-cell RNA sequencing of brain metastases originating from human triple-negative breast cancer (TNBC). This dataset characterizes the metastatic tumor microenvironment in the brain, including TNBC-derived malignant cells, microglia, and infiltrating immune cells.",
+    "n_cells": 2332,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE143423_tnbc_CancerBrainHm.h5ad",
+    "source_dir": "CancerDatasets"
+  },
+  "GSE148218_bmALLHmCancer": {
+    "text": "Single-cell RNA sequencing of human bone marrow samples from patients with acute lymphoblastic leukemia (ALL). This dataset profiles leukemic lymphoblasts, residual normal hematopoietic progenitors, and bone marrow niche cells in the context of B-cell or T-cell ALL.",
+    "n_cells": 2807,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE148218_bmALLHmCancer.h5ad",
+    "source_dir": "CancerDatasets"
+  },
+  "GSE155109_bcECHmCancer": {
+    "text": "Single-cell RNA sequencing of endothelial cells isolated from human breast cancer tumors. This dataset focuses on tumor-associated endothelial cell heterogeneity, angiogenic programs, and vascular remodeling within the breast cancer microenvironment.",
+    "n_cells": 3000,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE155109_bcECHmCancer.h5ad",
+    "source_dir": "CancerDatasets"
+  },
+  "GSE155109_bcStromaHmCancer": {
+    "text": "Single-cell RNA sequencing of stromal cells from human breast cancer tissue. This dataset characterizes cancer-associated fibroblasts, mesenchymal cells, and other stromal populations that shape the breast tumor microenvironment and support tumor progression.",
+    "n_cells": 3000,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE155109_bcStromaHmCancer.h5ad",
+    "source_dir": "CancerDatasets"
+  },
+  "GSE183904_GastricHmCancer": {
+    "text": "Single-cell RNA sequencing of human gastric cancer (stomach adenocarcinoma). This dataset profiles the cellular composition of gastric tumors, including malignant epithelial cells, tumor-infiltrating immune cells, and stromal components of the stomach cancer microenvironment.",
+    "n_cells": 3000,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE183904_GastricHmCancer.h5ad",
+    "source_dir": "CancerDatasets"
+  },
+  "GSE222002_TcellsHmCancer": {
+    "text": "Single-cell RNA sequencing of T cells isolated from human cancer samples. This dataset characterizes tumor-infiltrating T lymphocyte subsets, including CD8+ cytotoxic T cells, CD4+ helper T cells, and regulatory T cells, profiling exhaustion and activation states.",
+    "n_cells": 2962,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE222002_TcellsHmCancer.h5ad",
+    "source_dir": "CancerDatasets"
+  },
+  "GSE222369_NKsLymphomaHmCancer": {
+    "text": "Single-cell RNA sequencing of natural killer (NK) cells from human lymphoma patients. This dataset profiles NK cell functional states, cytotoxicity programs, and immune evasion mechanisms in the context of lymphoid malignancy.",
+    "n_cells": 2778,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE222369_NKsLymphomaHmCancer.h5ad",
+    "source_dir": "CancerDatasets"
+  },
+  "GSE225600_breast_CancerHm": {
+    "text": "Single-cell RNA sequencing of human breast cancer tumor tissue. This dataset captures the heterogeneous cellular landscape of breast carcinoma, including malignant epithelial cells, immune infiltrates, endothelial cells, and cancer-associated fibroblasts.",
+    "n_cells": 2333,
+    "n_genes": 2001,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE225600_breast_CancerHm.h5ad",
+    "source_dir": "CancerDatasets"
+  },
+  "GSE235787_bcellsALLHmCancer": {
+    "text": "Single-cell RNA sequencing of B cells from human patients with acute lymphoblastic leukemia (B-ALL). This dataset profiles leukemic B-lymphoblasts and residual normal B-cell populations, characterizing the transcriptomic features of B-cell precursor acute lymphoblastic leukemia.",
+    "n_cells": 2798,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE235787_bcellsALLHmCancer.h5ad",
+    "source_dir": "CancerDatasets"
+  },
+  "GSE262288_breastMetasisHmCancer": {
+    "text": "Single-cell RNA sequencing of metastatic breast cancer in human patients. This dataset profiles disseminated tumor cells and the metastatic microenvironment, capturing the transcriptomic alterations associated with breast cancer metastasis to distant organ sites.",
+    "n_cells": 2321,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE262288_breastMetasisHmCancer.h5ad",
+    "source_dir": "CancerDatasets"
+  },
+  "GSE98638_TcellLiverHmCancer": {
+    "text": "Single-cell RNA sequencing of T cells from human hepatocellular carcinoma (liver cancer). This dataset characterizes tumor-infiltrating T lymphocytes in the liver tumor microenvironment, profiling exhaustion markers, clonal expansion, and functional states of CD8+ and CD4+ T cells.",
+    "n_cells": 3000,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE98638_TcellLiverHmCancer.h5ad",
+    "source_dir": "CancerDatasets"
+  },
+  "GSE117988_MCCPBMCCancer": {
+    "text": "Single-cell RNA sequencing of peripheral blood mononuclear cells (PBMCs) from patients with Merkel cell carcinoma (MCC). This dataset profiles circulating immune cell populations and their functional states in the context of this aggressive neuroendocrine skin cancer.",
+    "n_cells": 2638,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets2/GSE117988_MCCPBMCCancer.h5ad",
+    "source_dir": "CancerDatasets2"
+  },
+  "GSE117988_MCCTumorCancer": {
+    "text": "Single-cell RNA sequencing of Merkel cell carcinoma (MCC) tumor tissue. This dataset characterizes malignant neuroendocrine tumor cells and the intra-tumoral immune microenvironment of this rare and aggressive cutaneous neoplasm.",
+    "n_cells": 2990,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets2/GSE117988_MCCTumorCancer.h5ad",
+    "source_dir": "CancerDatasets2"
+  },
+  "GSE124310_MMHmCancer": {
+    "text": "Single-cell RNA sequencing of human multiple myeloma (MM) bone marrow samples. This dataset profiles clonal plasma cells, residual normal hematopoietic cells, and the bone marrow niche microenvironment in the context of this hematological malignancy.",
+    "n_cells": 2833,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets2/GSE124310_MMHmCancer.h5ad",
+    "source_dir": "CancerDatasets2"
+  },
+  "GSE138709_LiverCancer": {
+    "text": "Single-cell RNA sequencing of liver cancer tissue. This dataset profiles the cellular heterogeneity of hepatocellular carcinoma, capturing malignant hepatocytes, Kupffer cells, stellate cells, and infiltrating immune populations.",
+    "n_cells": 2891,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets2/GSE138709_LiverCancer.h5ad",
+    "source_dir": "CancerDatasets2"
+  },
+  "GSE149655_CAHmCancer": {
+    "text": "Single-cell RNA sequencing of human colorectal adenocarcinoma. This dataset characterizes the tumor microenvironment of colorectal cancer, including malignant colonocytes, tumor-infiltrating immune cells, cancer-associated fibroblasts, and endothelial cells.",
+    "n_cells": 2087,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets2/GSE149655_CAHmCancer.h5ad",
+    "source_dir": "CancerDatasets2"
+  },
+  "GSE163558_stomachHmCancer": {
+    "text": "Single-cell RNA sequencing of human stomach cancer. This dataset profiles the cellular landscape of gastric carcinoma, capturing tumor epithelial cells, immune cell infiltrates, and stromal populations in the gastric tumor microenvironment.",
+    "n_cells": 2467,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets2/GSE163558_stomachHmCancer.h5ad",
+    "source_dir": "CancerDatasets2"
+  },
+  "GSE168181_BreastHmCancer": {
+    "text": "Single-cell RNA sequencing of human breast cancer tissue. This dataset characterizes the intra-tumoral heterogeneity of breast carcinoma, profiling malignant epithelial cells, immune cell subsets, and the stromal compartment across breast cancer subtypes.",
+    "n_cells": 2863,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets2/GSE168181_BreastHmCancer.h5ad",
+    "source_dir": "CancerDatasets2"
+  },
+  "GSE189357_lungAdreHmCancer": {
+    "text": "Single-cell RNA sequencing of human lung adenocarcinoma. This dataset profiles the tumor microenvironment of pulmonary adenocarcinoma, capturing malignant alveolar and bronchial epithelial cells, tumor-associated macrophages, T cells, and fibroblasts.",
+    "n_cells": 2886,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets2/GSE189357_lungAdreHmCancer.h5ad",
+    "source_dir": "CancerDatasets2"
+  },
+  "GSE225857_liverColonMetasisHmCancer": {
+    "text": "Single-cell RNA sequencing of human colorectal cancer liver metastases. This dataset profiles the metastatic microenvironment of colon cancer cells that have disseminated to the liver, characterizing tumor-hepatocyte interactions and the metastatic immune niche.",
+    "n_cells": 2986,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets2/GSE225857_liverColonMetasisHmCancer.h5ad",
+    "source_dir": "CancerDatasets2"
+  },
+  "GSE228499_breastHmCancer": {
+    "text": "Single-cell RNA sequencing of human breast cancer. This dataset captures the transcriptomic diversity of breast tumor tissue, including luminal and basal-like malignant cells, tumor-infiltrating lymphocytes, myeloid cells, and stromal fibroblasts.",
+    "n_cells": 2448,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets2/GSE228499_breastHmCancer.h5ad",
+    "source_dir": "CancerDatasets2"
+  },
+  "GSE283205_hepatoblastomaCancer": {
+    "text": "Single-cell RNA sequencing of hepatoblastoma tumor tissue. This dataset profiles the cellular composition of hepatoblastoma, a rare pediatric liver malignancy, capturing embryonal and fetal-type hepatoblasts, stromal cells, and immune populations.",
+    "n_cells": 2994,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets2/GSE283205_hepatoblastomaCancer.h5ad",
+    "source_dir": "CancerDatasets2"
+  },
+  "GSE120505_bloodAged": {
+    "text": "Single-cell RNA sequencing of aged blood cells. This dataset profiles hematopoietic cell populations in aging blood, characterizing age-associated changes in immune cell composition, clonal hematopoiesis, and transcriptomic drift.",
+    "n_cells": 3000,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets/GSE120505_bloodAged.h5ad",
+    "source_dir": "DevelopmentDatasets"
+  },
+  "GSE165844_LSKMmBatch": {
+    "text": "Single-cell RNA sequencing of mouse Lin-Sca-1+c-Kit+ (LSK) hematopoietic stem and progenitor cells. This dataset profiles the heterogeneity of the multipotent progenitor compartment in mouse bone marrow, capturing long-term and short-term hematopoietic stem cells and multipotent progenitors.",
+    "n_cells": 2881,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets/GSE165844_LSKMmBatch.h5ad",
+    "source_dir": "DevelopmentDatasets"
+  },
+  "GSE167597_spineMm": {
+    "text": "Single-cell RNA sequencing of mouse spinal cord during development. This dataset profiles the cellular diversity of the developing spinal cord, capturing motor neuron progenitors, interneuron subtypes, oligodendrocyte precursors, and astrocyte lineages.",
+    "n_cells": 3000,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets/GSE167597_spineMm.h5ad",
+    "source_dir": "DevelopmentDatasets"
+  },
+  "GSE192857_hESCHmTimes": {
+    "text": "Single-cell RNA sequencing time-series of human embryonic stem cell (hESC) differentiation. This dataset captures transcriptomic dynamics across multiple time points during directed differentiation of human pluripotent stem cells, profiling lineage commitment and cell fate transitions.",
+    "n_cells": 2696,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets/GSE192857_hESCHmTimes.h5ad",
+    "source_dir": "DevelopmentDatasets"
+  },
+  "GSE226131_HSCMmAged": {
+    "text": "Single-cell RNA sequencing of aged mouse hematopoietic stem cells (HSCs). This dataset profiles the transcriptomic changes associated with aging in the murine hematopoietic stem cell compartment, characterizing age-related lineage bias and functional decline.",
+    "n_cells": 2608,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets/GSE226131_HSCMmAged.h5ad",
+    "source_dir": "DevelopmentDatasets"
+  },
+  "GSE253355_bmNicheHm": {
+    "text": "Single-cell RNA sequencing of the human bone marrow niche. This dataset profiles the non-hematopoietic stromal microenvironment of human bone marrow, including mesenchymal stem cells, endothelial cells, adipocytes, and osteoblast lineage cells.",
+    "n_cells": 2835,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets/GSE253355_bmNicheHm.h5ad",
+    "source_dir": "DevelopmentDatasets"
+  },
+  "bm_GSE120446": {
+    "text": "Single-cell RNA sequencing of bone marrow during hematopoietic development. This dataset profiles the hierarchical differentiation of hematopoietic stem and progenitor cells into mature blood lineages within the bone marrow niche.",
+    "n_cells": 2890,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets/bm_GSE120446.h5ad",
+    "source_dir": "DevelopmentDatasets"
+  },
+  "dentate": {
+    "text": "Single-cell RNA sequencing of the dentate gyrus in the hippocampus during brain development. This dataset profiles neurogenesis in the dentate gyrus, capturing neural stem cells, intermediate progenitors, granule neurons, and glial cells during hippocampal neuronal differentiation.",
+    "n_cells": 3000,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets/dentate.h5ad",
+    "source_dir": "DevelopmentDatasets"
+  },
+  "endo": {
+    "text": "Single-cell RNA sequencing of endoderm differentiation. This dataset profiles the developmental trajectory of definitive endoderm specification, capturing pluripotent stem cells transitioning through mesendoderm to definitive endoderm progenitors.",
+    "n_cells": 2531,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets/endo.h5ad",
+    "source_dir": "DevelopmentDatasets"
+  },
+  "hESC_GSE144024": {
+    "text": "Single-cell RNA sequencing of human embryonic stem cells (hESCs). This dataset profiles the transcriptomic heterogeneity of pluripotent human embryonic stem cells, capturing states of self-renewal, priming, and early lineage specification.",
+    "n_cells": 3000,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets/hESC_GSE144024.h5ad",
+    "source_dir": "DevelopmentDatasets"
+  },
+  "hemato": {
+    "text": "Single-cell RNA sequencing of hematopoiesis. This dataset profiles the continuous differentiation trajectory from hematopoietic stem cells to mature blood lineages, capturing erythroid, myeloid, and lymphoid progenitor populations.",
+    "n_cells": 3000,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets/hemato.h5ad",
+    "source_dir": "DevelopmentDatasets"
+  },
+  "ifnHSPC_GSE226824": {
+    "text": "Single-cell RNA sequencing of interferon-treated hematopoietic stem and progenitor cells (HSPCs). This dataset profiles the transcriptomic response of HSPCs to interferon stimulation, characterizing interferon-stimulated gene programs and differentiation bias induced by inflammatory signaling.",
+    "n_cells": 2739,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets/ifnHSPC_GSE226824.h5ad",
+    "source_dir": "DevelopmentDatasets"
+  },
+  "lung": {
+    "text": "Single-cell RNA sequencing of lung development. This dataset profiles the cellular differentiation trajectories during pulmonary organogenesis, capturing alveolar type I and type II pneumocytes, airway progenitors, and mesenchymal cells.",
+    "n_cells": 3000,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets/lung.h5ad",
+    "source_dir": "DevelopmentDatasets"
+  },
+  "setty": {
+    "text": "Single-cell RNA sequencing of human hematopoiesis from the Setty et al. study. This dataset profiles the continuous differentiation landscape of human bone marrow hematopoiesis, capturing the full hierarchy from HSCs to committed erythroid, myeloid, and lymphoid progenitors.",
+    "n_cells": 2995,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets/setty.h5ad",
+    "source_dir": "DevelopmentDatasets"
+  },
+  "GSE115571_LPSMmDev": {
+    "text": "Single-cell RNA sequencing of mouse cells under lipopolysaccharide (LPS) stimulation. This dataset profiles the innate immune response to LPS, capturing macrophage activation states, inflammatory gene programs, and myeloid cell polarization during endotoxin challenge.",
+    "n_cells": 442,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE115571_LPSMmDev.h5ad",
+    "source_dir": "DevelopmentDatasets2"
+  },
+  "GSE130148_LungHmDev": {
+    "text": "Single-cell RNA sequencing of human fetal lung during development. This dataset profiles the cellular composition of the developing human lung, capturing airway progenitors, alveolar epithelial cells, mesenchymal populations, and endothelial lineages.",
+    "n_cells": 3000,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE130148_LungHmDev.h5ad",
+    "source_dir": "DevelopmentDatasets2"
+  },
+  "GSE142653pitHmDev": {
+    "text": "Single-cell RNA sequencing of human pituitary gland during development. This dataset profiles the cellular differentiation trajectories of the anterior pituitary, capturing hormone-producing cell lineages including corticotrophs, somatotrophs, and gonadotrophs.",
+    "n_cells": 2885,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE142653pitHmDev.h5ad",
+    "source_dir": "DevelopmentDatasets2"
+  },
+  "GSE145929_ProgastinMmDev": {
+    "text": "Single-cell RNA sequencing of mouse prostate and gastrin-expressing cells during development. This dataset profiles the epithelial and stromal cell populations in the developing mouse prostate, capturing luminal, basal, and neuroendocrine progenitor differentiation trajectories.",
+    "n_cells": 2830,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE145929_ProgastinMmDev.h5ad",
+    "source_dir": "DevelopmentDatasets2"
+  },
+  "GSE145929_UrineMmDev": {
+    "text": "Single-cell RNA sequencing of mouse urinary tract and kidney during development. This dataset profiles the nephron progenitor differentiation and collecting duct morphogenesis, capturing podocytes, tubular epithelial cells, and stromal populations in the developing kidney.",
+    "n_cells": 2745,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE145929_UrineMmDev.h5ad",
+    "source_dir": "DevelopmentDatasets2"
+  },
+  "GSE165784_RetinaHmDev": {
+    "text": "Single-cell RNA sequencing of human retina during development. This dataset profiles the differentiation of retinal progenitor cells into photoreceptors, retinal ganglion cells, amacrine cells, and Müller glia during human retinal organogenesis.",
+    "n_cells": 2622,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE165784_RetinaHmDev.h5ad",
+    "source_dir": "DevelopmentDatasets2"
+  },
+  "GSE189070_astrocytesSCIMmDev": {
+    "text": "Single-cell RNA sequencing of mouse astrocytes following spinal cord injury (SCI). This dataset profiles the reactive astrocyte response to spinal cord injury, capturing astrocyte heterogeneity, scar-forming populations, and neuroinflammatory gene programs.",
+    "n_cells": 2960,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE189070_astrocytesSCIMmDev.h5ad",
+    "source_dir": "DevelopmentDatasets2"
+  },
+  "GSE213740_ADHm": {
+    "text": "Single-cell RNA sequencing of human brain tissue from Alzheimer's disease patients. This dataset profiles the cellular landscape of the Alzheimer's disease brain, capturing neuronal degeneration, microglial activation, astrogliosis, and amyloid-associated transcriptomic changes.",
+    "n_cells": 2704,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE213740_ADHm.h5ad",
+    "source_dir": "DevelopmentDatasets2"
+  },
+  "GSE275119_TeethMmDev": {
+    "text": "Single-cell RNA sequencing of mouse dental tissue during tooth development. This dataset profiles odontogenesis, capturing dental epithelial cells, ameloblasts, odontoblasts, dental pulp mesenchyme, and periodontal ligament progenitors during mouse tooth morphogenesis.",
+    "n_cells": 2963,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE275119_TeethMmDev.h5ad",
+    "source_dir": "DevelopmentDatasets2"
   }
 }

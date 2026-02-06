@@ -184,14 +184,20 @@ class LatentCacheBuilder:
         """
         logger.info(f"Computing PCA embeddings ({n_components} components)...")
 
+        # Clamp components to valid range
+        max_components = min(n_components, adata.shape[0] - 1, adata.shape[1] - 1)
+        if max_components < 1:
+            logger.warning(f"Dataset too small for PCA ({adata.shape}), returning zeros.")
+            return np.zeros((adata.shape[0], self.cell_dim), dtype=np.float32)
+
         # Ensure data is dense for PCA
         import scipy.sparse as sp
         if sp.issparse(adata.X):
             from sklearn.decomposition import TruncatedSVD
-            svd = TruncatedSVD(n_components=min(n_components, adata.shape[1] - 1))
+            svd = TruncatedSVD(n_components=max_components)
             embeddings = svd.fit_transform(adata.X)
         else:
-            sc.tl.pca(adata, n_comps=min(n_components, adata.shape[1] - 1))
+            sc.tl.pca(adata, n_comps=max_components)
             embeddings = adata.obsm["X_pca"]
 
         # Pad to cell_dim if needed
@@ -259,9 +265,10 @@ class LatentCacheBuilder:
                 except ValueError as e:
                     logger.warning(
                         f"  scGPT encoding failed for {dataset_id}: {e}. "
-                        f"Falling back to PCA for this dataset."
+                        f"SKIPPING this dataset (PCA embeddings are incompatible "
+                        f"with scGPT embedding space)."
                     )
-                    cell_emb = self.encode_cells_pca(adata)
+                    continue
             elif cell_encoder_method == "pca":
                 logger.warning(
                     "PCA fallback is deprecated. scGPT provides universal pretrained "

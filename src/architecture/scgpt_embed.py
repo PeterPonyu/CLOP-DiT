@@ -609,17 +609,38 @@ class ScGPTCellEncoder:
         n_matched = valid_mask.sum()
         logger.info(f"Matched {n_matched}/{len(genes)} genes in scGPT vocabulary")
 
-        if n_matched == 0:
-            raise ValueError("No genes matched the scGPT vocabulary!")
+        # Case-insensitive retry: mouse gene symbols are Title Case (Xkr4)
+        # while scGPT uses UPPERCASE human symbols (XKR4)
+        if n_matched < 100:
+            logger.info("Low match rate — retrying with UPPERCASE gene names...")
+            gene_ids_upper = np.array([
+                self.vocab[g.upper()] if g.upper() in self.vocab else -1
+                for g in genes
+            ], dtype=int)
+            valid_mask_upper = gene_ids_upper >= 0
+            n_upper = valid_mask_upper.sum()
+            logger.info(f"Case-insensitive match: {n_upper}/{len(genes)} genes")
+            if n_upper > n_matched:
+                gene_ids = gene_ids_upper
+                valid_mask = valid_mask_upper
+                n_matched = n_upper
+                # Update gene names to uppercase for consistency
+                genes = [g.upper() for g in genes]
+
+        min_genes = 100  # Need at least 100 matched genes for meaningful embeddings
+        if n_matched < min_genes:
+            raise ValueError(
+                f"Only {n_matched}/{len(genes)} genes matched the scGPT vocabulary "
+                f"(minimum {min_genes} required). This dataset likely uses "
+                f"non-human gene names or Ensembl IDs."
+            )
 
         adata_filtered = adata[:, valid_mask].copy()
         gene_ids_filtered = gene_ids[valid_mask]
 
-        # Store reference gene set for decoding
-        if gene_col in adata.var.columns:
-            self._ref_gene_names = np.array(adata.var[gene_col].tolist())[valid_mask].tolist()
-        else:
-            self._ref_gene_names = np.array(adata.var_names.tolist())[valid_mask].tolist()
+        # Store reference gene set for decoding (use `genes` list which may
+        # have been uppercased for case-insensitive matching)
+        self._ref_gene_names = np.array(genes)[valid_mask].tolist()
         self._ref_gene_ids = gene_ids_filtered.copy()
 
         # Get count matrix
