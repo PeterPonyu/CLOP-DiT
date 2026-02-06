@@ -31,10 +31,10 @@ def main():
     parser.add_argument("--output_dir", type=str, default="data/cached_latents")
     parser.add_argument("--cell_encoder", type=str, default="scgpt",
                         choices=["scgpt", "pca"], help="Cell encoder method (scGPT recommended)")
-    parser.add_argument("--scgpt_dir", type=str, default="models/scgpt_human",
+    parser.add_argument("--scgpt_dir", type=str, default="models/scgpt_pancancer",
                         help="scGPT weights directory (if using scgpt)")
     parser.add_argument("--text_encoder", type=str,
-                        default="microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract")
+                        default="microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract")
     parser.add_argument("--cell_dim", type=int, default=512)
     parser.add_argument("--batch_size", type=int, default=64)
     args = parser.parse_args()

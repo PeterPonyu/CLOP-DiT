@@ -23,7 +23,7 @@ proj_drop: 0.1         # Projection dropout
 batch_size: 512        # DiT can use very large batches
 lr: 1.0e-4
 weight_decay: 0.01
-num_epochs: 200
+num_epochs: 500
 warmup_epochs: 10
 grad_clip: 1.0
 use_amp: true
@@ -32,6 +32,9 @@ ema_decay: 0.9999      # EMA for model weights
 # Inference defaults
 inference_steps: 4     # ODE steps for sampling
 cfg_scale: 3.0         # Guidance scale
+
+# scGPT (for decoding)
+scgpt_model_dir: "models/scgpt_pancancer"  # v0.3: pan-cancer pretrained
 
 # System
 device: "cuda"

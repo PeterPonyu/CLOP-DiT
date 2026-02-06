@@ -1,7 +1,7 @@
 # cache_builder.py — Pre-compute and cache latent embeddings
 """
-Latent Cache Builder: Pre-computes cell embeddings (scGPT) and text embeddings
-(PubMedBERT) and saves them as memory-mapped numpy arrays.
+Latent Cache Builder: Pre-computes cell embeddings (scGPT pan-cancer) and
+text embeddings (BiomedBERT-large) and saves them as memory-mapped numpy arrays.
 
 This is the critical optimization step that decouples the heavy encoder models
 from the lightweight CLOP and DiT training loops.
@@ -53,9 +53,9 @@ class LatentCacheBuilder:
         self,
         cache_dir: Union[str, Path] = "data/cached_latents",
         cell_encoder: str = "scgpt",
-        text_encoder: str = "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract",
+        text_encoder: str = "microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract",
         cell_dim: int = 512,
-        text_dim: int = 768,
+        text_dim: int = 1024,
         device: str = "cuda",
         batch_size: int = 64,
     ):

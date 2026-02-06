@@ -17,6 +17,7 @@ data/processed_h5ad_v2/*.h5ad
 # Model weights
 models/scgpt_weights/
 models/scgpt_human/
+models/scgpt_pancancer/
 models/sft_adapter/
 models/checkpoints/*.pth
 models/checkpoints_v2/*.pth

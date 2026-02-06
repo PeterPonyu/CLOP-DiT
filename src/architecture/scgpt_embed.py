@@ -320,6 +320,61 @@ class TransformerModel(nn.Module):
             cell_emb = torch.sum(layer_output * weights.unsqueeze(2), dim=1)
             return F.normalize(cell_emb, p=2, dim=1)
 
+    def generate(
+        self,
+        cell_emb: torch.Tensor,
+        src: torch.Tensor,
+        values: torch.Tensor,
+        src_key_padding_mask: torch.Tensor,
+        gen_iters: int = 1,
+        batch_labels: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        """Generate gene expression from cell embedding via scGPT's decoder.
+
+        This re-injects the cell embedding at the [CLS] position (position 0),
+        re-runs the full transformer encoder, and applies ExprDecoder to
+        predict per-gene expression values.
+
+        Parameters
+        ----------
+        cell_emb : (B, d_model) cell embeddings (e.g., from DiT output)
+        src : (B, seq_len) gene token IDs (with <cls> at position 0)
+        values : (B, seq_len) expression values (position 0 = pad_value for <cls>)
+        src_key_padding_mask : (B, seq_len) padding mask
+        gen_iters : int
+            Number of iterative generation refinement steps.
+        batch_labels : optional (B,) batch label IDs
+
+        Returns
+        -------
+        output : (B, seq_len) predicted expression values per gene
+        """
+        # Encode gene tokens and values
+        src_embs = self.encoder(src)                # (B, seq_len, d_model)
+        val_embs = self.value_encoder(values)       # (B, seq_len, d_model)
+
+        if self.input_emb_style == "scaling":
+            total_embs = src_embs * val_embs.unsqueeze(2)
+        else:
+            total_embs = src_embs + val_embs
+
+        # Inject cell_emb at position 0 (replacing [CLS] token embedding)
+        total_embs[:, 0, :] = cell_emb
+
+        if getattr(self, "bn", None) is not None:
+            total_embs = self.bn(total_embs.permute(0, 2, 1)).permute(0, 2, 1)
+
+        for _ in range(gen_iters):
+            output = self.transformer_encoder(
+                total_embs, src_key_padding_mask=src_key_padding_mask
+            )
+            # Update with transformer output for next iteration
+            total_embs[:, 0, :] = cell_emb  # Keep cell_emb fixed at position 0
+
+        # Decode: ExprDecoder applied to each gene token output → scalar expression
+        mlm_output = self.decoder(output)  # {"pred": (B, seq_len)}
+        return mlm_output["pred"]
+
 
 def load_pretrained(model, pretrained_params, strict=False, verbose=False):
     """Load pretrained params, matching shapes (from scGPT utils)."""
@@ -446,6 +501,9 @@ class ScGPTCellEncoder:
         self.model = None
         self.vocab = None
         self.model_configs = None
+        # Reference gene set for decoding (populated during encode())
+        self._ref_gene_ids = None
+        self._ref_gene_names = None
 
     def _load(self):
         """Load model, vocab, and config."""
@@ -557,6 +615,13 @@ class ScGPTCellEncoder:
         adata_filtered = adata[:, valid_mask].copy()
         gene_ids_filtered = gene_ids[valid_mask]
 
+        # Store reference gene set for decoding
+        if gene_col in adata.var.columns:
+            self._ref_gene_names = np.array(adata.var[gene_col].tolist())[valid_mask].tolist()
+        else:
+            self._ref_gene_names = np.array(adata.var_names.tolist())[valid_mask].tolist()
+        self._ref_gene_ids = gene_ids_filtered.copy()
+
         # Get count matrix
         import scipy.sparse as sp
         count_matrix = adata_filtered.X
@@ -630,6 +695,115 @@ class ScGPTCellEncoder:
 
         logger.info(f"Encoded {count} cells → ({count}, {self.model_configs['embsize']})")
         return embeddings
+
+    @torch.no_grad()
+    def decode(
+        self,
+        cell_embeddings: np.ndarray,
+        gene_ids: Optional[np.ndarray] = None,
+        gene_names: Optional[List[str]] = None,
+        batch_size: Optional[int] = None,
+    ) -> dict:
+        """Decode cell embeddings back to gene expression via scGPT generate().
+
+        Uses the TransformerModel.generate() method to inject cell embeddings
+        at the [CLS] position and reconstruct per-gene expression values.
+
+        Parameters
+        ----------
+        cell_embeddings : (N, 512) cell embeddings to decode
+        gene_ids : (G,) gene token IDs, optional.
+            If None, uses reference genes from last encode() call.
+        gene_names : list of str, optional.
+            Gene names corresponding to gene_ids.
+        batch_size : int, optional.
+            Decoding batch size.
+
+        Returns
+        -------
+        result : dict with keys:
+            "expression" : (N, G) predicted gene expression matrix
+            "gene_names" : list of G gene name strings
+        """
+        self._load()
+
+        if gene_ids is None:
+            if self._ref_gene_ids is None:
+                raise ValueError(
+                    "No reference gene set available. Call encode() first, "
+                    "or provide gene_ids explicitly."
+                )
+            gene_ids = self._ref_gene_ids
+            gene_names = self._ref_gene_names
+
+        if batch_size is None:
+            batch_size = self.batch_size
+
+        device = self.device
+        pad_token_id = self.vocab["<pad>"]
+        cls_token_id = self.vocab["<cls>"]
+        pad_value = self.model_configs.get("pad_value", -2)
+
+        N = cell_embeddings.shape[0]
+        G = len(gene_ids)
+
+        # Build fixed gene token sequence: [<cls>] + gene_ids
+        # Values: pad_value for <cls>, then zeros (will be predicted)
+        fixed_genes = np.insert(gene_ids, 0, cls_token_id)   # (G+1,)
+        fixed_values = np.full(G + 1, 0.0, dtype=np.float32)
+        fixed_values[0] = pad_value  # <cls> position
+
+        src = torch.from_numpy(fixed_genes).long().to(device)           # (G+1,)
+        values = torch.from_numpy(fixed_values).float().to(device)      # (G+1,)
+        src_key_padding_mask = src.eq(pad_token_id)                     # (G+1,)
+
+        all_preds = []
+
+        for i in tqdm(range(0, N, batch_size), desc="Decoding with scGPT generate()"):
+            batch_emb = cell_embeddings[i:i+batch_size]
+            if isinstance(batch_emb, np.ndarray):
+                batch_emb = torch.from_numpy(batch_emb).float()
+            batch_emb = batch_emb.to(device)
+
+            B = batch_emb.shape[0]
+
+            # Expand fixed inputs to batch
+            src_batch = src.unsqueeze(0).expand(B, -1)                         # (B, G+1)
+            values_batch = values.unsqueeze(0).expand(B, -1)                   # (B, G+1)
+            mask_batch = src_key_padding_mask.unsqueeze(0).expand(B, -1)       # (B, G+1)
+
+            with torch.amp.autocast("cuda", enabled=True):
+                pred = self.model.generate(
+                    cell_emb=batch_emb,
+                    src=src_batch,
+                    values=values_batch,
+                    src_key_padding_mask=mask_batch,
+                )
+            # pred shape: (B, G+1), skip position 0 (<cls>)
+            all_preds.append(pred[:, 1:].float().cpu().numpy())
+
+        expression = np.concatenate(all_preds, axis=0).astype(np.float32)  # (N, G)
+        logger.info(f"Decoded {N} cells → expression matrix {expression.shape}")
+
+        return {
+            "expression": expression,
+            "gene_names": gene_names if gene_names is not None else [f"gene_{i}" for i in range(G)],
+        }
+
+    def get_reference_genes(self) -> Optional[dict]:
+        """Return the reference gene set from the last encode() call.
+
+        Returns
+        -------
+        dict with "gene_ids" (np.ndarray) and "gene_names" (list of str),
+        or None if no encode() has been called.
+        """
+        if self._ref_gene_ids is None:
+            return None
+        return {
+            "gene_ids": self._ref_gene_ids,
+            "gene_names": self._ref_gene_names,
+        }
 
     @property
     def embed_dim(self) -> int:

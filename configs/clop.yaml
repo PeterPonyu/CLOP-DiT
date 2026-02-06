@@ -7,8 +7,8 @@ val_split: 0.1
 num_workers: 4
 
 # Model
-text_dim: 768          # PubMedBERT output dim
-cell_dim: 512          # scGPT output dim (or PCA dim)
+text_dim: 1024         # BiomedBERT-large output dim (v0.3: upgraded from 768)
+cell_dim: 512          # scGPT output dim
 proj_dim: 256          # Shared projection dimension
 text_layers: 3         # Text projector MLP layers
 cell_layers: 3         # Cell projector MLP layers
@@ -21,10 +21,13 @@ use_ema: false
 batch_size: 256        # Larger = better for contrastive (≥64 minimum)
 lr: 3.0e-4
 weight_decay: 0.01
-num_epochs: 100
+num_epochs: 200
 warmup_epochs: 5
 grad_clip: 1.0
 use_amp: true
+
+# scGPT
+scgpt_model_dir: "models/scgpt_pancancer"  # v0.3: pan-cancer pretrained
 
 # System
 device: "cuda"

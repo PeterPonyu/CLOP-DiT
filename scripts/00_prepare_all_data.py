@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
-# 00_prepare_all_data.py — Prepare ALL local h5ad datasets for CLOP-DiT v0.2
+# 00_prepare_all_data.py — Prepare ALL local h5ad datasets for CLOP-DiT v0.3
 """
-v0.2 data pipeline: Processes all 43 local datasets with curated biological
-text descriptions (not auto-generated from filenames).
+v0.3 data pipeline: Processes all 55 local datasets from 4 directories
+with curated biological text descriptions.
 
-Key improvements over v0.1:
-  - 43 datasets (vs 3 in v0.1) → meaningful CLOP contrastive training
+Key improvements over v0.2:
+  - 55 datasets from 4 directories (vs 43/3-dirs in v0.2)
+  - DevelopmentDatasets2 added (12 new datasets)
+  - Automatic filtering of invalid datasets:
+    · Normalized-only files (no raw counts → scGPT can't encode)
+    · Ensembl ID files (incompatible with scGPT gene vocab)
   - Biologically accurate text descriptions → real BiomedBERT alignment
   - Per-dataset subsampling for memory management
-  - Robust preprocessing with seurat_v3/seurat fallback
 
 Usage:
     python scripts/00_prepare_all_data.py \
@@ -257,14 +260,75 @@ DATASET_DESCRIPTIONS = {
         "This dataset profiles the continuous differentiation landscape of human bone marrow hematopoiesis, "
         "capturing the full hierarchy from HSCs to committed erythroid, myeloid, and lymphoid progenitors."
     ),
+
+    # ── DevelopmentDatasets2 (12 — 2 filtered out) ──────────────────────
+    "GSE115571_LPSMmDev": (
+        "Single-cell RNA sequencing of mouse cells under lipopolysaccharide (LPS) stimulation. "
+        "This dataset profiles the innate immune response to LPS, capturing macrophage activation states, "
+        "inflammatory gene programs, and myeloid cell polarization during endotoxin challenge."
+    ),
+    "GSE130148_LungHmDev": (
+        "Single-cell RNA sequencing of human fetal lung during development. "
+        "This dataset profiles the cellular composition of the developing human lung, capturing airway "
+        "progenitors, alveolar epithelial cells, mesenchymal populations, and endothelial lineages."
+    ),
+    "GSE142653pitHmDev": (
+        "Single-cell RNA sequencing of human pituitary gland during development. "
+        "This dataset profiles the cellular differentiation trajectories of the anterior pituitary, "
+        "capturing hormone-producing cell lineages including corticotrophs, somatotrophs, and gonadotrophs."
+    ),
+    "GSE145929_ProgastinMmDev": (
+        "Single-cell RNA sequencing of mouse prostate and gastrin-expressing cells during development. "
+        "This dataset profiles the epithelial and stromal cell populations in the developing mouse prostate, "
+        "capturing luminal, basal, and neuroendocrine progenitor differentiation trajectories."
+    ),
+    "GSE145929_UrineMmDev": (
+        "Single-cell RNA sequencing of mouse urinary tract and kidney during development. "
+        "This dataset profiles the nephron progenitor differentiation and collecting duct morphogenesis, "
+        "capturing podocytes, tubular epithelial cells, and stromal populations in the developing kidney."
+    ),
+    "GSE165784_RetinaHmDev": (
+        "Single-cell RNA sequencing of human retina during development. "
+        "This dataset profiles the differentiation of retinal progenitor cells into photoreceptors, "
+        "retinal ganglion cells, amacrine cells, and Müller glia during human retinal organogenesis."
+    ),
+    "GSE189070_astrocytesSCIMmDev": (
+        "Single-cell RNA sequencing of mouse astrocytes following spinal cord injury (SCI). "
+        "This dataset profiles the reactive astrocyte response to spinal cord injury, capturing "
+        "astrocyte heterogeneity, scar-forming populations, and neuroinflammatory gene programs."
+    ),
+    "GSE213740_ADHm": (
+        "Single-cell RNA sequencing of human brain tissue from Alzheimer's disease patients. "
+        "This dataset profiles the cellular landscape of the Alzheimer's disease brain, capturing "
+        "neuronal degeneration, microglial activation, astrogliosis, and amyloid-associated transcriptomic changes."
+    ),
+    # GSE225948_bloodMmStrokeDev — FILTERED OUT: normalized-only data (no raw counts, max=184.46)
+    # GSE247719_PanSci_05_Muscle_adata — FILTERED OUT: Ensembl IDs (ENSMUSG), scGPT incompatible
+    # GSE247719_PanSci_T_cell_adata — FILTERED OUT: Ensembl IDs (ENSMUSG), scGPT incompatible
+    "GSE275119_TeethMmDev": (
+        "Single-cell RNA sequencing of mouse dental tissue during tooth development. "
+        "This dataset profiles odontogenesis, capturing dental epithelial cells, ameloblasts, odontoblasts, "
+        "dental pulp mesenchyme, and periodontal ligament progenitors during mouse tooth morphogenesis."
+    ),
 }
 
-# Dataset source directories
+# Dataset source directories (v0.3: 4 directories)
 DATASET_DIRS = [
     Path.home() / "Desktop/datasets/CancerDatasets",
     Path.home() / "Desktop/datasets/CancerDatasets2",
     Path.home() / "Desktop/datasets/DevelopmentDatasets",
+    Path.home() / "Desktop/datasets/DevelopmentDatasets2",
 ]
+
+# Datasets to skip — incompatible with scGPT encoding pipeline
+# (normalized-only → no raw counts for rank binning; Ensembl IDs → not in scGPT vocab)
+SKIP_DATASETS = {
+    "GSE120575_melanomaHmCancer",     # Normalized-only (max=16.35), no raw counts
+    "GSE225948_bloodMmStrokeDev",     # Normalized-only (max=184.46), no raw counts
+    "GSE148215_hESCHSPCD8Hm",        # Ensembl IDs (ENSG*), scGPT vocab uses gene symbols
+    "GSE247719_PanSci_05_Muscle_adata",  # Ensembl IDs (ENSMUSG*), scGPT incompatible
+    "GSE247719_PanSci_T_cell_adata",     # Ensembl IDs (ENSMUSG*), scGPT incompatible
+}
 
 
 def preprocess_adata(adata, dataset_id, min_genes=200, min_cells=3,
@@ -349,10 +413,11 @@ def main():
             h5ad_files.append(ddir)
 
     print(f"\n{'='*70}")
-    print(f"CLOP-DiT v0.2 Data Preparation")
+    print(f"CLOP-DiT v0.3 Data Preparation")
     print(f"{'='*70}")
     print(f"Found {len(h5ad_files)} h5ad files across {len(data_dirs)} directories")
     print(f"Curated descriptions available for {len(DATASET_DESCRIPTIONS)} datasets")
+    print(f"Datasets to skip (incompatible): {len(SKIP_DATASETS)}")
     print(f"Max cells per dataset: {args.max_cells}")
     print(f"Output directory: {output_dir}")
     print(f"{'='*70}\n")
@@ -366,6 +431,12 @@ def main():
         dataset_id = h5ad_path.stem
         print(f"\n[{i+1}/{len(h5ad_files)}] Processing: {dataset_id}")
         print(f"  Source: {h5ad_path}")
+
+        # v0.3: Skip incompatible datasets
+        if dataset_id in SKIP_DATASETS:
+            print(f"  ✗ SKIPPED — incompatible with scGPT (normalized-only or Ensembl IDs)")
+            skipped.append(dataset_id)
+            continue
 
         # Get curated text description
         if dataset_id in DATASET_DESCRIPTIONS:
@@ -433,7 +504,7 @@ def main():
         json.dump(processed_files, f, indent=2)
 
     print(f"\n{'='*70}")
-    print(f"CLOP-DiT v0.2 Data Preparation Complete")
+    print(f"CLOP-DiT v0.3 Data Preparation Complete")
     print(f"{'='*70}")
     print(f"  Processed:  {len(processed_files)} datasets")
     print(f"  Skipped:    {len(skipped)} datasets")
@@ -444,7 +515,7 @@ def main():
     if skipped:
         print(f"  Skipped datasets: {skipped}")
     print(f"{'='*70}")
-    print(f"\nNext: Run 03_cache_latents.py --cell_encoder scgpt to compute embeddings.")
+    print(f"\nNext: Run 03_cache_latents.py --cell_encoder scgpt --scgpt_dir models/scgpt_pancancer")
 
 
 if __name__ == "__main__":

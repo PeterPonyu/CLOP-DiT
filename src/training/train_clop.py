@@ -262,6 +262,8 @@ class CLOPTrainer:
             "metrics": metrics,
             "config": {
                 "proj_dim": self.model.proj_dim,
+                "text_dim": self.model.text_projector.net[0].in_features,
+                "cell_dim": self.model.cell_projector.net[0].in_features,
             },
         }, path)
 
