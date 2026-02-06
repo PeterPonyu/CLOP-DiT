@@ -210,8 +210,8 @@ class LatentCacheBuilder:
         self,
         h5ad_files: List[Union[str, Path]],
         metadata_file: Union[str, Path],
-        cell_encoder_method: str = "pca",
-        scgpt_model_dir: Optional[str] = None,
+        cell_encoder_method: str = "scgpt",
+        scgpt_model_dir: str = "models/scgpt_human",
     ) -> Dict:
         """Build the complete latent cache from processed h5ad files and metadata.
 
@@ -250,11 +250,26 @@ class LatentCacheBuilder:
             # Load AnnData
             adata = sc.read_h5ad(h5ad_path)
 
-            # Cell encoding
-            if cell_encoder_method == "scgpt" and scgpt_model_dir:
-                cell_emb = self.encode_cells_scgpt(adata, scgpt_model_dir)
-            else:
+            # Cell encoding — scGPT is the standard encoder
+            if cell_encoder_method == "scgpt":
+                if not scgpt_model_dir:
+                    raise ValueError("scGPT model directory required. Set --scgpt_dir.")
+                try:
+                    cell_emb = self.encode_cells_scgpt(adata, scgpt_model_dir)
+                except ValueError as e:
+                    logger.warning(
+                        f"  scGPT encoding failed for {dataset_id}: {e}. "
+                        f"Falling back to PCA for this dataset."
+                    )
+                    cell_emb = self.encode_cells_pca(adata)
+            elif cell_encoder_method == "pca":
+                logger.warning(
+                    "PCA fallback is deprecated. scGPT provides universal pretrained "
+                    "embeddings — use --cell_encoder scgpt for production runs."
+                )
                 cell_emb = self.encode_cells_pca(adata)
+            else:
+                raise ValueError(f"Unknown cell encoder: {cell_encoder_method}")
 
             # Get text description for this dataset
             dataset_meta = metadata.get(dataset_id, {})

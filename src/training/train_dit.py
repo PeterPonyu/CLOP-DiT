@@ -249,9 +249,10 @@ class DiTTrainer:
 
     @torch.no_grad()
     def evaluate_generation(self, num_samples: int = 256) -> Dict:
-        """Evaluate generation quality.
+        """Evaluate generation quality using full metric suite.
 
-        Generates embeddings and compares statistics with real data.
+        Generates embeddings and compares with real data using Fréchet Distance,
+        MMD, Coverage/Density, KL divergence, and cosine similarity.
 
         Parameters
         ----------
@@ -262,6 +263,8 @@ class DiTTrainer:
         -------
         metrics : dict
         """
+        from ..evaluation.metrics import GenerationMetrics
+
         model = self.ema_model if self.ema_model is not None else self.model
         model.eval()
 
@@ -280,35 +283,19 @@ class DiTTrainer:
         # Generate
         generated = model.sample(conditions, num_steps=4, cfg_scale=3.0)
 
-        # Metrics
-        # 1. Mean and std comparison
-        real_mean = real_embs.mean(dim=0)
-        gen_mean = generated.mean(dim=0)
-        mean_mse = F.mse_loss(gen_mean, real_mean).item()
+        real_np = real_embs.cpu().numpy()
+        gen_np = generated.cpu().numpy()
 
-        real_std = real_embs.std(dim=0)
-        gen_std = generated.std(dim=0)
-        std_mse = F.mse_loss(gen_std, real_std).item()
+        # Full evaluation via GenerationMetrics
+        metrics = GenerationMetrics.full_evaluation(real_np, gen_np)
 
-        # 2. Cosine similarity distribution
+        # Additional quick stats
         cosine_sims = F.cosine_similarity(
             generated.unsqueeze(1), real_embs.unsqueeze(0), dim=-1
         )
-        mean_nearest_sim = cosine_sims.max(dim=1).values.mean().item()
-
-        # 3. Norm statistics
-        real_norms = real_embs.norm(dim=-1)
-        gen_norms = generated.norm(dim=-1)
-
-        metrics = {
-            "mean_mse": mean_mse,
-            "std_mse": std_mse,
-            "mean_nearest_cosine": mean_nearest_sim,
-            "real_norm_mean": real_norms.mean().item(),
-            "gen_norm_mean": gen_norms.mean().item(),
-            "real_norm_std": real_norms.std().item(),
-            "gen_norm_std": gen_norms.std().item(),
-        }
+        metrics["mean_nearest_cosine"] = cosine_sims.max(dim=1).values.mean().item()
+        metrics["real_norm_mean"] = real_embs.norm(dim=-1).mean().item()
+        metrics["gen_norm_mean"] = generated.norm(dim=-1).mean().item()
 
         logger.info(f"Generation eval: {json.dumps(metrics, indent=2)}")
         return metrics

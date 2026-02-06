@@ -10,13 +10,16 @@ build/
 # Data (large files)
 data/raw_geo/
 data/cached_latents/*.npy
+data/cached_latents_v2/*.npy
 data/processed_h5ad/*.h5ad
+data/processed_h5ad_v2/*.h5ad
 
 # Model weights
 models/scgpt_weights/
 models/scgpt_human/
 models/sft_adapter/
 models/checkpoints/*.pth
+models/checkpoints_v2/*.pth
 
 # Generated outputs
 generated_*.h5ad
