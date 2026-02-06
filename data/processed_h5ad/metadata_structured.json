@@ -1,0 +1,29 @@
+{
+  "GSE123813_bccHmCancer": {
+    "text": "Single-cell RNA sequencing with cancer from human (GSE123813).",
+    "tissue": "inferred",
+    "disease": "inferred",
+    "organism": "human",
+    "n_cells": 2000,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE123813_bccHmCancer.h5ad"
+  },
+  "GSE123813_sccHmCancer": {
+    "text": "Single-cell RNA sequencing with cancer from human (GSE123813).",
+    "tissue": "inferred",
+    "disease": "inferred",
+    "organism": "human",
+    "n_cells": 2000,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE123813_sccHmCancer.h5ad"
+  },
+  "GSE123902_LungAdreHmCancer": {
+    "text": "Single-cell RNA sequencing of lung tissue with cancer from human (GSE123902).",
+    "tissue": "inferred",
+    "disease": "inferred",
+    "organism": "human",
+    "n_cells": 1833,
+    "n_genes": 2000,
+    "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE123902_LungAdreHmCancer.h5ad"
+  }
+}

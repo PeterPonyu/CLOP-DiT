@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Data (large files)
+data/raw_geo/
+data/cached_latents/*.npy
+data/processed_h5ad/*.h5ad
+
+# Model weights
+models/scgpt_weights/
+models/scgpt_human/
+models/sft_adapter/
+models/checkpoints/*.pth
+
+# Generated outputs
+generated_*.h5ad
+
+# Logs
+logs/
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+*.egg

@@ -1,0 +1,41 @@
+# CLOP-DiT Requirements
+# Core
+torch>=2.0.0
+numpy>=1.24.0
+scipy>=1.10.0
+scikit-learn>=1.2.0
+
+# Single-cell
+scanpy>=1.9.0
+anndata>=0.9.0
+scib>=1.0.0
+
+# Text & Language Models
+transformers>=4.35.0
+tokenizers>=0.15.0
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+umap-learn>=0.5.0
+
+# Data fetching
+GEOparse>=2.0.3
+requests>=2.28.0
+
+# Configuration
+pyyaml>=6.0
+tqdm>=4.65.0
+
+# === Optional (install separately as needed) ===
+# SFT Text Cleaning (requires CUDA):
+#   pip install unsloth
+#   pip install bitsandbytes>=0.42.0
+#
+# scGPT Cell Encoder:
+#   pip install scgpt
+#   or: git clone https://github.com/bowang-lab/scGPT
+#
+# Experiment tracking:
+#   pip install wandb
+#   pip install tensorboard

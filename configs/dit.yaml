@@ -1,0 +1,38 @@
+# DiT Configuration
+# 1D Diffusion Transformer with Flow Matching
+
+# Data
+cache_dir: "data/cached_latents"
+projected_text_path: "data/cached_latents/projected_text.npy"
+val_split: 0.1
+num_workers: 4
+
+# Model Architecture
+latent_dim: 512        # Cell embedding dimension
+hidden_dim: 384        # Transformer hidden dimension
+cond_dim: 256          # Condition dimension (= CLOP proj_dim)
+num_blocks: 8          # Number of DiT transformer blocks
+num_heads: 6           # Attention heads (hidden_dim must be divisible)
+mlp_ratio: 4.0         # FFN expansion ratio
+num_tokens: 16         # Pseudo-tokens (latent_dim / num_tokens = token_dim)
+cond_drop_prob: 0.1    # CFG condition dropout
+attn_drop: 0.0         # Attention dropout
+proj_drop: 0.1         # Projection dropout
+
+# Training
+batch_size: 512        # DiT can use very large batches
+lr: 1.0e-4
+weight_decay: 0.01
+num_epochs: 200
+warmup_epochs: 10
+grad_clip: 1.0
+use_amp: true
+ema_decay: 0.9999      # EMA for model weights
+
+# Inference defaults
+inference_steps: 4     # ODE steps for sampling
+cfg_scale: 3.0         # Guidance scale
+
+# System
+device: "cuda"
+save_dir: "models/checkpoints"

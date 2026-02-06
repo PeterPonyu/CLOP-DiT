@@ -1,0 +1,32 @@
+from setuptools import setup, find_packages
+
+setup(
+    name="clop-dit",
+    version="0.1.0",
+    author="Zeyu Fu",
+    author_email="fuzeyu99@126.com",
+    description="CLOP-DiT: Contrastive Language-Omics Pre-training + Diffusion Transformer for conditional single-cell generation",
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
+    url="https://github.com/PeterPonyu/CLOP-DiT",
+    packages=find_packages(),
+    python_requires=">=3.9",
+    install_requires=[
+        "torch>=2.0.0",
+        "numpy>=1.24.0",
+        "scipy>=1.10.0",
+        "scikit-learn>=1.2.0",
+        "scanpy>=1.9.0",
+        "anndata>=0.9.0",
+        "transformers>=4.35.0",
+        "matplotlib>=3.7.0",
+        "pyyaml>=6.0",
+        "tqdm>=4.65.0",
+    ],
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Topic :: Scientific/Engineering :: Bio-Informatics",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    ],
+)

@@ -1,0 +1,31 @@
+# CLOP Configuration
+# Contrastive Language-Omics Pre-training alignment
+
+# Data
+cache_dir: "data/cached_latents"
+val_split: 0.1
+num_workers: 4
+
+# Model
+text_dim: 768          # PubMedBERT output dim
+cell_dim: 512          # scGPT output dim (or PCA dim)
+proj_dim: 256          # Shared projection dimension
+text_layers: 3         # Text projector MLP layers
+cell_layers: 3         # Cell projector MLP layers
+dropout: 0.1
+temperature: 0.07      # Initial contrastive temperature
+label_smoothing: 0.1
+use_ema: false
+
+# Training
+batch_size: 256        # Larger = better for contrastive (≥64 minimum)
+lr: 3.0e-4
+weight_decay: 0.01
+num_epochs: 100
+warmup_epochs: 5
+grad_clip: 1.0
+use_amp: true
+
+# System
+device: "cuda"
+save_dir: "models/checkpoints"
