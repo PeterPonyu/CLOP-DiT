@@ -77,10 +77,11 @@ User Text ─→ BiomedBERT-large (1024-d) ─→ CLOP Text Projector ─→ Con
 | **Text encoder** | BiomedBERT-base (768-d, 110M) | **BiomedBERT-large** (1024-d, 340M) |
 | **Decoder** | Broken `model.decoder(batch)` — just ExprDecoder head on raw embedding | **scGPT `generate()`**: inject cell_emb at [CLS] → full transformer → ExprDecoder per gene |
 | **CLOP training** | 50 epochs | **200 epochs** |
-| **DiT training** | 100 epochs | **500 epochs** |
+| **DiT training** | 100 epochs | **200 epochs** (optimized: batch=1024, preloaded RAM, resume support) |
 | **Output** | 512-d embeddings only | **Gene expression matrix** via scGPT decoding + embeddings |
 | **Evaluation** | FD, MMD, R@K on embeddings | + **Gene expression correlation** (Pearson, Spearman per-gene/per-cell) |
 | **Figures** | 5 figures (embedding space) | + **Expression heatmap**, **gene correlation scatter** |
+| **Resume training** | Not supported | **Checkpoint resume**: `--resume` flag restores model+EMA+optimizer+epoch |
 
 ### v0.1.0 → v0.2.0
 
@@ -102,6 +103,49 @@ User Text ─→ BiomedBERT-large (1024-d) ─→ CLOP Text Projector ─→ Con
 3. **BiomedBERT-large (1024-d)**: The base model (768-d, 110M params) may not capture fine-grained distinctions between similar cancer types. The large model (1024-d, 340M params) has 3× more parameters and a richer representation space for discriminating between subtle biological descriptions.
 
 4. **Dataset filtering**: scGPT requires raw integer counts for its rank-based binning (51 bins). Datasets with only normalized data (no raw counts) or Ensembl IDs (not in scGPT's gene symbol vocabulary) are automatically filtered.
+
+---
+
+## v0.3.0 Results
+
+### CLOP Alignment
+| Metric | Value |
+|--------|-------|
+| Text→Cell R@1 | 1.0000 |
+| Cell→Text R@1 | 1.0000 |
+| R@3, R@5, R@10 | 1.0000 (all) |
+| Mean cosine similarity | 0.6789 ± 0.019 |
+
+### DiT Generation Quality
+| Metric | v0.2.0 | v0.3.0 | Direction |
+|--------|--------|--------|-----------|
+| Fréchet Distance | 123.84 | **4.32** | Lower ↓ |
+| MMD (RBF) | 0.262 | **0.005** | Lower ↓ |
+| Coverage | 0.024 | **0.650** | Higher ↑ |
+| Density | 0.062 | **0.616** | ~1.0 |
+| Mean KL divergence | 2.133 | **0.312** | Lower ↓ |
+| Paired cosine similarity | 0.855 | **0.966** | Higher ↑ |
+| Val loss (flow matching) | 0.662 | **0.142** | Lower ↓ |
+| Val cosine similarity | 0.818 | **0.970** | Higher ↑ |
+
+### Gene Expression Decoding (v0.3 new)
+| Metric | Value |
+|--------|-------|
+| Per-gene mean Pearson r | 1.0000 |
+| Per-gene mean Spearman r | 1.0000 |
+| Per-cell mean Pearson r | 0.9999 |
+| Number of genes decoded | 1,890 |
+
+### Training Configuration
+| Component | Setting |
+|-----------|---------|
+| Total cells | 138,477 |
+| Datasets | 50 (55 total − 5 filtered) |
+| Cell encoder | scGPT pan-cancer (512-d, 51.9M params) |
+| Text encoder | BiomedBERT-large (1024-d, 340M params) |
+| CLOP | 2M params, proj_dim=256, 200 epochs, batch=512 |
+| DiT | 22.1M params, 8 blocks, hidden=384, 200 epochs, batch=1024, EMA=0.9999 |
+| Hardware | NVIDIA RTX 5090 Laptop GPU (25.1 GB VRAM) |
 
 ---
 
@@ -176,11 +220,15 @@ python scripts/04a_train_clop.py \
     --config configs/clop.yaml
 ```
 
-### Step 4: Train DiT (500 epochs)
+### Step 4: Train DiT (200 epochs, with optional resume)
 
 ```bash
 python scripts/04b_train_dit.py \
     --config configs/dit.yaml
+
+# Resume from last checkpoint:
+python scripts/04b_train_dit.py \
+    --config configs/dit.yaml --resume
 ```
 
 ### Step 5: Generate Cells (with gene expression decoding)
@@ -211,7 +259,7 @@ python scripts/06_evaluate.py \
 CLOP-DiT/
 ├── configs/
 │   ├── clop.yaml              # CLOP config (text_dim=1024, 200 epochs)
-│   └── dit.yaml               # DiT config (500 epochs)
+│   └── dit.yaml               # DiT config (200 epochs, batch=1024, resume)
 ├── data/
 │   ├── processed_h5ad/        # ~50 preprocessed h5ad + metadata JSON
 │   └── cached_latents/        # Pre-computed .npy embeddings
