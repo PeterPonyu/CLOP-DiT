@@ -1,0 +1,101 @@
+{
+  "text2cell": {
+    "gene_mean_pearson": 0.9999651908874512,
+    "gene_mean_R2": 0.9999295473098755,
+    "gene_var_pearson": 0.6491646766662598,
+    "FD_gene_pca50": 1.3935364502108766e-05,
+    "FD_scgpt_embedding": 76.09570910277782,
+    "marker_specificity_real": 0.250021877645379,
+    "marker_specificity_generated": 0.25001039514673556,
+    "interpretation": {
+      "gene_mean_pearson": "Pearson r between per-gene mean expression of real (scGPT-reconstructed) vs generated. >0.9 = high fidelity; 1.0 = perfect.",
+      "gene_mean_R2": "R-squared of gene means; fraction of variance explained. >0.8 is good.",
+      "gene_var_pearson": "Pearson r of per-gene variance. Captures whether expression variability is preserved.",
+      "FD_gene_pca50": "Frechet Distance in PCA-50 gene space. Lower = more similar distributions. <1 is excellent.",
+      "FD_scgpt_embedding": "Frechet Distance in scGPT 512-d embedding space. Lower = better.",
+      "marker_specificity_real": "Marker specificity index (MSI) on real cells. Higher = markers are enriched in intended cell types.",
+      "marker_specificity_generated": "MSI on generated cells. Higher = markers remain cell-type specific after generation."
+    }
+  },
+  "cell2cell": {
+    "source_type": "Monocytes",
+    "target_type": "Macrophages",
+    "DEG_overlap_top50": 0.04,
+    "direction_accuracy": 0.86,
+    "delta_R2": -30.96100425720215,
+    "interpretation": {
+      "DEG_overlap_top50": "Fraction of top-50 differentially expressed genes shared between real and predicted cell-type transition. Higher = better gene-level specificity. 1.0 = perfect overlap.",
+      "direction_accuracy": "Fraction of top-50 real DEGs where the predicted up/down direction matches reality. >0.7 is meaningful; 0.5 = random chance.",
+      "delta_R2": "R-squared between real vs predicted per-gene expression shift vectors. >0 means predictions explain real shifts; <0 means worse than a flat prediction. Higher is better."
+    }
+  },
+  "celltypist": {
+    "model": "Human_Lung_Atlas.pkl",
+    "top_label_purity": {
+      "CD8+ T cells": 1.0,
+      "Macrophages": 1.0,
+      "Epithelial cells": 1.0,
+      "NK cells": 1.0
+    },
+    "heuristic_match_rate": {
+      "CD8+ T cells": 0.0,
+      "Macrophages": 0.0,
+      "Epithelial cells": 1.0,
+      "NK cells": 0.0
+    },
+    "labels_used": [
+      "Multiciliated (non-nasal)",
+      "NK cells",
+      "Alveolar macrophages",
+      "CD8 T cells",
+      "AT2",
+      "Alveolar Mph CCL3+",
+      "DC2",
+      "Monocyte-derived Mph",
+      "pre-TB secretory",
+      "Suprabasal",
+      "AT1",
+      "Alveolar Mph proliferating",
+      "Other"
+    ],
+    "generated_label_counts": {
+      "Multiciliated (non-nasal)": 800
+    },
+    "real_label_counts": {
+      "Monocyte-derived Mph": 21,
+      "CD8 T cells": 115,
+      "DC2": 37,
+      "Alveolar macrophages": 129,
+      "NK cells": 163,
+      "T cells proliferating": 4,
+      "CD4 T cells": 3,
+      "AT2": 107,
+      "Classical monocytes": 1,
+      "B cells": 1,
+      "Alveolar Mph CCL3+": 70,
+      "Alveolar Mph proliferating": 6,
+      "Adventitial fibroblasts": 4,
+      "Multiciliated (non-nasal)": 25,
+      "AT0": 5,
+      "Suprabasal": 12,
+      "AT2 proliferating": 5,
+      "Basal resting": 2,
+      "AT1": 11,
+      "Goblet (nasal)": 5,
+      "pre-TB secretory": 18,
+      "Hillock-like": 3,
+      "Non-classical monocytes": 1,
+      "Club (nasal)": 2
+    },
+    "generated_label_entropy_bits": 0.0,
+    "generated_unique_labels": 1,
+    "interpretation": {
+      "top_label_purity": "For each prompt, fraction of generated cells assigned to the most frequent CellTypist label. Higher = more coherent identity.",
+      "heuristic_match_rate": "Keyword-based mapping from CellTypist labels to coarse cell types (heuristic). Higher = better external agreement.",
+      "generated_label_counts": "Raw CellTypist label counts for generated cells.",
+      "real_label_counts": "Raw CellTypist label counts for real cells in the same prompt types (if provided).",
+      "generated_label_entropy_bits": "Label diversity of generated cells in bits. 0 = all assigned to one label; higher = more diverse identities.",
+      "generated_unique_labels": "Number of unique CellTypist labels assigned to generated cells. Low values indicate collapse."
+    }
+  }
+}
