@@ -3,6 +3,15 @@
   "cells_per_type": 200,
   "num_genes_decoded": 1890,
   "reference_dataset": "data/processed_h5ad/GSE123902_LungAdreHmCancer_processed.h5ad",
+  "reference_cells_decoded": 500,
+  "figures_generated": [
+    "markers_*.png (per cell type, grid layout)",
+    "marker_heatmap_cross_celltype.png",
+    "celltype_discrimination_umap.png",
+    "discriminative_genes.png",
+    "distribution_comparison.png",
+    "correlation_scatter.png"
+  ],
   "marker_gene_coverage": {
     "CD8+ Cytotoxic T cells": {
       "total": 8,
