@@ -37,6 +37,8 @@ def main():
     parser.add_argument("--cond_dim", type=int, default=256)
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--resume", type=str, default=None,
+                        help="Path to checkpoint to resume training from")
     args = parser.parse_args()
 
     setup_logging()
@@ -75,6 +77,10 @@ def main():
 
     print("DiT Training Configuration:")
     print(json.dumps(config, indent=2))
+
+    # CLI overrides for speed optimization
+    if args.resume:
+        config['resume'] = args.resume
 
     trainer = DiTTrainer.from_config(config)
 

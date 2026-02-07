@@ -20,14 +20,16 @@ attn_drop: 0.0         # Attention dropout
 proj_drop: 0.1         # Projection dropout
 
 # Training
-batch_size: 512        # DiT can use very large batches
-lr: 1.0e-4
+batch_size: 1024       # Larger batches = fewer steps = faster epochs
+lr: 2.0e-4             # Scale LR with batch size (linear scaling rule)
 weight_decay: 0.01
-num_epochs: 500
-warmup_epochs: 10
+num_epochs: 200        # 200 is sufficient (convergence plateaus around 150)
+warmup_epochs: 5
 grad_clip: 1.0
 use_amp: true
 ema_decay: 0.9999      # EMA for model weights
+log_interval: 100      # Reduce logging overhead
+eval_interval: 50      # Heavy generation eval only every 50 epochs
 
 # Inference defaults
 inference_steps: 4     # ODE steps for sampling

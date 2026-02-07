@@ -126,22 +126,27 @@ class DiTDataset(Dataset):
     ):
         cache_dir = Path(cache_dir)
 
-        self.cell_emb = np.load(cache_dir / "cell_embeddings.npy", mmap_mode="r")
+        # Load fully into RAM for speed (138K × 512 ≈ 270MB — fits easily)
+        self.cell_emb = np.load(cache_dir / "cell_embeddings.npy")
 
         # Use projected text if available, otherwise raw
         if projected_text_path and Path(projected_text_path).exists():
-            self.text_cond = np.load(projected_text_path, mmap_mode="r")
+            self.text_cond = np.load(projected_text_path)
         else:
-            self.text_cond = np.load(cache_dir / "text_embeddings.npy", mmap_mode="r")
+            self.text_cond = np.load(cache_dir / "text_embeddings.npy")
 
         self.sample_ids = np.load(cache_dir / "sample_ids.npy")
+
+        # Pre-convert to torch tensors for zero-copy __getitem__
+        self._cell_tensor = torch.from_numpy(self.cell_emb).float()
+        self._cond_tensor = torch.from_numpy(self.text_cond).float()
 
     def __len__(self) -> int:
         return len(self.cell_emb)
 
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
-        z_1 = torch.from_numpy(np.array(self.cell_emb[idx])).float()
-        cond = torch.from_numpy(np.array(self.text_cond[idx])).float()
+        z_1 = self._cell_tensor[idx]
+        cond = self._cond_tensor[idx]
 
         # Sample noise and timestep on-the-fly
         z_0 = torch.randn_like(z_1)
@@ -290,6 +295,7 @@ def create_dataloaders(
         num_workers=num_workers,
         pin_memory=True,
         drop_last=True,
+        persistent_workers=num_workers > 0,
     )
 
     val_loader = DataLoader(
@@ -298,6 +304,7 @@ def create_dataloaders(
         shuffle=False,
         num_workers=num_workers,
         pin_memory=True,
+        persistent_workers=num_workers > 0,
     )
 
     return train_loader, val_loader

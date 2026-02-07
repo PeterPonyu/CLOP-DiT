@@ -121,10 +121,45 @@ class DiTTrainer:
         # Tracking
         self.best_val_loss = float("inf")
         self.global_step = 0
+        self.start_epoch = 1
         self.history = {
             "train_loss": [], "val_loss": [],
             "val_cosine_sim": [], "lr": [],
         }
+
+    def resume_from_checkpoint(self, checkpoint_path: str):
+        """Resume training from a saved checkpoint.
+
+        Parameters
+        ----------
+        checkpoint_path : str
+            Path to the checkpoint file.
+        """
+        logger.info(f"Resuming from checkpoint: {checkpoint_path}")
+        ckpt = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
+
+        self.model.load_state_dict(ckpt["model_state_dict"])
+
+        if "optimizer_state_dict" in ckpt:
+            self.optimizer.load_state_dict(ckpt["optimizer_state_dict"])
+            logger.info("  Loaded optimizer state from checkpoint")
+        else:
+            logger.info("  No optimizer state in checkpoint, using fresh optimizer")
+
+        if self.ema_model is not None and "ema_state_dict" in ckpt:
+            self.ema_model.load_state_dict(ckpt["ema_state_dict"])
+
+        self.start_epoch = ckpt.get("epoch", 0) + 1
+        self.global_step = ckpt.get("global_step", 0)
+
+        metrics = ckpt.get("metrics", {})
+        self.best_val_loss = metrics.get("val_loss", float("inf"))
+
+        logger.info(
+            f"  Resumed at epoch {self.start_epoch}, "
+            f"global_step={self.global_step}, "
+            f"best_val_loss={self.best_val_loss:.6f}"
+        )
 
     def _create_ema(self) -> DiT1D:
         """Create EMA copy of model."""
@@ -314,7 +349,7 @@ class DiTTrainer:
         logger.info(f"Device: {self.device} | AMP: {self.use_amp} | EMA: {self.ema_decay}")
         logger.info("=" * 60)
 
-        for epoch in range(1, self.num_epochs + 1):
+        for epoch in range(self.start_epoch, self.num_epochs + 1):
             t0 = time.time()
 
             train_metrics = self.train_epoch(epoch)
@@ -342,12 +377,15 @@ class DiTTrainer:
                 self.save_checkpoint("dit_best.pth", epoch, val_metrics)
                 logger.info(f"  ✓ New best model (val_loss={self.best_val_loss:.6f})")
 
-            # Periodic evaluation
+            # Periodic evaluation (skip optimizer state to reduce I/O)
             if epoch % self.eval_interval == 0:
                 gen_metrics = self.evaluate_generation()
-                self.save_checkpoint(f"dit_epoch_{epoch}.pth", epoch, val_metrics)
+                self.save_checkpoint(
+                    f"dit_epoch_{epoch}.pth", epoch, val_metrics,
+                    include_optimizer=False,
+                )
 
-        # Final save
+        # Final save (with optimizer for potential future resume)
         self.save_checkpoint("dit_final.pth", self.num_epochs, val_metrics)
 
         with open(self.save_dir / "dit_history.json", "w") as f:
@@ -355,14 +393,23 @@ class DiTTrainer:
 
         return self.history
 
-    def save_checkpoint(self, filename: str, epoch: int, metrics: Dict):
-        """Save model checkpoint."""
+    def save_checkpoint(self, filename: str, epoch: int, metrics: Dict,
+                        include_optimizer: bool = True):
+        """Save model checkpoint.
+
+        Parameters
+        ----------
+        filename : str
+        epoch : int
+        metrics : dict
+        include_optimizer : bool
+            If False, skip optimizer state to reduce file size (~170MB vs ~338MB).
+        """
         path = self.save_dir / filename
         state = {
             "epoch": epoch,
             "global_step": self.global_step,
             "model_state_dict": self.model.state_dict(),
-            "optimizer_state_dict": self.optimizer.state_dict(),
             "metrics": metrics,
             "config": {
                 "latent_dim": self.model.latent_dim,
@@ -370,6 +417,8 @@ class DiTTrainer:
                 "num_tokens": self.model.num_tokens,
             },
         }
+        if include_optimizer:
+            state["optimizer_state_dict"] = self.optimizer.state_dict()
         if self.ema_model is not None:
             state["ema_state_dict"] = self.ema_model.state_dict()
         torch.save(state, path)
@@ -408,7 +457,7 @@ class DiTTrainer:
             projected_text_path=config.get("projected_text_path", None),
         )
 
-        return cls(
+        trainer = cls(
             model=model,
             train_loader=train_loader,
             val_loader=val_loader,
@@ -421,4 +470,13 @@ class DiTTrainer:
             use_amp=config.get("use_amp", True),
             grad_clip=config.get("grad_clip", 1.0),
             ema_decay=config.get("ema_decay", 0.9999),
+            log_interval=config.get("log_interval", 50),
+            eval_interval=config.get("eval_interval", 10),
         )
+
+        # Resume from checkpoint if specified
+        resume_path = config.get("resume")
+        if resume_path:
+            trainer.resume_from_checkpoint(resume_path)
+
+        return trainer
