@@ -1,0 +1,77 @@
+# CLOP-DiT v0.4 — Model Configuration
+# Supports multiple encoder/decoder combinations for benchmark experiments
+#
+# Available cell encoders:
+#   - scgpt_pancancer: 51.9M params, 512-d, pretrained on 5.7M cancer cells
+#   - scgpt_human: 51.9M params, 512-d, pretrained on 33M human cells
+#
+# Available text encoders:
+#   - biomedbert_large: 340M params, 1024-d
+#   - biomedbert_base:  110M params, 768-d
+#
+# Available decoders (for gene expression reconstruction):
+#   - scgpt_pancancer: generate() via pan-cancer scGPT
+#   - scgpt_human: generate() via whole-human scGPT
+
+# ── Preset configurations ──────────────────────────────────────────────
+
+presets:
+  # v0.3 default: cancer-focused
+  cancer:
+    cell_encoder:
+      name: scgpt_pancancer
+      model_dir: models/scgpt_pancancer
+      embed_dim: 512
+    text_encoder:
+      name: biomedbert_large
+      model_id: microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract
+      embed_dim: 1024
+    decoder:
+      name: scgpt_pancancer
+      model_dir: models/scgpt_pancancer
+
+  # v0.2 setup: general-purpose
+  general:
+    cell_encoder:
+      name: scgpt_human
+      model_dir: models/scgpt_human
+      embed_dim: 512
+    text_encoder:
+      name: biomedbert_base
+      model_id: microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract
+      embed_dim: 768
+    decoder:
+      name: scgpt_human
+      model_dir: models/scgpt_human
+
+  # Ablation: large text + general cell
+  large_text_general_cell:
+    cell_encoder:
+      name: scgpt_human
+      model_dir: models/scgpt_human
+      embed_dim: 512
+    text_encoder:
+      name: biomedbert_large
+      model_id: microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract
+      embed_dim: 1024
+    decoder:
+      name: scgpt_human
+      model_dir: models/scgpt_human
+
+  # Ablation: base text + cancer cell
+  base_text_cancer_cell:
+    cell_encoder:
+      name: scgpt_pancancer
+      model_dir: models/scgpt_pancancer
+      embed_dim: 512
+    text_encoder:
+      name: biomedbert_base
+      model_id: microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract
+      embed_dim: 768
+    decoder:
+      name: scgpt_pancancer
+      model_dir: models/scgpt_pancancer
+
+# ── Active configuration ───────────────────────────────────────────────
+# Change this to switch between presets
+active_preset: cancer

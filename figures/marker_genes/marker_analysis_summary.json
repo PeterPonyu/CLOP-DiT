@@ -1,0 +1,90 @@
+{
+  "num_cell_types_generated": 4,
+  "cells_per_type": 200,
+  "num_genes_decoded": 1890,
+  "reference_dataset": "data/processed_h5ad/GSE123902_LungAdreHmCancer_processed.h5ad",
+  "marker_gene_coverage": {
+    "CD8+ Cytotoxic T cells": {
+      "total": 8,
+      "available": 3,
+      "markers": [
+        "GZMB",
+        "PRF1",
+        "IFNG"
+      ]
+    },
+    "CD4+ Helper T cells": {
+      "total": 8,
+      "available": 0,
+      "markers": []
+    },
+    "NK cells": {
+      "total": 8,
+      "available": 5,
+      "markers": [
+        "KLRD1",
+        "GNLY",
+        "KLRF1",
+        "FCGR3A",
+        "CD160"
+      ]
+    },
+    "Macrophages / Monocytes": {
+      "total": 8,
+      "available": 8,
+      "markers": [
+        "CD68",
+        "CD163",
+        "CSF1R",
+        "MRC1",
+        "CD14",
+        "FCGR1A",
+        "MSR1",
+        "MARCO"
+      ]
+    },
+    "Proliferating cells": {
+      "total": 8,
+      "available": 8,
+      "markers": [
+        "MKI67",
+        "TOP2A",
+        "PCNA",
+        "CDK1",
+        "CCNB1",
+        "TYMS",
+        "MCM2",
+        "BIRC5"
+      ]
+    },
+    "Epithelial cells": {
+      "total": 8,
+      "available": 8,
+      "markers": [
+        "EPCAM",
+        "KRT18",
+        "KRT8",
+        "CDH1",
+        "KRT19",
+        "MUC1",
+        "CLDN4",
+        "TJP1"
+      ]
+    },
+    "Fibroblasts / Stroma": {
+      "total": 8,
+      "available": 3,
+      "markers": [
+        "COL1A1",
+        "VIM",
+        "FN1"
+      ]
+    }
+  },
+  "generated_prompts": {
+    "CD8_T": "CD8+ cytotoxic T lymphocytes from human lung adenocarcinoma tumor microenvironment. Tumor-infiltrating CD8+ T cells expressing cytotoxic effector molecules and exhaustion markers.",
+    "Macrophage": "Tumor-associated macrophages from human lung adenocarcinoma. Myeloid macrophage populations in the cancer microenvironment with mixed M1/M2 polarization states.",
+    "Epithelial_tumor": "Malignant epithelial cells from human lung adenocarcinoma. Cancer cells of epithelial origin expressing proliferative and lung adenocarcinoma-specific markers.",
+    "Fibroblast": "Cancer-associated fibroblasts from human lung adenocarcinoma stroma. Stromal fibroblast populations supporting the tumor microenvironment."
+  }
+}

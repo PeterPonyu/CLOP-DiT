@@ -57,9 +57,10 @@ DATASET_DESCRIPTIONS = {
         "within the tumor microenvironment of non-small cell lung cancer (adenocarcinoma subtype)."
     ),
     "GSE132509_acutelymluekPBMCHmCancer": (
-        "Single-cell RNA sequencing of peripheral blood mononuclear cells (PBMCs) from human patients "
-        "with acute myeloid leukemia (AML). This dataset captures circulating leukemic blasts and immune "
-        "cell populations in the blood of AML patients, providing insight into hematopoietic malignancy."
+        "Single-cell RNA sequencing of bone marrow mononuclear cells from human pediatric patients "
+        "with acute lymphoblastic leukemia (ALL). This dataset profiles leukemic lymphoblasts including "
+        "Pre-B t(12;21) ETV6-RUNX1 ALL, Pre-B high hyperdiploid ALL, and Pre-T ALL subtypes, alongside "
+        "residual normal hematopoietic cells in the bone marrow of childhood leukemia patients."
     ),
     "GSE143423_lbm_CancerBrainHm": (
         "Single-cell RNA sequencing of human leptomeningeal brain metastasis. "

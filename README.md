@@ -67,6 +67,20 @@ User Text ─→ BiomedBERT-large (1024-d) ─→ CLOP Text Projector ─→ Con
 
 ## Changelog
 
+### v0.3.0 → v0.4.0
+
+| Aspect | v0.3.0 | v0.4.0 |
+|--------|--------|--------|
+| **Datasets** | 50 datasets (4 dirs), 138K cells | **69 datasets** (4 dirs + scRNA-25100), **190K cells** |
+| **New data sources** | Cancer + Development h5ad | + **19 GSE studies from 10x h5** (cancer, immunology, neuro disease, development) |
+| **Text descriptions** | Model-generated | **GEO-verified** metadata (fixed GSE132509 ALL/AML error) |
+| **Model options** | scGPT pan-cancer + BiomedBERT-large only | **4 presets**: cancer, general, large_text_general_cell, base_text_cancer_cell |
+| **Deprecated models** | scGPT human + BiomedBERT-base removed | **Restored** as benchmark/ablation options |
+| **Visualization** | 8 basic figures | + **10 marker gene figures** (violin, heatmap, UMAP, discriminative genes) |
+| **Marker gene analysis** | None | **35 canonical markers** across 7 cell types |
+| **Cell-type generation** | Single prompt | **Multi-prompt** (CD8_T, Macrophage, Epithelial_tumor, Fibroblast) |
+| **Application narrative** | Not articulated | **Virtual cell state prediction** framework |
+
 ### v0.2.0 → v0.3.0
 
 | Aspect | v0.2.0 | v0.3.0 |
@@ -251,6 +265,15 @@ python scripts/06_evaluate.py \
     --reference_h5ad data/processed_h5ad/GSE123902_LungAdreHmCancer_processed.h5ad
 ```
 
+### Step 7: Marker Gene Analysis (v0.4)
+
+```bash
+python scripts/07_marker_gene_analysis.py \
+    --output_dir figures/marker_genes \
+    --reference_h5ad data/processed_h5ad/GSE123902_LungAdreHmCancer_processed.h5ad \
+    --num_cells 200
+```
+
 ---
 
 ## Project Structure
@@ -260,6 +283,7 @@ CLOP-DiT/
 ├── configs/
 │   ├── clop.yaml              # CLOP config (text_dim=1024, 200 epochs)
 │   └── dit.yaml               # DiT config (200 epochs, batch=1024, resume)
+│   └── models.yaml            # v0.4: multi-model presets (cancer/general/ablations)
 ├── data/
 │   ├── processed_h5ad/        # ~50 preprocessed h5ad + metadata JSON
 │   └── cached_latents/        # Pre-computed .npy embeddings
@@ -277,7 +301,13 @@ CLOP-DiT/
 │   ├── gene_correlation.png         # v0.3: per-gene correlation
 │   ├── clop_training_curves.png
 │   ├── dit_training_curves.png
-│   └── evaluation_metrics.json
+│   ├── evaluation_metrics.json
+│   └── marker_genes/                # v0.4: marker gene analysis
+│       ├── markers_CD8plus_*.png    #   Cell-type marker violin plots
+│       ├── marker_heatmap_cross_celltype.png
+│       ├── celltype_discrimination_umap.png
+│       ├── discriminative_genes.png
+│       └── marker_analysis_summary.json
 ├── models/
 │   ├── checkpoints/           # Trained weights
 │   │   ├── clop_best.pth
@@ -294,11 +324,13 @@ CLOP-DiT/
 │       └── args.json
 ├── scripts/
 │   ├── 00_prepare_all_data.py  # v0.3: 55 datasets, 4 dirs, auto-filter
+│   ├── 01_integrate_h5_datasets.py  # v0.4: 19 new GSE from 10x h5
 │   ├── 03_cache_latents.py     # scGPT pan-cancer + BiomedBERT-large
 │   ├── 04a_train_clop.py
-│   ├── 04b_train_dit.py
+│   ├── 04b_train_dit.py        # v0.3: --resume support
 │   ├── 05_inference.py         # v0.3: scGPT generate() decoding
-│   └── 06_evaluate.py          # v0.3: gene expression evaluation
+│   ├── 06_evaluate.py          # v0.3: gene expression evaluation
+│   └── 07_marker_gene_analysis.py   # v0.4: marker gene visualization
 ├── src/
 │   ├── architecture/
 │   │   ├── dit.py             # 1D DiT with AdaLN-Zero (22.1M)
@@ -395,6 +427,47 @@ This is fundamentally different from the v0.2 approach which just applied ExprDe
 1. **BiomedBERT-large** (`microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract`) — auto-downloaded by HuggingFace `transformers`
 2. **scGPT pan-cancer weights** — downloaded to `models/scgpt_pancancer/` from [bowang-lab/scGPT](https://github.com/bowang-lab/scGPT) (pretrained on 5.7M cancer cells)
 3. **scGPT whole-human weights** — `models/scgpt_human/` (pretrained on 33M+ cells, used in v0.1-v0.2)
+
+---
+
+## Application Scenarios & Scientific Value
+
+### Core Proposition: Text-to-Cell-State Prediction
+
+CLOP-DiT is a **virtual cell state predictor**: given a natural language description of a biological condition, it generates synthetic single-cell gene expression profiles that recapitulate the expected transcriptomic patterns. This is analogous to AlphaFold predicting protein structures from sequences — we predict cell expression states from biological context descriptions.
+
+### Key Application Scenarios
+
+1. **Hypothesis-driven virtual experiments**: Generate cells for conditions not yet profiled by scRNA-seq (e.g., "CD8+ T cells from a patient with KRAS-G12C mutant lung adenocarcinoma treated with sotorasib") and examine predicted marker gene expression to guide experimental design.
+
+2. **Rare cell state discovery**: Generate cells for under-sampled states in existing datasets. The model can interpolate between observed conditions to predict intermediate cell states that are difficult to capture in a single-timepoint scRNA-seq snapshot.
+
+3. **Cross-study harmonization**: By projecting all text descriptions into a shared CLOP alignment space, the model provides a unified framework for comparing cell states across studies, tissues, and diseases.
+
+4. **Drug response prediction**: Given a text description of treatment context, generate the expected gene expression profile and compare with untreated cells to predict transcriptomic drug effects.
+
+5. **Benchmark foundation for single-cell AI**: The multi-model architecture (swappable scGPT/BiomedBERT variants) enables systematic ablation studies comparing cell encoders, text encoders, and decoders.
+
+### Model Configuration Presets (v0.4)
+
+| Preset | Cell Encoder | Text Encoder | Use Case |
+|--------|-------------|--------------|----------|
+| `cancer` | scGPT pan-cancer (5.7M cells) | BiomedBERT-large (1024-d) | Cancer TME studies |
+| `general` | scGPT whole-human (33M cells) | BiomedBERT-base (768-d) | General single-cell |
+| `large_text_general_cell` | scGPT whole-human | BiomedBERT-large | Ablation: text encoder effect |
+| `base_text_cancer_cell` | scGPT pan-cancer | BiomedBERT-base | Ablation: cell encoder effect |
+
+### Alternative Decoder Models Evaluated
+
+| Model | Decode → Expression? | Size | Pretraining | Status |
+|-------|---------------------|------|-------------|--------|
+| **scGPT** | ✅ `generate()` | 51.9M | 33M / 5.7M cells | ✅ Implemented |
+| **scFoundation** (xTrimoGene) | ✅ RDE mode | 100M | 50M+ cells | 🔜 Candidate |
+| **Geneformer** | ❌ Encoder-only | 316M | 104M cells | ❌ No decoder |
+| **UCE** | ❌ Encoder-only | — | Tabula Sapiens | ❌ No decoder |
+| **scVI** | ✅ VAE decoder | ~1-5M | Per-dataset | ❌ Not foundation |
+
+The critical requirement is **embedding → gene expression decoding**. Only scGPT and scFoundation (xTrimoGene) provide foundation-model-level decoders. scFoundation is the strongest candidate for future integration.
 
 ---
 
