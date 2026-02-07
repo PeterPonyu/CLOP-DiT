@@ -1,8 +1,8 @@
 {
-  "total_cells": 138477,
+  "total_cells": 190826,
   "cell_dim": 512,
   "text_dim": 1024,
-  "num_datasets": 50,
+  "num_datasets": 69,
   "cell_encoder": "scgpt",
   "text_encoder": "microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract"
 }

@@ -218,6 +218,7 @@ class LatentCacheBuilder:
         metadata_file: Union[str, Path],
         cell_encoder_method: str = "scgpt",
         scgpt_model_dir: str = "models/scgpt_human",
+        subcluster_metadata_file: Optional[Union[str, Path]] = None,
     ) -> Dict:
         """Build the complete latent cache from processed h5ad files and metadata.
 
@@ -231,6 +232,10 @@ class LatentCacheBuilder:
             'scgpt' or 'pca'.
         scgpt_model_dir : str, optional
             Required if cell_encoder_method == 'scgpt'.
+        subcluster_metadata_file : path, optional
+            Sub-cluster metadata JSON from 02_subcluster_descriptions.py.
+            If provided, assigns per-cluster text descriptions to individual cells
+            instead of a single dataset-level text for all cells.
 
         Returns
         -------
@@ -240,6 +245,16 @@ class LatentCacheBuilder:
         # Load structured metadata
         with open(metadata_file) as f:
             metadata = json.load(f)
+
+        # Load sub-cluster metadata if available
+        subcluster_meta = None
+        if subcluster_metadata_file and Path(subcluster_metadata_file).exists():
+            with open(subcluster_metadata_file) as f:
+                subcluster_meta = json.load(f)
+            # subcluster_metadata.json structure:
+            #   dataset_id → {dataset_text, n_cells_total, n_clusters,
+            #                  clusters: {cluster_id → {text, cell_indices, ...}}}
+            logger.info(f"Loaded sub-cluster metadata for {len(subcluster_meta)} datasets")
 
         all_cell_emb = []
         all_text_emb = []
@@ -289,14 +304,54 @@ class LatentCacheBuilder:
             else:
                 text_desc = f"Single-cell RNA sequencing data from {dataset_id}."
 
-            # Text encoding (same text for all cells in the dataset)
-            text_emb_single = self.encode_texts([text_desc])  # (1, text_dim)
-            text_emb = np.repeat(text_emb_single, cell_emb.shape[0], axis=0)
+            # ── Sub-cluster text assignment ─────────────────────────────────
+            # If sub-cluster metadata available, assign per-cluster texts to cells
+            if subcluster_meta and dataset_id in subcluster_meta:
+                ds_info = subcluster_meta[dataset_id]
+                n_cells = cell_emb.shape[0]
 
-            # Sample IDs
-            sample_ids = np.full(cell_emb.shape[0], sample_counter, dtype=np.int64)
-            id_to_text[str(sample_counter)] = text_desc
-            sample_counter += 1
+                # Build per-cell text assignments
+                # Cells not in any annotated cluster get the dataset-level text
+                cell_texts = [text_desc] * n_cells
+
+                for cid, cinfo in ds_info.get("clusters", {}).items():
+                    cluster_text = cinfo.get("text", text_desc)
+                    cell_indices = cinfo.get("cell_indices", [])
+                    for idx in cell_indices:
+                        if idx < n_cells:
+                            cell_texts[idx] = cluster_text
+
+                # Get unique texts and encode them
+                unique_texts = list(set(cell_texts))
+                text_to_idx = {t: i for i, t in enumerate(unique_texts)}
+                text_embs_unique = self.encode_texts(unique_texts)
+
+                # Map cell_texts → text embeddings
+                text_emb = np.zeros((n_cells, text_embs_unique.shape[1]), dtype=np.float32)
+                for ci in range(n_cells):
+                    text_emb[ci] = text_embs_unique[text_to_idx[cell_texts[ci]]]
+
+                # Use one sample_id per dataset for grouping; text diversity is in embeddings
+                sample_ids = np.full(n_cells, sample_counter, dtype=np.int64)
+                id_to_text[str(sample_counter)] = text_desc
+                sample_counter += 1
+
+                logger.info(
+                    f"  {dataset_id}: {n_cells} cells, "
+                    f"{len(unique_texts)} sub-cluster texts (from {ds_info['n_clusters']} clusters)"
+                )
+
+            else:
+                # Standard: single text for all cells in dataset
+                text_emb_single = self.encode_texts([text_desc])  # (1, text_dim)
+                text_emb = np.repeat(text_emb_single, cell_emb.shape[0], axis=0)
+
+                # Sample IDs
+                sample_ids = np.full(cell_emb.shape[0], sample_counter, dtype=np.int64)
+                id_to_text[str(sample_counter)] = text_desc
+                sample_counter += 1
+
+                logger.info(f"  {dataset_id}: {cell_emb.shape[0]} cells, text='{text_desc[:60]}...'")
 
             all_cell_emb.append(cell_emb)
             all_text_emb.append(text_emb)

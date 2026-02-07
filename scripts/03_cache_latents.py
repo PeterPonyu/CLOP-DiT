@@ -37,6 +37,9 @@ def main():
                         default="microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract")
     parser.add_argument("--cell_dim", type=int, default=512)
     parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--subcluster_metadata", type=str, default=None,
+                        help="Sub-cluster metadata JSON from 02_subcluster_descriptions.py. "
+                             "Enables per-cluster text assignments for fine-grained alignment.")
     args = parser.parse_args()
 
     setup_logging()
@@ -68,6 +71,7 @@ def main():
         metadata_file=args.metadata,
         cell_encoder_method=args.cell_encoder,
         scgpt_model_dir=args.scgpt_dir if args.cell_encoder == "scgpt" else None,
+        subcluster_metadata_file=args.subcluster_metadata,
     )
 
     print(f"\n{'='*50}")

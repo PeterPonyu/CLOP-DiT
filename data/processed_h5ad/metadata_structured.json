@@ -21,7 +21,7 @@
     "source_dir": "CancerDatasets"
   },
   "GSE132509_acutelymluekPBMCHmCancer": {
-    "text": "Single-cell RNA sequencing of peripheral blood mononuclear cells (PBMCs) from human patients with acute myeloid leukemia (AML). This dataset captures circulating leukemic blasts and immune cell populations in the blood of AML patients, providing insight into hematopoietic malignancy.",
+    "text": "Single-cell RNA sequencing of bone marrow mononuclear cells from human pediatric patients with acute lymphoblastic leukemia (ALL). This dataset profiles leukemic lymphoblasts including Pre-B t(12;21) ETV6-RUNX1 ALL, Pre-B high hyperdiploid ALL, and Pre-T ALL subtypes, alongside residual normal hematopoietic cells in the bone marrow of childhood leukemia patients.",
     "n_cells": 2984,
     "n_genes": 2000,
     "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE132509_acutelymluekPBMCHmCancer.h5ad",
@@ -133,14 +133,14 @@
     "source_dir": "CancerDatasets2"
   },
   "GSE138709_LiverCancer": {
-    "text": "Single-cell RNA sequencing of liver cancer tissue. This dataset profiles the cellular heterogeneity of hepatocellular carcinoma, capturing malignant hepatocytes, Kupffer cells, stellate cells, and infiltrating immune populations.",
+    "text": "Single-cell RNA sequencing of human intrahepatic cholangiocarcinoma (ICC). This dataset profiles the cellular heterogeneity of bile duct cancer, capturing malignant cholangiocytes, tumor-associated fibroblasts, immune infiltrates, and the biliary tumor microenvironment.",
     "n_cells": 2891,
     "n_genes": 2000,
     "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets2/GSE138709_LiverCancer.h5ad",
     "source_dir": "CancerDatasets2"
   },
   "GSE149655_CAHmCancer": {
-    "text": "Single-cell RNA sequencing of human colorectal adenocarcinoma. This dataset characterizes the tumor microenvironment of colorectal cancer, including malignant colonocytes, tumor-infiltrating immune cells, cancer-associated fibroblasts, and endothelial cells.",
+    "text": "Single-cell RNA sequencing of human early-stage lung adenocarcinoma with activating somatic KRAS mutations. This dataset profiles the tumor microenvironment of KRAS-mutant non-small cell lung cancer, capturing malignant epithelial cells, immune cell populations, and stromal components in LUAD.",
     "n_cells": 2087,
     "n_genes": 2000,
     "source_file": "/home/zeyufu/Desktop/datasets/CancerDatasets2/GSE149655_CAHmCancer.h5ad",
@@ -308,14 +308,14 @@
     "source_dir": "DevelopmentDatasets2"
   },
   "GSE145929_ProgastinMmDev": {
-    "text": "Single-cell RNA sequencing of mouse prostate and gastrin-expressing cells during development. This dataset profiles the epithelial and stromal cell populations in the developing mouse prostate, capturing luminal, basal, and neuroendocrine progenitor differentiation trajectories.",
+    "text": "Single-cell RNA sequencing of adult mouse prostate tissue. This dataset profiles the epithelial and stromal cell populations of the adult murine prostate, capturing luminal, basal, and neuroendocrine epithelial subtypes alongside prostatic stroma.",
     "n_cells": 2830,
     "n_genes": 2000,
     "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE145929_ProgastinMmDev.h5ad",
     "source_dir": "DevelopmentDatasets2"
   },
   "GSE145929_UrineMmDev": {
-    "text": "Single-cell RNA sequencing of mouse urinary tract and kidney during development. This dataset profiles the nephron progenitor differentiation and collecting duct morphogenesis, capturing podocytes, tubular epithelial cells, and stromal populations in the developing kidney.",
+    "text": "Single-cell RNA sequencing of adult mouse urethra. This dataset profiles the epithelial and stromal cell populations of the murine lower urinary tract, capturing urethral epithelial cells, smooth muscle, and surrounding connective tissue populations.",
     "n_cells": 2745,
     "n_genes": 2000,
     "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE145929_UrineMmDev.h5ad",
@@ -336,7 +336,7 @@
     "source_dir": "DevelopmentDatasets2"
   },
   "GSE213740_ADHm": {
-    "text": "Single-cell RNA sequencing of human brain tissue from Alzheimer's disease patients. This dataset profiles the cellular landscape of the Alzheimer's disease brain, capturing neuronal degeneration, microglial activation, astrogliosis, and amyloid-associated transcriptomic changes.",
+    "text": "Single-cell RNA sequencing of human ascending aortic wall tissue from patients with sporadic type A aortic dissection. This dataset profiles the cellular landscape of the diseased aortic wall, capturing smooth muscle cells, macrophage infiltration, endothelial dysfunction, and extracellular matrix remodeling associated with acute aortic dissection pathogenesis.",
     "n_cells": 2704,
     "n_genes": 2000,
     "source_file": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE213740_ADHm.h5ad",

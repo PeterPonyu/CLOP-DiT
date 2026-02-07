@@ -280,19 +280,6 @@ class CLOPTrainer:
         -------
         trainer : CLOPTrainer
         """
-        # Build model
-        model = CLOPAligner(
-            text_dim=config.get("text_dim", 768),
-            cell_dim=config.get("cell_dim", 512),
-            proj_dim=config.get("proj_dim", 256),
-            text_layers=config.get("text_layers", 3),
-            cell_layers=config.get("cell_layers", 3),
-            dropout=config.get("dropout", 0.1),
-            temperature=config.get("temperature", 0.07),
-            label_smoothing=config.get("label_smoothing", 0.1),
-            use_ema=config.get("use_ema", False),
-        )
-
         # Build dataloaders
         train_loader, val_loader = create_dataloaders(
             cache_dir=config.get("cache_dir", "data/cached_latents"),
@@ -300,6 +287,27 @@ class CLOPTrainer:
             val_split=config.get("val_split", 0.1),
             num_workers=config.get("num_workers", 4),
             stage="clop",
+        )
+
+        # Auto-detect dimensions from cached data if not specified
+        ds = train_loader.dataset
+        if hasattr(ds, 'dataset'):  # Subset wrapper from random_split
+            ds = ds.dataset
+        actual_text_dim = ds.text_dim if hasattr(ds, 'text_dim') else config.get("text_dim", 768)
+        actual_cell_dim = ds.cell_dim if hasattr(ds, 'cell_dim') else config.get("cell_dim", 512)
+        logger.info(f"Auto-detected dims: text_dim={actual_text_dim}, cell_dim={actual_cell_dim}")
+
+        # Build model
+        model = CLOPAligner(
+            text_dim=config.get("text_dim", actual_text_dim),
+            cell_dim=config.get("cell_dim", actual_cell_dim),
+            proj_dim=config.get("proj_dim", 256),
+            text_layers=config.get("text_layers", 3),
+            cell_layers=config.get("cell_layers", 3),
+            dropout=config.get("dropout", 0.1),
+            temperature=config.get("temperature", 0.07),
+            label_smoothing=config.get("label_smoothing", 0.1),
+            use_ema=config.get("use_ema", False),
         )
 
         return cls(

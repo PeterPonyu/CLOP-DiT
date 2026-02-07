@@ -1,22 +1,45 @@
 # CLOP-DiT v0.4 — Model Configuration
-# Supports multiple encoder/decoder combinations for benchmark experiments
+# Comprehensive encoder/decoder catalog for benchmark & ablation experiments
 #
-# Available cell encoders:
-#   - scgpt_pancancer: 51.9M params, 512-d, pretrained on 5.7M cancer cells
-#   - scgpt_human: 51.9M params, 512-d, pretrained on 33M human cells
+# ═══════════════════════════════════════════════════════════════════════
+#  CELL ENCODERS (scGPT variants — pretrained single-cell transformers)
+# ═══════════════════════════════════════════════════════════════════════
+#   Name               | Params | Embed-d | Pretrain data           | Local dir
+#   scgpt_pancancer    | 51.9M  | 512     | 5.7M cancer cells       | models/scgpt_pancancer
+#   scgpt_human        | 51.9M  | 512     | 33M human cells         | models/scgpt_human
 #
-# Available text encoders:
-#   - biomedbert_large: 340M params, 1024-d
-#   - biomedbert_base:  110M params, 768-d
+# ═══════════════════════════════════════════════════════════════════════
+#  TEXT ENCODERS (Biomedical BERT variants — all auto-downloaded from HF)
+# ═══════════════════════════════════════════════════════════════════════
+#   Name                       | Params | Embed-d | Training data                 | HuggingFace ID
+#   biomedbert_large           | 340M   | 1024    | PubMed abstracts              | microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract
+#   biomedbert_base            | 110M   | 768     | PubMed abstracts              | microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract
+#   biomedbert_base_fulltext   | 110M   | 768     | PubMed abstracts + PMC full   | microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext
+#   biolinkbert_large          | 340M   | 1024    | PubMed + citation graph       | michiyasunaga/BioLinkBERT-large
+#   biolinkbert_base           | 110M   | 768     | PubMed + citation graph       | michiyasunaga/BioLinkBERT-base
+#   scibert                    | 110M   | 768     | 1.14M scientific papers       | allenai/scibert_scivocab_uncased
+#   biobert_large              | 340M   | 1024    | PubMed+PMC (from BERT init)   | dmis-lab/biobert-large-cased-v1.1
 #
-# Available decoders (for gene expression reconstruction):
-#   - scgpt_pancancer: generate() via pan-cancer scGPT
-#   - scgpt_human: generate() via whole-human scGPT
+# ═══════════════════════════════════════════════════════════════════════
+#  DECODERS (gene expression reconstruction)
+# ═══════════════════════════════════════════════════════════════════════
+#   Name               | Method           | Genes  | Notes
+#   scgpt_pancancer    | generate()       | ~1890  | Pan-cancer scGPT decoder
+#   scgpt_human        | generate()       | ~1890  | Whole-human scGPT decoder
+#   scfoundation       | RDE decoder      | 19264  | xTrimoGene asymmetric decoder (future)
+#
+# scFoundation: Published Nature Methods 2024, 100M params, 50M+ pretrain cells
+#   - NOT on HuggingFace; clone from github.com/biomap-research/scFoundation
+#   - Encoder: 768-d (12 layers); Decoder: 512-d (6 layers)
+#   - Cell embedding: 3072-d (4x768 pooled) or 768-d (single pool)
+#   - Status: planned integration (requires manual weight download from SharePoint)
 
-# ── Preset configurations ──────────────────────────────────────────────
+# ════════════════════════════════════════════════════════════════════════
+#  PRESET CONFIGURATIONS (ready-to-use combinations)
+# ════════════════════════════════════════════════════════════════════════
 
 presets:
-  # v0.3 default: cancer-focused
+  # ── Primary: pan-cancer scGPT + BiomedBERT-large ──
   cancer:
     cell_encoder:
       name: scgpt_pancancer
@@ -30,7 +53,7 @@ presets:
       name: scgpt_pancancer
       model_dir: models/scgpt_pancancer
 
-  # v0.2 setup: general-purpose
+  # ── General: whole-human scGPT + BiomedBERT-base ──
   general:
     cell_encoder:
       name: scgpt_human
@@ -44,7 +67,7 @@ presets:
       name: scgpt_human
       model_dir: models/scgpt_human
 
-  # Ablation: large text + general cell
+  # ── Ablation A: large text + general cell ──
   large_text_general_cell:
     cell_encoder:
       name: scgpt_human
@@ -58,7 +81,7 @@ presets:
       name: scgpt_human
       model_dir: models/scgpt_human
 
-  # Ablation: base text + cancer cell
+  # ── Ablation B: base text + cancer cell ──
   base_text_cancer_cell:
     cell_encoder:
       name: scgpt_pancancer
@@ -72,6 +95,88 @@ presets:
       name: scgpt_pancancer
       model_dir: models/scgpt_pancancer
 
+  # ── Ablation C: BiomedBERT-base-fulltext + cancer cell ──
+  fulltext_cancer:
+    cell_encoder:
+      name: scgpt_pancancer
+      model_dir: models/scgpt_pancancer
+      embed_dim: 512
+    text_encoder:
+      name: biomedbert_base_fulltext
+      model_id: microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext
+      embed_dim: 768
+    decoder:
+      name: scgpt_pancancer
+      model_dir: models/scgpt_pancancer
+
+  # ── Ablation D: BioLinkBERT-large + cancer cell ──
+  biolinkbert_cancer:
+    cell_encoder:
+      name: scgpt_pancancer
+      model_dir: models/scgpt_pancancer
+      embed_dim: 512
+    text_encoder:
+      name: biolinkbert_large
+      model_id: michiyasunaga/BioLinkBERT-large
+      embed_dim: 1024
+    decoder:
+      name: scgpt_pancancer
+      model_dir: models/scgpt_pancancer
+
+  # ── Ablation E: BioLinkBERT-base + general cell ──
+  biolinkbert_general:
+    cell_encoder:
+      name: scgpt_human
+      model_dir: models/scgpt_human
+      embed_dim: 512
+    text_encoder:
+      name: biolinkbert_base
+      model_id: michiyasunaga/BioLinkBERT-base
+      embed_dim: 768
+    decoder:
+      name: scgpt_human
+      model_dir: models/scgpt_human
+
+  # ── Ablation F: SciBERT + cancer cell ──
+  scibert_cancer:
+    cell_encoder:
+      name: scgpt_pancancer
+      model_dir: models/scgpt_pancancer
+      embed_dim: 512
+    text_encoder:
+      name: scibert
+      model_id: allenai/scibert_scivocab_uncased
+      embed_dim: 768
+    decoder:
+      name: scgpt_pancancer
+      model_dir: models/scgpt_pancancer
+
+  # ── Ablation G: BioBERT-large + cancer cell ──
+  biobert_cancer:
+    cell_encoder:
+      name: scgpt_pancancer
+      model_dir: models/scgpt_pancancer
+      embed_dim: 512
+    text_encoder:
+      name: biobert_large
+      model_id: dmis-lab/biobert-large-cased-v1.1
+      embed_dim: 1024
+    decoder:
+      name: scgpt_pancancer
+      model_dir: models/scgpt_pancancer
+
+# ════════════════════════════════════════════════════════════════════════
+#  ABLATION MATRIX (2 cell x 7 text = 14 possible, 9 pre-configured)
+# ════════════════════════════════════════════════════════════════════════
+#
+#  Cell \ Text           | BiomedBERT-L | BiomedBERT-B | BiomedBERT-B-FT | BioLinkBERT-L | BioLinkBERT-B | SciBERT | BioBERT-L
+#                        |   (1024)     |   (768)      |   (768)         |   (1024)      |   (768)       |  (768)  |  (1024)
+#  ──────────────────────+──────────────+──────────────+─────────────────+───────────────+───────────────+─────────+──────────
+#  scgpt_pancancer (512) | cancer ★     | B            | C               | D             | —             | F       | G
+#  scgpt_human    (512)  | A            | general      | —               | —             | E             | —       | —
+#
+#  ★ = active_preset default
+#  All text encoders auto-download from HuggingFace on first use.
+
 # ── Active configuration ───────────────────────────────────────────────
-# Change this to switch between presets
 active_preset: cancer

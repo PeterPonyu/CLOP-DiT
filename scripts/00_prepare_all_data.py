@@ -145,14 +145,14 @@ DATASET_DESCRIPTIONS = {
         "niche microenvironment in the context of this hematological malignancy."
     ),
     "GSE138709_LiverCancer": (
-        "Single-cell RNA sequencing of liver cancer tissue. "
-        "This dataset profiles the cellular heterogeneity of hepatocellular carcinoma, capturing malignant "
-        "hepatocytes, Kupffer cells, stellate cells, and infiltrating immune populations."
+        "Single-cell RNA sequencing of human intrahepatic cholangiocarcinoma (ICC). "
+        "This dataset profiles the cellular heterogeneity of bile duct cancer, capturing malignant "
+        "cholangiocytes, tumor-associated fibroblasts, immune infiltrates, and the biliary tumor microenvironment."
     ),
     "GSE149655_CAHmCancer": (
-        "Single-cell RNA sequencing of human colorectal adenocarcinoma. "
-        "This dataset characterizes the tumor microenvironment of colorectal cancer, including malignant "
-        "colonocytes, tumor-infiltrating immune cells, cancer-associated fibroblasts, and endothelial cells."
+        "Single-cell RNA sequencing of human early-stage lung adenocarcinoma with activating somatic KRAS mutations. "
+        "This dataset profiles the tumor microenvironment of KRAS-mutant non-small cell lung cancer, capturing "
+        "malignant epithelial cells, immune cell populations, and stromal components in LUAD."
     ),
     "GSE163558_stomachHmCancer": (
         "Single-cell RNA sequencing of human stomach cancer. "
@@ -279,14 +279,14 @@ DATASET_DESCRIPTIONS = {
         "capturing hormone-producing cell lineages including corticotrophs, somatotrophs, and gonadotrophs."
     ),
     "GSE145929_ProgastinMmDev": (
-        "Single-cell RNA sequencing of mouse prostate and gastrin-expressing cells during development. "
-        "This dataset profiles the epithelial and stromal cell populations in the developing mouse prostate, "
-        "capturing luminal, basal, and neuroendocrine progenitor differentiation trajectories."
+        "Single-cell RNA sequencing of adult mouse prostate tissue. "
+        "This dataset profiles the epithelial and stromal cell populations of the adult murine prostate, "
+        "capturing luminal, basal, and neuroendocrine epithelial subtypes alongside prostatic stroma."
     ),
     "GSE145929_UrineMmDev": (
-        "Single-cell RNA sequencing of mouse urinary tract and kidney during development. "
-        "This dataset profiles the nephron progenitor differentiation and collecting duct morphogenesis, "
-        "capturing podocytes, tubular epithelial cells, and stromal populations in the developing kidney."
+        "Single-cell RNA sequencing of adult mouse urethra. "
+        "This dataset profiles the epithelial and stromal cell populations of the murine lower urinary tract, "
+        "capturing urethral epithelial cells, smooth muscle, and surrounding connective tissue populations."
     ),
     "GSE165784_RetinaHmDev": (
         "Single-cell RNA sequencing of human retina during development. "
@@ -299,9 +299,10 @@ DATASET_DESCRIPTIONS = {
         "astrocyte heterogeneity, scar-forming populations, and neuroinflammatory gene programs."
     ),
     "GSE213740_ADHm": (
-        "Single-cell RNA sequencing of human brain tissue from Alzheimer's disease patients. "
-        "This dataset profiles the cellular landscape of the Alzheimer's disease brain, capturing "
-        "neuronal degeneration, microglial activation, astrogliosis, and amyloid-associated transcriptomic changes."
+        "Single-cell RNA sequencing of human ascending aortic wall tissue from patients with sporadic "
+        "type A aortic dissection. This dataset profiles the cellular landscape of the diseased aortic wall, "
+        "capturing smooth muscle cells, macrophage infiltration, endothelial dysfunction, and extracellular "
+        "matrix remodeling associated with acute aortic dissection pathogenesis."
     ),
     # GSE225948_bloodMmStrokeDev — FILTERED OUT: normalized-only data (no raw counts, max=184.46)
     # GSE247719_PanSci_05_Muscle_adata — FILTERED OUT: Ensembl IDs (ENSMUSG), scGPT incompatible
