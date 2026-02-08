@@ -3,11 +3,10 @@
 """
 Focused biological validation for CLOP-DiT producing 3 core figures:
 
-  Figure 1 — Text2Cell Biological Fidelity (2×2 panel)
-    (a) Gene Mean Correlation scatter (real_recon vs generated, Pearson/R²)
-    (b) UMAP: real + generated, colored by cell type + source
-    (c) Marker Gene Heatmap: side-by-side real vs generated per cell type
-    (d) Gene Variance Correlation scatter
+  Figure 1 — Text2Cell Biological Fidelity (multi-dataset, N×3 panel)
+    (a) UMAP: real + generated, colored by cell type + source
+    (b) Marker Gene Heatmap: side-by-side real vs generated per cell type
+    (c) Gene Mean Correlation scatter (real_recon vs generated, Pearson/R²)
 
   Figure 2 — Cell2Cell Editing Quality (1×3 panel)
     (a) PCA vector field: source → edited arrows with real target reference
@@ -24,6 +23,11 @@ Usage:
   python scripts/08_biological_validation.py \\
       --reference_h5ad data/processed_h5ad/GSE123902_LungAdreHmCancer_processed.h5ad \\
       --dataset_key GSE123902_LungAdreHmCancer \\
+      --output_dir figures/biovalidation
+
+  # Multi-dataset
+  python scripts/08_biological_validation.py \\
+      --dataset_manifest configs/biovalidation_datasets.json \\
       --output_dir figures/biovalidation
 """
 
@@ -79,15 +83,16 @@ COLORS = {
     "target": "#31a354",
 }
 
-# ── Marker genes per cell type (curated for lung adeno TME) ─────────────
+# ── Marker genes per cell type (fallback defaults) ─────────────────────
+# Keep non-overlapping, representative markers to avoid redundancy.
 MARKER_GENES = {
-    "CD8+ T cells": ["CD8A", "GZMB", "PRF1", "IFNG", "NKG7", "GZMA"],
-    "Macrophages":  ["CD68", "CD163", "CSF1R", "MRC1", "CD14", "MSR1"],
-    "Epithelial cells": ["EPCAM", "KRT8", "KRT18", "KRT19", "MUC1", "CDH1"],
-    "NK cells":     ["NKG7", "KLRD1", "GNLY", "FCGR3A", "NCAM1", "KLRF1"],
+    "CD8+ T cells": ["CD8A", "CD8B", "GZMB", "PRF1"],
+    "Macrophages":  ["CD68", "CD163", "CSF1R", "MSR1"],
+    "Epithelial cells": ["EPCAM", "KRT8", "KRT19", "MUC1"],
+    "NK cells":     ["NKG7", "GNLY", "KLRD1", "FCGR3A"],
 }
 
-TEXT2CELL_PROMPTS = {
+DEFAULT_TEXT2CELL_PROMPTS = {
     "CD8+ T cells": (
         "CD8+ cytotoxic T lymphocytes from human lung adenocarcinoma tumor "
         "microenvironment. Tumor-infiltrating CD8+ T cells expressing cytotoxic "
@@ -143,6 +148,112 @@ def align_genes(*adatas: ad.AnnData) -> List[ad.AnnData]:
     return [a[:, common].copy() for a in adatas]
 
 
+def load_prompt_file(path: str) -> Dict[str, str]:
+    """Load a JSON file mapping cell_type -> prompt text."""
+    if not path:
+        return {}
+    p = Path(path)
+    if not p.exists():
+        logger.warning(f"Prompt file not found: {path}")
+        return {}
+    try:
+        with open(p) as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            logger.warning(f"Invalid prompt file format: {path}")
+            return {}
+        return data
+    except Exception as e:
+        logger.warning(f"Failed to load prompt file: {e}")
+        return {}
+
+
+def load_subcluster_metadata(path: str) -> Dict:
+    if not path:
+        return {}
+    p = Path(path)
+    if not p.exists():
+        logger.warning(f"Subcluster metadata not found: {path}")
+        return {}
+    with open(p) as f:
+        return json.load(f)
+
+
+def build_prompts_from_subclusters(
+    subcluster_meta: Dict,
+    dataset_key: str,
+    top_k: int = 4,
+    min_conf: float = 0.25,
+) -> Dict[str, str]:
+    """Auto-build prompts from subcluster metadata."""
+    if dataset_key not in subcluster_meta:
+        return {}
+    ds = subcluster_meta[dataset_key]
+    dataset_text = ds.get("dataset_text", "")
+    ct_counts = {}
+    for cinfo in ds.get("clusters", {}).values():
+        if cinfo.get("confidence", 0.0) < min_conf:
+            continue
+        ct = cinfo.get("cell_type", "Unknown")
+        if ct == "Unknown":
+            continue
+        ct_counts[ct] = ct_counts.get(ct, 0) + int(cinfo.get("n_cells", 0))
+    if not ct_counts:
+        return {}
+    top_types = sorted(ct_counts.items(), key=lambda x: x[1], reverse=True)[:top_k]
+    context = dataset_text.split(".")[0].strip() if dataset_text else "single-cell RNA sequencing"
+    prompts = {}
+    for ct, _ in top_types:
+        prompts[ct] = f"{ct} from {context}."
+    return prompts
+
+
+def compute_markers_by_cell_type(
+    adata: ad.AnnData,
+    cell_types: List[str],
+    n_genes: int = 6,
+) -> Dict[str, List[str]]:
+    """Compute representative markers per cell type using rank_genes_groups."""
+    adata = adata.copy()
+    if "log1p" not in adata.uns:
+        sc.pp.normalize_total(adata, target_sum=1e4)
+        sc.pp.log1p(adata)
+
+    sc.tl.rank_genes_groups(adata, "cell_type", method="wilcoxon", n_genes=50)
+    markers = {}
+    for ct in cell_types:
+        if ct not in adata.obs["cell_type"].unique():
+            continue
+        try:
+            genes = list(adata.uns["rank_genes_groups"]["names"][ct])
+        except Exception:
+            genes = []
+        # Filter to genes present and keep unique non-overlapping selection
+        genes = [g for g in genes if g in adata.var_names]
+        markers[ct] = genes[: n_genes * 3]
+    return markers
+
+
+def select_nonredundant_markers(
+    marker_pool: Dict[str, List[str]],
+    n_genes: int = 6,
+) -> Dict[str, List[str]]:
+    """Pick non-overlapping markers across cell types."""
+    used = set()
+    selected = {}
+    for ct, genes in marker_pool.items():
+        picked = []
+        for g in genes:
+            if g in used:
+                continue
+            picked.append(g)
+            used.add(g)
+            if len(picked) >= n_genes:
+                break
+        selected[ct] = picked
+    return selected
+
+
 def frechet_distance(real: np.ndarray, gen: np.ndarray) -> float:
     mu_r, mu_g = real.mean(0), gen.mean(0)
     sig_r = np.cov(real, rowvar=False)
@@ -158,15 +269,16 @@ def gene_mean_pearson(real: ad.AnnData, gen: ad.AnnData) -> float:
     return float(stats.pearsonr(to_dense(real.X).mean(0), to_dense(gen.X).mean(0))[0])
 
 
-def marker_specificity_index(adata: ad.AnnData) -> float:
+def marker_specificity_index(adata: ad.AnnData, marker_dict: Dict[str, List[str]] = None) -> float:
     """
     Compute a simple marker specificity index (MSI).
     For each marker gene, compute the fraction of its mean expression that falls
     into the intended cell type; then average across all markers.
     Range: [0,1], higher = more specific expression in intended cell type.
     """
+    marker_dict = marker_dict or MARKER_GENES
     markers = []
-    for ct, genes in MARKER_GENES.items():
+    for ct, genes in marker_dict.items():
         for g in genes:
             if g in adata.var_names:
                 markers.append((ct, g))
@@ -175,7 +287,7 @@ def marker_specificity_index(adata: ad.AnnData) -> float:
 
     # Precompute per-cell-type means
     ct_means = {}
-    for ct in MARKER_GENES.keys():
+    for ct in marker_dict.keys():
         ct_cells = adata[adata.obs["cell_type"] == ct]
         if ct_cells.n_obs == 0:
             continue
@@ -197,8 +309,8 @@ def marker_specificity_index(adata: ad.AnnData) -> float:
     return float(np.mean(scores)) if scores else float("nan")
 
 
-def load_dataset_indices(dataset_key: str) -> Dict[str, np.ndarray]:
-    sc_meta = json.load(open("data/processed_h5ad/subcluster_metadata.json"))
+def load_dataset_indices(dataset_key: str, subcluster_meta: Dict = None) -> Dict[str, np.ndarray]:
+    sc_meta = subcluster_meta or json.load(open("data/processed_h5ad/subcluster_metadata.json"))
     ds = sc_meta[dataset_key]
     ct_idx: Dict[str, list] = {}
     for _, info in ds["clusters"].items():
@@ -214,7 +326,43 @@ def load_dataset_indices(dataset_key: str) -> Dict[str, np.ndarray]:
 # Figure 1 — Text2Cell Biological Fidelity
 # ═══════════════════════════════════════════════════════════════════════════
 
-def generate_cells_text2cell(adata_ref, args, dit_ckpt=None):
+def load_dataset_specs(args, subcluster_meta: Dict, prompt_overrides: Dict) -> List[Dict]:
+    if args.dataset_manifest:
+        with open(args.dataset_manifest) as f:
+            specs = json.load(f)
+        if not isinstance(specs, list) or not specs:
+            raise ValueError("dataset_manifest must be a non-empty JSON list")
+    else:
+        if not args.reference_h5ad or not args.dataset_key:
+            raise ValueError("Provide either --dataset_manifest or both --reference_h5ad and --dataset_key")
+        specs = [{
+            "dataset_key": args.dataset_key,
+            "reference_h5ad": args.reference_h5ad,
+            "label": args.dataset_key,
+        }]
+
+    prepared = []
+    for spec in specs[: args.max_datasets]:
+        dataset_key = spec["dataset_key"]
+        prompts = spec.get("prompts")
+        if not prompts and args.auto_prompts:
+            prompts = build_prompts_from_subclusters(
+                subcluster_meta, dataset_key,
+                top_k=args.prompt_top_k, min_conf=args.prompt_min_conf,
+            )
+        if not prompts:
+            prompts = dict(DEFAULT_TEXT2CELL_PROMPTS)
+        # Apply prompt overrides if provided
+        for ct, p in prompt_overrides.items():
+            if ct in prompts:
+                prompts[ct] = p
+        spec = dict(spec)
+        spec["prompts"] = prompts
+        prepared.append(spec)
+    return prepared
+
+
+def generate_cells_text2cell(adata_ref, args, prompts, dit_ckpt=None):
     """Generate cells using Text2Cell pipeline with a specific DiT checkpoint."""
     CLOPDiTInference = load_class_from_script(
         Path(__file__).resolve().parent / "05_inference.py", "CLOPDiTInference"
@@ -228,7 +376,7 @@ def generate_cells_text2cell(adata_ref, args, dit_ckpt=None):
         device=args.device,
     )
     fake_list = []
-    for ct, prompt in TEXT2CELL_PROMPTS.items():
+    for ct, prompt in prompts.items():
         adata_gen = pipeline.generate_adata(
             prompt=prompt, num_cells=args.num_cells_per_type,
             decode_expression=True, reference_adata=adata_ref,
@@ -242,10 +390,10 @@ def generate_cells_text2cell(adata_ref, args, dit_ckpt=None):
     return ad.concat(fake_list, join="outer", merge="same")
 
 
-def build_real_subset(adata_ref, indices_map, n_per_type):
+def build_real_subset(adata_ref, indices_map, n_per_type, prompts):
     rng = np.random.RandomState(42)
     real_list = []
-    for ct in TEXT2CELL_PROMPTS:
+    for ct in prompts:
         if ct not in indices_map:
             logger.warning(f"  Cell type '{ct}' absent, skipping")
             continue
@@ -259,11 +407,8 @@ def build_real_subset(adata_ref, indices_map, n_per_type):
     return ad.concat(real_list, join="outer", merge="same")
 
 
-def figure1_text2cell(real_adata, fake_adata, scgpt, output_dir, metrics):
-    """Create Figure 1: 2×2 publication panel."""
-    logger.info("Creating Figure 1 — Text2Cell Biological Fidelity")
-
-    # ── Reconstruct real via scGPT for fair comparison ──
+def compute_text2cell_metrics(real_adata, fake_adata, scgpt, marker_dict=None):
+    """Compute Text2Cell metrics and preprocessed AnnData for plotting."""
     real_emb = scgpt.encode(real_adata)
     fake_emb = scgpt.encode(fake_adata)
     real_dec = scgpt.decode(real_emb)
@@ -272,7 +417,6 @@ def figure1_text2cell(real_adata, fake_adata, scgpt, output_dir, metrics):
     real_recon.obs = real_adata.obs.copy()
     real_recon.obs["source"] = "Real"
 
-    # align & normalize
     real_n, fake_n = align_genes(real_recon, fake_adata)
     real_n = log1p_safe(real_n)
     fake_n = log1p_safe(fake_n)
@@ -280,7 +424,6 @@ def figure1_text2cell(real_adata, fake_adata, scgpt, output_dir, metrics):
     real_x = to_dense(real_n.X)
     fake_x = to_dense(fake_n.X)
 
-    # ── Compute metrics ──
     rm, fm = real_x.mean(0), fake_x.mean(0)
     rv, fv = real_x.var(0), fake_x.var(0)
     pr_mean = stats.pearsonr(rm, fm)
@@ -293,10 +436,10 @@ def figure1_text2cell(real_adata, fake_adata, scgpt, output_dir, metrics):
     fd_gene = frechet_distance(pca_r, pca_f)
     fd_emb = frechet_distance(real_emb, fake_emb)
 
-    msi_real = marker_specificity_index(real_n)
-    msi_fake = marker_specificity_index(fake_n)
+    msi_real = marker_specificity_index(real_n, marker_dict=marker_dict)
+    msi_fake = marker_specificity_index(fake_n, marker_dict=marker_dict)
 
-    metrics["text2cell"] = {
+    metrics = {
         "gene_mean_pearson": float(pr_mean[0]),
         "gene_mean_R2": float(r2_mean),
         "gene_var_pearson": float(pr_var[0]),
@@ -304,6 +447,43 @@ def figure1_text2cell(real_adata, fake_adata, scgpt, output_dir, metrics):
         "FD_scgpt_embedding": float(fd_emb),
         "marker_specificity_real": float(msi_real),
         "marker_specificity_generated": float(msi_fake),
+    }
+
+    return metrics, real_recon, real_n, fake_n, rm, fm, rv, fv
+
+
+def figure1_text2cell_multi(dataset_runs, scgpt, output_dir, metrics):
+    """Create Figure 1: multi-dataset Text2Cell biological fidelity."""
+    logger.info("Creating Figure 1 — Text2Cell Biological Fidelity (multi-dataset)")
+
+    per_dataset = []
+    for ds in dataset_runs:
+        cell_types = list(ds["prompts"].keys())
+        marker_pool = compute_markers_by_cell_type(ds["real_adata"], cell_types, n_genes=6)
+        marker_dict = select_nonredundant_markers(marker_pool, n_genes=4)
+        if not any(marker_dict.values()):
+            marker_dict = MARKER_GENES
+
+        m, real_recon, real_n, fake_n, rm, fm, rv, fv = compute_text2cell_metrics(
+            ds["real_adata"], ds["fake_adata"], scgpt, marker_dict=marker_dict
+        )
+        per_dataset.append({
+            "label": ds["label"],
+            "metrics": m,
+            "marker_dict": marker_dict,
+            "real_recon": real_recon,
+            "real_n": real_n,
+            "fake_n": fake_n,
+            "rm": rm,
+            "fm": fm,
+            "rv": rv,
+            "fv": fv,
+        })
+
+    metrics["text2cell_multi"] = {
+        "datasets": {
+            d["label"]: d["metrics"] for d in per_dataset
+        },
         "interpretation": {
             "gene_mean_pearson": "Pearson r between per-gene mean expression of real (scGPT-reconstructed) vs generated. >0.9 = high fidelity; 1.0 = perfect.",
             "gene_mean_R2": "R-squared of gene means; fraction of variance explained. >0.8 is good.",
@@ -315,52 +495,48 @@ def figure1_text2cell(real_adata, fake_adata, scgpt, output_dir, metrics):
         },
     }
 
-    # ── Build Figure 1 ──
-    fig = plt.figure(figsize=(14, 12))
-    gs = gridspec.GridSpec(2, 2, hspace=0.38, wspace=0.35)
+    n_rows = len(per_dataset)
+    fig_h = max(4.5, 4.2 * n_rows)
+    fig, axes = plt.subplots(n_rows, 3, figsize=(16, fig_h))
+    if n_rows == 1:
+        axes = np.array([axes])
 
-    # (a) Gene Mean Scatter
-    ax_a = fig.add_subplot(gs[0, 0])
-    ax_a.scatter(rm, fm, s=4, alpha=0.35, c="#1f77b4", edgecolors="none", rasterized=True)
-    lim = [min(rm.min(), fm.min()) - 0.05, max(rm.max(), fm.max()) + 0.05]
-    ax_a.plot(lim, lim, "--", color="#999999", lw=0.8)
-    ax_a.set_xlim(lim); ax_a.set_ylim(lim)
-    ax_a.set_xlabel("Real (scGPT-reconstructed)")
-    ax_a.set_ylabel("Generated")
-    ax_a.set_title("(a) Gene Mean Expression")
-    ax_a.text(0.05, 0.92, f"Pearson r = {pr_mean[0]:.4f}\nR² = {r2_mean:.4f}\nMSI(real)={msi_real:.2f}\nMSI(gen)={msi_fake:.2f}",
-              transform=ax_a.transAxes, fontsize=9, va="top",
-              bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8))
+    for i, d in enumerate(per_dataset):
+        row_axes = axes[i]
+        label = d["label"]
+        rm, fm = d["rm"], d["fm"]
+        m = d["metrics"]
 
-    # (b) UMAP: merged real + generated
-    ax_b = fig.add_subplot(gs[0, 1])
-    _plot_umap_panel(real_recon, fake_adata, ax_b)
-    ax_b.text(0.02, -0.12, "Note: gene-level metrics are influenced by scGPT encode→decode bottleneck",
-              transform=ax_b.transAxes, fontsize=7, color="#555555")
+        # (a) UMAP integration
+        _plot_umap_panel(d["real_recon"], dataset_runs[i]["fake_adata"], row_axes[0])
+        row_axes[0].set_title(f"(a) UMAP Integration — {label}")
 
-    # (c) Marker Gene Heatmap
-    ax_c = fig.add_subplot(gs[1, 0])
-    _plot_marker_heatmap(real_n, fake_n, ax_c)
+        # (b) Marker gene heatmap
+        _plot_marker_heatmap(d["real_n"], d["fake_n"], row_axes[1], marker_dict=d["marker_dict"])
+        row_axes[1].set_title(f"(b) Marker Genes — {label}")
 
-    # (d) Gene Variance Scatter
-    ax_d = fig.add_subplot(gs[1, 1])
-    ax_d.scatter(rv, fv, s=4, alpha=0.35, c="#ff7f0e", edgecolors="none", rasterized=True)
-    lim_v = [min(rv.min(), fv.min()) - 0.05, max(rv.max(), fv.max()) + 0.05]
-    ax_d.plot(lim_v, lim_v, "--", color="#999999", lw=0.8)
-    ax_d.set_xlim(lim_v); ax_d.set_ylim(lim_v)
-    ax_d.set_xlabel("Real variance")
-    ax_d.set_ylabel("Generated variance")
-    ax_d.set_title("(d) Gene Variance Correlation")
-    ax_d.text(0.05, 0.92, f"Pearson r = {pr_var[0]:.4f}",
-              transform=ax_d.transAxes, fontsize=9, va="top",
-              bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8))
+        # (c) Gene mean scatter
+        ax = row_axes[2]
+        ax.scatter(rm, fm, s=4, alpha=0.35, c="#1f77b4", edgecolors="none", rasterized=True)
+        lim = [min(rm.min(), fm.min()) - 0.05, max(rm.max(), fm.max()) + 0.05]
+        ax.plot(lim, lim, "--", color="#999999", lw=0.8)
+        ax.set_xlim(lim); ax.set_ylim(lim)
+        ax.set_xlabel("Real (scGPT-reconstructed)")
+        ax.set_ylabel("Generated")
+        ax.set_title(f"(c) Gene Mean Expression — {label}")
+        ax.text(
+            0.05, 0.92,
+            f"Pearson r = {m['gene_mean_pearson']:.4f}\nR² = {m['gene_mean_R2']:.4f}\n"
+            f"MSI(real)={m['marker_specificity_real']:.2f}\nMSI(gen)={m['marker_specificity_generated']:.2f}",
+            transform=ax.transAxes, fontsize=9, va="top",
+            bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8),
+        )
 
-    fig.savefig(output_dir / "figure1_text2cell.png")
-    fig.savefig(output_dir / "figure1_text2cell.pdf")
+    fig.tight_layout()
+    fig.savefig(output_dir / "figure1_text2cell_multi.png")
+    fig.savefig(output_dir / "figure1_text2cell_multi.pdf")
     plt.close(fig)
-    logger.info(f"  Saved Figure 1 -> {output_dir / 'figure1_text2cell.png'}")
-
-    return real_emb, fake_emb
+    logger.info(f"  Saved Figure 1 -> {output_dir / 'figure1_text2cell_multi.png'}")
 
 
 def _plot_umap_panel(real_recon, fake_adata, ax):
@@ -407,15 +583,29 @@ def _plot_umap_panel(real_recon, fake_adata, ax):
               ncol=1, markerscale=0.8, handletextpad=0.3, borderaxespad=0.2)
 
 
-def _plot_marker_heatmap(real_n, fake_n, ax):
-    """Side-by-side marker gene heatmap: Real (left) | Generated (right)."""
+def _select_marker_genes(real_n, fake_n, marker_dict=None, max_per_type=4):
+    marker_dict = marker_dict or MARKER_GENES
+    used = set()
     all_markers = []
     marker_ct_labels = []
-    for ct, genes in MARKER_GENES.items():
+    for ct, genes in marker_dict.items():
+        added = 0
         for g in genes:
-            if g in real_n.var_names and g in fake_n.var_names:
+            if g in real_n.var_names and g in fake_n.var_names and g not in used:
                 all_markers.append(g)
                 marker_ct_labels.append(ct)
+                used.add(g)
+                added += 1
+            if added >= max_per_type:
+                break
+    return all_markers, marker_ct_labels
+
+
+def _plot_marker_heatmap(real_n, fake_n, ax, marker_dict=None):
+    """Side-by-side marker gene heatmap: Real (left) | Generated (right)."""
+    all_markers, marker_ct_labels = _select_marker_genes(
+        real_n, fake_n, marker_dict=marker_dict, max_per_type=4
+    )
 
     if not all_markers:
         ax.text(0.5, 0.5, "No marker genes found in data",
@@ -486,7 +676,7 @@ def _plot_marker_heatmap(real_n, fake_n, ax):
 # Figure 2 — Cell2Cell Editing Quality
 # ═══════════════════════════════════════════════════════════════════════════
 
-def figure2_cell2cell(adata_ref, indices_map, scgpt, output_dir, args, metrics):
+def figure2_cell2cell(adata_ref, indices_map, scgpt, output_dir, args, metrics, prompts):
     """Create Figure 2: 1×3 Cell2Cell editing panel."""
     logger.info("Creating Figure 2 — Cell2Cell Editing Quality")
 
@@ -516,7 +706,7 @@ def figure2_cell2cell(adata_ref, indices_map, scgpt, output_dir, args, metrics):
         device=args.device,
     )
 
-    target_prompt = TEXT2CELL_PROMPTS.get(
+    target_prompt = prompts.get(
         tgt_type, f"{tgt_type} from human lung adenocarcinoma"
     )
     edited = c2c.edit_adata(
@@ -530,8 +720,6 @@ def figure2_cell2cell(adata_ref, indices_map, scgpt, output_dir, args, metrics):
     rs, rt, pt = align_genes(log1p_safe(real_src), log1p_safe(real_tgt), log1p_safe(edited))
     delta_real = to_dense(rt.X).mean(0) - to_dense(rs.X).mean(0)
     delta_pred = to_dense(pt.X).mean(0) - to_dense(rs.X).mean(0)
-    gene_names_aligned = rs.var_names.tolist()
-
     top_n = 50
     idx_real_top = np.argsort(-np.abs(delta_real))[:top_n]
     idx_pred_top = np.argsort(-np.abs(delta_pred))[:top_n]
@@ -546,12 +734,27 @@ def figure2_cell2cell(adata_ref, indices_map, scgpt, output_dir, args, metrics):
     if edit_emb is None:
         edit_emb = scgpt.encode(edited)
 
+    # Embedding proximity metrics
+    def _cos(a, b):
+        a_n = a / (np.linalg.norm(a, axis=1, keepdims=True) + 1e-8)
+        b_n = b / (np.linalg.norm(b) + 1e-8)
+        return np.dot(a_n, b_n)
+
+    mean_tgt = tgt_emb.mean(0)
+    mean_src = src_emb.mean(0)
+    cos_to_tgt = _cos(edit_emb, mean_tgt)
+    cos_to_src = _cos(edit_emb, mean_src)
+    cos_gain = float(np.mean(cos_to_tgt - cos_to_src))
+
     metrics["cell2cell"] = {
         "source_type": src_type,
         "target_type": tgt_type,
         "DEG_overlap_top50": float(overlap),
         "direction_accuracy": float(dir_acc),
         "delta_R2": float(r2_delta),
+        "cosine_to_target_mean": float(np.mean(cos_to_tgt)),
+        "cosine_to_source_mean": float(np.mean(cos_to_src)),
+        "cosine_gain": cos_gain,
         "interpretation": {
             "DEG_overlap_top50": (
                 "Fraction of top-50 differentially expressed genes shared between "
@@ -566,6 +769,10 @@ def figure2_cell2cell(adata_ref, indices_map, scgpt, output_dir, args, metrics):
                 "R-squared between real vs predicted per-gene expression shift vectors. "
                 ">0 means predictions explain real shifts; <0 means worse than a flat "
                 "prediction. Higher is better."
+            ),
+            "cosine_gain": (
+                "Mean cosine similarity gain of edited cells toward target vs source "
+                "in scGPT embedding space. Positive = moved toward target."
             ),
         },
     }
@@ -613,24 +820,14 @@ def figure2_cell2cell(adata_ref, indices_map, scgpt, output_dir, args, metrics):
             transform=ax.transAxes, fontsize=9, va="top",
             bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8))
 
-    # (c) Top DEG direction barplot
+    # (c) Embedding proximity boxplot
     ax = axes[2]
-    show_n = 20  # top 20 for readability
-    top_genes = [gene_names_aligned[i] for i in idx_real_top[:show_n]]
-    top_dr = delta_real[idx_real_top[:show_n]]
-    top_dp = delta_pred[idx_real_top[:show_n]]
-
-    y_pos = np.arange(show_n)
-    ax.barh(y_pos, top_dr, height=0.4, align="center",
-            color="#2166ac", alpha=0.7, label="Real shift")
-    ax.barh(y_pos + 0.4, top_dp, height=0.4, align="center",
-            color="#d6604d", alpha=0.7, label="Predicted shift")
-    ax.set_yticks(y_pos + 0.2)
-    ax.set_yticklabels(top_genes, fontsize=6)
-    ax.invert_yaxis()
-    ax.set_xlabel("Δ Expression (log1p)")
-    ax.set_title(f"(c) Top-20 DEG Shifts\nOverlap={overlap:.0%}, DirAcc={dir_acc:.0%}")
-    ax.legend(fontsize=7, frameon=False, loc="lower right")
+    ax.boxplot([cos_to_src, cos_to_tgt], labels=["To Source", "To Target"],
+               widths=0.5, patch_artist=True,
+               boxprops=dict(facecolor="#cccccc", alpha=0.7),
+               medianprops=dict(color="#000000"))
+    ax.set_ylabel("Cosine similarity (scGPT emb)")
+    ax.set_title(f"(c) Embedding Proximity\nGain={cos_gain:.3f}")
 
     fig.tight_layout()
     fig.savefig(output_dir / "figure2_cell2cell.png")
@@ -694,17 +891,83 @@ def figure3_celltypist(fake_adata, output_dir, metrics, model_name=CELLTYPIST_MO
                 mat[i, j] = counts.get(lab, 0)
         mat[i, :] = mat[i, :] / total
 
-    # heuristic match rate
+    # heuristic match rate — expanded mapping
     def map_label_to_category(label: str):
         l = label.lower()
+        # T cells
         if "cd8" in l or "cytotoxic" in l:
             return "CD8+ T cells"
+        if "cd4" in l and ("helper" in l or "naive" in l or "memory" in l or "th1" in l or "th2" in l or "th17" in l):
+            return "CD4+ T cells"
+        if "cd4" in l:
+            return "CD4+ T cells"
+        if "treg" in l or "regulatory t" in l or ("foxp3" in l and "t cell" in l):
+            return "Regulatory T cells"
+        if "gamma" in l and "delta" in l:
+            return "Gamma-delta T cells"
+        if any(k in l for k in ["t cell", "t lymph"]) and "nk" not in l:
+            return "CD8+ T cells"  # default T cells to CD8+
+        # NK cells
         if "nk" in l or "natural killer" in l:
             return "NK cells"
-        if "macrophage" in l or "mph" in l or "monocyte" in l:
+        # B cells / Plasma
+        if "plasma" in l or "plasmablast" in l:
+            return "Plasma cells"
+        if any(k in l for k in ["b cell", "b lymph", "b-cell"]):
+            return "B cells"
+        # Myeloid
+        if "macrophage" in l or "mph" in l:
             return "Macrophages"
-        if any(k in l for k in ["epithelial", "at1", "at2", "ciliated", "secretory", "club"]):
+        if "monocyte" in l:
+            return "Monocytes"
+        if "dendritic" in l or "dc" == l.strip() or "cdc" in l or "pdc" in l:
+            return "Dendritic cells"
+        if "neutrophil" in l or "granulocyte" in l:
+            return "Neutrophils"
+        if "mast" in l:
+            return "Mast cells"
+        if "megakaryo" in l or "platelet" in l:
+            return "Megakaryocytes"
+        # Epithelial
+        if any(k in l for k in ["epithelial", "at1", "at2", "ciliated", "secretory",
+                                 "club", "goblet", "alveolar", "basal", "ionocyte",
+                                 "multiciliated", "pneumocyte", "keratinocyte"]):
             return "Epithelial cells"
+        # Stromal
+        if "fibroblast" in l or "mesenchymal" in l or "caf" in l:
+            return "Fibroblasts"
+        if "endothelial" in l:
+            return "Endothelial cells"
+        if "smooth muscle" in l or "myofibroblast" in l:
+            return "Smooth muscle cells"
+        if "pericyte" in l:
+            return "Pericytes"
+        # Neural
+        if "neuron" in l or "neuronal" in l:
+            return "Neurons"
+        if "astrocyte" in l:
+            return "Astrocytes"
+        if "oligodendrocyte" in l:
+            return "Oligodendrocytes"
+        if "microglia" in l:
+            return "Microglia"
+        # Hematopoietic
+        if any(k in l for k in ["stem cell", "progenitor", "hsc"]):
+            return "HSCs/Progenitors"
+        if "erythro" in l or "erythroid" in l:
+            return "Erythroid progenitors"
+        # Hepatic
+        if "hepatocyte" in l:
+            return "Hepatocytes"
+        if "cholangiocyte" in l:
+            return "Cholangiocytes"
+        # Other
+        if "melanocyte" in l or "melanoma" in l:
+            return "Melanocytes"
+        if "adipocyte" in l:
+            return "Adipocytes"
+        if "proliferat" in l:
+            return "Proliferating cells"
         return None
 
     match_rates = {}
@@ -726,10 +989,30 @@ def figure3_celltypist(fake_adata, output_dir, metrics, model_name=CELLTYPIST_MO
     else:
         label_entropy = float("nan")
 
+    per_dataset_match = {}
+    if "dataset" in adata.obs:
+        for ds in sorted(set(adata.obs["dataset"].values)):
+            mask = adata.obs["dataset"].values == ds
+            ds_labels = pred_labels[mask]
+            ds_prompts = prompts[mask]
+            if len(ds_labels) == 0:
+                per_dataset_match[ds] = float("nan")
+                continue
+            ds_rates = []
+            for ct in set(ds_prompts):
+                ct_labels = ds_labels[ds_prompts == ct]
+                if len(ct_labels) == 0:
+                    continue
+                mapped = [map_label_to_category(lab) for lab in ct_labels]
+                if any(m is not None for m in mapped):
+                    ds_rates.append(np.mean([m == ct for m in mapped if m is not None]))
+            per_dataset_match[ds] = float(np.mean(ds_rates)) if ds_rates else 0.0
+
     metrics["celltypist"] = {
         "model": model_name,
         "top_label_purity": {k: float(v) for k, v in purity.items()},
         "heuristic_match_rate": {k: float(v) for k, v in match_rates.items()},
+        "per_dataset_match_rate": per_dataset_match if per_dataset_match else None,
         "labels_used": top_labels,
         "generated_label_counts": {k: int(v) for k, v in Counter(pred_labels).items()},
         "real_label_counts": {k: int(v) for k, v in Counter(real_labels).items()} if real_labels is not None else None,
@@ -761,38 +1044,20 @@ def figure3_celltypist(fake_adata, output_dir, metrics, model_name=CELLTYPIST_MO
     cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.02)
     cbar.set_label("Fraction", fontsize=7)
 
-    # (b) Label distribution (Generated vs Real)
+    # (b) Prompt-wise purity + match rate
     ax = axes[1]
-    labels_plot = [lab for lab in top_labels]
-    gen_counts = Counter(pred_labels)
-    gen_vals = []
-    for lab in labels_plot:
-        if lab == "Other":
-            gen_vals.append(sum(v for k, v in gen_counts.items() if k not in top_labels))
-        else:
-            gen_vals.append(gen_counts.get(lab, 0))
-
-    if real_labels is not None:
-        real_counts = Counter(real_labels)
-        real_vals = []
-        for lab in labels_plot:
-            if lab == "Other":
-                real_vals.append(sum(v for k, v in real_counts.items() if k not in top_labels))
-            else:
-                real_vals.append(real_counts.get(lab, 0))
-        y = np.arange(len(labels_plot))
-        ax.barh(y - 0.2, gen_vals, height=0.35, color="#4c72b0", alpha=0.8, label="Generated")
-        ax.barh(y + 0.2, real_vals, height=0.35, color="#55a868", alpha=0.8, label="Real")
-        ax.legend(fontsize=7, frameon=False, loc="lower right")
-    else:
-        y = np.arange(len(labels_plot))
-        ax.barh(y, gen_vals, height=0.5, color="#4c72b0", alpha=0.8, label="Generated")
-
-    ax.set_yticks(range(len(labels_plot)))
-    ax.set_yticklabels(labels_plot, fontsize=7)
+    y = np.arange(len(prompt_types))
+    purity_vals = [purity.get(ct, float("nan")) for ct in prompt_types]
+    match_vals = [match_rates.get(ct, float("nan")) for ct in prompt_types]
+    ax.barh(y - 0.2, purity_vals, height=0.35, color="#4c72b0", alpha=0.8, label="Purity")
+    ax.barh(y + 0.2, match_vals, height=0.35, color="#55a868", alpha=0.8, label="Match rate")
+    ax.set_yticks(y)
+    ax.set_yticklabels(prompt_types, fontsize=7)
     ax.invert_yaxis()
-    ax.set_xlabel("# Cells")
-    ax.set_title("(b) CellTypist Label Distribution")
+    ax.set_xlabel("Fraction")
+    ax.set_xlim(0, 1.0)
+    ax.set_title("(b) Prompt-wise Purity & Match")
+    ax.legend(fontsize=7, frameon=False, loc="lower right")
 
     fig.tight_layout()
     fig.savefig(output_dir / "figure3_celltypist.png")
@@ -802,13 +1067,79 @@ def figure3_celltypist(fake_adata, output_dir, metrics, model_name=CELLTYPIST_MO
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# Figure 4 — Multi-dataset Summary
+# ═══════════════════════════════════════════════════════════════════════════
+
+def figure4_summary(metrics: Dict, output_dir: Path):
+    """Create Figure 4: compact multi-dataset summary."""
+    if "text2cell_multi" not in metrics:
+        logger.warning("Figure 4 skipped: missing text2cell_multi metrics")
+        return
+
+    ds_metrics = metrics["text2cell_multi"]["datasets"]
+    labels = list(ds_metrics.keys())
+    gene_mean = [ds_metrics[l]["gene_mean_pearson"] for l in labels]
+    msi_gen = [ds_metrics[l]["marker_specificity_generated"] for l in labels]
+
+    celltypist_rates = None
+    if "celltypist" in metrics and metrics["celltypist"].get("per_dataset_match_rate"):
+        per_ds = metrics["celltypist"]["per_dataset_match_rate"]
+        celltypist_rates = [per_ds.get(l, float("nan")) for l in labels]
+
+    fig, axes = plt.subplots(1, 3, figsize=(14, 4))
+
+    ax = axes[0]
+    ax.bar(range(len(labels)), gene_mean, color="#4c72b0", alpha=0.85)
+    ax.set_xticks(range(len(labels)))
+    ax.set_xticklabels(labels, rotation=30, ha="right", fontsize=7)
+    ax.set_ylim(0, 1.0)
+    ax.set_ylabel("Pearson r")
+    ax.set_title("(a) Gene Mean Correlation")
+
+    ax = axes[1]
+    ax.bar(range(len(labels)), msi_gen, color="#55a868", alpha=0.85)
+    ax.set_xticks(range(len(labels)))
+    ax.set_xticklabels(labels, rotation=30, ha="right", fontsize=7)
+    ax.set_ylim(0, 1.0)
+    ax.set_ylabel("MSI")
+    ax.set_title("(b) Marker Specificity (Gen)")
+
+    ax = axes[2]
+    if celltypist_rates is not None:
+        ax.bar(range(len(labels)), celltypist_rates, color="#c44e52", alpha=0.85)
+        ax.set_ylim(0, 1.0)
+        ax.set_ylabel("Match rate")
+        ax.set_title("(c) CellTypist Match Rate")
+    else:
+        ax.text(0.5, 0.5, "CellTypist match\nnot available",
+                ha="center", va="center", transform=ax.transAxes)
+        ax.set_axis_off()
+
+    fig.tight_layout()
+    fig.savefig(output_dir / "figure4_summary.png")
+    fig.savefig(output_dir / "figure4_summary.pdf")
+    plt.close(fig)
+    logger.info(f"  Saved Figure 4 -> {output_dir / 'figure4_summary.png'}")
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # Main
 # ═══════════════════════════════════════════════════════════════════════════
 
 def main():
     parser = argparse.ArgumentParser(description="Biological Validation v2")
-    parser.add_argument("--reference_h5ad", required=True)
-    parser.add_argument("--dataset_key", required=True)
+    parser.add_argument("--reference_h5ad")
+    parser.add_argument("--dataset_key")
+    parser.add_argument("--dataset_manifest",
+                        help="JSON list of {dataset_key, reference_h5ad, label?, prompts?}")
+    parser.add_argument("--max_datasets", type=int, default=3)
+    parser.add_argument("--subcluster_meta", default="data/processed_h5ad/subcluster_metadata.json")
+    parser.add_argument("--auto_prompts", action="store_true",
+                        help="Auto-build prompts from subcluster metadata")
+    parser.add_argument("--prompt_file", default="",
+                        help="JSON mapping of cell_type -> prompt to override defaults")
+    parser.add_argument("--prompt_top_k", type=int, default=4)
+    parser.add_argument("--prompt_min_conf", type=float, default=0.25)
     parser.add_argument("--output_dir", default="figures/biovalidation")
     parser.add_argument("--num_cells_per_type", type=int, default=200)
     parser.add_argument("--num_steps", type=int, default=4)
@@ -824,35 +1155,79 @@ def main():
     parser.add_argument("--skip_figure1", action="store_true")
     parser.add_argument("--skip_figure2", action="store_true")
     parser.add_argument("--skip_figure3", action="store_true")
+    parser.add_argument("--skip_figure4", action="store_true")
     args = parser.parse_args()
 
     setup_logging()
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    logger.info(f"Loading reference: {args.reference_h5ad}")
-    adata_ref = sc.read_h5ad(args.reference_h5ad)
-    indices_map = load_dataset_indices(args.dataset_key)
-
     scgpt = ScGPTDecoder(model_dir=args.scgpt_model_dir, device=torch.device(args.device))
     metrics: Dict = {}
 
-    fake = None
-    real = None
+    prompt_overrides = load_prompt_file(args.prompt_file)
+    subcluster_meta = load_subcluster_metadata(args.subcluster_meta) if args.auto_prompts else {}
+    dataset_specs = load_dataset_specs(args, subcluster_meta, prompt_overrides)
+    dataset_runs = []
+
+    for spec in dataset_specs:
+        dataset_key = spec["dataset_key"]
+        ref_path = spec["reference_h5ad"]
+        label = spec.get("label", dataset_key)
+        prompts = spec.get("prompts", DEFAULT_TEXT2CELL_PROMPTS)
+
+        logger.info(f"Loading reference: {ref_path}")
+        adata_ref = sc.read_h5ad(ref_path)
+        indices_map = load_dataset_indices(dataset_key, subcluster_meta=subcluster_meta or None)
+
+        fake = None
+        real = None
+        if not args.skip_figure1 or not args.skip_figure3:
+            fake = generate_cells_text2cell(adata_ref, args, prompts)
+            fake.obs["dataset"] = label
+            real = build_real_subset(adata_ref, indices_map, args.num_cells_per_type, prompts)
+            real.obs["dataset"] = label
+
+        dataset_runs.append({
+            "label": label,
+            "dataset_key": dataset_key,
+            "reference_h5ad": ref_path,
+            "prompts": prompts,
+            "adata_ref": adata_ref,
+            "indices_map": indices_map,
+            "fake_adata": fake,
+            "real_adata": real,
+        })
+
     if not args.skip_figure1:
-        fake = generate_cells_text2cell(adata_ref, args)
-        real = build_real_subset(adata_ref, indices_map, args.num_cells_per_type)
-        figure1_text2cell(real, fake, scgpt, output_dir, metrics)
+        figure1_text2cell_multi(dataset_runs, scgpt, output_dir, metrics)
 
     if not args.skip_figure2:
-        figure2_cell2cell(adata_ref, indices_map, scgpt, output_dir, args, metrics)
+        preferred = None
+        for ds in dataset_runs:
+            if "Monocytes" in ds["indices_map"] and "Macrophages" in ds["indices_map"]:
+                preferred = ds
+                break
+        if preferred is None:
+            preferred = dataset_runs[0]
+        metrics["cell2cell_dataset"] = preferred["label"]
+        figure2_cell2cell(
+            preferred["adata_ref"], preferred["indices_map"], scgpt,
+            output_dir, args, metrics, preferred["prompts"]
+        )
 
     if not args.skip_figure3:
-        if fake is None:
-            fake = generate_cells_text2cell(adata_ref, args)
-        if real is None:
-            real = build_real_subset(adata_ref, indices_map, args.num_cells_per_type)
-        figure3_celltypist(fake, output_dir, metrics, model_name=args.celltypist_model, real_adata=real)
+        fake_all = ad.concat([ds["fake_adata"] for ds in dataset_runs if ds["fake_adata"] is not None],
+                             join="outer", merge="same")
+        real_all = ad.concat([ds["real_adata"] for ds in dataset_runs if ds["real_adata"] is not None],
+                             join="outer", merge="same")
+        figure3_celltypist(
+            fake_all, output_dir, metrics,
+            model_name=args.celltypist_model, real_adata=real_all,
+        )
+
+    if not args.skip_figure4:
+        figure4_summary(metrics, output_dir)
 
     # ── Save metrics ──
     metrics_path = output_dir / "metrics_summary.json"

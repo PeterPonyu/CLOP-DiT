@@ -43,47 +43,76 @@ logger = logging.getLogger(__name__)
 
 # ============================================================================
 #  Known cell type marker gene signatures (curated from CellMarker/PanglaoDB)
+#  Keep this list broad but not exhaustive; users can extend via --signature_db.
 # ============================================================================
 
 CELL_TYPE_SIGNATURES = {
     # ── Immune: Lymphoid ──
     "CD8+ T cells": {
-        "markers": ["CD8A", "CD8B", "CD3E", "CD3D", "GZMB", "PRF1", "IFNG", "NKG7", "GZMA", "GZMK"],
+        "markers": ["CD8A", "CD8B", "CD3E", "CD3D", "GZMB", "PRF1", "IFNG", "NKG7", "GZMA", "GZMK", "EOMES", "TBX21", "KLRG1"],
         "description": "CD8+ cytotoxic T lymphocytes",
     },
     "CD4+ T cells": {
-        "markers": ["CD4", "IL7R", "CD3E", "CD3D", "TCF7", "LEF1", "CCR7", "SELL", "CD28"],
+        "markers": ["CD4", "IL7R", "CD3E", "CD3D", "TCF7", "LEF1", "CCR7", "SELL", "CD28", "CD40LG", "ICOS"],
         "description": "CD4+ helper T lymphocytes",
     },
     "Regulatory T cells": {
-        "markers": ["FOXP3", "IL2RA", "CTLA4", "IKZF2", "TNFRSF18", "CD4"],
+        "markers": ["FOXP3", "IL2RA", "CTLA4", "IKZF2", "TNFRSF18", "CD4", "TIGIT", "LAYN"],
         "description": "CD4+FOXP3+ regulatory T cells (Tregs)",
     },
+    "Gamma-delta T cells": {
+        "markers": ["TRGC1", "TRGC2", "TRDC", "TRDV2", "TRGV9", "CD3E", "CD3D", "GNLY", "NKG7"],
+        "description": "gamma-delta T lymphocytes",
+    },
+    "Exhausted T cells": {
+        "markers": ["PDCD1", "LAG3", "HAVCR2", "TIGIT", "CTLA4", "TOX", "ENTPD1", "CD8A"],
+        "description": "exhausted T cells with chronic activation markers",
+    },
     "NK cells": {
-        "markers": ["NKG7", "KLRD1", "GNLY", "NCR1", "NCAM1", "KLRF1", "FCGR3A", "CD160", "GZMB"],
+        "markers": ["NKG7", "KLRD1", "GNLY", "NCR1", "NCAM1", "KLRF1", "FCGR3A", "CD160", "GZMB", "KLRB1", "KLRC1"],
         "description": "natural killer cells",
     },
+    "ILC cells": {
+        "markers": ["IL7R", "RORC", "IL22", "IL23R", "KIT", "GATA3", "IL1RL1", "KLRB1"],
+        "description": "innate lymphoid cells",
+    },
     "B cells": {
-        "markers": ["CD79A", "CD79B", "MS4A1", "CD19", "PAX5", "BANK1", "BLK", "IGHM", "IGHD"],
+        "markers": ["CD79A", "CD79B", "MS4A1", "CD19", "PAX5", "BANK1", "BLK", "IGHM", "IGHD", "CD22", "TCL1A"],
         "description": "B lymphocytes",
     },
     "Plasma cells": {
-        "markers": ["JCHAIN", "MZB1", "SDC1", "IGHG1", "IGHG2", "IGHA1", "XBP1", "PRDM1"],
+        "markers": ["JCHAIN", "MZB1", "SDC1", "IGHG1", "IGHG2", "IGHA1", "XBP1", "PRDM1", "IRF4"],
         "description": "antibody-secreting plasma cells",
     },
 
     # ── Immune: Myeloid ──
     "Macrophages": {
-        "markers": ["CD68", "CD163", "CSF1R", "MRC1", "MSR1", "MARCO", "C1QA", "C1QB", "APOE"],
+        "markers": ["CD68", "CD163", "CSF1R", "MRC1", "MSR1", "MARCO", "C1QA", "C1QB", "APOE", "FCGR1A"],
         "description": "tissue-resident macrophages",
     },
+    "Alveolar macrophages": {
+        "markers": ["MARCO", "FABP4", "MCEMP1", "RBP4", "PPARG", "SIGLEC1", "CD68", "MSR1"],
+        "description": "alveolar macrophages",
+    },
+    "Kupffer cells": {
+        "markers": ["CD163", "MARCO", "CD5L", "TIMD4", "CLEC4F", "VSIG4", "C1QA", "CD68"],
+        "description": "liver Kupffer cells (tissue-resident macrophages)",
+    },
     "Monocytes": {
-        "markers": ["CD14", "FCGR3A", "LYZ", "S100A8", "S100A9", "VCAN", "FCN1", "CST3"],
+        "markers": ["CD14", "FCGR3A", "LYZ", "S100A8", "S100A9", "VCAN", "FCN1", "CST3", "MNDA"],
         "description": "circulating monocytes",
     },
     "Dendritic cells": {
         "markers": ["FCER1A", "CD1C", "CLEC10A", "ITGAX", "HLA-DRA", "HLA-DQA1", "IRF8", "BATF3"],
         "description": "dendritic cells",
+    },
+    "Plasmacytoid DCs": {
+        "markers": ["CLEC4C", "IL3RA", "NRP1", "TCF4", "IRF7", "LILRA4", "GZMB", "JCHAIN"],
+        "description": "plasmacytoid dendritic cells",
+    },
+    "Langerhans cells": {
+        "markers": ["CD207", "CD1A", "EPCAM", "FCER1A", "LANGERIN", "CD1C"],
+        "description": "Langerhans cells (skin-resident dendritic cells)",
     },
     "Neutrophils": {
         "markers": ["S100A8", "S100A9", "CSF3R", "FCGR3B", "CXCR2", "MMP9", "ELANE", "MPO"],
@@ -93,11 +122,19 @@ CELL_TYPE_SIGNATURES = {
         "markers": ["KIT", "CPA3", "TPSAB1", "TPSB2", "HPGDS", "MS4A2", "HDC"],
         "description": "mast cells",
     },
+    "Megakaryocytes": {
+        "markers": ["ITGA2B", "GP1BB", "GP9", "PF4", "PPBP", "TUBB1", "TREML1", "GATA1"],
+        "description": "megakaryocytes / platelet-producing cells",
+    },
 
     # ── Epithelial ──
     "Epithelial cells": {
         "markers": ["EPCAM", "KRT18", "KRT8", "CDH1", "KRT19", "MUC1", "CLDN4", "TJP1"],
         "description": "epithelial cells",
+    },
+    "Alveolar type 1": {
+        "markers": ["AGER", "PDPN", "HOPX", "CLIC5", "CAV1", "AQP5", "EMP2"],
+        "description": "alveolar type 1 pneumocytes",
     },
     "Alveolar type 2": {
         "markers": ["SFTPC", "SFTPA1", "SFTPA2", "SFTPB", "ABCA3", "SLC34A2", "LAMP3"],
@@ -106,6 +143,26 @@ CELL_TYPE_SIGNATURES = {
     "Basal cells": {
         "markers": ["KRT5", "KRT14", "KRT17", "TP63", "S100A2", "NGFR"],
         "description": "basal epithelial cells",
+    },
+    "Ciliated cells": {
+        "markers": ["FOXJ1", "PIFO", "TPPP3", "SNTN", "RSPH1", "CAPS", "CCDC78", "DNAH5"],
+        "description": "multiciliated epithelial cells",
+    },
+    "Club cells": {
+        "markers": ["SCGB1A1", "SCGB3A1", "SCGB3A2", "CYP2F1", "BPIFB1", "MUC5B"],
+        "description": "club (Clara) secretory cells",
+    },
+    "Goblet cells": {
+        "markers": ["MUC5AC", "MUC5B", "TFF3", "SPDEF", "AGR2", "FCGBP", "CLCA1"],
+        "description": "mucus-secreting goblet cells",
+    },
+    "Ionocytes": {
+        "markers": ["CFTR", "FOXI1", "ATP6V1C2", "ATP6V0D2", "ASCL3"],
+        "description": "pulmonary ionocytes",
+    },
+    "Mesothelial cells": {
+        "markers": ["MSLN", "CALB2", "WT1", "UPK3B", "HP", "KRT19", "LRRN4"],
+        "description": "mesothelial cells",
     },
 
     # ── Stromal ──
@@ -125,6 +182,18 @@ CELL_TYPE_SIGNATURES = {
         "markers": ["RGS5", "PDGFRB", "NOTCH3", "MCAM", "KCNJ8", "ABCC9"],
         "description": "pericytes / mural cells",
     },
+    "Cancer-associated fibroblasts": {
+        "markers": ["FAP", "PDPN", "ACTA2", "COL1A1", "POSTN", "MMP11", "CXCL12", "IL6"],
+        "description": "cancer-associated fibroblasts (CAFs)",
+    },
+    "Mesenchymal stem cells": {
+        "markers": ["NT5E", "THY1", "ENG", "VCAM1", "LEPR", "CXCL12", "PDGFRA", "PDGFRB"],
+        "description": "mesenchymal stem / stromal cells",
+    },
+    "Lymphatic endothelial": {
+        "markers": ["PROX1", "LYVE1", "FLT4", "PDPN", "CCL21", "TFF3"],
+        "description": "lymphatic endothelial cells",
+    },
 
     # ── Proliferating ──
     "Proliferating cells": {
@@ -134,8 +203,16 @@ CELL_TYPE_SIGNATURES = {
 
     # ── Neural ──
     "Neurons": {
-        "markers": ["RBFOX3", "SNAP25", "SYN1", "SYP", "MAP2", "TUBB3", "ENO2", "SLC17A7"],
+        "markers": ["RBFOX3", "SNAP25", "SYN1", "SYP", "MAP2", "TUBB3", "ENO2", "SLC17A7", "NRGN"],
         "description": "neurons",
+    },
+    "Excitatory neurons": {
+        "markers": ["SLC17A7", "SATB2", "CUX2", "SLC17A6", "CAMK2A", "NRGN", "GRIA1"],
+        "description": "excitatory (glutamatergic) neurons",
+    },
+    "Inhibitory neurons": {
+        "markers": ["GAD1", "GAD2", "SLC32A1", "SST", "PVALB", "VIP", "ADARB2"],
+        "description": "inhibitory (GABAergic) neurons",
     },
     "Astrocytes": {
         "markers": ["GFAP", "AQP4", "SLC1A3", "S100B", "ALDH1L1", "GJA1", "SOX9"],
@@ -145,9 +222,21 @@ CELL_TYPE_SIGNATURES = {
         "markers": ["MBP", "MOG", "PLP1", "MAG", "OLIG1", "OLIG2", "SOX10"],
         "description": "oligodendrocytes",
     },
+    "OPCs": {
+        "markers": ["PDGFRA", "CSPG4", "OLIG1", "OLIG2", "SOX10", "GPR17", "NEU4"],
+        "description": "oligodendrocyte precursor cells (OPCs)",
+    },
     "Microglia": {
         "markers": ["CX3CR1", "P2RY12", "TMEM119", "CSF1R", "AIF1", "HEXB", "TREM2"],
         "description": "microglia",
+    },
+    "Schwann cells": {
+        "markers": ["MPZ", "MBP", "PMP22", "SOX10", "S100B", "EGR2", "PLP1", "CDH19"],
+        "description": "Schwann cells (peripheral glia)",
+    },
+    "Radial glia": {
+        "markers": ["PAX6", "SOX2", "NES", "HES1", "HES5", "FABP7", "VIM", "GFAP", "EOMES"],
+        "description": "radial glial / neural progenitor cells",
     },
 
     # ── Stem / Progenitor ──
@@ -169,7 +258,164 @@ CELL_TYPE_SIGNATURES = {
         "markers": ["KRT7", "KRT19", "SOX9", "EPCAM", "SPP1", "ANXA4", "FXYD2"],
         "description": "cholangiocytes / bile duct epithelial cells",
     },
+    # ── Pancreatic ──
+    "Beta cells": {
+        "markers": ["INS", "INS1", "INS2", "IAPP", "PCSK1", "PCSK2", "PDX1", "MAFA"],
+        "description": "pancreatic beta cells",
+    },
+    "Alpha cells": {
+        "markers": ["GCG", "TTR", "ARX", "MAFB", "IRX2", "LOXL4"],
+        "description": "pancreatic alpha cells",
+    },
+    "Delta cells": {
+        "markers": ["SST", "HHEX", "GHSR", "RBP4", "ADCYAP1"],
+        "description": "pancreatic delta cells",
+    },
+    # ── Kidney ──
+    "Proximal tubule": {
+        "markers": ["SLC34A1", "SLC5A2", "ALDOB", "AQP1", "LRP2", "CUBN"],
+        "description": "kidney proximal tubule cells",
+    },
+    "Collecting duct": {
+        "markers": ["AQP2", "AQP3", "SLC12A1", "SCNN1A", "KRT8", "KRT18"],
+        "description": "kidney collecting duct cells",
+    },
+    "Podocytes": {
+        "markers": ["NPHS1", "NPHS2", "PODXL", "WT1", "SYNPO"],
+        "description": "glomerular podocytes",
+    },
+    # ── Muscle ──
+    "Skeletal muscle": {
+        "markers": ["MYH1", "MYH2", "MYH7", "ACTA1", "TTN", "MYLK2"],
+        "description": "skeletal muscle cells",
+    },
+    "Cardiomyocytes": {
+        "markers": ["TNNT2", "MYH6", "MYH7", "ACTC1", "RYR2", "MYL2"],
+        "description": "cardiomyocytes",
+    },
+    # ── Endocrine / Other ──
+    "Adipocytes": {
+        "markers": ["ADIPOQ", "LEP", "FABP4", "PLIN1", "LPL"],
+        "description": "adipocytes",
+    },
+    "Melanocytes": {
+        "markers": ["MITF", "MLANA", "TYR", "DCT", "PMEL"],
+        "description": "melanocytes",
+    },
+    # ── Gastrointestinal ──
+    "Enterocytes": {
+        "markers": ["FABP2", "ALPI", "SLC5A1", "SI", "VIL1", "APOA1", "APOA4"],
+        "description": "intestinal enterocytes",
+    },
+    "Paneth cells": {
+        "markers": ["DEFA5", "DEFA6", "LYZ", "REG3A", "MMP7", "ITLN2"],
+        "description": "Paneth cells (intestinal innate defense)",
+    },
+    "Tuft cells": {
+        "markers": ["POU2F3", "TRPM5", "DCLK1", "GFI1B", "AVIL", "SH2D6"],
+        "description": "tuft (chemosensory) cells",
+    },
+    # ── Thymic ──
+    "Thymic epithelial": {
+        "markers": ["KRT5", "KRT14", "AIRE", "FOXN1", "PSMB11", "CCL25", "DLL4"],
+        "description": "thymic epithelial cells",
+    },
+    # ── Red blood cells ──
+    "Erythrocytes": {
+        "markers": ["HBB", "HBA1", "HBA2", "HBD", "SLC4A1", "ANK1", "GYPA", "SPTA1"],
+        "description": "mature red blood cells / erythrocytes",
+    },
 }
+
+# Context-aware priors: if dataset text mentions these keywords, boost relevant cell types.
+CONTEXT_PRIORS = {
+    "lung": ["Alveolar type 1", "Alveolar type 2", "Basal cells", "Ciliated cells", "Club cells",
+             "Goblet cells", "Ionocytes", "Epithelial cells", "Alveolar macrophages",
+             "Endothelial cells", "Fibroblasts", "Macrophages", "NK cells", "CD8+ T cells"],
+    "airway": ["Ciliated cells", "Club cells", "Goblet cells", "Basal cells", "Ionocytes",
+               "Epithelial cells", "Macrophages"],
+    "brain": ["Neurons", "Excitatory neurons", "Inhibitory neurons", "Astrocytes",
+              "Oligodendrocytes", "OPCs", "Microglia", "Radial glia"],
+    "cortex": ["Excitatory neurons", "Inhibitory neurons", "Astrocytes",
+               "Oligodendrocytes", "OPCs", "Microglia"],
+    "kidney": ["Proximal tubule", "Collecting duct", "Podocytes", "Endothelial cells",
+               "Fibroblasts", "Mesothelial cells"],
+    "liver": ["Hepatocytes", "Cholangiocytes", "Endothelial cells", "Kupffer cells",
+              "Macrophages", "NK cells", "Lymphatic endothelial"],
+    "pancreas": ["Beta cells", "Alpha cells", "Delta cells", "Endothelial cells",
+                 "Fibroblasts", "Macrophages"],
+    "bone marrow": ["HSCs/Progenitors", "Erythroid progenitors", "Monocytes", "Neutrophils",
+                    "B cells", "Megakaryocytes", "Erythrocytes", "Plasma cells"],
+    "hematopoiesis": ["HSCs/Progenitors", "Erythroid progenitors", "Monocytes", "Neutrophils",
+                      "B cells", "Megakaryocytes", "Erythrocytes"],
+    "hemato": ["HSCs/Progenitors", "Erythroid progenitors", "Monocytes", "Neutrophils",
+               "B cells", "Megakaryocytes"],
+    "pbmc": ["CD8+ T cells", "CD4+ T cells", "NK cells", "B cells", "Monocytes",
+             "Dendritic cells", "Plasma cells", "Regulatory T cells", "Gamma-delta T cells"],
+    "blood": ["CD8+ T cells", "CD4+ T cells", "NK cells", "B cells", "Monocytes",
+              "Dendritic cells", "Neutrophils", "Erythrocytes", "Megakaryocytes"],
+    "tumor": ["Epithelial cells", "Cancer-associated fibroblasts", "Fibroblasts",
+              "Endothelial cells", "Macrophages", "CD8+ T cells", "NK cells",
+              "Exhausted T cells", "Regulatory T cells"],
+    "cancer": ["Epithelial cells", "Cancer-associated fibroblasts", "Fibroblasts",
+               "Endothelial cells", "Macrophages", "CD8+ T cells", "NK cells",
+               "Exhausted T cells", "Regulatory T cells"],
+    "carcinoma": ["Epithelial cells", "Cancer-associated fibroblasts", "Macrophages",
+                  "CD8+ T cells", "Exhausted T cells", "Regulatory T cells"],
+    "melanoma": ["Melanocytes", "Macrophages", "CD8+ T cells", "NK cells",
+                 "Exhausted T cells", "Fibroblasts"],
+    "leukemia": ["HSCs/Progenitors", "B cells", "Monocytes", "CD8+ T cells",
+                 "Erythroid progenitors", "Megakaryocytes"],
+    "lymphoma": ["B cells", "CD8+ T cells", "CD4+ T cells", "NK cells",
+                 "Macrophages", "Fibroblasts"],
+    "skin": ["Basal cells", "Melanocytes", "Langerhans cells", "Fibroblasts",
+             "Endothelial cells", "Macrophages", "CD8+ T cells"],
+    "intestin": ["Enterocytes", "Goblet cells", "Paneth cells", "Tuft cells",
+                 "Epithelial cells", "Macrophages", "CD8+ T cells"],
+    "colon": ["Enterocytes", "Goblet cells", "Epithelial cells", "Macrophages",
+              "Fibroblasts", "CD8+ T cells"],
+    "thymus": ["Thymic epithelial", "CD4+ T cells", "CD8+ T cells", "Dendritic cells",
+               "Macrophages"],
+    "muscle": ["Skeletal muscle", "Smooth muscle cells", "Fibroblasts", "Endothelial cells",
+               "Macrophages", "Pericytes"],
+    "heart": ["Cardiomyocytes", "Fibroblasts", "Endothelial cells", "Pericytes",
+              "Smooth muscle cells", "Macrophages"],
+    "spleen": ["B cells", "CD8+ T cells", "CD4+ T cells", "Macrophages", "NK cells",
+               "Dendritic cells", "Erythrocytes"],
+    "eye": ["Neurons", "Astrocytes", "Pericytes", "Endothelial cells", "Macrophages"],
+    "peripheral nerve": ["Schwann cells", "Neurons", "Fibroblasts", "Endothelial cells"],
+    "embryo": ["Radial glia", "HSCs/Progenitors", "Mesenchymal stem cells",
+               "Proliferating cells", "Epithelial cells"],
+    "development": ["Radial glia", "HSCs/Progenitors", "Mesenchymal stem cells",
+                    "Proliferating cells"],
+    "fetal": ["Radial glia", "HSCs/Progenitors", "Erythroid progenitors",
+              "Mesenchymal stem cells", "Proliferating cells"],
+    "immune": ["CD8+ T cells", "CD4+ T cells", "NK cells", "B cells", "Monocytes",
+               "Macrophages", "Dendritic cells", "Neutrophils", "Mast cells"],
+    "lps": ["Macrophages", "Monocytes", "Microglia", "Dendritic cells", "Neutrophils"],
+    "aging": ["CD8+ T cells", "CD4+ T cells", "NK cells", "B cells", "Monocytes",
+              "Macrophages", "HSCs/Progenitors"],
+}
+
+
+def _load_signature_db(path: str) -> Dict[str, Dict[str, List[str]]]:
+    """Load additional marker signatures from a JSON file."""
+    if not path:
+        return {}
+    p = Path(path)
+    if not p.exists():
+        logger.warning(f"Signature DB not found: {path}")
+        return {}
+    try:
+        with open(p) as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            logger.warning(f"Invalid signature DB format: {path}")
+            return {}
+        return data
+    except Exception as e:
+        logger.warning(f"Failed to load signature DB: {e}")
+        return {}
 
 
 def annotate_cluster(
@@ -177,6 +423,8 @@ def annotate_cluster(
     dataset_text: str,
     cluster_id: int,
     n_cells: int,
+    resolution: float,
+    signatures: Dict[str, Dict[str, List[str]]],
 ) -> Tuple[str, str, float]:
     """
     Annotate a cluster based on its top marker genes.
@@ -186,43 +434,75 @@ def annotate_cluster(
     best_type = None
     best_score = 0.0
     best_matched = []
+    second_best_type = None
+    second_best_score = 0.0
 
     top_set = set([m.upper() for m in top_markers[:30]])  # use top 30 markers
+    # Also check top 15 (higher weight — more specific markers)
+    top15_set = set([m.upper() for m in top_markers[:15]])
 
-    for ct_name, ct_info in CELL_TYPE_SIGNATURES.items():
+    context = dataset_text.lower()
+    context_hits = set()
+    for kw, types in CONTEXT_PRIORS.items():
+        if kw in context:
+            context_hits.update(types)
+
+    scores = []
+    for ct_name, ct_info in signatures.items():
         sig_markers = set([m.upper() for m in ct_info["markers"]])
         overlap = top_set & sig_markers
-        # Jaccard-like score weighted toward specificity
+        overlap_top15 = top15_set & sig_markers
+        # Weighted scoring: top-15 markers count more (they're more specific)
         if len(sig_markers) > 0:
-            score = len(overlap) / min(len(sig_markers), 8)  # cap denominator
+            denom = min(len(sig_markers), 8)
+            base = len(overlap) / denom
+            # Extra weight for markers in top 15 (higher rank = more discriminative)
+            rank_bonus = 0.05 * len(overlap_top15)
         else:
-            score = 0
-        if score > best_score:
-            best_score = score
-            best_type = ct_name
-            best_matched = sorted(overlap)
+            base = 0
+            rank_bonus = 0
+        # Context prior bonus
+        bonus = 0.1 if ct_name in context_hits else 0.0
+        score = min(base + bonus + rank_bonus, 1.0)
+        scores.append((score, ct_name, sorted(overlap)))
 
-    if best_score >= 0.25 and best_type is not None:
-        ct_desc = CELL_TYPE_SIGNATURES[best_type]["description"]
+    scores.sort(reverse=True)
+    if scores:
+        best_score, best_type, best_matched = scores[0]
+    if len(scores) > 1:
+        second_best_score, second_best_type, _ = scores[1]
+
+    # Lower threshold from 0.25 → 0.15 to catch more valid annotations
+    # Use margin check: if top two scores are very close, flag lower confidence
+    if best_score >= 0.15 and best_type is not None:
+        ct_desc = signatures[best_type]["description"]
         matched_str = ", ".join(best_matched[:5])
         
-        # Build cluster-specific description combining dataset context + cell type
-        # Extract tissue/disease context from dataset description
-        tissue_context = _extract_context(dataset_text)
+        # Adjust confidence if margin is small (ambiguous assignment)
+        margin = best_score - second_best_score
+        effective_conf = best_score if margin > 0.1 else best_score * 0.85
         
+        # Build cluster-specific description combining dataset context + cell type
+        tissue_context = _extract_context(dataset_text)
+        if best_score >= 0.50:
+            prefix = "Sub-population of"
+        elif best_score >= 0.30:
+            prefix = "Putative"
+        else:
+            prefix = "Candidate"
         description = (
-            f"Sub-population of {ct_desc} (cluster {cluster_id}, n={n_cells} cells) "
-            f"identified by expression of {matched_str}. "
+            f"{prefix} {ct_desc} (Leiden cluster {cluster_id}, n={n_cells} cells, "
+            f"res={resolution:.2f}) identified by expression of {matched_str}. "
             f"Context: {tissue_context}"
         )
-        return best_type, description, best_score
+        return best_type, description, effective_conf
     else:
         # Unknown cluster — use top markers for description
         top_5 = ", ".join(top_markers[:5])
         tissue_context = _extract_context(dataset_text)
         description = (
-            f"Uncharacterized cell population (cluster {cluster_id}, n={n_cells} cells) "
-            f"with high expression of {top_5}. "
+            f"Uncharacterized cell population (Leiden cluster {cluster_id}, n={n_cells} cells, "
+            f"res={resolution:.2f}) with high expression of {top_5}. "
             f"Context: {tissue_context}"
         )
         return "Unknown", description, best_score
@@ -230,11 +510,24 @@ def annotate_cluster(
 
 def _extract_context(dataset_text: str) -> str:
     """Extract tissue/disease context from dataset-level description."""
-    # Take first sentence as context
-    sentences = dataset_text.split(". ")
-    if len(sentences) >= 1:
-        return sentences[0].strip().rstrip(".")
-    return dataset_text[:150]
+    sentences = [s.strip() for s in dataset_text.split(". ") if s.strip()]
+    context = ". ".join(sentences[:2]).strip().rstrip(".")
+    context = context.replace("Single-cell RNA sequencing of ", "")
+    if len(context) > 160:
+        context = context[:157].rsplit(" ", 1)[0] + "..."
+    return context
+
+
+def choose_resolution(n_cells: int, base_resolution: float, mode: str) -> float:
+    if mode == "fixed":
+        return base_resolution
+    if n_cells < 1000:
+        return 0.6
+    if n_cells < 5000:
+        return 0.8
+    if n_cells < 15000:
+        return 1.0
+    return 1.2
 
 
 def cluster_and_annotate(
@@ -243,6 +536,7 @@ def cluster_and_annotate(
     dataset_text: str,
     resolution: float = 0.8,
     min_cluster_size: int = 20,
+    signatures: Dict[str, Dict[str, List[str]]] = None,
 ) -> Dict:
     """
     Cluster an AnnData and annotate each cluster.
@@ -280,6 +574,7 @@ def cluster_and_annotate(
         return {}
     
     cluster_annotations = {}
+    signatures = signatures or CELL_TYPE_SIGNATURES
     
     for cluster_id in sorted(clusters, key=int):
         mask = adata_work.obs["leiden"] == cluster_id
@@ -301,7 +596,7 @@ def cluster_and_annotate(
                 continue
         
         cell_type, description, confidence = annotate_cluster(
-            top_markers, dataset_text, int(cluster_id), n_cells
+            top_markers, dataset_text, int(cluster_id), n_cells, resolution, signatures
         )
         
         cluster_annotations[str(cluster_id)] = {
@@ -311,6 +606,7 @@ def cluster_and_annotate(
             "n_cells": int(n_cells),
             "top_markers": top_markers[:10],
             "cell_indices": [int(x) for x in np.where(mask)[0]],
+            "label_source": "signature" if cell_type != "Unknown" else "marker_only",
         }
         
         logger.info(
@@ -329,9 +625,13 @@ def main():
     parser.add_argument("--metadata", type=str, default="data/processed_h5ad/metadata_structured.json")
     parser.add_argument("--output_dir", type=str, default="data/processed_h5ad")
     parser.add_argument("--resolution", type=float, default=0.8,
-                        help="Leiden clustering resolution (higher = more clusters)")
+                        help="Base Leiden clustering resolution (higher = more clusters)")
+    parser.add_argument("--resolution_mode", choices=["fixed", "adaptive"], default="adaptive",
+                        help="fixed: use --resolution; adaptive: adjust by dataset size")
     parser.add_argument("--min_cluster_size", type=int, default=20,
                         help="Minimum cells per cluster to annotate")
+    parser.add_argument("--signature_db", type=str, default="",
+                        help="Optional JSON file with additional marker signatures")
     args = parser.parse_args()
 
     setup_logging()
@@ -343,6 +643,10 @@ def main():
     with open(args.metadata) as f:
         metadata = json.load(f)
     
+    # Load optional signature DB and merge
+    extra_signatures = _load_signature_db(args.signature_db)
+    signatures = {**CELL_TYPE_SIGNATURES, **extra_signatures}
+
     # Find all processed h5ad files
     h5ad_files = sorted(h5ad_dir.glob("*_processed.h5ad"))
     
@@ -350,7 +654,7 @@ def main():
     print(f"CLOP-DiT v0.4 Sub-Cluster Text Generation")
     print(f"{'='*70}")
     print(f"Datasets: {len(h5ad_files)}")
-    print(f"Resolution: {args.resolution}")
+    print(f"Resolution: {args.resolution} ({args.resolution_mode})")
     print(f"Min cluster size: {args.min_cluster_size}")
     print(f"{'='*70}\n")
     
@@ -378,10 +682,12 @@ def main():
             print(f"  ✗ Failed to load: {e}")
             continue
         
+        res = choose_resolution(int(adata.shape[0]), args.resolution, args.resolution_mode)
         cluster_annotations = cluster_and_annotate(
             adata, dataset_id, dataset_text,
-            resolution=args.resolution,
+            resolution=res,
             min_cluster_size=args.min_cluster_size,
+            signatures=signatures,
         )
         
         if cluster_annotations:
@@ -389,6 +695,8 @@ def main():
                 "dataset_text": dataset_text,
                 "n_cells_total": int(adata.shape[0]),
                 "n_clusters": len(cluster_annotations),
+                "resolution": round(float(res), 3),
+                "resolution_mode": args.resolution_mode,
                 "clusters": cluster_annotations,
             }
             total_clusters += len(cluster_annotations)
@@ -405,7 +713,7 @@ def main():
     # Save sub-cluster metadata
     subcluster_path = output_dir / "subcluster_metadata.json"
     with open(subcluster_path, "w") as f:
-        json.dump(all_subcluster_meta, f, indent=2, ensure_ascii=False)
+        json.dump(all_subcluster_meta, f, indent=2, ensure_ascii=True)
     
     # Create expanded metadata for cache builder
     # This maps each cell to its sub-cluster text (more fine-grained than dataset-level)
@@ -428,7 +736,7 @@ def main():
     
     expanded_path = output_dir / "metadata_subclusters.json"
     with open(expanded_path, "w") as f:
-        json.dump(expanded_metadata, f, indent=2, ensure_ascii=False)
+        json.dump(expanded_metadata, f, indent=2, ensure_ascii=True)
     
     print(f"\n{'='*70}")
     print(f"Sub-Cluster Analysis Complete")
