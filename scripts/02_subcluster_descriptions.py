@@ -325,6 +325,220 @@ CELL_TYPE_SIGNATURES = {
         "markers": ["HBB", "HBA1", "HBA2", "HBD", "SLC4A1", "ANK1", "GYPA", "SPTA1"],
         "description": "mature red blood cells / erythrocytes",
     },
+
+    # ── Neuroendocrine / Merkel ──
+    "Neuroendocrine cells": {
+        "markers": ["CHGA", "CHGB", "SYP", "ENO2", "NCAM1", "INSM1", "ASCL1", "NHLH1",
+                    "MDK", "CCK", "NPY", "VIP", "GRP", "SCG2", "DDC", "BEX1"],
+        "description": "neuroendocrine cells",
+    },
+    "Merkel cells": {
+        "markers": ["ATOH1", "ISL1", "SOX2", "KRT20", "KRT8", "KRT18", "NHLH1", "CHGA",
+                    "MDK", "CCK", "NPY", "VIP", "ENO1", "S100A1"],
+        "description": "Merkel cells (neuroendocrine touch receptors)",
+    },
+
+    # ── Spinal cord / motor neurons ──
+    "Motor neurons": {
+        "markers": ["CHAT", "ISL1", "ISL2", "MNX1", "SLC18A3", "SLC5A7", "PRPH", "LHX3"],
+        "description": "motor neurons",
+    },
+    "Spinal interneurons": {
+        "markers": ["PAX2", "EN1", "EVX1", "LBX1", "LHX1", "LHX5", "GRIA1", "GAD1",
+                    "GAD2", "SLC32A1", "GBX1", "ELMO1"],
+        "description": "spinal cord interneurons",
+    },
+    "Dorsal horn neurons": {
+        "markers": ["LBX1", "PAX2", "TLX3", "DRG11", "SST", "TAC1", "PVALB", "CALB1",
+                    "CALB2", "NPY", "NOS1AP"],
+        "description": "dorsal horn sensory neurons",
+    },
+
+    # ── Hippocampal / DG neurons ──
+    "Granule cells": {
+        "markers": ["PROX1", "CALB2", "NEUROD6", "NEUROD2", "BHLHE22", "BCL11B",
+                    "SEMA5A", "NRGN", "CNTNAP2", "CNTNAP5A"],
+        "description": "hippocampal dentate gyrus granule cells",
+    },
+    "Immature neurons": {
+        "markers": ["DCX", "NEUROD1", "NEUROD2", "NEUROD6", "TUBB3", "STMN2",
+                    "CD24", "SNAP25", "NREP", "SOX11", "NFIB", "RTN1"],
+        "description": "immature / migrating neurons",
+    },
+    "Intermediate progenitors": {
+        "markers": ["EOMES", "TBR2", "NEUROG2", "NEUROG1", "HES6", "NHLH1",
+                    "GADD45G", "DLL1", "ASCL1", "INSM1", "MKI67"],
+        "description": "intermediate neural progenitors",
+    },
+
+    # ── Retinal ──
+    "Retinal ganglion cells": {
+        "markers": ["POU4F1", "POU4F2", "ISL1", "RBPMS", "SNCG", "THY1", "GAP43",
+                    "NEFL", "NEFM"],
+        "description": "retinal ganglion cells",
+    },
+    "Photoreceptors": {
+        "markers": ["RHO", "OPN1SW", "OPN1MW", "NRL", "CRX", "NR2E3", "RCVRN",
+                    "PDE6A", "GNAT1", "ARR3"],
+        "description": "photoreceptor cells (rods and cones)",
+    },
+    "Bipolar cells": {
+        "markers": ["VSX2", "OTX2", "VSX1", "TRPM1", "GRM6", "PRKCA", "CABP5"],
+        "description": "retinal bipolar cells",
+    },
+    "Müller glia": {
+        "markers": ["RLBP1", "GLUL", "SLC1A3", "VIM", "SOX9", "CLU", "DKK3",
+                    "AQP4", "APOE"],
+        "description": "Müller glial cells",
+    },
+    "Amacrine cells": {
+        "markers": ["GAD1", "GAD2", "SLC32A1", "SLC6A9", "TFAP2A", "TFAP2B",
+                    "PAX6", "CHAT", "CALB1"],
+        "description": "retinal amacrine cells",
+    },
+
+    # ── Pituitary ──
+    "Somatotrophs": {
+        "markers": ["GH1", "GH2", "GHRHR", "DLK1", "RBP4", "OTOS", "IGSF1"],
+        "description": "pituitary somatotroph cells (growth hormone-producing)",
+    },
+    "Lactotrophs": {
+        "markers": ["PRL", "DRD2", "GATA2", "ESR1", "TBX19"],
+        "description": "pituitary lactotroph cells (prolactin-producing)",
+    },
+    "Corticotrophs": {
+        "markers": ["POMC", "TBX19", "TPIT", "PCSK1", "CRH", "CRHR1"],
+        "description": "pituitary corticotroph cells (ACTH-producing)",
+    },
+    "Gonadotrophs": {
+        "markers": ["FSHB", "LHB", "CGA", "NR5A1", "GNRHR", "FOXL2"],
+        "description": "pituitary gonadotroph cells (FSH/LH-producing)",
+    },
+    "Thyrotrophs": {
+        "markers": ["TSHB", "CGA", "POU1F1", "GATA2", "RXRG"],
+        "description": "pituitary thyrotroph cells (TSH-producing)",
+    },
+
+    # ── Urothelial / prostate / urethral ──
+    "Urothelial cells": {
+        "markers": ["UPK1A", "UPK1B", "UPK2", "UPK3A", "UPK3B", "KRT20", "PSCA",
+                    "KRT8", "KRT18", "SLC12A2"],
+        "description": "urothelial / transitional epithelial cells",
+    },
+    "Luminal epithelial": {
+        "markers": ["KRT8", "KRT18", "KRT19", "MUC1", "CDH1", "EPCAM", "GATA3",
+                    "FOXA1", "ESR1", "PGR", "AR"],
+        "description": "luminal epithelial cells",
+    },
+    "Myoepithelial cells": {
+        "markers": ["KRT5", "KRT14", "ACTA2", "TAGLN", "MYH11", "CNN1", "TP63",
+                    "SERPINB5", "OXTR"],
+        "description": "myoepithelial / basal cells",
+    },
+    "Prostate epithelial": {
+        "markers": ["MSMB", "PBSN", "KLK3", "KLK2", "NKX3-1", "AR", "ACPP",
+                    "SLC45A3", "TGM4", "DEFB50"],
+        "description": "prostate epithelial cells",
+    },
+
+    # ── Mammary / breast-specific ──
+    "Mammary secretory": {
+        "markers": ["CSN2", "CSN3", "LALBA", "LTF", "BTN1A1", "XDH", "ELF5"],
+        "description": "mammary secretory epithelial cells",
+    },
+
+    # ── Reproductive ──
+    "Leydig cells": {
+        "markers": ["CYP17A1", "CYP11A1", "HSD3B1", "STAR", "INSL3", "CYP19A1"],
+        "description": "Leydig cells (testosterone-producing)",
+    },
+    "Sertoli cells": {
+        "markers": ["SOX9", "WT1", "AMH", "CLDN11", "GATA4", "CLU", "INHA"],
+        "description": "Sertoli cells (testicular supporting cells)",
+    },
+
+    # ── Dental / odontogenic ──
+    "Odontoblasts": {
+        "markers": ["DSPP", "DMP1", "COL1A1", "ALPL", "PHEX", "RUNX2", "IBSP",
+                    "SPARC", "BGLAP"],
+        "description": "odontoblasts / dentin-secreting cells",
+    },
+    "Ameloblasts": {
+        "markers": ["AMELX", "ENAM", "AMBN", "KLK4", "MMP20", "SLC24A4"],
+        "description": "ameloblasts (enamel-producing cells)",
+    },
+    "Dental epithelial": {
+        "markers": ["SHH", "PITX2", "PAX9", "MSX1", "DLX2", "BMP4", "FGF4"],
+        "description": "dental epithelial progenitor cells",
+    },
+
+    # ── Osteoblast / chondrocyte ──
+    "Osteoblasts": {
+        "markers": ["BGLAP", "RUNX2", "SP7", "ALPL", "COL1A1", "IBSP", "SPP1",
+                    "DMP1", "SOST"],
+        "description": "osteoblasts / bone-forming cells",
+    },
+    "Chondrocytes": {
+        "markers": ["SOX9", "COL2A1", "ACAN", "COL9A1", "COL11A1", "COMP",
+                    "MATN3", "FMOD"],
+        "description": "chondrocytes / cartilage cells",
+    },
+
+    # ── Functional / state-based signatures (catch stress, IFN, etc.) ──
+    "Stress-response cells": {
+        "markers": ["HSPA1A", "HSPA1B", "HSP90AA1", "HSP90AB1", "HSPH1", "HSPB1",
+                    "HSPE1", "DNAJB1", "DNAJB6", "ATF3", "FOS", "JUN", "JUNB"],
+        "description": "cells in heat-shock / stress response state",
+    },
+    "IFN-stimulated cells": {
+        "markers": ["ISG15", "IFIT1", "IFIT3", "IFITM1", "IFITM3", "MX1", "MX2",
+                    "OAS1", "STAT1", "IRF7", "BST2", "IFI6", "IFI27", "IFI44L"],
+        "description": "interferon-stimulated / antiviral response cells",
+    },
+    "MHC-II high APCs": {
+        "markers": ["HLA-DRA", "HLA-DRB1", "HLA-DPA1", "HLA-DPB1", "HLA-DQA1",
+                    "HLA-DQB1", "CD74", "H2-AA", "H2-AB1", "H2-EB1", "CIITA"],
+        "description": "MHC-II-high antigen-presenting cells",
+    },
+    "Cycling cells": {
+        "markers": ["MKI67", "TOP2A", "PCNA", "CDK1", "CCNB1", "CCNB2", "TYMS",
+                    "MCM2", "MCM5", "BIRC5", "UBE2C", "STMN1", "TUBA1B", "TUBB"],
+        "description": "actively cycling cells (S/G2/M phase)",
+    },
+
+    # ── Endoderm / stem-cell derived ──
+    "Definitive endoderm": {
+        "markers": ["SOX17", "FOXA2", "CXCR4", "GATA4", "GATA6", "GSC", "CER1",
+                    "HHEX", "MIXL1"],
+        "description": "definitive endoderm cells",
+    },
+    "Pluripotent stem cells": {
+        "markers": ["POU5F1", "SOX2", "NANOG", "ZFP42", "DPPA4", "LIN28A",
+                    "DNMT3B", "L1TD1", "PODXL", "SALL4"],
+        "description": "pluripotent stem cells (ESC/iPSC)",
+    },
+    "Mesoderm progenitors": {
+        "markers": ["MESP1", "MESP2", "MIXL1", "TBX6", "MSGN1", "WNT3A", "CDX2",
+                    "HAND1", "BMP4"],
+        "description": "mesoderm progenitor cells",
+    },
+
+    # ── Capillary / vascular subtypes ──
+    "Capillary endothelial": {
+        "markers": ["CA4", "CD36", "FABP4", "FABP5", "GPIHBP1", "RBP7", "BTNL9",
+                    "CD300LG", "CLDN5"],
+        "description": "capillary endothelial cells",
+    },
+    "Venous endothelial": {
+        "markers": ["ACKR1", "CLU", "SELE", "SELP", "VWF", "CCL14", "PLVAP",
+                    "CD74", "HLA-DRA"],
+        "description": "venous endothelial cells",
+    },
+    "Tip cells": {
+        "markers": ["ESM1", "APLN", "ANGPT2", "DLL4", "KDR", "CXCR4", "SPARC",
+                    "COL4A1", "COL4A2"],
+        "description": "tip / angiogenic endothelial cells",
+    },
 }
 
 # Context-aware priors: if dataset text mentions these keywords, boost relevant cell types.
@@ -395,6 +609,98 @@ CONTEXT_PRIORS = {
     "lps": ["Macrophages", "Monocytes", "Microglia", "Dendritic cells", "Neutrophils"],
     "aging": ["CD8+ T cells", "CD4+ T cells", "NK cells", "B cells", "Monocytes",
               "Macrophages", "HSCs/Progenitors"],
+    "pituitary": ["Somatotrophs", "Lactotrophs", "Corticotrophs", "Gonadotrophs",
+                  "Thyrotrophs", "Endothelial cells", "Fibroblasts"],
+    "retina": ["Retinal ganglion cells", "Photoreceptors", "Bipolar cells",
+               "Müller glia", "Amacrine cells", "Astrocytes", "Microglia"],
+    "hippocampus": ["Granule cells", "Immature neurons", "Intermediate progenitors",
+                    "Radial glia", "Astrocytes", "Microglia", "Oligodendrocytes",
+                    "Inhibitory neurons", "Excitatory neurons"],
+    "dentate": ["Granule cells", "Immature neurons", "Intermediate progenitors",
+                "Radial glia", "Astrocytes", "Oligodendrocytes"],
+    "spinal": ["Motor neurons", "Spinal interneurons", "Dorsal horn neurons",
+               "Astrocytes", "Oligodendrocytes", "OPCs", "Microglia",
+               "Excitatory neurons", "Inhibitory neurons"],
+    "spine": ["Motor neurons", "Spinal interneurons", "Dorsal horn neurons",
+              "Astrocytes", "Oligodendrocytes", "OPCs", "Microglia"],
+    "prostate": ["Prostate epithelial", "Luminal epithelial", "Basal cells",
+                 "Smooth muscle cells", "Fibroblasts", "Endothelial cells"],
+    "urethr": ["Urothelial cells", "Luminal epithelial", "Basal cells",
+               "Myoepithelial cells", "Smooth muscle cells", "Fibroblasts"],
+    "bladder": ["Urothelial cells", "Luminal epithelial", "Smooth muscle cells",
+                "Fibroblasts", "Endothelial cells"],
+    "breast": ["Luminal epithelial", "Myoepithelial cells", "Mammary secretory",
+               "Cancer-associated fibroblasts", "Endothelial cells", "Macrophages",
+               "CD8+ T cells", "Adipocytes"],
+    "mammary": ["Luminal epithelial", "Myoepithelial cells", "Mammary secretory",
+                "Fibroblasts", "Adipocytes", "Endothelial cells"],
+    "organoid": ["Radial glia", "Immature neurons", "Intermediate progenitors",
+                 "Excitatory neurons", "Inhibitory neurons", "Astrocytes",
+                 "Pluripotent stem cells", "Proliferating cells"],
+    "forebrain": ["Radial glia", "Immature neurons", "Intermediate progenitors",
+                  "Excitatory neurons", "Inhibitory neurons", "OPCs", "Astrocytes"],
+    "thalamus": ["Excitatory neurons", "Inhibitory neurons", "Astrocytes",
+                  "Oligodendrocytes", "OPCs", "Microglia"],
+    "esc": ["Pluripotent stem cells", "Definitive endoderm", "Mesoderm progenitors",
+            "Proliferating cells"],
+    "hesc": ["Pluripotent stem cells", "Definitive endoderm", "Mesoderm progenitors",
+             "Proliferating cells"],
+    "ipsc": ["Pluripotent stem cells", "Definitive endoderm", "Mesoderm progenitors",
+             "Proliferating cells"],
+    "stem cell": ["Pluripotent stem cells", "HSCs/Progenitors", "Mesenchymal stem cells",
+                  "Radial glia", "Proliferating cells"],
+    "differentiation": ["Pluripotent stem cells", "Definitive endoderm",
+                        "Mesoderm progenitors", "Intermediate progenitors",
+                        "Immature neurons", "Radial glia"],
+    "endoderm": ["Definitive endoderm", "Hepatocytes", "Beta cells", "Alpha cells",
+                 "Enterocytes", "Goblet cells", "Cholangiocytes"],
+    "als": ["Motor neurons", "Spinal interneurons", "Astrocytes", "Microglia",
+            "Oligodendrocytes", "OPCs"],
+    "aorta": ["Smooth muscle cells", "Endothelial cells", "Fibroblasts",
+              "Macrophages", "CD8+ T cells", "Pericytes"],
+    "vessel": ["Endothelial cells", "Smooth muscle cells", "Pericytes",
+               "Fibroblasts", "Capillary endothelial", "Venous endothelial"],
+    "lymph node": ["B cells", "CD8+ T cells", "CD4+ T cells", "Dendritic cells",
+                   "Macrophages", "NK cells", "Plasma cells"],
+    "mesenteri": ["B cells", "CD4+ T cells", "CD8+ T cells", "Dendritic cells",
+                  "Macrophages", "NK cells", "ILC cells"],
+    "tooth": ["Odontoblasts", "Ameloblasts", "Dental epithelial", "Fibroblasts",
+              "Mesenchymal stem cells", "Endothelial cells"],
+    "dent": ["Odontoblasts", "Ameloblasts", "Dental epithelial", "Fibroblasts",
+             "Mesenchymal stem cells"],
+    "alzheim": ["Microglia", "Astrocytes", "Neurons", "Oligodendrocytes",
+                "OPCs", "Endothelial cells"],
+    "autism": ["Microglia", "Astrocytes", "Neurons", "Excitatory neurons",
+               "Inhibitory neurons", "Oligodendrocytes"],
+    "hepatoblastoma": ["Hepatocytes", "Cholangiocytes", "Endothelial cells",
+                       "Macrophages", "Fibroblasts", "Mesenchymal stem cells"],
+    "stomach": ["Epithelial cells", "Enterocytes", "Goblet cells",
+                "Macrophages", "Fibroblasts", "CD8+ T cells"],
+    "gastric": ["Epithelial cells", "Enterocytes", "Goblet cells",
+                "Macrophages", "Fibroblasts", "CD8+ T cells"],
+    "myeloma": ["Plasma cells", "B cells", "CD8+ T cells", "NK cells",
+                "Monocytes", "Macrophages", "Erythroid progenitors"],
+    "myeloid": ["Monocytes", "Macrophages", "Dendritic cells", "Neutrophils",
+                "Mast cells", "Plasmacytoid DCs"],
+    "lsk": ["HSCs/Progenitors", "Erythroid progenitors", "Megakaryocytes",
+            "Monocytes", "Proliferating cells"],
+    "neuroendocrin": ["Neuroendocrine cells", "Merkel cells"],
+    "merkel": ["Merkel cells", "Neuroendocrine cells", "CD8+ T cells"],
+    "interferon": ["IFN-stimulated cells", "Monocytes", "Macrophages",
+                   "HSCs/Progenitors"],
+    "cd45": ["CD8+ T cells", "CD4+ T cells", "NK cells", "Macrophages",
+             "Monocytes", "Dendritic cells", "B cells", "Neutrophils"],
+    "leukocyte": ["CD8+ T cells", "CD4+ T cells", "NK cells", "Macrophages",
+                  "Monocytes", "Dendritic cells", "B cells", "Neutrophils"],
+    "endothelial": ["Endothelial cells", "Capillary endothelial", "Venous endothelial",
+                    "Lymphatic endothelial", "Tip cells", "Pericytes"],
+    "strom": ["Fibroblasts", "Smooth muscle cells", "Pericytes",
+              "Endothelial cells", "Mesenchymal stem cells", "Adipocytes"],
+    "islet": ["Beta cells", "Alpha cells", "Delta cells", "Endothelial cells",
+              "Macrophages"],
+    "tumor infiltrat": ["CD8+ T cells", "CD4+ T cells", "NK cells",
+                        "Macrophages", "Dendritic cells", "Regulatory T cells",
+                        "Exhausted T cells", "Monocytes"],
 }
 
 
@@ -425,6 +731,7 @@ def annotate_cluster(
     n_cells: int,
     resolution: float,
     signatures: Dict[str, Dict[str, List[str]]],
+    dataset_id: str = "",
 ) -> Tuple[str, str, float]:
     """
     Annotate a cluster based on its top marker genes.
@@ -483,7 +790,9 @@ def annotate_cluster(
         effective_conf = best_score if margin > 0.1 else best_score * 0.85
         
         # Build cluster-specific description combining dataset context + cell type
-        tissue_context = _extract_context(dataset_text)
+        # Two-layer: dataset-level metadata (organism/tissue/disease) + cluster-level annotation
+        tissue_context = _extract_context(dataset_text, dataset_id)
+        ctx = _parse_structured_context(dataset_text, dataset_id)
         if best_score >= 0.50:
             prefix = "Sub-population of"
         elif best_score >= 0.30:
@@ -491,31 +800,140 @@ def annotate_cluster(
         else:
             prefix = "Candidate"
         description = (
-            f"{prefix} {ct_desc} (Leiden cluster {cluster_id}, n={n_cells} cells, "
+            f"In {ctx['organism']} {ctx['tissue']}"
+            + (f" ({ctx['disease']})" if ctx['disease'] != 'healthy' else "")
+            + f": {prefix} {ct_desc} "
+            f"(Leiden cluster {cluster_id}, n={n_cells} cells, "
             f"res={resolution:.2f}) identified by expression of {matched_str}. "
-            f"Context: {tissue_context}"
+            f"Source: {ctx['context_summary']}"
         )
         return best_type, description, effective_conf
     else:
         # Unknown cluster — use top markers for description
         top_5 = ", ".join(top_markers[:5])
-        tissue_context = _extract_context(dataset_text)
+        tissue_context = _extract_context(dataset_text, dataset_id)
+        ctx = _parse_structured_context(dataset_text, dataset_id)
         description = (
-            f"Uncharacterized cell population (Leiden cluster {cluster_id}, n={n_cells} cells, "
+            f"In {ctx['organism']} {ctx['tissue']}"
+            + (f" ({ctx['disease']})" if ctx['disease'] != 'healthy' else "")
+            + f": Uncharacterized cell population "
+            f"(Leiden cluster {cluster_id}, n={n_cells} cells, "
             f"res={resolution:.2f}) with high expression of {top_5}. "
-            f"Context: {tissue_context}"
+            f"Source: {ctx['context_summary']}"
         )
         return "Unknown", description, best_score
 
 
-def _extract_context(dataset_text: str) -> str:
-    """Extract tissue/disease context from dataset-level description."""
+def _parse_structured_context(dataset_text: str, dataset_id: str = "") -> dict:
+    """Parse organism, tissue, disease from dataset text and ID.
+    
+    Returns dict with keys: organism, tissue, disease, context_summary
+    """
+    text_lower = dataset_text.lower()
+    id_lower = dataset_id.lower()
+    
+    # --- Organism ---
+    organism = "unknown organism"
+    if any(x in text_lower for x in ["human", "hm", "hesc", "pbmc"]):
+        organism = "human"
+    elif "hm" in id_lower and "mm" not in id_lower:
+        organism = "human"
+    elif any(x in text_lower for x in ["mouse", "murine", "mus musculus"]):
+        organism = "mouse"
+    elif "mm" in id_lower:
+        organism = "mouse"
+    # Fallback: check for human/mouse gene naming convention in text
+    if organism == "unknown organism":
+        if any(x in text_lower for x in ["patients", "donors", "clinical"]):
+            organism = "human"
+        elif any(x in text_lower for x in ["c57bl", "balb", "nod", "transgenic mice"]):
+            organism = "mouse"
+    
+    # --- Tissue ---
+    tissue_map = [
+        (["lung", "pulmonary", "alveolar", "airway", "bronch"], "lung"),
+        (["brain", "cortex", "cortical", "cerebr", "hippocampus", "dentate", "forebrain",
+          "thalamus"], "brain"),
+        (["spinal cord", "spine", "spinal"], "spinal cord"),
+        (["liver", "hepat"], "liver"),
+        (["kidney", "renal", "nephro"], "kidney"),
+        (["pancrea", "islet"], "pancreas"),
+        (["bone marrow", "bm ", "marrow"], "bone marrow"),
+        (["blood", "pbmc", "peripheral"], "peripheral blood"),
+        (["skin", "cutaneous", "derma"], "skin"),
+        (["intestin", "colon", "gut", "ileum", "jejunum", "duodenum"], "intestine"),
+        (["breast", "mammary"], "breast"),
+        (["heart", "cardiac", "myocard"], "heart"),
+        (["retina", "retinal", "eye", "ocular"], "retina"),
+        (["pituitary"], "pituitary gland"),
+        (["thymus", "thymic"], "thymus"),
+        (["spleen", "splenic"], "spleen"),
+        (["aort", "vessel", "vascul"], "vasculature"),
+        (["prostate", "prostatic"], "prostate"),
+        (["urethr", "bladder", "urothel"], "urethra/bladder"),
+        (["stomach", "gastric"], "stomach"),
+        (["lymph node", "mesenteric"], "lymph node"),
+        (["tooth", "dental", "teeth"], "dental tissue"),
+        (["muscle", "skeletal"], "muscle"),
+        (["organoid"], "organoid"),
+    ]
+    tissue = "tissue"
+    for keywords, t_name in tissue_map:
+        if any(kw in text_lower or kw in id_lower for kw in keywords):
+            tissue = t_name
+            break
+    
+    # --- Disease ---
+    disease_map = [
+        (["cancer", "tumor", "tumour", "carcinoma", "sarcoma", "malignant",
+          "neoplasm", "oncol"], "cancer"),
+        (["melanoma"], "melanoma"),
+        (["leukemia", "leukaemia", "all ", "aml", "cml"], "leukemia"),
+        (["lymphoma"], "lymphoma"),
+        (["myeloma", " mm "], "multiple myeloma"),
+        (["glioblastoma", "glioma", "gbm"], "glioma"),
+        (["metastas", "metastic"], "metastatic cancer"),
+        (["hepatoblastoma"], "hepatoblastoma"),
+        (["alzheim"], "Alzheimer's disease"),
+        (["parkinsons", "parkinson"], "Parkinson's disease"),
+        (["als", "amyotrophic"], "ALS"),
+        (["autism", "asd"], "autism spectrum disorder"),
+        (["aging", "aged"], "aging"),
+        (["injur", "sci "], "injury"),
+        (["fibrosis", "fibrotic"], "fibrosis"),
+        (["cystic fibrosis", "cftr"], "cystic fibrosis"),
+        (["inflamm", "lps"], "inflammation"),
+    ]
+    disease = "healthy"
+    for keywords, d_name in disease_map:
+        if any(kw in text_lower or kw in id_lower for kw in keywords):
+            disease = d_name
+            break
+    
+    # --- Context summary ---
     sentences = [s.strip() for s in dataset_text.split(". ") if s.strip()]
-    context = ". ".join(sentences[:2]).strip().rstrip(".")
-    context = context.replace("Single-cell RNA sequencing of ", "")
-    if len(context) > 160:
-        context = context[:157].rsplit(" ", 1)[0] + "..."
-    return context
+    context_summary = ". ".join(sentences[:2]).strip().rstrip(".")
+    context_summary = context_summary.replace("Single-cell RNA sequencing of ", "")
+    if len(context_summary) > 120:
+        context_summary = context_summary[:117].rsplit(" ", 1)[0] + "..."
+    
+    return {
+        "organism": organism,
+        "tissue": tissue,
+        "disease": disease,
+        "context_summary": context_summary,
+    }
+
+
+def _extract_context(dataset_text: str, dataset_id: str = "") -> str:
+    """Build two-layer context string: organism + tissue + disease + summary."""
+    ctx = _parse_structured_context(dataset_text, dataset_id)
+    parts = []
+    parts.append(f"{ctx['organism']} {ctx['tissue']}")
+    if ctx['disease'] != "healthy":
+        parts.append(f"({ctx['disease']})")
+    parts.append(f"— {ctx['context_summary']}")
+    return " ".join(parts)
 
 
 def choose_resolution(n_cells: int, base_resolution: float, mode: str) -> float:
@@ -596,7 +1014,8 @@ def cluster_and_annotate(
                 continue
         
         cell_type, description, confidence = annotate_cluster(
-            top_markers, dataset_text, int(cluster_id), n_cells, resolution, signatures
+            top_markers, dataset_text, int(cluster_id), n_cells, resolution, signatures,
+            dataset_id=dataset_id,
         )
         
         cluster_annotations[str(cluster_id)] = {
