@@ -78,18 +78,18 @@ class TestDatasetCustomPaths:
         """Test loading custom text embeddings from config-specified path."""
         custom_text_path = temp_cache_dir / "embeddings" / "text_embeddings_v2.npy"
         
-        # This test WILL FAIL until we implement custom path wiring
-        # Expected behavior: CLOPDataset should accept text_embeddings_path
-        # and load from that instead of default text_embeddings_unique.npy
+        dataset = CLOPDataset(
+            cache_dir=temp_cache_dir,
+            text_embeddings_path=str(custom_text_path),
+            noise_std=0.0,
+            variant_prob=0.0,
+        )
         
-        with pytest.raises(TypeError):
-            # Currently CLOPDataset.__init__ doesn't accept text_embeddings_path
-            dataset = CLOPDataset(
-                cache_dir=temp_cache_dir,
-                text_embeddings_path=str(custom_text_path),
-                noise_std=0.0,
-                variant_prob=0.0,
-            )
+        # Should load from custom path instead of default
+        expected = np.load(custom_text_path)
+        actual = np.array(dataset.text_emb_unique)
+        assert np.allclose(actual, expected), "Custom text embeddings not loaded correctly"
+        assert dataset._deduplicated is True
 
     def test_custom_variant_path(self, temp_cache_dir):
         """Test loading custom variant data from config-specified path."""
@@ -108,14 +108,15 @@ class TestDatasetCustomPaths:
         with open(variants_dir / "text_variant_map.json", "w") as f:
             json.dump(variant_map, f)
         
-        # This test WILL FAIL until we implement custom path wiring
-        with pytest.raises(TypeError):
-            dataset = CLOPDataset(
-                cache_dir=temp_cache_dir,
-                variant_path=str(variants_dir / "text_variant_embeddings.npy"),
-                variant_map_path=str(variants_dir / "text_variant_map.json"),
-                variant_prob=0.35,
-            )
+        dataset = CLOPDataset(
+            cache_dir=temp_cache_dir,
+            variant_emb_path=str(variants_dir / "text_variant_embeddings.npy"),
+            variant_map_path=str(variants_dir / "text_variant_map.json"),
+            variant_prob=0.35,
+        )
+        
+        assert dataset._has_variants is True
+        assert dataset._variant_embs.shape[0] == n_variants
 
 
 class TestDatasetPathWiringIntegration:

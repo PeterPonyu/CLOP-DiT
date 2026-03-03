@@ -28,41 +28,34 @@ class TestV82ConfigStructure:
 
     def test_v8_1_has_variant_prob(self, v8_1_config):
         """Verify v8.1 config has variant_prob set."""
-        assert "training" in v8_1_config
-        assert "variant_prob" in v8_1_config["training"]
-        assert v8_1_config["training"]["variant_prob"] == 0.35
+        assert "variant_prob" in v8_1_config
+        assert v8_1_config["variant_prob"] == 0.35
 
     def test_v8_1_has_temperature_learnable(self, v8_1_config):
         """Verify v8.1 config has temperature_learnable enabled."""
-        assert "loss" in v8_1_config
-        assert "temperature_learnable" in v8_1_config["loss"]
-        assert v8_1_config["loss"]["temperature_learnable"] is True
+        assert "temperature_learnable" in v8_1_config
+        assert v8_1_config["temperature_learnable"] is True
 
     def test_v8_1_has_custom_paths(self, v8_1_config):
         """Verify v8.1 config has custom path specifications."""
-        assert "data" in v8_1_config
-        data = v8_1_config["data"]
-        
-        # These paths should exist in v8.1 config
-        assert "text_embeddings_path" in data
-        assert "text_strings_path" in data
-        assert "variant_path" in data
+        # These paths should exist in v8.1 config (flat layout)
+        assert "text_embeddings_path" in v8_1_config
+        assert "text_strings_path" in v8_1_config
+        assert "variant_path" in v8_1_config
         
         # Paths should point to v2 reorganized structure
-        assert "text_embeddings_v2" in data["text_embeddings_path"]
-        assert "text_strings_v2" in data["text_strings_path"]
+        assert "text_embeddings_v2" in v8_1_config["text_embeddings_path"]
+        assert "text_strings_v2" in v8_1_config["text_strings_path"]
 
     def test_v8_1_paths_use_reorganized_structure(self, v8_1_config):
         """Verify v8.1 paths use new subdirectory organization."""
-        data = v8_1_config["data"]
-        
         # Should use embeddings/, raw/, variants/ subdirectories
-        if "text_embeddings_path" in data:
-            assert "embeddings/" in data["text_embeddings_path"]
-        if "text_strings_path" in data:
-            assert "raw/" in data["text_strings_path"]
-        if "variant_path" in data:
-            assert "variants/" in data["variant_path"]
+        if "text_embeddings_path" in v8_1_config:
+            assert "embeddings/" in v8_1_config["text_embeddings_path"]
+        if "text_strings_path" in v8_1_config:
+            assert "raw/" in v8_1_config["text_strings_path"]
+        if "variant_path" in v8_1_config:
+            assert "variants/" in v8_1_config["variant_path"]
 
 
 class TestV82ConfigValidation:
@@ -178,21 +171,19 @@ class TestV82ConfigFileCreation:
         v8_2_config["version"] = "8.2"
         v8_2_config["description"] = "v8.1 with corrected dataset loader path wiring"
         
-        # Verify all required fields are present
-        assert "data" in v8_2_config
-        assert "training" in v8_2_config
-        assert "loss" in v8_2_config
-        assert "model" in v8_2_config
+        # Verify all required fields are present (flat config layout)
+        assert "cache_dir" in v8_2_config
+        assert "variant_prob" in v8_2_config
+        assert "loss_type" in v8_2_config
+        assert "text_dim" in v8_2_config
         
         # Verify custom paths
-        data = v8_2_config["data"]
-        assert "text_embeddings_path" in data
-        assert "variant_path" in data
+        assert "text_embeddings_path" in v8_2_config
+        assert "variant_path" in v8_2_config
         
         # Verify training settings
-        training = v8_2_config["training"]
-        assert training["variant_prob"] == 0.35
-        assert training["use_preprocessed"] is True
+        assert v8_2_config["variant_prob"] == 0.35
+        assert v8_2_config["use_preprocessed"] is True
 
     def test_v8_2_config_serializes_correctly(self):
         """Test that v8.2 config can be written to YAML and reloaded."""

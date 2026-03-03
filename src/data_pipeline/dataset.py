@@ -63,6 +63,9 @@ class CLOPDataset(Dataset):
         variant_prob: float = 0.0,
         preprocess_text: bool = True,
         preprocess_cell: bool = True,
+        text_embeddings_path: Optional[str] = None,
+        variant_emb_path: Optional[str] = None,
+        variant_map_path: Optional[str] = None,
     ):
         cache_dir = Path(cache_dir)
         self.cache_dir = cache_dir
@@ -106,25 +109,35 @@ class CLOPDataset(Dataset):
 
         # ── Load text embeddings ──
         if self._deduplicated:
-            self.text_emb_unique = np.load(dedup_path, mmap_mode="r")
-            self.text_group_ids = np.load(group_id_path)
+            # Custom text embeddings path takes priority over default
+            if text_embeddings_path is not None:
+                custom_path = Path(text_embeddings_path)
+                if not custom_path.is_absolute():
+                    # Resolve relative to project root (parent of cache_dir ancestor)
+                    custom_path = cache_dir.parent.parent / custom_path
+                self.text_emb_unique = np.load(str(custom_path), mmap_mode="r")
+                logger.info(f"Loading CUSTOM text embeddings from: {custom_path}")
+            else:
+                self.text_emb_unique = np.load(dedup_path, mmap_mode="r")
 
-            # Load preprocessed unique texts if available
-            if use_pp_text:
-                pp_unique = cache_dir / "text_embeddings_unique_preprocessed.npy"
-                if pp_unique.exists():
-                    self.text_emb_unique = np.load(pp_unique, mmap_mode="r")
-                    logger.info("Loading PREPROCESSED (whitened) unique text embeddings")
+                # Load preprocessed unique texts if available
+                if use_pp_text:
+                    pp_unique = cache_dir / "text_embeddings_unique_preprocessed.npy"
+                    if pp_unique.exists():
+                        self.text_emb_unique = np.load(pp_unique, mmap_mode="r")
+                        logger.info("Loading PREPROCESSED (whitened) unique text embeddings")
+
+            self.text_group_ids = np.load(group_id_path)
 
             # For legacy compatibility: text_emb used by some code paths
             self.text_emb = None  # Will be fetched via __getitem__
 
-            # Load variant embeddings if available
-            variant_emb_path = cache_dir / "text_variant_embeddings.npy"
-            variant_map_path = cache_dir / "text_variant_map.json"
-            if variant_emb_path.exists() and variant_map_path.exists() and variant_prob > 0:
-                self._variant_embs = np.load(variant_emb_path, mmap_mode="r")
-                with open(variant_map_path) as f:
+            # Load variant embeddings: custom paths first, then default
+            _var_emb = Path(variant_emb_path) if variant_emb_path else cache_dir / "text_variant_embeddings.npy"
+            _var_map = Path(variant_map_path) if variant_map_path else cache_dir / "text_variant_map.json"
+            if _var_emb.exists() and _var_map.exists() and variant_prob > 0:
+                self._variant_embs = np.load(str(_var_emb), mmap_mode="r")
+                with open(str(_var_map)) as f:
                     variant_map = json.load(f)  # list of [group_id, variant_idx]
 
                 # Build group_id → list of variant embedding indices
@@ -439,6 +452,9 @@ def create_dataloaders(
     groups_per_batch: int = 128,
     hard_negative_ratio: float = 0.5,
     hard_negative_k: int = 20,
+    text_embeddings_path: Optional[str] = None,
+    variant_emb_path: Optional[str] = None,
+    variant_map_path: Optional[str] = None,
 ) -> Tuple[DataLoader, DataLoader]:
     """Create train/val DataLoaders for CLOP or DiT training.
 
@@ -479,6 +495,9 @@ def create_dataloaders(
             variant_prob=variant_prob,
             preprocess_text=preprocess_text,
             preprocess_cell=preprocess_cell,
+            text_embeddings_path=text_embeddings_path,
+            variant_emb_path=variant_emb_path,
+            variant_map_path=variant_map_path,
         )
     elif stage == "dit":
         dataset = DiTDataset(

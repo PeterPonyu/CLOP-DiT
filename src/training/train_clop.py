@@ -463,6 +463,9 @@ class CLOPTrainer:
             groups_per_batch=config.get("groups_per_batch", 128),
             hard_negative_ratio=config.get("hard_negative_ratio", 0.5),
             hard_negative_k=config.get("hard_negative_k", 20),
+            text_embeddings_path=config.get("text_embeddings_path"),
+            variant_emb_path=config.get("variant_emb_path"),
+            variant_map_path=config.get("variant_map_path"),
         )
 
         # Auto-detect dimensions from cached data if not specified

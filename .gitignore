@@ -6,36 +6,41 @@ __pycache__/
 dist/
 build/
 .eggs/
+.pytest_cache/
 
-# Data (large files)
+# Data (large files — binary embeddings and h5ad)
 data/cached_latents*/
-data/cached_latents*/*.npy
-data/cached_latents*/**/*.npy
-data/cached_latents*/**/*.json
 data/processed_h5ad/*.h5ad
-data/processed_h5ad_v*/*.h5ad
+data/processed_h5ad_v*/
 
 # Model weights (large binary files)
 models/scgpt_human/
 models/scgpt_pancancer/
 models/checkpoints/*.pth
+models/checkpoints/archive/
 models/checkpoints_v*/
 
 # Generated outputs
-results/*.npz
-results/*.npy
-results/*.json
-generated_*.h5ad
+results/
 figures_v*/
 figures/**/*.png
 figures/**/*.pdf
+generated_*.h5ad
 
-# Logs (all directories and files)
+# Logs
 logs/
 *.log
 
 # Config archives
 configs/archive/
+
+# Doc archives (AI session reports)
+docs/archive/
+
+# Misc generated files
+preprocess_embeddings
+arch-figure/node_modules/
+arch-figure/.nuxt/
 
 # Jupyter
 .ipynb_checkpoints/
