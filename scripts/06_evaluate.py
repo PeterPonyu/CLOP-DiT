@@ -96,7 +96,48 @@ def evaluate_clop(clop_model, cache_dir, device="cuda"):
     logger.info("="*60)
 
     cell_emb = np.load(Path(cache_dir) / "cell_embeddings.npy")
-    text_emb = np.load(Path(cache_dir) / "text_embeddings.npy")
+
+    # ── Resolve text embeddings (v6.2+ compatible) ──
+    # Priority: preprocessed > unique (expand via group_ids) > raw
+    cache_path = Path(cache_dir)
+    text_emb = None
+    group_ids = None
+
+    for candidate in ["text_embeddings_preprocessed.npy",
+                      "text_embeddings.npy"]:
+        p = cache_path / candidate
+        if p.exists():
+            text_emb = np.load(p)
+            logger.info(f"  Loaded text embeddings from {candidate}")
+            break
+
+    if text_emb is None:
+        # Deduplicated storage: expand unique embeddings via group_ids
+        for candidate in ["text_embeddings_unique_preprocessed.npy",
+                          "text_embeddings_unique.npy",
+                          "text_embeddings_dedup.npy"]:
+            p = cache_path / candidate
+            if p.exists():
+                text_emb_unique = np.load(p)
+                for gid_name in ["text_group_ids.npy", "text_group_ids_dedup.npy"]:
+                    gid_path = cache_path / gid_name
+                    if gid_path.exists():
+                        group_ids = np.load(gid_path)
+                        text_emb = text_emb_unique[group_ids]
+                        logger.info(
+                            f"  Expanded {len(text_emb_unique)} unique text embeddings "
+                            f"→ {len(text_emb)} via {gid_name}"
+                        )
+                        break
+                if text_emb is not None:
+                    break
+
+    if text_emb is None:
+        raise FileNotFoundError(
+            f"No text embedding file found in {cache_dir}. "
+            f"Expected text_embeddings.npy, text_embeddings_unique.npy, etc."
+        )
+
     sample_ids = np.load(Path(cache_dir) / "sample_ids.npy")
 
     # Project through CLOP

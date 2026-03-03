@@ -24,6 +24,7 @@ from torch.amp import GradScaler, autocast
 
 from ..architecture.clop import CLOPAligner
 from ..data_pipeline.dataset import CLOPDataset, create_dataloaders
+from ..evaluation.embedding_quality import compute_all_quality_metrics
 from .schedulers import CosineWarmupScheduler
 
 logger = logging.getLogger(__name__)
@@ -226,7 +227,23 @@ class CLOPTrainer:
 
     @torch.no_grad()
     def validate(self) -> Dict:
-        """Run validation.
+        """Run validation with embedding quality metrics.
+
+        Computes standard contrastive metrics (loss, proto accuracy) PLUS
+        structural quality metrics that better predict downstream generation:
+
+        - **alignment**: Mean squared L2 distance between matched pairs.
+          Lower = better.  (Wang & Isola, ICML 2020)
+        - **uniformity_{text,cell}**: Log-average Gaussian kernel between all
+          pairs within each modality.  Lower = more spread.  (ibid.)
+        - **mean_cosine_sim**: Average cosine similarity of matched text–cell
+          pairs.  Higher = better.  Analogous to "CLIP score".
+        - **inter_sep**: Mean cosine distance between cell-type centroids.
+          Higher = better type discrimination.
+        - **intra_cohesion**: Mean cosine sim of cells to their group centroid.
+          Higher = tighter clusters.
+        - **text_cell_align**: Mean cosine sim between each group's text
+          centroid and cell centroid.  Measures conditioning fidelity.
 
         Returns
         -------
@@ -245,6 +262,11 @@ class CLOPTrainer:
         total_n_groups = 0
         num_batches = 0
 
+        # Collect projected embeddings for embedding quality metrics
+        all_text_proj = []
+        all_cell_proj = []
+        all_group_ids = []
+
         for batch in self.val_loader:
             # Dataset returns (text, cell, sample_id, text_group_id)
             if len(batch) == 4:
@@ -257,6 +279,14 @@ class CLOPTrainer:
             cell_emb = cell_emb.to(self.device)
 
             loss, metrics = self.model(text_emb, cell_emb, group_ids=group_ids)
+
+            # Collect projected embeddings for quality metrics
+            text_proj = self.model.project_text(text_emb)
+            cell_proj = self.model.project_cell(cell_emb)
+            all_text_proj.append(text_proj)
+            all_cell_proj.append(cell_proj)
+            if group_ids is not None:
+                all_group_ids.append(group_ids)
 
             total_loss += loss.item()
             total_acc_t2c += metrics["acc_t2c"]
@@ -282,6 +312,17 @@ class CLOPTrainer:
             result["val_proto_top5"] = (total_proto_top5_t2c + total_proto_top5_c2t) / (2 * num_batches)
             result["val_proto_top10"] = (total_proto_top10_t2c + total_proto_top10_c2t) / (2 * num_batches)
             result["val_n_groups"] = total_n_groups / num_batches
+
+        # ── Embedding quality metrics (structural space quality) ──
+        try:
+            all_text_proj = torch.cat(all_text_proj, dim=0)
+            all_cell_proj = torch.cat(all_cell_proj, dim=0)
+            gids = torch.cat(all_group_ids, dim=0) if all_group_ids else None
+            quality = compute_all_quality_metrics(all_text_proj, all_cell_proj, gids)
+            result.update({f"val_{k}": v for k, v in quality.items()})
+        except Exception as e:
+            logger.warning(f"Embedding quality metrics failed: {e}")
+
         return result
 
     def train(self) -> Dict:
@@ -340,6 +381,17 @@ class CLOPTrainer:
                 self.history["train_cohesion"] = []
             self.history["train_cohesion"].append(train_metrics.get("train_cohesion", 0))
 
+            # ── Track embedding quality metrics ──
+            quality_keys = [
+                "val_alignment", "val_uniformity_text", "val_uniformity_cell",
+                "val_mean_cosine_sim", "val_inter_sep", "val_intra_cohesion",
+                "val_text_cell_align",
+            ]
+            for qk in quality_keys:
+                if qk not in self.history:
+                    self.history[qk] = []
+                self.history[qk].append(val_metrics.get(qk, float("nan")))
+
             proto_str = ""
             if "val_proto_acc" in val_metrics:
                 proto_str = (
@@ -359,26 +411,60 @@ class CLOPTrainer:
                     gap = train_metrics['train_proto_acc'] / val_proto_acc
                     gap_str = f"\n  Gap (train/val): {gap:.1f}x"
 
+            # Embedding quality summary
+            eq_str = ""
+            align_val = val_metrics.get("val_alignment")
+            if align_val is not None:
+                eq_str = (
+                    f"\n  Embed Quality:"
+                    f" align={align_val:.4f}"
+                    f" uniform_t={val_metrics.get('val_uniformity_text', 0):.3f}"
+                    f" uniform_c={val_metrics.get('val_uniformity_cell', 0):.3f}"
+                    f" cos_sim={val_metrics.get('val_mean_cosine_sim', 0):.4f}"
+                )
+                if "val_inter_sep" in val_metrics:
+                    eq_str += (
+                        f"\n  Group Quality:"
+                        f" sep={val_metrics['val_inter_sep']:.4f}"
+                        f" coh={val_metrics.get('val_intra_cohesion', 0):.4f}"
+                        f" t↔c={val_metrics.get('val_text_cell_align', 0):.4f}"
+                    )
+
             logger.info(
                 f"\n{'='*60}\n"
                 f"Epoch {epoch}/{self.num_epochs} ({elapsed:.1f}s)\n"
                 f"  Train Loss: {train_metrics['train_loss']:.4f}{train_proto_str}\n"
                 f"  Val   Loss: {val_metrics['val_loss']:.4f}\n"
                 f"  Val   Acc:  {val_metrics['val_acc']:.3f}{proto_str}\n"
-                f"  Temp:       {current_temp:.4f}{gap_str}\n"
+                f"  Temp:       {current_temp:.4f}{gap_str}"
+                f"{eq_str}\n"
                 f"{'='*60}"
             )
 
-            # Use prototype-level acc for early stopping (more stable metric)
-            tracking_acc = val_proto_acc if "val_proto_acc" in val_metrics else val_metrics["val_acc"]
+            # ── Best-model selection: composite quality score ──
+            # Combines alignment (lower=better → negate) with mean cosine sim
+            # (higher=better) and optionally text-cell centroid alignment.
+            # This better predicts downstream generation quality than proto acc.
+            cos_sim = val_metrics.get("val_mean_cosine_sim", 0.0)
+            tc_align = val_metrics.get("val_text_cell_align", 0.0)
+            align = val_metrics.get("val_alignment", 2.0)  # default 2.0 (worst)
+            # quality_score: higher is better
+            # cos_sim ∈ [-1,1], tc_align ∈ [-1,1], alignment ∈ [0,4]
+            quality_score = cos_sim + 0.5 * tc_align - 0.25 * align
 
-            # Save best by tracking accuracy
-            if tracking_acc > self.best_val_acc:
-                self.best_val_acc = tracking_acc
+            # Fall back to proto acc if quality metrics aren't available
+            if cos_sim == 0.0 and tc_align == 0.0:
+                tracking_metric = val_proto_acc if "val_proto_acc" in val_metrics else val_metrics["val_acc"]
+            else:
+                tracking_metric = quality_score
+
+            # Save best by tracking metric
+            if tracking_metric > self.best_val_acc:
+                self.best_val_acc = tracking_metric
                 self.best_val_loss = val_metrics["val_loss"]
                 self.patience_counter = 0
                 self.save_checkpoint("clop_best.pth", epoch, val_metrics)
-                logger.info(f"  ✓ New best model saved (val_proto_acc={self.best_val_acc:.4f})")
+                logger.info(f"  ✓ New best model saved (quality_score={self.best_val_acc:.4f})")
             else:
                 self.patience_counter += 1
 
