@@ -4,18 +4,35 @@ CLOP Aligner: Bridges text embeddings (PubMedBERT) and cell embeddings (scGPT)
 into a shared contrastive space.
 
 Architecture:
-    Text  Embedding (768) → TextProjector  → Shared Space (proj_dim)
-    Cell  Embedding (512) → CellProjector  → Shared Space (proj_dim)
-    Loss: InfoNCE with learnable temperature
+    Text  Embedding (1024) → [Whitening] → TextProjector  → Shared Space (proj_dim)
+    Cell  Embedding (512)  →              CellProjector  → Shared Space (proj_dim)
+    Loss: PrototypeSigLIP (v6.1), SigLIP, or InfoNCE with learnable temperature
 
 This follows the CLIP paradigm but operates on (text_description, cell_profile)
 pairs instead of (text, image) pairs.
 
-Key improvements over basic CLIP:
-    1. Asymmetric projectors (different depths for text vs cell)
-    2. Learnable temperature with clamping for stability
-    3. Hard negative mining via similarity masking
-    4. EMA momentum targets for stable training (optional)
+Key improvements:
+    v6.0 — Fixed embedding space collapse:
+        1. Upstream ZCA whitening of both text AND cell embeddings.
+        2. SigLIP sigmoid loss replaces InfoNCE for collapsed spaces.
+        3. Auto-duplicate mask for identical-text cells.
+        4. LayerNorm for cross-dataset generalization.
+
+    v6.1 — Addresses text-cell GRANULARITY MISMATCH:
+        Text descriptions are at Leiden cluster level (~2,300 unique), while cell
+        embeddings capture per-cell variation (220K unique cells). Variance
+        decomposition shows 67% of cell variance is within-group (sub-cluster noise
+        that text cannot discriminate), only 33% is between-group (text-aligned).
+        This caused v6.0 to overfit (train_acc 80%, val_acc 1.5%).
+
+        5. PrototypeSigLIPLoss: Aligns text to group centroids (prototypes) instead
+           of individual cells, averaging out within-group noise.
+        6. Cohesion regularization: Pulls cells toward their group centroid.
+        7. Cell noise augmentation: Prevents memorization of embedding positions.
+        8. Stronger regularization: Dropout 0.2, weight_decay 0.05.
+        9. Temperature capping: Prevents overfitting through logit sharpening.
+        10. Larger batch size (1024): Needed for meaningful prototype averaging
+            (at batch=256, almost no text collisions → prototypes are singletons).
 """
 
 import torch
@@ -23,6 +40,69 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Optional, Tuple
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+# ============================================================================
+#  Text Embedding Whitening
+# ============================================================================
+
+class TextWhiteningTransform(nn.Module):
+    """Fixed (non-learnable) PCA whitening transform for text embeddings.
+
+    Decorrelates and equalizes variance of BiomedBERT embeddings to counter
+    embedding space collapse (pairwise cosine sim > 0.88). Computed from
+    training data statistics at initialization time, then frozen.
+
+    The transform is:
+        x_whitened = (x - mean) @ whiten_matrix.T
+
+    Parameters
+    ----------
+    dim : int
+        Input embedding dimension (1024 for BiomedBERT-large).
+    eps : float
+        Regularization to prevent amplifying noise dimensions.
+    """
+
+    def __init__(self, dim: int, eps: float = 1e-4):
+        super().__init__()
+        self.dim = dim
+        self.eps = eps
+        self.register_buffer('mean', torch.zeros(dim))
+        self.register_buffer('whiten_matrix', torch.eye(dim))
+        self.initialized = False
+
+    def compute_stats(self, X: np.ndarray):
+        """Compute whitening statistics from training text embeddings.
+
+        Parameters
+        ----------
+        X : (N, dim) numpy array of training text embeddings
+        """
+        X_t = torch.from_numpy(X).float()
+        mean = X_t.mean(dim=0)
+        X_centered = X_t - mean
+
+        # Covariance matrix
+        cov = (X_centered.T @ X_centered) / (X_centered.shape[0] - 1)
+
+        # Eigendecomposition (symmetric → eigenvalues are real, sorted ascending)
+        eigenvalues, eigenvectors = torch.linalg.eigh(cov)
+
+        # PCA whitening: W = diag(1/sqrt(lambda + eps)) @ V^T
+        scale = 1.0 / torch.sqrt(eigenvalues.clamp(min=self.eps) + self.eps)
+        whiten_matrix = torch.diag(scale) @ eigenvectors.T
+
+        self.mean.copy_(mean)
+        self.whiten_matrix.copy_(whiten_matrix)
+        self.initialized = True
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Apply whitening: (B, dim) → (B, dim)."""
+        return (x - self.mean) @ self.whiten_matrix.T
 
 
 # ============================================================================
@@ -37,7 +117,7 @@ class ProjectionHead(nn.Module):
     Parameters
     ----------
     input_dim : int
-        Input embedding dimension (e.g., 768 for BERT, 512 for scGPT).
+        Input embedding dimension (e.g., 1024 for BERT, 512 for scGPT).
     proj_dim : int
         Shared projection space dimension.
     hidden_dim : int, optional
@@ -47,7 +127,9 @@ class ProjectionHead(nn.Module):
     dropout : float
         Dropout rate between layers.
     use_batch_norm : bool
-        Whether to use BatchNorm (more stable for contrastive learning).
+        If True, use BatchNorm1d. If False, use LayerNorm.
+        LayerNorm generalizes better across dataset-level splits because
+        it normalizes per-sample rather than using running statistics.
     """
 
     def __init__(
@@ -70,6 +152,8 @@ class ProjectionHead(nn.Module):
             if i < len(dims) - 2:  # No activation/norm on final layer
                 if use_batch_norm:
                     layers.append(nn.BatchNorm1d(dims[i + 1]))
+                else:
+                    layers.append(nn.LayerNorm(dims[i + 1]))
                 layers.append(nn.GELU())
                 layers.append(nn.Dropout(dropout))
 
@@ -93,12 +177,365 @@ class ProjectionHead(nn.Module):
 #  InfoNCE Loss with Learnable Temperature
 # ============================================================================
 
+class SigLIPLoss(nn.Module):
+    """SigLIP Sigmoid Loss for contrastive alignment (Google, 2023).
+
+    Unlike InfoNCE which uses softmax normalization (requiring good global
+    separation), SigLIP treats each (text_i, cell_j) pair independently with
+    binary cross-entropy. The target is +1 for matched pairs, -1 for unmatched.
+
+    Loss = -1/B * sum_i sum_j [
+        y_ij * log(sigmoid(logit_ij)) + (1-y_ij) * log(1-sigmoid(logit_ij))
+    ]
+    where logit_ij = text_i · cell_j * exp(log_temp) + bias
+
+    Key advantage: Works with COLLAPSED embedding spaces where softmax InfoNCE
+    fails because the denominator is dominated by near-identical negatives.
+
+    Parameters
+    ----------
+    init_temperature : float
+        Initial temperature (log-space). SigLIP learns this jointly.
+    init_bias : float
+        Initial bias term. Shifted to compensate for imbalanced pos/neg ratios.
+    """
+
+    def __init__(
+        self,
+        init_temperature: float = 10.0,
+        init_bias: float = -10.0,
+    ):
+        super().__init__()
+        self.log_temperature = nn.Parameter(torch.tensor(np.log(init_temperature)))
+        self.bias = nn.Parameter(torch.tensor(init_bias))
+
+    @property
+    def temperature(self) -> torch.Tensor:
+        return self.log_temperature.exp()
+
+    def forward(
+        self,
+        text_proj: torch.Tensor,
+        cell_proj: torch.Tensor,
+        mask: Optional[torch.Tensor] = None,
+        text_sim: Optional[torch.Tensor] = None,
+    ) -> Tuple[torch.Tensor, dict]:
+        """
+        Parameters
+        ----------
+        text_proj : (B, proj_dim) L2-normalized text projections
+        cell_proj : (B, proj_dim) L2-normalized cell projections
+        mask : (B, B), optional
+            Duplicate mask: 1 = true pair or valid negative, 0 = duplicate
+            (same-text cell) that should be excluded from loss.
+        text_sim : unused, kept for API compatibility
+
+        Returns
+        -------
+        loss : scalar
+        metrics : dict
+        """
+        B = text_proj.shape[0]
+        device = text_proj.device
+
+        # Pairwise logits: (B, B)
+        logits = text_proj @ cell_proj.T * self.temperature + self.bias
+
+        # Target: +1 on diagonal (matched), -1 off-diagonal (unmatched)
+        labels = 2 * torch.eye(B, device=device) - 1  # (B, B)
+
+        # If mask provided, exclude duplicate cells from loss
+        if mask is not None:
+            # mask=1 means valid pair, mask=0 means duplicate to ignore
+            valid = mask.float()
+        else:
+            valid = torch.ones(B, B, device=device)
+
+        # Binary cross-entropy with logits: -log(sigmoid(y * logit))
+        loss_matrix = -F.logsigmoid(labels * logits) * valid
+
+        # Average over valid pairs
+        n_valid = valid.sum().clamp(min=1.0)
+        loss = loss_matrix.sum() / n_valid
+
+        # Metrics
+        with torch.no_grad():
+            preds_t2c = logits.argmax(dim=-1)
+            preds_c2t = logits.T.argmax(dim=-1)
+            targets = torch.arange(B, device=device)
+            acc_t2c = (preds_t2c == targets).float().mean()
+            acc_c2t = (preds_c2t == targets).float().mean()
+
+        metrics = {
+            "loss_t2c": loss.item(),
+            "loss_c2t": loss.item(),
+            "acc_t2c": acc_t2c.item(),
+            "acc_c2t": acc_c2t.item(),
+            "temperature": self.temperature.item(),
+            "bias": self.bias.item(),
+        }
+
+        return loss, metrics
+
+
+class PrototypeSigLIPLoss(nn.Module):
+    """Prototype-aware SigLIP loss for cluster-level text × sub-cluster cell alignment.
+
+    Addresses the fundamental granularity mismatch in CLOP:
+        - Text descriptions are at Leiden cluster level (~2,300 unique)
+        - Cell embeddings capture per-cell variation (220K unique)
+        - 67% of cell variance is WITHIN text groups (sub-cluster noise)
+        - Only 33% is BETWEEN groups (text-discriminable signal)
+
+    Standard SigLIP aligns individual (text_i, cell_i) pairs, which lets the
+    model memorize per-cell noise → train_acc 80% but val_acc 1.5%.
+
+    This loss instead:
+    1. Groups cells sharing the same text embedding within each batch
+    2. Computes group centroids (prototypes) in projected cell space
+    3. SigLIP alignment between unique text projections and prototypes
+    4. Cohesion regularization pulls cells toward their group centroid
+
+    For singleton groups (most cells in a batch), degenerates to standard SigLIP.
+    For multi-cell groups, averages out within-group noise for cleaner gradients.
+
+    Parameters
+    ----------
+    init_temperature : float
+        Initial temperature (log-space). Higher = sharper similarity.
+    init_bias : float
+        Initial bias for SigLIP. Compensates for pos/neg imbalance.
+    cohesion_weight : float
+        Weight for intra-group cohesion loss. Pulls cells toward their group
+        centroid, explicitly regularizing within-group variation.
+    max_temperature : float
+        Cap on learned temperature to prevent overfitting through sharpening.
+    """
+
+    def __init__(
+        self,
+        init_temperature: float = 10.0,
+        init_bias: float = -10.0,
+        cohesion_weight: float = 0.1,
+        max_temperature: float = 100.0,
+        temp_reg_weight: float = 0.0,
+    ):
+        super().__init__()
+        self.log_temperature = nn.Parameter(torch.tensor(np.log(init_temperature)))
+        self.bias = nn.Parameter(torch.tensor(init_bias))
+        self.cohesion_weight = cohesion_weight
+        self.max_temperature = max_temperature
+        self.temp_reg_weight = temp_reg_weight  # L2 penalty on log_temperature
+
+    @property
+    def temperature(self) -> torch.Tensor:
+        return torch.clamp(self.log_temperature.exp(), max=self.max_temperature)
+
+    def forward(
+        self,
+        text_proj: torch.Tensor,
+        cell_proj: torch.Tensor,
+        mask: Optional[torch.Tensor] = None,
+        text_sim: Optional[torch.Tensor] = None,
+        group_ids: Optional[torch.Tensor] = None,
+        variant_mask: Optional[torch.BoolTensor] = None,
+    ) -> Tuple[torch.Tensor, dict]:
+        """
+        Parameters
+        ----------
+        text_proj : (B, proj_dim) L2-normalized text projections
+        cell_proj : (B, proj_dim) L2-normalized cell projections
+        mask : (B, B), optional — duplicate mask (for fallback group detection)
+        text_sim : unused, API compatibility
+        group_ids : (B,) int tensor — text group assignment per cell.
+            Cells sharing the same text have the same group_id.
+            Computed from RAW text embeddings (before projection/dropout).
+        variant_mask : (B, T) bool tensor, optional.
+            Positive-bag mask for cell→text candidates. True entries indicate
+            valid positive text variants for each cell. If None, uses the
+            default prototype SigLIP behavior.
+
+        Returns
+        -------
+        loss : scalar
+        metrics : dict
+        """
+        B = text_proj.shape[0]
+        device = text_proj.device
+
+        # ── Step 1: Determine group IDs ──
+        if group_ids is None:
+            # Fallback: use mask or text_proj cosine (less reliable with dropout)
+            if mask is not None:
+                group_ids = self._groups_from_mask(mask, B, device)
+            else:
+                group_ids = torch.arange(B, device=device)
+
+        unique_gids, inverse_ids = group_ids.unique(return_inverse=True)
+        n_groups = unique_gids.shape[0]
+
+        # ── Step 2: Compute prototypes (group centroids) via scatter ──
+        # Accumulate cell projections per group
+        prototypes = torch.zeros(n_groups, cell_proj.shape[-1], device=device)
+        prototypes.scatter_add_(
+            0, inverse_ids.unsqueeze(-1).expand_as(cell_proj), cell_proj
+        )
+        counts = torch.zeros(n_groups, 1, device=device)
+        counts.scatter_add_(
+            0, inverse_ids.unsqueeze(-1),
+            torch.ones(B, 1, device=device)
+        )
+        prototypes = prototypes / counts.clamp(min=1)
+        prototypes = F.normalize(prototypes, dim=-1)
+
+        # Representative text for each group (first cell in each group)
+        first_indices = torch.zeros(n_groups, dtype=torch.long, device=device)
+        seen = torch.zeros(n_groups, dtype=torch.bool, device=device)
+        for i in range(B):
+            g = inverse_ids[i].item()
+            if not seen[g]:
+                first_indices[g] = i
+                seen[g] = True
+        text_reps = text_proj[first_indices]
+        text_reps = F.normalize(text_reps, dim=-1)
+
+        # ── Step 3: SigLIP loss on prototypes (N × N) ──
+        logits = (text_reps @ prototypes.T) * self.temperature + self.bias
+        labels = 2 * torch.eye(n_groups, device=device) - 1
+        alignment_loss = -F.logsigmoid(labels * logits).mean()
+
+        bag_loss = torch.tensor(0.0, device=device)
+        if variant_mask is not None:
+            logits_bt = cell_proj @ text_proj.T * self.temperature + self.bias
+            bag_loss = self._bag_positive_nce_loss(logits_bt, variant_mask.to(device))
+            alignment_loss = bag_loss
+
+        # ── Step 4: Cohesion regularization ──
+        cohesion_loss = torch.tensor(0.0, device=device)
+        if self.cohesion_weight > 0:
+            # For each cell, compute cosine to its group prototype (detached)
+            proto_for_cells = prototypes[inverse_ids].detach()  # (B, D)
+            cos_to_proto = (cell_proj * proto_for_cells).sum(dim=-1)  # (B,)
+            cohesion_loss = (1 - cos_to_proto).mean()
+
+        total_loss = alignment_loss + self.cohesion_weight * cohesion_loss
+
+        # Temperature regularization: penalize large log_temperature to slow saturation
+        if self.temp_reg_weight > 0:
+            temp_reg = self.temp_reg_weight * (self.log_temperature ** 2)
+            total_loss = total_loss + temp_reg
+
+        # ── Metrics ──
+        with torch.no_grad():
+            # Prototype-level accuracy
+            proto_targets = torch.arange(n_groups, device=device)
+            proto_acc_t2c = (logits.argmax(dim=-1) == proto_targets).float().mean()
+            proto_acc_c2t = (logits.T.argmax(dim=-1) == proto_targets).float().mean()
+
+            # Top-k prototype accuracy (k=5)
+            if n_groups >= 5:
+                top5_t2c = (logits.topk(5, dim=-1).indices == proto_targets.unsqueeze(-1)).any(-1).float().mean()
+                top5_c2t = (logits.T.topk(5, dim=-1).indices == proto_targets.unsqueeze(-1)).any(-1).float().mean()
+            else:
+                top5_t2c = proto_acc_t2c
+                top5_c2t = proto_acc_c2t
+
+            # Top-k prototype accuracy (k=10)
+            if n_groups >= 10:
+                top10_t2c = (logits.topk(10, dim=-1).indices == proto_targets.unsqueeze(-1)).any(-1).float().mean()
+                top10_c2t = (logits.T.topk(10, dim=-1).indices == proto_targets.unsqueeze(-1)).any(-1).float().mean()
+            else:
+                top10_t2c = top5_t2c
+                top10_c2t = top5_c2t
+
+            # Individual-level accuracy (for comparison with standard SigLIP)
+            ind_logits = text_proj @ cell_proj.T * self.temperature + self.bias
+            ind_targets = torch.arange(B, device=device)
+            acc_t2c = (ind_logits.argmax(dim=-1) == ind_targets).float().mean()
+            acc_c2t = (ind_logits.T.argmax(dim=-1) == ind_targets).float().mean()
+
+        metrics = {
+            "loss_t2c": alignment_loss.item(),
+            "loss_c2t": alignment_loss.item(),
+            "bag_loss": bag_loss.item() if variant_mask is not None else 0.0,
+            "acc_t2c": acc_t2c.item(),
+            "acc_c2t": acc_c2t.item(),
+            "proto_acc_t2c": proto_acc_t2c.item(),
+            "proto_acc_c2t": proto_acc_c2t.item(),
+            "proto_top5_t2c": top5_t2c.item(),
+            "proto_top5_c2t": top5_c2t.item(),
+            "proto_top10_t2c": top10_t2c.item(),
+            "proto_top10_c2t": top10_c2t.item(),
+            "temperature": self.temperature.item(),
+            "bias": self.bias.item(),
+            "n_groups": n_groups,
+            "cohesion_loss": cohesion_loss.item(),
+        }
+
+        return total_loss, metrics
+
+    @staticmethod
+    def _bag_positive_nce_loss(logits: torch.Tensor, variant_mask: torch.Tensor) -> torch.Tensor:
+        """Compute positive-bag NCE loss from logits and boolean positive mask.
+
+        Parameters
+        ----------
+        logits : (B, T)
+            Cell→text similarity logits.
+        variant_mask : (B, T)
+            True entries mark valid positives for each row.
+
+        Returns
+        -------
+        loss : scalar tensor
+        """
+        if variant_mask.dtype != torch.bool:
+            variant_mask = variant_mask.bool()
+
+        if variant_mask.shape != logits.shape:
+            raise ValueError(
+                f"variant_mask shape {tuple(variant_mask.shape)} must match logits shape {tuple(logits.shape)}"
+            )
+
+        # Guarantee at least one positive per row (fallback to diagonal for square logits)
+        row_has_pos = variant_mask.any(dim=1)
+        if not row_has_pos.all():
+            if logits.shape[0] == logits.shape[1]:
+                diag = torch.eye(logits.shape[0], device=logits.device, dtype=torch.bool)
+                variant_mask = variant_mask | diag
+            else:
+                raise ValueError("variant_mask has rows without positives")
+
+        positive_logits = logits.masked_fill(~variant_mask, float("-inf"))
+        per_cell_pos = positive_logits.logsumexp(dim=1)
+        per_cell_all = logits.logsumexp(dim=1)
+        return -(per_cell_pos - per_cell_all).mean()
+
+    @staticmethod
+    def _groups_from_mask(mask: torch.Tensor, B: int, device: torch.device) -> torch.Tensor:
+        """Convert duplicate mask to group IDs. Fallback when group_ids not provided."""
+        # mask[i,j]=0 and i!=j means text_i == text_j
+        group_ids = torch.arange(B, device=device)
+        for i in range(B):
+            if group_ids[i] == i:  # not yet merged
+                for j in range(i + 1, B):
+                    if mask[i, j] < 0.5 and group_ids[j] == j:
+                        group_ids[j] = group_ids[i]
+        _, group_ids = group_ids.unique(return_inverse=True)
+        return group_ids
+
+
 class InfoNCELoss(nn.Module):
-    """Symmetric InfoNCE contrastive loss with learnable temperature.
+    """Symmetric InfoNCE contrastive loss with learnable temperature and soft labels.
 
-    L = 0.5 * (CE(sim_t2c, labels) + CE(sim_c2t, labels))
+    Kept for backward compatibility and ablation. For new training runs with
+    collapsed embedding spaces, prefer SigLIPLoss or PrototypeSigLIPLoss.
 
-    where sim = (text_proj @ cell_proj.T) / temperature
+    Supports two modes:
+    - Hard labels (standard): L = 0.5 * (CE(logits, arange(B)) + CE(logits.T, arange(B)))
+    - Soft labels: Uses text embedding similarity to build soft target distributions.
+      Semantically similar texts get partial positive credit instead of being treated
+      as full negatives.
 
     Parameters
     ----------
@@ -109,7 +546,13 @@ class InfoNCELoss(nn.Module):
     max_temperature : float
         Maximum temperature for clamping.
     label_smoothing : float
-        Label smoothing for cross-entropy.
+        Label smoothing for cross-entropy (only used in hard-label mode).
+    use_soft_labels : bool
+        If True, use text-similarity-based soft labels instead of hard labels.
+    soft_label_alpha : float
+        Exponent for sharpening text similarity when building soft targets.
+    soft_label_bias : float
+        Additive bias for the diagonal (true positive) in soft targets.
     """
 
     def __init__(
@@ -117,13 +560,19 @@ class InfoNCELoss(nn.Module):
         init_temperature: float = 0.07,
         min_temperature: float = 0.01,
         max_temperature: float = 0.5,
-        label_smoothing: float = 0.0,
+        label_smoothing: float = 0.1,
+        use_soft_labels: bool = False,
+        soft_label_alpha: float = 2.0,
+        soft_label_bias: float = 5.0,
     ):
         super().__init__()
         self.log_temperature = nn.Parameter(torch.tensor(np.log(init_temperature)))
         self.min_temp = min_temperature
         self.max_temp = max_temperature
         self.label_smoothing = label_smoothing
+        self.use_soft_labels = use_soft_labels
+        self.soft_label_alpha = soft_label_alpha
+        self.soft_label_bias = soft_label_bias
 
     @property
     def temperature(self) -> torch.Tensor:
@@ -134,11 +583,50 @@ class InfoNCELoss(nn.Module):
             max=self.max_temp,
         )
 
+    def _build_soft_targets(
+        self,
+        text_sim: torch.Tensor,
+        mask: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        """Build soft target distribution from text similarity matrix.
+
+        Parameters
+        ----------
+        text_sim : (B, B) cosine similarity between input text embeddings
+        mask : (B, B) optional validity mask (1 = valid pair)
+
+        Returns
+        -------
+        targets : (B, B) row-normalized soft target distribution
+        """
+        B = text_sim.shape[0]
+
+        # Clamp similarity to [0, 1]
+        sim_clamped = text_sim.clamp(min=0.0)
+
+        # Sharpen: raise to power alpha to separate similar from dissimilar
+        raw_targets = sim_clamped.pow(self.soft_label_alpha)
+
+        # Boost diagonal (true positive pair) with additive bias
+        raw_targets = raw_targets + self.soft_label_bias * torch.eye(
+            B, device=text_sim.device, dtype=text_sim.dtype
+        )
+
+        # Zero out masked (invalid) positions
+        if mask is not None:
+            raw_targets = raw_targets.masked_fill(~mask.bool(), 0.0)
+
+        # Row-normalize to form valid probability distribution
+        targets = raw_targets / raw_targets.sum(dim=-1, keepdim=True).clamp(min=1e-8)
+
+        return targets
+
     def forward(
         self,
         text_proj: torch.Tensor,
         cell_proj: torch.Tensor,
         mask: Optional[torch.Tensor] = None,
+        text_sim: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, dict]:
         """
         Parameters
@@ -146,8 +634,10 @@ class InfoNCELoss(nn.Module):
         text_proj : (B, proj_dim) L2-normalized text projections
         cell_proj : (B, proj_dim) L2-normalized cell projections
         mask : (B, B), optional
-            Binary mask where 1 = valid negative pair. Used for same-batch
-            duplicate removal (e.g., cells from the same sample).
+            Binary mask where 1 = valid negative pair.
+        text_sim : (B, B), optional
+            Cosine similarity between raw text embeddings in the batch.
+            Required when use_soft_labels=True.
 
         Returns
         -------
@@ -160,22 +650,70 @@ class InfoNCELoss(nn.Module):
         # Cosine similarity matrix / temperature
         logits = (text_proj @ cell_proj.T) / self.temperature  # (B, B)
 
-        # Apply mask if provided (set invalid pairs to large negative)
-        if mask is not None:
-            logits = logits.masked_fill(~mask.bool(), float('-inf'))
+        if self.use_soft_labels and text_sim is not None:
+            # ── Soft-label mode ──
+            targets = self._build_soft_targets(text_sim, mask=mask)
 
-        # Labels: diagonal is the positive pair
-        labels = torch.arange(B, device=device)
+            if mask is not None:
+                logits_masked = logits.masked_fill(~mask.bool(), -65000.0)
+            else:
+                logits_masked = logits
 
-        # Symmetric cross-entropy
-        loss_t2c = F.cross_entropy(logits, labels, label_smoothing=self.label_smoothing)
-        loss_c2t = F.cross_entropy(logits.T, labels, label_smoothing=self.label_smoothing)
-        loss = 0.5 * (loss_t2c + loss_c2t)
+            # Soft cross-entropy: L = -sum(targets * log_softmax(logits))
+            log_probs_t2c = F.log_softmax(logits_masked, dim=-1)
+            log_probs_c2t = F.log_softmax(logits_masked.T, dim=-1)
 
-        # Metrics
+            loss_t2c = -(targets * log_probs_t2c).sum(dim=-1).mean()
+            loss_c2t = -(targets * log_probs_c2t).sum(dim=-1).mean()
+            loss = 0.5 * (loss_t2c + loss_c2t)
+
+        else:
+            # ── Hard-label mode (original) ──
+            if mask is not None and self.label_smoothing > 0:
+                # Custom label-smoothed CE that only distributes smoothing
+                # among VALID (unmasked) classes. Using -65000 fill with
+                # standard F.cross_entropy would cause label_smoothing to
+                # penalize masked entries: (ls/B) * 65000 ≈ 12.7 per masked class.
+                logits_masked = logits.masked_fill(~mask.bool(), float('-inf'))
+                labels = torch.arange(B, device=device)
+
+                # Valid class count per row
+                valid_count = mask.bool().sum(dim=-1, keepdim=True).float()  # (B, 1)
+
+                # Build smoothed targets: diagonal gets (1-ls), rest of valid
+                # classes share ls equally, masked classes get 0
+                smooth_targets = torch.zeros_like(logits)
+                smooth_targets.scatter_(1, labels.unsqueeze(1), 1.0 - self.label_smoothing)
+                # Distribute smoothing only among valid off-diagonal entries
+                mask_no_diag = mask.bool().clone()
+                mask_no_diag.fill_diagonal_(False)
+                valid_off_diag = mask_no_diag.sum(dim=-1, keepdim=True).float().clamp(min=1)
+                smooth_targets += (self.label_smoothing / valid_off_diag) * mask_no_diag.float()
+
+                # Cross-entropy with custom targets
+                log_probs_t2c = F.log_softmax(logits_masked, dim=-1)
+                log_probs_c2t = F.log_softmax(logits_masked.T, dim=-1)
+                loss_t2c = -(smooth_targets * log_probs_t2c).sum(dim=-1).mean()
+                loss_c2t = -(smooth_targets * log_probs_c2t).sum(dim=-1).mean()
+                loss = 0.5 * (loss_t2c + loss_c2t)
+            else:
+                # Standard CE: no label smoothing, or no mask
+                if mask is not None:
+                    logits = logits.masked_fill(~mask.bool(), float('-inf'))
+                labels = torch.arange(B, device=device)
+                loss_t2c = F.cross_entropy(logits, labels, label_smoothing=self.label_smoothing)
+                loss_c2t = F.cross_entropy(logits.T, labels, label_smoothing=self.label_smoothing)
+                loss = 0.5 * (loss_t2c + loss_c2t)
+
+        # Metrics (always use hard accuracy for comparability)
         with torch.no_grad():
-            acc_t2c = (logits.argmax(dim=-1) == labels).float().mean()
-            acc_c2t = (logits.T.argmax(dim=-1) == labels).float().mean()
+            labels = torch.arange(B, device=device)
+            if mask is not None:
+                logits_for_acc = logits.masked_fill(~mask.bool(), -65000.0) if self.use_soft_labels else logits
+            else:
+                logits_for_acc = logits
+            acc_t2c = (logits_for_acc.argmax(dim=-1) == labels).float().mean()
+            acc_c2t = (logits_for_acc.T.argmax(dim=-1) == labels).float().mean()
 
         metrics = {
             "loss_t2c": loss_t2c.item(),
@@ -196,12 +734,12 @@ class CLOPAligner(nn.Module):
     """Contrastive Language-Omics Pre-training Aligner.
 
     Aligns text descriptions and cell profiles in a shared embedding space
-    using InfoNCE contrastive learning.
+    using InfoNCE contrastive learning with optional soft labels and whitening.
 
     Parameters
     ----------
     text_dim : int
-        Text encoder output dimension (768 for PubMedBERT).
+        Text encoder output dimension (1024 for BiomedBERT-large).
     cell_dim : int
         Cell encoder output dimension (512 for scGPT).
     proj_dim : int
@@ -216,14 +754,46 @@ class CLOPAligner(nn.Module):
         Number of layers in cell projector.
     dropout : float
         Projector dropout rate.
+    use_batch_norm : bool
+        If True, use BatchNorm. If False, use LayerNorm
+        (better cross-dataset generalization).
     temperature : float
         Initial contrastive temperature.
+    min_temperature : float
+        Minimum temperature for clamping.
+    max_temperature : float
+        Maximum temperature for clamping.
     label_smoothing : float
-        Label smoothing for InfoNCE.
+        Label smoothing for InfoNCE (hard-label mode only).
     use_ema : bool
         Whether to maintain EMA copies of projectors for stability.
     ema_decay : float
         EMA decay coefficient.
+    use_soft_labels : bool
+        Use text-similarity soft targets instead of hard diagonal labels.
+    soft_label_alpha : float
+        Sharpening exponent for soft targets (higher = sharper).
+    soft_label_bias : float
+        Additive bias for diagonal (true positive) in soft targets.
+    cell_noise_std : float
+        Gaussian noise std for cell embedding augmentation during training.
+    use_whitening : bool
+        Apply PCA whitening to text embeddings before projection.
+        DEPRECATED in v6: use upstream embedding_preprocessor instead.
+    whitening_eps : float
+        Regularization for whitening (prevents noise amplification).
+    loss_type : str
+        Loss function: 'prototype_siglip' (v6.1, recommended), 'siglip', or 'infonce'.
+        prototype_siglip addresses the text-cell granularity mismatch by aligning
+        text embeddings to group centroids instead of individual cells.
+    auto_duplicate_mask : bool
+        If True, automatically detect and mask cells sharing identical text
+        embeddings within a batch so they are not penalized as false negatives.
+    cohesion_weight : float
+        Weight for prototype cohesion regularization (only for prototype_siglip).
+        Pulls individual cells toward their text group centroid.
+    max_temperature : float
+        Temperature cap for SigLIP/PrototypeSigLIP to prevent overfitting.
     """
 
     def __init__(
@@ -236,16 +806,42 @@ class CLOPAligner(nn.Module):
         text_layers: int = 3,
         cell_layers: int = 3,
         dropout: float = 0.1,
+        use_batch_norm: bool = True,
         temperature: float = 0.07,
+        min_temperature: float = 0.01,
+        max_temperature: float = 0.5,
         label_smoothing: float = 0.1,
         use_ema: bool = False,
         ema_decay: float = 0.999,
+        use_soft_labels: bool = False,
+        soft_label_alpha: float = 2.0,
+        soft_label_bias: float = 5.0,
+        cell_noise_std: float = 0.0,
+        use_whitening: bool = False,
+        whitening_eps: float = 1e-4,
+        loss_type: str = "infonce",
+        auto_duplicate_mask: bool = False,
+        cohesion_weight: float = 0.1,
+        temp_reg_weight: float = 0.0,
     ):
         super().__init__()
 
         self.proj_dim = proj_dim
         self.use_ema = use_ema
         self.ema_decay = ema_decay
+        self.cell_noise_std = cell_noise_std
+        self.use_whitening = use_whitening
+        self.use_batch_norm = use_batch_norm
+        self.loss_type = loss_type
+        self.auto_duplicate_mask = auto_duplicate_mask
+
+        # Text embedding whitening (v4: addresses BiomedBERT embedding collapse)
+        if use_whitening:
+            self.text_whitening = TextWhiteningTransform(
+                dim=text_dim, eps=whitening_eps
+            )
+        else:
+            self.text_whitening = None
 
         # Projection heads
         self.text_projector = ProjectionHead(
@@ -254,6 +850,7 @@ class CLOPAligner(nn.Module):
             hidden_dim=text_hidden_dim or text_dim,
             num_layers=text_layers,
             dropout=dropout,
+            use_batch_norm=use_batch_norm,
         )
         self.cell_projector = ProjectionHead(
             input_dim=cell_dim,
@@ -261,13 +858,33 @@ class CLOPAligner(nn.Module):
             hidden_dim=cell_hidden_dim or cell_dim,
             num_layers=cell_layers,
             dropout=dropout,
+            use_batch_norm=use_batch_norm,
         )
 
         # Contrastive loss
-        self.criterion = InfoNCELoss(
-            init_temperature=temperature,
-            label_smoothing=label_smoothing,
-        )
+        if loss_type == "prototype_siglip":
+            self.criterion = PrototypeSigLIPLoss(
+                init_temperature=temperature if temperature > 1.0 else 10.0,
+                init_bias=-10.0,
+                cohesion_weight=cohesion_weight,
+                max_temperature=max_temperature if max_temperature > 1.0 else 100.0,
+                temp_reg_weight=temp_reg_weight,
+            )
+        elif loss_type == "siglip":
+            self.criterion = SigLIPLoss(
+                init_temperature=temperature if temperature > 1.0 else 10.0,
+                init_bias=-10.0,
+            )
+        else:
+            self.criterion = InfoNCELoss(
+                init_temperature=temperature,
+                min_temperature=min_temperature,
+                max_temperature=max_temperature,
+                label_smoothing=label_smoothing,
+                use_soft_labels=use_soft_labels,
+                soft_label_alpha=soft_label_alpha,
+                soft_label_bias=soft_label_bias,
+            )
 
         # Optional EMA targets
         if use_ema:
@@ -275,11 +892,13 @@ class CLOPAligner(nn.Module):
                 input_dim=text_dim, proj_dim=proj_dim,
                 hidden_dim=text_hidden_dim or text_dim,
                 num_layers=text_layers, dropout=0.0,
+                use_batch_norm=use_batch_norm,
             )
             self.cell_projector_ema = ProjectionHead(
                 input_dim=cell_dim, proj_dim=proj_dim,
                 hidden_dim=cell_hidden_dim or cell_dim,
                 num_layers=cell_layers, dropout=0.0,
+                use_batch_norm=use_batch_norm,
             )
             # Copy initial weights
             self._ema_copy(self.text_projector, self.text_projector_ema)
@@ -306,11 +925,18 @@ class CLOPAligner(nn.Module):
         for s, t in zip(self.cell_projector.parameters(), self.cell_projector_ema.parameters()):
             t.data.mul_(self.ema_decay).add_(s.data, alpha=1 - self.ema_decay)
 
+    def _whiten_text(self, text_emb: torch.Tensor) -> torch.Tensor:
+        """Apply whitening transform to text embeddings if enabled."""
+        if self.use_whitening and self.text_whitening is not None:
+            return self.text_whitening(text_emb)
+        return text_emb
+
     def forward(
         self,
         text_emb: torch.Tensor,
         cell_emb: torch.Tensor,
         mask: Optional[torch.Tensor] = None,
+        text_sim: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, dict]:
         """
         Parameters
@@ -319,16 +945,39 @@ class CLOPAligner(nn.Module):
         cell_emb : (B, cell_dim) frozen cell encoder embeddings
         mask : (B, B), optional
             Negative pair validity mask.
+        text_sim : (B, B), optional
+            Cosine similarity of raw text embeddings (for soft labels).
+            Computed from RAW embeddings before whitening.
 
         Returns
         -------
         loss : scalar
         metrics : dict
         """
-        text_proj = self.text_projector(text_emb)
+        # Cell embedding augmentation during training
+        if self.training and self.cell_noise_std > 0:
+            cell_emb = cell_emb + torch.randn_like(cell_emb) * self.cell_noise_std
+
+        # Apply text whitening before projection
+        text_emb_proj = self._whiten_text(text_emb)
+
+        text_proj = self.text_projector(text_emb_proj)
         cell_proj = self.cell_projector(cell_emb)
 
-        loss, metrics = self.criterion(text_proj, cell_proj, mask=mask)
+        # Auto-detect duplicate text embeddings and build mask
+        if self.auto_duplicate_mask and mask is None:
+            mask = self._build_duplicate_mask(text_emb)
+
+        # For prototype loss, compute group IDs from RAW text embeddings
+        # (before projection/dropout, so identical inputs map to same group)
+        if self.loss_type == "prototype_siglip":
+            group_ids = self._compute_group_ids(text_emb)
+            loss, metrics = self.criterion(
+                text_proj, cell_proj, mask=mask, text_sim=text_sim,
+                group_ids=group_ids,
+            )
+        else:
+            loss, metrics = self.criterion(text_proj, cell_proj, mask=mask, text_sim=text_sim)
 
         # EMA update
         if self.training and self.use_ema:
@@ -336,12 +985,92 @@ class CLOPAligner(nn.Module):
 
         return loss, metrics
 
+    @staticmethod
+    @torch.no_grad()
+    def _compute_group_ids(text_emb: torch.Tensor) -> torch.Tensor:
+        """Assign text group IDs based on raw embedding identity.
+
+        Cells with identical text embeddings (cosine > 0.9999) get the same
+        group ID. Uses raw embeddings so dropout in projection heads doesn't
+        break group detection.
+
+        IMPORTANT: Runs in float32 even under AMP autocast. Float16 matmul
+        accumulation across 1024 dims loses enough precision to break the
+        0.9999 cosine threshold for truly identical embeddings.
+
+        Parameters
+        ----------
+        text_emb : (B, D) raw text embeddings
+
+        Returns
+        -------
+        group_ids : (B,) long tensor with contiguous group IDs
+        """
+        B = text_emb.shape[0]
+        device = text_emb.device
+
+        # Force float32 — AMP autocast would cast matmul to float16,
+        # causing identical 1024-d vectors to appear different (cosine < 0.9999)
+        with torch.amp.autocast("cuda", enabled=False):
+            text_f32 = text_emb.float()
+            text_normed = F.normalize(text_f32, dim=-1)
+            sim = text_normed @ text_normed.T  # (B, B) in float32
+
+        is_same = sim > 0.9999
+
+        # Assign each cell to the earliest index in its equivalence class
+        group_ids = torch.arange(B, device=device)
+        for i in range(1, B):
+            matches = is_same[i, :i].nonzero(as_tuple=True)[0]
+            if len(matches) > 0:
+                group_ids[i] = group_ids[matches[0]]
+
+        # Remap to contiguous 0..N-1
+        _, group_ids = group_ids.unique(return_inverse=True)
+        return group_ids
+
+    @staticmethod
+    def _build_duplicate_mask(text_emb: torch.Tensor) -> torch.Tensor:
+        """Build mask that identifies cells with identical text embeddings.
+
+        For SigLIP: mask=1 means "valid pair" (true positive or true negative),
+        mask=0 means "ambiguous/duplicate" (same text, exclude from loss).
+
+        For each pair (i, j): if text_i == text_j and i != j, mask=0.
+
+        IMPORTANT: Runs in float32 even under AMP autocast. Float16 matmul
+        loses precision for the 0.9999 cosine threshold.
+
+        Parameters
+        ----------
+        text_emb : (B, D) text embeddings
+
+        Returns
+        -------
+        mask : (B, B) float tensor
+        """
+        B = text_emb.shape[0]
+
+        # Force float32 for precision
+        with torch.amp.autocast("cuda", enabled=False):
+            text_normed = F.normalize(text_emb.float(), dim=-1)
+            sim = text_normed @ text_normed.T  # (B, B)
+
+        # Identical texts have cosine sim > 0.9999
+        duplicates = (sim > 0.9999).float()
+
+        # Keep diagonal (true positive), mask off-diagonal duplicates
+        mask = 1.0 - duplicates + torch.eye(B, device=text_emb.device)
+        mask = mask.clamp(0.0, 1.0)
+
+        return mask
+
     def project_text(self, text_emb: torch.Tensor, use_ema: bool = False) -> torch.Tensor:
         """Project text embedding to shared space (for DiT conditioning).
 
         Parameters
         ----------
-        text_emb : (B, text_dim)
+        text_emb : (B, text_dim) raw text embeddings (whitening applied internally)
         use_ema : bool
             Use EMA projector (more stable for inference).
 
@@ -349,6 +1078,7 @@ class CLOPAligner(nn.Module):
         -------
         (B, proj_dim) L2-normalized text projection
         """
+        text_emb = self._whiten_text(text_emb)
         projector = self.text_projector_ema if (use_ema and self.use_ema) else self.text_projector
         return projector(text_emb)
 

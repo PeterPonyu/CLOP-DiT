@@ -8,26 +8,34 @@ build/
 .eggs/
 
 # Data (large files)
-data/raw_geo/
-data/cached_latents/*.npy
-data/cached_latents_v2/*.npy
+data/cached_latents*/
+data/cached_latents*/*.npy
+data/cached_latents*/**/*.npy
+data/cached_latents*/**/*.json
 data/processed_h5ad/*.h5ad
-data/processed_h5ad_v2/*.h5ad
+data/processed_h5ad_v*/*.h5ad
 
-# Model weights
-models/scgpt_weights/
+# Model weights (large binary files)
 models/scgpt_human/
 models/scgpt_pancancer/
-models/sft_adapter/
 models/checkpoints/*.pth
-models/checkpoints_v2/*.pth
+models/checkpoints_v*/
 
 # Generated outputs
+results/*.npz
+results/*.npy
+results/*.json
 generated_*.h5ad
+figures_v*/
+figures/**/*.png
+figures/**/*.pdf
 
-# Logs
+# Logs (all directories and files)
 logs/
 *.log
+
+# Config archives
+configs/archive/
 
 # Jupyter
 .ipynb_checkpoints/

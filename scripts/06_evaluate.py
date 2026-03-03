@@ -27,7 +27,7 @@ Visualizations generated:
 
 Usage:
     python scripts/06_evaluate.py \
-        --cache_dir data/cached_latents \
+        --cache_dir data/cached_latents_v5.2 \
         --clop_checkpoint models/checkpoints/clop_best.pth \
         --dit_checkpoint models/checkpoints/dit_best.pth \
         --output_dir figures \
@@ -148,7 +148,7 @@ def evaluate_clop(clop_model, cache_dir, device="cuda"):
 
 @torch.no_grad()
 def evaluate_generation(dit_model, clop_model, cache_dir, num_samples=500,
-                        num_steps=4, cfg_scale=3.0, device="cuda"):
+                        num_steps=20, cfg_scale=3.0, device="cuda"):
     """Evaluate DiT generation quality."""
     logger.info("\n" + "="*60)
     logger.info("DiT Generation Evaluation")
@@ -348,12 +348,12 @@ def generate_visualizations(clop_results, gen_results, history_dir, output_dir,
 
 def main():
     parser = argparse.ArgumentParser(description="CLOP-DiT v0.3 Evaluation")
-    parser.add_argument("--cache_dir", type=str, default="data/cached_latents")
+    parser.add_argument("--cache_dir", type=str, default="data/cached_latents_v5.2")
     parser.add_argument("--clop_checkpoint", type=str, default="models/checkpoints/clop_best.pth")
     parser.add_argument("--dit_checkpoint", type=str, default="models/checkpoints/dit_best.pth")
     parser.add_argument("--output_dir", type=str, default="figures")
     parser.add_argument("--num_samples", type=int, default=500)
-    parser.add_argument("--num_steps", type=int, default=4)
+    parser.add_argument("--num_steps", type=int, default=20)
     parser.add_argument("--cfg_scale", type=float, default=3.0)
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--skip_clop", action="store_true")

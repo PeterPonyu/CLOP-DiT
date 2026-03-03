@@ -1142,7 +1142,7 @@ def main():
     parser.add_argument("--prompt_min_conf", type=float, default=0.25)
     parser.add_argument("--output_dir", default="figures/biovalidation")
     parser.add_argument("--num_cells_per_type", type=int, default=200)
-    parser.add_argument("--num_steps", type=int, default=4)
+    parser.add_argument("--num_steps", type=int, default=20)
     parser.add_argument("--cfg_scale", type=float, default=3.0)
     parser.add_argument("--edit_strength", type=float, default=0.5)
     parser.add_argument("--dit_checkpoint", default="models/checkpoints/dit_best.pth")

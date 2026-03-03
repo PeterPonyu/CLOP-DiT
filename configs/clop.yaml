@@ -1,33 +1,80 @@
-# CLOP Configuration
+# CLOP Configuration — v6.3 (Template-anchored alignment)
 # Contrastive Language-Omics Pre-training alignment
+#
+# v6.0 fixed embedding space collapse via ZCA whitening + SigLIP.
+# v6.1 addressed text-cell granularity mismatch via Prototype-SigLIP.
+# v6.2 enriched captions → FAILED (val_acc 3.6% → 0.8%, text anchor drift).
+# v6.3 fixes text anchor drift + temperature explosion.
+#
+# Diagnosis (v6.2 → v6.3):
+#   Enriched texts shifted alignment anchor from cell-type features to
+#   dataset-specific features (logFC, dataset pathways, Source context).
+#   Same cell type across datasets got very different BiomedBERT embeddings.
+#   Temperature learned to 100 (logit_scale, capped) → sharp memorization.
+#
+# v6.3 fixes:
+#   1. Template text as PRIMARY alignment anchor (cell-type centric):
+#      - Strip "Source: ..." suffix (dataset-specific context)
+#      - Strip "(Leiden cluster N, n=X cells, res=Y)" (arbitrary numbering)
+#      - Keep: organism + tissue + cell type + canonical markers
+#   2. Enriched variants as AUGMENTATION only (30% sampling via variant_prob)
+#   3. Temperature clamp: max 20 (down from 100). CLIP standard ≈ 14.
+#      PrototypeSigLIP uses T as logit_scale (multiplier), NOT 1/T.
+#   4. Initial temperature: 14.0 (CLIP standard, not 10.0)
+#
+# History:
+#   v5.2:  val_acc=0.036 (embedding collapse, InfoNCE failure)
+#   v6.0:  Whitening + SigLIP → train_acc 80%, val_acc 1.5% (overfitting)
+#   v6.1:  Prototype-SigLIP + regularization → train-val gap 64.3%
+#   v6.2:  Enriched captions → val_acc 0.008 (FAILED, text anchor drift)
+#   v6.3:  Template anchor + temp fix → target val_acc ≥ 0.04
 
-# Data
-cache_dir: "data/cached_latents"
+# Data — uses preprocessed (whitened) embeddings
+cache_dir: "data/cached_latents_v5.2"
+use_preprocessed: true          # v6: load whitened embeddings (*_preprocessed.npy)
+variant_prob: 0.0               # v6.3.1: disabled — variants too different from primary in whitened space
 val_split: 0.1
+n_folds: 1
+fold_idx: 0
 num_workers: 4
 
 # Model
-text_dim: 1024         # BiomedBERT-large output dim (v0.3: upgraded from 768)
-cell_dim: 512          # scGPT output dim
-proj_dim: 256          # Shared projection dimension
+text_dim: 1024         # BiomedBERT-large output dim (whitened but same dim)
+cell_dim: 512          # scGPT output dim (whitened but same dim)
+proj_dim: 512          # v6: increased from 256 for richer shared space
 text_layers: 3         # Text projector MLP layers
 cell_layers: 3         # Cell projector MLP layers
-dropout: 0.1
-temperature: 0.07      # Initial contrastive temperature
-label_smoothing: 0.1
+dropout: 0.2           # v6.1: increased from 0.1 to reduce overfitting
+temperature: 14.0      # v6.3: CLIP-standard logit_scale (SigLIP uses T as multiplier)
+label_smoothing: 0.1   # Only used if loss_type=infonce
+use_batch_norm: false   # v6: LayerNorm for cross-dataset generalization
 use_ema: false
+cell_noise_std: 0.05   # v6.1: Gaussian noise on cell embeddings during training
+
+# v6.1 loss settings
+loss_type: "prototype_siglip"   # v6.1: 'prototype_siglip', 'siglip', or 'infonce'
+auto_duplicate_mask: true       # Mask cells with identical text in batch
+cohesion_weight: 0.1            # v6.1: prototype cohesion regularization weight
+max_temperature: 20.0           # v6.3: CLIP-range cap, prevents over-sharpening
 
 # Training
-batch_size: 256        # Larger = better for contrastive (≥64 minimum)
-lr: 3.0e-4
-weight_decay: 0.01
+batch_size: 1024       # v6.1: increased from 256 to activate prototype averaging
+                       # With 2,342 unique texts, batch_size=256 → ~0 collisions
+                       # batch_size=1024 → ~195 collisions → meaningful centroids
+lr: 1.0e-3             # v6: higher LR for SigLIP (SGD-like convergence)
+weight_decay: 0.05     # v6.1: increased from 0.01 for stronger regularization
 num_epochs: 200
-warmup_epochs: 5
+warmup_epochs: 10       # v6: longer warmup for stability
 grad_clip: 1.0
 use_amp: true
+early_stopping_patience: 30   # v6: stop if no improvement for 30 epochs
+
+# Embedding preprocessing (run before training)
+preprocess_text_method: "whiten"
+preprocess_cell_method: "whiten"
 
 # scGPT
-scgpt_model_dir: "models/scgpt_pancancer"  # v0.3: pan-cancer pretrained
+scgpt_model_dir: "models/scgpt_pancancer"
 
 # System
 device: "cuda"

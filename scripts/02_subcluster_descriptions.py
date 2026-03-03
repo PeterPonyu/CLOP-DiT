@@ -937,15 +937,23 @@ def _extract_context(dataset_text: str, dataset_id: str = "") -> str:
 
 
 def choose_resolution(n_cells: int, base_resolution: float, mode: str) -> float:
+    """Choose Leiden clustering resolution based on dataset size.
+
+    v6.1: Increased resolutions ~2× to produce finer clusters, addressing the
+    text-cell granularity gap (67% within-group variance). More clusters → more
+    unique text descriptions → between-group variance increases.
+
+    Previous: 0.6/0.8/1.0/1.2 → New: 1.2/1.5/2.0/2.5
+    """
     if mode == "fixed":
         return base_resolution
     if n_cells < 1000:
-        return 0.6
+        return 1.2
     if n_cells < 5000:
-        return 0.8
+        return 1.5
     if n_cells < 15000:
-        return 1.0
-    return 1.2
+        return 2.0
+    return 2.5
 
 
 def cluster_and_annotate(
@@ -1169,7 +1177,7 @@ def main():
     print(f"  Sub-cluster metadata:  {subcluster_path}")
     print(f"  Expanded metadata:     {expanded_path}")
     print(f"{'='*70}")
-    print(f"\nNext: Run 03_cache_latents.py with --subcluster_metadata {expanded_path}")
+    print(f"\nNext: Run 03_cache_latents.py with --subcluster_metadata {subcluster_path}")
 
 
 if __name__ == "__main__":

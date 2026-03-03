@@ -1,21 +1,23 @@
-# DiT Configuration
+# DiT Configuration — v6.0 (matched to CLOP v6)
 # 1D Diffusion Transformer with Flow Matching
 
 # Data
-cache_dir: "data/cached_latents"
-projected_text_path: "data/cached_latents/projected_text.npy"
+cache_dir: "data/cached_latents_v5.2"
+projected_text_path: "data/cached_latents_v5.2/projected_text.npy"
 val_split: 0.1
+n_folds: 1
+fold_idx: 0
 num_workers: 4
 
 # Model Architecture
 latent_dim: 512        # Cell embedding dimension
 hidden_dim: 384        # Transformer hidden dimension
-cond_dim: 256          # Condition dimension (= CLOP proj_dim)
+cond_dim: 512          # v6: increased to match CLOP proj_dim=512
 num_blocks: 8          # Number of DiT transformer blocks
-num_heads: 6           # Attention heads (hidden_dim must be divisible)
+num_heads: 8           # v6: increased (hidden_dim must be divisible)
 mlp_ratio: 4.0         # FFN expansion ratio
 num_tokens: 16         # Pseudo-tokens (latent_dim / num_tokens = token_dim)
-cond_drop_prob: 0.1    # CFG condition dropout
+cond_drop_prob: 0.15   # v2: increased from 0.1 for stronger CFG
 attn_drop: 0.0         # Attention dropout
 proj_drop: 0.1         # Projection dropout
 
@@ -31,8 +33,13 @@ ema_decay: 0.9999      # EMA for model weights
 log_interval: 100      # Reduce logging overhead
 eval_interval: 50      # Heavy generation eval only every 50 epochs
 
+# Time sampling (v2: logit-normal for better training)
+time_sampling: "logit_normal"   # 'uniform' or 'logit_normal'
+time_sampling_mean: 0.0
+time_sampling_std: 1.0
+
 # Inference defaults
-inference_steps: 4     # ODE steps for sampling
+inference_steps: 20    # v2: increased from 4 for higher quality
 cfg_scale: 3.0         # Guidance scale
 
 # scGPT (for decoding)

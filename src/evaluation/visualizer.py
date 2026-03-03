@@ -13,8 +13,23 @@ import matplotlib
 from pathlib import Path
 from typing import Optional, List, Dict
 
-matplotlib.rcParams["font.family"] = "sans-serif"
-matplotlib.rcParams["font.size"] = 12
+# Publication-quality style (Nature/Cell convention)
+matplotlib.rcParams.update({
+    "font.family": "sans-serif",
+    "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+    "font.size": 9,
+    "axes.titlesize": 11,
+    "axes.labelsize": 10,
+    "xtick.labelsize": 8,
+    "ytick.labelsize": 8,
+    "legend.fontsize": 8,
+    "axes.linewidth": 0.8,
+    "xtick.major.width": 0.6,
+    "ytick.major.width": 0.6,
+    "lines.linewidth": 1.2,
+    "savefig.bbox": "tight",
+    "savefig.pad_inches": 0.05,
+})
 
 
 class EmbeddingVisualizer:

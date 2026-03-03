@@ -4,6 +4,7 @@ Custom learning rate schedulers for CLOP-DiT training.
 """
 
 import math
+import warnings
 import torch
 from torch.optim.lr_scheduler import _LRScheduler
 
@@ -33,7 +34,10 @@ class CosineWarmupScheduler(_LRScheduler):
         self.warmup_steps = warmup_steps
         self.total_steps = total_steps
         self.min_lr_ratio = min_lr_ratio
-        super().__init__(optimizer, last_epoch)
+        # Suppress benign PyTorch warning about step() order during __init__
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            super().__init__(optimizer, last_epoch)
 
     def get_lr(self):
         if self.last_epoch < self.warmup_steps:

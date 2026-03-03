@@ -350,7 +350,7 @@ def main():
     parser.add_argument("--text_encoder", type=str,
                         default="microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract")
     parser.add_argument("--output", type=str, default="generated_cells.h5ad")
-    parser.add_argument("--num_steps", type=int, default=4)
+    parser.add_argument("--num_steps", type=int, default=20)
     parser.add_argument("--cfg_scale", type=float, default=3.0)
     parser.add_argument("--solver", type=str, default="euler", choices=["euler", "midpoint"])
     parser.add_argument("--decode_expression", action="store_true",

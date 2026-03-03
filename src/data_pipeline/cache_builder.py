@@ -6,13 +6,22 @@ text embeddings (BiomedBERT-large) and saves them as memory-mapped numpy arrays.
 This is the critical optimization step that decouples the heavy encoder models
 from the lightweight CLOP and DiT training loops.
 
-Outputs:
+v6.2: Supports DEDUPLICATED storage format and enriched multi-caption texts.
+
+Outputs (v6.2 — deduplicated):
     cached_latents/
-    ├── cell_embeddings.npy     # (N_total, cell_dim)
-    ├── text_embeddings.npy     # (N_total, text_dim)
-    ├── sample_ids.npy          # (N_total,) integer sample IDs
-    ├── metadata.json           # Mapping of sample_id → text description
-    └── manifest.json           # Dataset statistics and configuration
+    ├── cell_embeddings.npy          # (N_total, cell_dim)
+    ├── text_embeddings_unique.npy   # (N_unique_texts, text_dim)  ← deduplicated
+    ├── text_group_ids.npy           # (N_total,) maps cell → unique text index
+    ├── sample_ids.npy               # (N_total,) integer dataset IDs
+    ├── text_strings.json            # {text_group_id: raw_text_string}
+    ├── text_variants.json           # {text_group_id: [variant_1, variant_2, ...]}
+    ├── metadata.json                # sample_id → dataset-level text
+    └── manifest.json                # Cache statistics and configuration
+
+Outputs (legacy — duplicated, for backward compatibility):
+    cached_latents/
+    ├── text_embeddings.npy          # (N_total, text_dim) — full duplication
 """
 
 import json
@@ -51,7 +60,7 @@ class LatentCacheBuilder:
 
     def __init__(
         self,
-        cache_dir: Union[str, Path] = "data/cached_latents",
+        cache_dir: Union[str, Path] = "data/cached_latents_v5.2",
         cell_encoder: str = "scgpt",
         text_encoder: str = "microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract",
         cell_dim: int = 512,
@@ -219,6 +228,8 @@ class LatentCacheBuilder:
         cell_encoder_method: str = "scgpt",
         scgpt_model_dir: str = "models/scgpt_human",
         subcluster_metadata_file: Optional[Union[str, Path]] = None,
+        deduplicate: bool = True,
+        use_variants: bool = False,
     ) -> Dict:
         """Build the complete latent cache from processed h5ad files and metadata.
 
@@ -233,9 +244,16 @@ class LatentCacheBuilder:
         scgpt_model_dir : str, optional
             Required if cell_encoder_method == 'scgpt'.
         subcluster_metadata_file : path, optional
-            Sub-cluster metadata JSON from 02_subcluster_descriptions.py.
-            If provided, assigns per-cluster text descriptions to individual cells
-            instead of a single dataset-level text for all cells.
+            Sub-cluster metadata JSON (from 02_subcluster_descriptions.py or
+            02b_enrich_descriptions.py). If provided, assigns per-cluster
+            text descriptions to individual cells.
+        deduplicate : bool
+            If True (default), store text embeddings in deduplicated format
+            (text_embeddings_unique.npy + text_group_ids.npy) saving ~99% space.
+            Also saves legacy text_embeddings.npy for backward compatibility.
+        use_variants : bool
+            If True and subcluster_metadata has 'text_variants', encode all
+            variants and store in text_variant_embeddings_unique.npy.
 
         Returns
         -------
@@ -259,6 +277,8 @@ class LatentCacheBuilder:
         all_cell_emb = []
         all_text_emb = []
         all_sample_ids = []
+        all_cell_text_strings = []    # v6.2: raw text strings per cell
+        all_cell_text_variants = []   # v6.2: caption variants per cell
         id_to_text = {}
         sample_counter = 0
 
@@ -313,13 +333,17 @@ class LatentCacheBuilder:
                 # Build per-cell text assignments
                 # Cells not in any annotated cluster get the dataset-level text
                 cell_texts = [text_desc] * n_cells
+                cell_variants = [[] for _ in range(n_cells)]  # v6.2: variants per cell
 
                 for cid, cinfo in ds_info.get("clusters", {}).items():
                     cluster_text = cinfo.get("text", text_desc)
+                    text_variants = cinfo.get("text_variants", [])
                     cell_indices = cinfo.get("cell_indices", [])
                     for idx in cell_indices:
                         if idx < n_cells:
                             cell_texts[idx] = cluster_text
+                            if text_variants:
+                                cell_variants[idx] = text_variants
 
                 # Get unique texts and encode them
                 unique_texts = list(set(cell_texts))
@@ -336,6 +360,10 @@ class LatentCacheBuilder:
                 id_to_text[str(sample_counter)] = text_desc
                 sample_counter += 1
 
+                # v6.2: collect raw text strings and variants
+                all_cell_text_strings.append(cell_texts)
+                all_cell_text_variants.append(cell_variants)
+
                 logger.info(
                     f"  {dataset_id}: {n_cells} cells, "
                     f"{len(unique_texts)} sub-cluster texts (from {ds_info['n_clusters']} clusters)"
@@ -351,6 +379,10 @@ class LatentCacheBuilder:
                 id_to_text[str(sample_counter)] = text_desc
                 sample_counter += 1
 
+                # v6.2: raw text strings (all same for this dataset)
+                all_cell_text_strings.append([text_desc] * cell_emb.shape[0])
+                all_cell_text_variants.append([[] for _ in range(cell_emb.shape[0])])
+
                 logger.info(f"  {dataset_id}: {cell_emb.shape[0]} cells, text='{text_desc[:60]}...'")
 
             all_cell_emb.append(cell_emb)
@@ -364,10 +396,84 @@ class LatentCacheBuilder:
         text_embeddings = np.concatenate(all_text_emb, axis=0)
         sample_ids = np.concatenate(all_sample_ids, axis=0)
 
-        # Save
+        # Save cell embeddings and sample IDs (always same format)
         np.save(self.cache_dir / "cell_embeddings.npy", cell_embeddings)
-        np.save(self.cache_dir / "text_embeddings.npy", text_embeddings)
         np.save(self.cache_dir / "sample_ids.npy", sample_ids)
+
+        # ── Deduplicated storage (v6.2) ─────────────────────────────────
+        if deduplicate:
+            # Find unique text embeddings and build index mapping
+            # Use byte-level comparison for exact matching
+            text_bytes = text_embeddings.view(np.uint8).reshape(text_embeddings.shape[0], -1)
+            _, unique_idx, inverse_idx = np.unique(
+                text_bytes, axis=0, return_index=True, return_inverse=True
+            )
+
+            text_emb_unique = text_embeddings[unique_idx]  # (N_unique, text_dim)
+            text_group_ids = inverse_idx.astype(np.int32)  # (N_total,) → index into unique
+
+            np.save(self.cache_dir / "text_embeddings_unique.npy", text_emb_unique)
+            np.save(self.cache_dir / "text_group_ids.npy", text_group_ids)
+
+            # Also collect raw text strings for each unique group
+            # Build cell_idx → text_string mapping from alltext lists
+            all_cell_texts_flat = []
+            for text_list in all_cell_text_strings:
+                all_cell_texts_flat.extend(text_list)
+
+            text_strings = {}
+            for uid in range(len(unique_idx)):
+                # Find a cell with this group ID and get its text
+                cell_idx = unique_idx[uid]
+                text_strings[str(uid)] = all_cell_texts_flat[cell_idx]
+
+            with open(self.cache_dir / "text_strings.json", "w") as f:
+                json.dump(text_strings, f, indent=2, ensure_ascii=False)
+
+            # Save text variants if available
+            if all_cell_text_variants:
+                all_variants_flat = []
+                for variant_list in all_cell_text_variants:
+                    all_variants_flat.extend(variant_list)
+
+                text_variants_map = {}
+                for uid in range(len(unique_idx)):
+                    cell_idx = unique_idx[uid]
+                    variants = all_variants_flat[cell_idx]
+                    if variants:
+                        text_variants_map[str(uid)] = variants
+
+                if text_variants_map:
+                    with open(self.cache_dir / "text_variants.json", "w") as f:
+                        json.dump(text_variants_map, f, indent=2, ensure_ascii=False)
+
+                    # Encode variant embeddings if requested
+                    if use_variants:
+                        all_variant_texts = []
+                        variant_group_map = []  # (group_id, variant_idx)
+                        for uid_str, variants in text_variants_map.items():
+                            for vi, vtext in enumerate(variants):
+                                all_variant_texts.append(vtext)
+                                variant_group_map.append((int(uid_str), vi))
+
+                        if all_variant_texts:
+                            logger.info(f"Encoding {len(all_variant_texts)} caption variants...")
+                            variant_embs = self.encode_texts(all_variant_texts)
+                            np.save(self.cache_dir / "text_variant_embeddings.npy", variant_embs)
+                            with open(self.cache_dir / "text_variant_map.json", "w") as f:
+                                json.dump(variant_group_map, f)
+                            logger.info(f"  Saved {variant_embs.shape[0]} variant embeddings")
+
+            dedup_size = text_emb_unique.shape[0] * text_emb_unique.shape[1] * 4
+            orig_size = text_embeddings.shape[0] * text_embeddings.shape[1] * 4
+            logger.info(
+                f"Deduplicated: {text_embeddings.shape[0]} → {text_emb_unique.shape[0]} "
+                f"unique texts ({dedup_size/1e6:.1f} MB vs {orig_size/1e6:.1f} MB, "
+                f"{100*(1-dedup_size/orig_size):.1f}% savings)"
+            )
+
+        # Legacy format: full duplicated text_embeddings.npy (backward compatible)
+        np.save(self.cache_dir / "text_embeddings.npy", text_embeddings)
 
         with open(self.cache_dir / "metadata.json", "w") as f:
             json.dump(id_to_text, f, indent=2)
@@ -379,7 +485,12 @@ class LatentCacheBuilder:
             "num_datasets": sample_counter,
             "cell_encoder": cell_encoder_method,
             "text_encoder": self.text_encoder_name,
+            "deduplicated": deduplicate,
+            "format_version": "6.2",
         }
+        if deduplicate:
+            manifest["num_unique_texts"] = int(text_emb_unique.shape[0])
+
         with open(self.cache_dir / "manifest.json", "w") as f:
             json.dump(manifest, f, indent=2)
 

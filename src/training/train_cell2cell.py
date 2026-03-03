@@ -61,7 +61,7 @@ class Cell2CellDataset(Dataset):
 
     def __init__(
         self,
-        cache_dir: str = "data/cached_latents",
+        cache_dir: str = "data/cached_latents_v5.2",
         projected_text_path: Optional[str] = None,
         mode: str = "unpaired",
     ):
@@ -370,7 +370,7 @@ class Cell2CellTrainer:
         edited = model.edit(
             sources, conditions,
             edit_strength=0.5,
-            num_steps=4, cfg_scale=3.0, src_cfg_scale=1.5
+            num_steps=20, cfg_scale=3.0, src_cfg_scale=1.5
         )
 
         real_np = real_tgts.cpu().numpy()
@@ -460,7 +460,7 @@ class Cell2CellTrainer:
     @classmethod
     def from_config(cls, config: Dict) -> "Cell2CellTrainer":
         """Create trainer from config dict."""
-        cache_dir = config.get("cache_dir", "data/cached_latents")
+        cache_dir = config.get("cache_dir", "data/cached_latents_v5.2")
         projected_text_path = config.get("projected_text_path", None)
 
         # Auto-detect projected text

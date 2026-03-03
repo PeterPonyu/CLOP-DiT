@@ -82,6 +82,7 @@ class DiTTrainer:
         ema_decay: float = 0.9999,
         log_interval: int = 50,
         eval_interval: int = 10,
+        **kwargs,
     ):
         self.model = model.to(device)
         self.train_loader = train_loader
@@ -94,6 +95,10 @@ class DiTTrainer:
         self.log_interval = log_interval
         self.eval_interval = eval_interval
         self.save_dir = Path(save_dir)
+
+        # Inference config (settable from config)
+        self.inference_steps = kwargs.get("inference_steps", 20)
+        self.cfg_scale = kwargs.get("cfg_scale", 3.0)
         self.save_dir.mkdir(parents=True, exist_ok=True)
 
         # Optimizer
@@ -315,8 +320,10 @@ class DiTTrainer:
         real_embs = torch.cat(real_embs)[:num_samples].to(self.device)
         conditions = torch.cat(conditions)[:num_samples].to(self.device)
 
-        # Generate
-        generated = model.sample(conditions, num_steps=4, cfg_scale=3.0)
+        # Generate with configurable steps
+        generated = model.sample(
+            conditions, num_steps=self.inference_steps, cfg_scale=self.cfg_scale
+        )
 
         real_np = real_embs.cpu().numpy()
         gen_np = generated.cpu().numpy()
@@ -449,12 +456,17 @@ class DiTTrainer:
         )
 
         train_loader, val_loader = create_dataloaders(
-            cache_dir=config.get("cache_dir", "data/cached_latents"),
+            cache_dir=config.get("cache_dir", "data/cached_latents_v5.2"),
             batch_size=config.get("batch_size", 512),
             val_split=config.get("val_split", 0.1),
+            n_folds=config.get("n_folds", 1),
+            fold_idx=config.get("fold_idx", 0),
             num_workers=config.get("num_workers", 4),
             stage="dit",
             projected_text_path=config.get("projected_text_path", None),
+            time_sampling=config.get("time_sampling", "logit_normal"),
+            time_sampling_mean=config.get("time_sampling_mean", 0.0),
+            time_sampling_std=config.get("time_sampling_std", 1.0),
         )
 
         trainer = cls(
@@ -472,6 +484,8 @@ class DiTTrainer:
             ema_decay=config.get("ema_decay", 0.9999),
             log_interval=config.get("log_interval", 50),
             eval_interval=config.get("eval_interval", 10),
+            inference_steps=config.get("inference_steps", 20),
+            cfg_scale=config.get("cfg_scale", 3.0),
         )
 
         # Resume from checkpoint if specified

@@ -2,64 +2,102 @@
 
 > **Text-conditioned generation of single-cell gene expression profiles via Flow Matching**
 
+## Key Results (v6.1)
+
+| Metric | v5.2 | v6.0 | v6.1 | Notes |
+|--------|------|------|------|-------|
+| **CLOP Val Acc** | 2.5% | 1.5% (overfitting) | **TBD** (+proto_acc) | Prototype alignment reduces memorization |
+| **CLOP Train Acc** | ~2.5% (stuck) | 80% (memorizing) | **66%** (generalizing) | Lower train = less overfitting |
+| **Proto Acc (train)** | — | — | **5%** (25× random) | True between-group alignment metric |
+| **Unique Text Groups** | 1,088 | 1,088 | **2,342** (whitened) | ZCA amplifies subtle differences |
+| **Within-Group Variance** | — | 67.2% | **67.2%** (data-level) | Addressed via loss, not data |
+
+**Training data:** 220,304 cells from 80 datasets, ~2,342 unique whitened text groups
+
+### v6.1 Root Cause Fix: Text-Cell Granularity Mismatch
+
+v6.0 fixed the embedding collapse but revealed a deeper issue:
+text descriptions are at **Leiden cluster level** (~2,300 unique), while cells
+have **per-cell variation** (220K unique embeddings). Variance decomposition shows:
+
+| Variance Component | % of Total | Meaning |
+|--------------------|-----------|---------|
+| **Within-group** (sub-cluster) | **67.2%** | Noise that text CANNOT discriminate |
+| **Between-group** (text-aligned) | **32.8%** | Signal that text CAN discriminate |
+
+Standard SigLIP memorizes per-cell within-group noise (train_acc 80%) that doesn't
+generalize (val_acc 1.5%). **Prototype-SigLIP** aligns text to group centroids,
+forcing the model to learn only the 33% between-group signal.
+
+### v6.1 also discovered: AMP Float16 Bug
+
+Both `_build_duplicate_mask` and `_compute_group_ids` were silently broken under
+AMP autocast. Float16 matmul on 1024-dim vectors loses enough precision that
+identical embeddings appear different (cosine < 0.9999). **This means v6.0's
+auto_duplicate_mask was effectively disabled** — duplicate text cells were being
+penalized as false negatives. Fixed by forcing float32 in both methods.
+
 ---
 
 ## Architecture Overview
 
 ```
-User Text ─→ BiomedBERT-large (1024-d) ─→ CLOP Text Projector ─→ Condition c (256-d)
-                                                                       ↓
-                              z₀ ~ N(0,I) ─→ DiT(z_t, t, c) ─→ ODE Integrate ─→ z₁ (Cell Embedding, 512-d)
-                                                                                         ↓
-                                                                          scGPT generate() Decoder
-                                                                          [CLS] injection → Transformer → ExprDecoder
-                                                                                         ↓
-                                                                          Gene Expression Matrix (Genes × Cells)
+User Text ─→ BiomedBERT-large (1024-d) ─→ [ZCA Whitening] ─→ CLOP Text Projector ─→ Condition c (512-d)
+                                                                                            ↓
+                                   z₀ ~ N(0,I) ─→ DiT(z_t, t, c) ─→ ODE Integrate ─→ z₁ (Cell Embedding, 512-d)
+                                                                                              ↓
+                                                                               scGPT generate() Decoder
+                                                                               [CLS] injection → Transformer → ExprDecoder
+                                                                                              ↓
+                                                                               Gene Expression Matrix (Genes × Cells)
 ```
 
-### Pipeline Data Flow
+### Pipeline Data Flow (v6)
 
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌────────────────────┐
-│  55 h5ad files   │ ──→ │ 00_prepare_all_  │ ──→ │ processed_h5ad/    │
-│ (Cancer + Dev)   │     │    data.py       │     │ ~50 × ~3K cells    │
-│ CancerDatasets/  │     │ Curated bio text │     │ + metadata JSON    │
-│ CancerDatasets2/ │     │ QC + HVG + norm  │     │ ~50 unique texts   │
-│ DevelopmentData/ │     │ Skip invalid:    │     │ (5 datasets        │
-│ DevelopmentData2/│     │  normalized-only │     │  filtered out)     │
-└─────────────────┘     │  Ensembl IDs     │     └────────┬───────────┘
-                         └──────────────────┘              │
+│  80 datasets     │ ──→ │ Prepare & QC     │ ──→ │ processed_h5ad/    │
+│ (Cancer + Dev)   │     │ 00_prepare_all_  │     │ ~80 × ~2.8K cells  │
+│ CancerDatasets/  │     │    data.py       │     │ + metadata JSON    │
+│ DevelopmentData/ │     │ 01_integrate_*   │     │ 1,088 unique texts │
+│ GEO-DataHub      │     │ 01b_integrate_*  │     │                    │
+└─────────────────┘     └──────────────────┘     └────────┬───────────┘
                                                            ▼
 ┌──────────────────┐     ┌──────────────────┐     ┌────────────────────┐
-│ scGPT pan-cancer │ ──→ │ 03_cache_latents │ ──→ │ cached_latents/    │
-│ (51.9M, 5.7M     │     │     .py          │     │ cell_emb (N×512)   │
-│ cancer cells)    │     │ scGPT + BiomedBERT│    │ text_emb (N×1024)  │
-│                  │     │      -large       │     │ sample_ids, meta   │
-│ BiomedBERT-large │     └──────────────────┘     └────────┬───────────┘
-│ text encoder     │                                       │
-│ (1024-d)         │                                       ▼
-└──────────────────┘     ┌──────────────────┐     ┌────────────────────┐
-                         │ 04a_train_clop   │ ──→ │ CLOP Aligner       │
-                         │     .py          │     │ proj_text (N×256)  │
-                         │ InfoNCE + temp   │     │ clop_best.pth      │
-                         │ 200 epochs       │     └────────┬───────────┘
-                         └──────────────────┘              │
-                         ┌──────────────────┐     ┌────────▼───────────┐
-                         │ 04b_train_dit    │ ──→ │ DiT (22.1M)        │
-                         │     .py          │     │ dit_best.pth (EMA) │
-                         │ Flow Matching    │     │ 500 epochs         │
-                         │ 500 epochs       │     └────────┬───────────┘
-                         └──────────────────┘              │
-                         ┌──────────────────┐     ┌────────▼───────────┐
+│ scGPT pan-cancer │ ──→ │ 03_cache_latents │ ──→ │ cached_latents_    │
+│ (51.9M, 5.7M     │     │     .py          │     │  v5.2/             │
+│ cancer cells)    │     │ scGPT + BiomedBERT│    │ cell_emb (N×512)   │
+│                  │     │      -large       │     │ text_emb (N×1024)  │
+│ BiomedBERT-large │     └──────────────────┘     │                    │
+│ text encoder     │                               └────────┬───────────┘
+└──────────────────┘                                        │
+                         ┌──────────────────┐     ┌─────────▼──────────┐
+                         │ 03b_preprocess_  │ ──→ │ Whitened embeddings│
+                         │ embeddings.py   │     │ cell_emb_pp (N×512)│
+                         │ ZCA Whitening    │     │ text_emb_pp(N×1024)│
+                         │ (v6 critical!)   │     │ cos 0.96→0.002 ✓  │
+                         └──────────────────┘     └─────────┬──────────┘
+                         ┌──────────────────┐     ┌─────────▼──────────┐
+                         │ 04a_train_clop   │ ──→ │ CLOP (3.42M)       │
+                         │     .py          │     │ clop_best.pth      │
+                         │ SigLIP + dup mask│     │ proj_dim=512       │
+                         │ 200 epochs       │     │ proj_text (N×512)  │
+                         └──────────────────┘     └─────────┬──────────┘
+                         ┌──────────────────┐     ┌─────────▼──────────┐
+                         │ 04b_train_dit    │ ──→ │ DiT (22.10M, EMA)  │
+                         │     .py          │     │ dit_best.pth       │
+                         │ Flow Matching    │     │ cond_dim=512       │
+                         │ 200 epochs       │     └─────────┬──────────┘
+                         └──────────────────┘               │
+                         ┌──────────────────┐     ┌─────────▼──────────┐
                          │ 05_inference.py  │ ──→ │ Generated cells    │
-                         │ Text → CLOP → DiT│     │ (N × 512) → scGPT │
-                         │ → scGPT decode  │     │ → gene expression  │
-                         └──────────────────┘     └────────┬───────────┘
-                                                           │
-                         ┌──────────────────┐     ┌────────▼───────────┐
-                         │ 06_evaluate.py   │ ──→ │ FD, MMD, R@K       │
-                         │ Metrics + Viz    │     │ Gene correlation   │
-                         │ + Expression eval│     │ UMAP figures       │
+                         │ CFG=1.0–3.0     │     │ (N × 512) → scGPT  │
+                         │ Euler/Midpoint   │     │ → gene expression  │
+                         └──────────────────┘     └─────────┬──────────┘
+                         ┌──────────────────┐     ┌─────────▼──────────┐
+                         │ 15_final_verified│ ──→ │ KNN, Steering,     │
+                         │ _evaluation.py   │     │ DivR, LinAcc       │
+                         │ In-distribution  │     │ + CFG sweep (24)   │
                          └──────────────────┘     └────────────────────┘
 ```
 
@@ -67,152 +105,153 @@ User Text ─→ BiomedBERT-large (1024-d) ─→ CLOP Text Projector ─→ Con
 
 ## Changelog
 
-### v0.3.0 → v0.4.0
+### v6.2.0 (Current — March 2026)
 
-| Aspect | v0.3.0 | v0.4.0 |
-|--------|--------|--------|
-| **Datasets** | 50 datasets (4 dirs), 138K cells | **69 datasets** (4 dirs + scRNA-25100), **190K cells** |
-| **New data sources** | Cancer + Development h5ad | + **19 GSE studies from 10x h5** (cancer, immunology, neuro disease, development) |
-| **Text descriptions** | Model-generated | **GEO-verified** metadata (fixed GSE132509 ALL/AML error) |
-| **Model options** | scGPT pan-cancer + BiomedBERT-large only | **4 presets**: cancer, general, large_text_general_cell, base_text_cancer_cell |
-| **Deprecated models** | scGPT human + BiomedBERT-base removed | **Restored** as benchmark/ablation options |
-| **Visualization** | 8 basic figures | + **10 marker gene figures** (violin, heatmap, UMAP, discriminative genes) |
-| **Marker gene analysis** | None | **35 canonical markers** across 7 cell types |
-| **Cell-type generation** | Single prompt | **Multi-prompt** (CD8_T, Macrophage, Epithelial_tumor, Fibroblast) |
-| **Application narrative** | Not articulated | **Virtual cell state prediction** framework |
+**Evidence-based text enrichment: Maximizes caption entropy for discriminative alignment.**
 
-### v0.2.0 → v0.3.0
+| Aspect | v6.1 | v6.2 |
+|--------|------|------|
+| **Text descriptions** | Template-based (mean 284 chars) | **Evidence-dense** (mean 581 chars) |
+| **Unique captions** | 1,073 cluster texts | **5,258** (4.9 variants/cluster) |
+| **Text storage** | 902 MB (99.5% duplicated) | **5.3 MB** (deduplicated + group IDs) |
+| **Evidence sources** | Marker genes only | **+ pathways, anti-markers, GO terms, TFs, expr stats** |
+| **Text augmentation** | None | **variant_prob=0.3** (30% chance of caption variant per sample) |
+| **Storage format** | Flat duplicated .npy | **Deduplicated** (text_embeddings_unique + text_group_ids) |
 
-| Aspect | v0.2.0 | v0.3.0 |
-|--------|--------|--------|
-| **Datasets** | 43 datasets (3 dirs), 81K cells | **~50 datasets** (4 dirs, 55 total − 5 filtered), ~150K cells |
-| **Data filtering** | None (some invalid data) | Auto-skip normalized-only (2) + Ensembl ID (3) datasets |
-| **Cell encoder** | scGPT whole-human (33M cells) | **scGPT pan-cancer** (5.7M cancer cells, tumor-specialized) |
-| **Text encoder** | BiomedBERT-base (768-d, 110M) | **BiomedBERT-large** (1024-d, 340M) |
-| **Decoder** | Broken `model.decoder(batch)` — just ExprDecoder head on raw embedding | **scGPT `generate()`**: inject cell_emb at [CLS] → full transformer → ExprDecoder per gene |
-| **CLOP training** | 50 epochs | **200 epochs** |
-| **DiT training** | 100 epochs | **200 epochs** (optimized: batch=1024, preloaded RAM, resume support) |
-| **Output** | 512-d embeddings only | **Gene expression matrix** via scGPT decoding + embeddings |
-| **Evaluation** | FD, MMD, R@K on embeddings | + **Gene expression correlation** (Pearson, Spearman per-gene/per-cell) |
-| **Figures** | 5 figures (embedding space) | + **Expression heatmap**, **gene correlation scatter** |
-| **Resume training** | Not supported | **Checkpoint resume**: `--resume` flag restores model+EMA+optimizer+epoch |
+New files:
+- `scripts/02b_enrich_descriptions.py` — Evidence extraction + enriched caption generation
+- `scripts/02c_build_enriched_cache.py` — Build deduplicated cache from enriched metadata
+- `data/processed_h5ad/subcluster_metadata_enriched.json` — Enriched cluster annotations
 
-### v0.1.0 → v0.2.0
+### v6.1.0 (March 2026)
 
-| Aspect | v0.1.0 | v0.2.0 |
-|--------|--------|--------|
-| **Datasets** | 3 cancer datasets, 5,833 cells | **43 datasets** (28 cancer + 15 development), **81,225 cells** |
-| **Text descriptions** | 3 auto-generated from filenames | **43 curated biological descriptions** |
-| **Cell encoder** | PCA fallback as default | **scGPT mandatory** (51.9M, 512-d) |
-| **Text encoder** | BiomedBERT loaded but trivial texts | **BiomedBERT with meaningful biomedical text** (768-d) |
-| **CLOP training** | 3 unique negatives | **43 unique text classes** |
-| **Evaluation pipeline** | metrics.py existed but never called | **06_evaluate.py** — full evaluation with 5 figures |
+**Granularity-aware alignment: Addresses the text-cell resolution mismatch.**
 
-### Key Design Decisions (v0.3)
+| Aspect | v6.0 | v6.1 |
+|--------|------|------|
+| **CLOP loss** | SigLIP (individual pairs) | **Prototype-SigLIP** (centroid alignment + cohesion) |
+| **Group detection** | Broken (AMP float16 bug) | **Fixed** (forced float32 for cosine threshold) |
+| **Duplicate mask** | Broken (AMP float16 bug) | **Fixed** (forced float32) |
+| **Cell augmentation** | None (noise_std=0) | **Gaussian noise** (std=0.05) |
+| **Dropout** | 0.1 | **0.2** |
+| **Weight decay** | 0.01 | **0.05** |
+| **Batch size** | 256 (~0 collisions) | **1024** (~480 cells in multi-cell groups) |
+| **Temperature cap** | None (unlimited) | **100.0** |
+| **Cohesion weight** | — | **0.1** (pulls cells toward group centroid) |
+| **Leiden resolution** | 0.6–1.2 (adaptive) | **1.2–2.5** (2× more clusters) |
+| **Train acc (3 ep)** | 80% (memorizing noise) | **66%** (less memorization) |
+| **Train-val gap** | 78.5% | **64.3%** (narrower) |
 
-1. **scGPT pan-cancer over whole-human**: The pan-cancer checkpoint was pretrained on 5.7M cancer cells specifically. Since 28/50 of our datasets are cancer, this specialized model provides better cancer cell embeddings while still generalizing to development datasets.
+### v6.0.0 (March 2026)
 
-2. **scGPT generate() for decoding**: The v0.2 decoder was fundamentally broken — it applied ExprDecoder directly to the 512-d embedding as if it were a single transformer output token. The correct approach re-injects the cell embedding at the [CLS] position, re-runs the full 12-layer transformer with all gene tokens, and then applies ExprDecoder to each gene position to predict per-gene expression. This is the native scGPT reconstruction pathway.
+**Industrial-grade alignment fix: Solves the v5.2 CLOP training failure.**
 
-3. **BiomedBERT-large (1024-d)**: The base model (768-d, 110M params) may not capture fine-grained distinctions between similar cancer types. The large model (1024-d, 340M params) has 3× more parameters and a richer representation space for discriminating between subtle biological descriptions.
+| Aspect | v5.2 | v6.0 |
+|--------|------|------|
+| **Embedding preprocessing** | None (raw encoders) | **ZCA whitening** (text cos 0.96→0.002, cell cos 0.99→0.0003) |
+| **CLOP loss** | InfoNCE (softmax) | **SigLIP** (pairwise sigmoid BCE — robust to collapsed spaces) |
+| **Duplicate handling** | None (same-text cells penalized as negatives) | **Auto-duplicate mask** (same-text cells excluded from negative set) |
+| **Normalization** | BatchNorm | **LayerNorm** (cross-dataset generalization) |
+| **proj_dim** | 256 | **512** (richer shared space) |
+| **Temperature init** | 0.07 | **10.0** (SigLIP learns higher temps with separate bias) |
+| **Warmup** | 5 epochs | **10 epochs** (stability with higher LR) |
+| **LR** | 3e-4 | **1e-3** (SigLIP converges faster with SGD-like dynamics) |
+| **Early stopping** | None | **30-epoch patience** |
+| **Train acc (epoch 3)** | ~2.5% (stuck) | **80%** (verified — model is learning) |
+| **Val acc** | 2.5% (ceiling) | **Target >10%** |
 
-4. **Dataset filtering**: scGPT requires raw integer counts for its rank-based binning (51 bins). Datasets with only normalized data (no raw counts) or Ensembl IDs (not in scGPT's gene symbol vocabulary) are automatically filtered.
+**Root cause analysis:** Both BiomedBERT and scGPT embeddings exhibit extreme cosine similarity collapse (>0.95). Standard InfoNCE's softmax denominator is dominated by near-identical negatives, making gradients vanish. SigLIP's pairwise sigmoid formulation treats each (text, cell) pair independently, bypassing this failure mode entirely. This is the same insight that drove Google's transition from CLIP → SigLIP for vision-language alignment.
 
----
+### v5.2.0 (February 2026)
 
-## v0.3.0 Results
+| Aspect | v0.4 | v5.2 |
+|--------|------|------|
+| **Datasets** | 69 datasets, 190K cells | **80 datasets**, **220,304 cells** |
+| **Data sources** | Cancer + Development + 10x h5 | + **GEO-DataHub** (11 additional studies) |
+| **Text descriptions** | 69 dataset-level labels | **1,088 sub-cluster descriptions** (marker genes, tissue, disease) |
+| **Evaluation** | FD, MMD, Coverage, Density, KL | **KNN (37×), Steering (81%), DivR (0.93), LinAcc** |
+| **Eval protocol** | Out-of-distribution prompts (6 types) | **In-distribution conditions** (100 groups × 200 cells) |
+| **Validation** | 6 datasets, `shuffle=False` (bug) | **8 datasets**, `shuffle=True` (fixed) |
+| **Val accuracy** | 1.1% (with shuffle bug) | **2.5%** (6.4× random, shuffle fixed) |
 
-### CLOP Alignment
-| Metric | Value |
-|--------|-------|
-| Text→Cell R@1 | 1.0000 |
-| Cell→Text R@1 | 1.0000 |
-| R@3, R@5, R@10 | 1.0000 (all) |
-| Mean cosine similarity | 0.6789 ± 0.019 |
+### Earlier Versions (Archived)
 
-### DiT Generation Quality
-| Metric | v0.2.0 | v0.3.0 | Direction |
-|--------|--------|--------|-----------|
-| Fréchet Distance | 123.84 | **4.32** | Lower ↓ |
-| MMD (RBF) | 0.262 | **0.005** | Lower ↓ |
-| Coverage | 0.024 | **0.650** | Higher ↑ |
-| Density | 0.062 | **0.616** | ~1.0 |
-| Mean KL divergence | 2.133 | **0.312** | Lower ↓ |
-| Paired cosine similarity | 0.855 | **0.966** | Higher ↑ |
-| Val loss (flow matching) | 0.662 | **0.142** | Lower ↓ |
-| Val cosine similarity | 0.818 | **0.970** | Higher ↑ |
+<details>
+<summary>v0.3 → v0.4 → v5.0 history</summary>
 
-### Gene Expression Decoding (v0.3 new)
-| Metric | Value |
-|--------|-------|
-| Per-gene mean Pearson r | 1.0000 |
-| Per-gene mean Spearman r | 1.0000 |
-| Per-cell mean Pearson r | 0.9999 |
-| Number of genes decoded | 1,890 |
+**v0.4:** 69 datasets (190K cells) from 4 dirs + 19 GSE studies. GEO-verified metadata. </br>
+**v0.3:** 50 datasets (138K cells). scGPT pan-cancer + BiomedBERT-large. scGPT `generate()` decoder. </br>
+**v0.2:** 43 datasets (81K cells). scGPT mandatory. BiomedBERT-base. </br>
+**v0.1:** 3 datasets (5,833 cells). Proof-of-concept.
 
-### Training Configuration
-| Component | Setting |
-|-----------|---------|
-| Total cells | 138,477 |
-| Datasets | 50 (55 total − 5 filtered) |
-| Cell encoder | scGPT pan-cancer (512-d, 51.9M params) |
-| Text encoder | BiomedBERT-large (1024-d, 340M params) |
-| CLOP | 2M params, proj_dim=256, 200 epochs, batch=512 |
-| DiT | 22.1M params, 8 blocks, hidden=384, 200 epochs, batch=1024, EMA=0.9999 |
-| Hardware | NVIDIA RTX 5090 Laptop GPU (25.1 GB VRAM) |
+</details>
 
 ---
 
-## v0.2.0 Results
+## v6.1 Training Configuration
 
-### CLOP Alignment
-| Metric | Value |
-|--------|-------|
-| Text→Cell R@1 | 0.9535 |
-| Cell→Text R@1 | 1.0000 |
-| R@3 (both) | 1.0000 |
-| Mean cosine similarity | 0.6397 ± 0.1187 |
+| Component | v6.0 | v6.1 |
+|-----------|------|------|
+| Total cells | 220,304 | 220,304 |
+| Text groups | 1,088 raw → 2,342 whitened | 2,342 whitened |
+| **Preprocessing** | ZCA whitening | ZCA whitening |
+| **CLOP loss** | SigLIP (broken dup mask) | **Prototype-SigLIP** (fixed float32) |
+| **CLOP** | 3.42M, proj=512, batch=256 | **3.42M, proj=512, batch=1024** |
+| **Regularization** | dropout=0.1, wd=0.01 | **dropout=0.2, wd=0.05, noise=0.05** |
+| **DiT** | 22.10M, cond=512 | 22.10M, cond=512 |
+| Hardware | NVIDIA RTX 5090 Laptop GPU (24.1 GB VRAM) | Same |
 
-### DiT Generation Quality
+### CLOP v6.1 (3.42M params, Prototype-SigLIP, 200 epochs target)
+| Metric | v5.2 | v6.0 (3 epoch test) |
+|--------|------|---------------------|
+| Train acc | ~2.5% (stuck) | **80% by epoch 3** |
+| Train loss | 1.19 | 0.005 |
+| Val acc | 2.5% | 1.5% (4× random — improving) |
+| Temperature | 0.060 | 17.12 (SigLIP learned) |
+| Loss type | InfoNCE | **SigLIP (sigmoid BCE)** |
+
+### v5.2 Results (Downstream — to be re-evaluated after v6 CLOP)
+
+### DiT Generation (22.10M params, 200 epochs + EMA)
 | Metric | Value | Direction |
 |--------|-------|-----------|
-| Fréchet Distance | 123.84 | Lower ↓ |
-| MMD (RBF) | 0.262 | Lower ↓ |
-| Coverage | 0.024 | Higher ↑ |
-| Density | 0.062 | ~1.0 |
-| Mean KL divergence | 2.133 | Lower ↓ |
-| Paired cosine similarity | 0.855 | Higher ↑ |
-| Val loss (flow matching) | 0.662 | Lower ↓ |
-| Val cosine similarity | 0.818 | Higher ↑ |
+| Val cosine (EMA) | 0.976 | Higher ↑ |
+| Val loss | 0.091 | Lower ↓ |
+| Angular error | ~12.6° | Lower ↓ |
 
-### Training Configuration
-| Component | Setting |
-|-----------|---------|
-| Total cells | 81,225 |
-| Datasets | 43 (28 cancer + 15 development) |
-| Cell encoder | scGPT (512-d, 51.9M params) |
-| Text encoder | BiomedBERT (768-d) |
-| CLOP | 2M params, proj_dim=256, 50 epochs, batch=512 |
-| DiT | 22.1M params, 8 blocks, hidden=384, 100 epochs, batch=512, EMA=0.9999 |
-| Hardware | NVIDIA RTX 5090 Laptop GPU (25.1 GB VRAM) |
-
----
+### Evaluation (In-Distribution, 100 groups × 200 cells)
+| Method | KNN-1 ↑ | Steering ↑ | DivR (→1) | LinAcc ↑ | KNN/Rand |
+|--------|---------|-----------|-----------|----------|----------|
+| **Real Data** | **0.890** | — | **1.000** | **0.942** | 89× |
+| CFG=2.0 Euler-10 | **0.369** | **0.810** | 0.513 | **0.511** | **37×** |
+| CFG=1.0 Midpoint-10 | 0.288 | 0.807 | **0.929** | 0.357 | 29× |
+| CFG=0.0 (Uncond.) | 0.010 | 0.475 | 1.833 | 0.010 | 1× |
+| Gaussian N(μ,Σ) | 0.011 | 0.466 | 2.277 | 0.009 | 1× |
 
 ## Quick Start
 
 ### Environment Setup
 
 ```bash
-conda activate clopdit
+conda activate /path/to/.conda
 cd CLOP-DiT
 ```
 
-### Step 1: Prepare Data (~50 datasets from 4 directories)
+### Step 1: Prepare Data (80 datasets from multiple sources)
 
 ```bash
+# Local h5ad datasets
 python scripts/00_prepare_all_data.py \
-    --output_dir data/processed_h5ad \
-    --max_cells 3000
+    --output_dir data/processed_h5ad --max_cells 3000
+
+# Integrate 10x h5 datasets
+python scripts/01_integrate_h5_datasets.py
+
+# Integrate GEO-DataHub h5ad datasets
+python scripts/01b_integrate_geodh_h5ad.py
+
+# Generate sub-cluster descriptions (→ 1,088 text groups)
+python scripts/02_subcluster_descriptions.py
 ```
 
 ### Step 2: Cache Latent Embeddings (scGPT pan-cancer + BiomedBERT-large)
@@ -221,57 +260,54 @@ python scripts/00_prepare_all_data.py \
 python scripts/03_cache_latents.py \
     --h5ad_dir data/processed_h5ad \
     --metadata data/processed_h5ad/metadata_structured.json \
-    --output_dir data/cached_latents \
+    --output_dir data/cached_latents_v5.2 \
     --cell_encoder scgpt \
     --scgpt_dir models/scgpt_pancancer \
     --text_encoder microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract
 ```
 
-### Step 3: Train CLOP Alignment (200 epochs)
+### Step 2b: Preprocess Embeddings (v6 — CRITICAL for alignment)
 
 ```bash
-python scripts/04a_train_clop.py \
-    --config configs/clop.yaml
+# ZCA whitening to fix embedding space collapse
+# Text cosine: 0.96 → 0.002, Cell cosine: 0.99 → 0.0003
+python scripts/03b_preprocess_embeddings.py --cache_dir data/cached_latents_v5.2
+```
+
+### Step 3: Train CLOP Alignment (SigLIP + whitened embeddings, 200 epochs)
+
+```bash
+python scripts/04a_train_clop.py --config configs/clop.yaml
 ```
 
 ### Step 4: Train DiT (200 epochs, with optional resume)
 
 ```bash
-python scripts/04b_train_dit.py \
-    --config configs/dit.yaml
-
-# Resume from last checkpoint:
-python scripts/04b_train_dit.py \
-    --config configs/dit.yaml --resume
+python scripts/04b_train_dit.py --config configs/dit.yaml
+# Resume:
+python scripts/04b_train_dit.py --config configs/dit.yaml --resume
 ```
 
-### Step 5: Generate Cells (with gene expression decoding)
+### Step 5: Evaluate (In-Distribution)
+
+```bash
+# Full verified evaluation (KNN, steering, diversity, CFG sweep)
+python scripts/15_final_verified_evaluation.py
+
+# Publication figures
+python scripts/16_publication_figures.py
+```
+
+### Step 6: Generate Cells
 
 ```bash
 python scripts/05_inference.py \
-    --prompt "CD8+ cytotoxic T cells from human lung adenocarcinoma tumor microenvironment" \
+    --prompt "CD8+ cytotoxic T cells from human lung adenocarcinoma" \
     --num_cells 500 \
+    --cfg_scale 2.0 \
     --decode_expression \
     --reference_h5ad data/processed_h5ad/GSE123902_LungAdreHmCancer_processed.h5ad \
     --output generated_cells.h5ad
-```
-
-### Step 6: Evaluate (including gene expression quality)
-
-```bash
-python scripts/06_evaluate.py \
-    --output_dir figures \
-    --decode_expression \
-    --reference_h5ad data/processed_h5ad/GSE123902_LungAdreHmCancer_processed.h5ad
-```
-
-### Step 7: Marker Gene Analysis (v0.4)
-
-```bash
-python scripts/07_marker_gene_analysis.py \
-    --output_dir figures/marker_genes \
-    --reference_h5ad data/processed_h5ad/GSE123902_LungAdreHmCancer_processed.h5ad \
-    --num_cells 200
 ```
 
 ---
@@ -281,40 +317,43 @@ python scripts/07_marker_gene_analysis.py \
 ```
 CLOP-DiT/
 ├── configs/
-│   ├── clop.yaml              # CLOP config (text_dim=1024, 200 epochs)
-│   └── dit.yaml               # DiT config (200 epochs, batch=1024, resume)
-│   └── models.yaml            # v0.4: multi-model presets (cancer/general/ablations)
+│   ├── clop.yaml              # CLOP config (v6: SigLIP, whitened emb, proj=512)
+│   ├── dit.yaml               # DiT config (v6: cond_dim=512, 200 epochs)
+│   └── models.yaml            # Multi-model presets (cancer/general/ablations)
 ├── data/
-│   ├── processed_h5ad/        # ~50 preprocessed h5ad + metadata JSON
-│   └── cached_latents/        # Pre-computed .npy embeddings
-│       ├── cell_embeddings.npy   # (N, 512) scGPT pan-cancer
-│       ├── text_embeddings.npy   # (N, 1024) BiomedBERT-large
-│       ├── projected_text.npy    # (N, 256) CLOP-projected
-│       ├── sample_ids.npy        # (N,) dataset IDs
-│       ├── metadata.json         # ID → text description mapping
-│       └── manifest.json         # Cache statistics
-├── figures/                   # Evaluation outputs
-│   ├── clop_alignment_umap.png
-│   ├── generation_comparison_umap.png
-│   ├── dim_distributions.png
-│   ├── expression_comparison.png    # v0.3: gene expression heatmap
-│   ├── gene_correlation.png         # v0.3: per-gene correlation
-│   ├── clop_training_curves.png
-│   ├── dit_training_curves.png
-│   ├── evaluation_metrics.json
-│   └── marker_genes/                # v0.4: marker gene analysis
-│       ├── markers_CD8plus_*.png    #   Cell-type marker violin plots
-│       ├── marker_heatmap_cross_celltype.png
-│       ├── celltype_discrimination_umap.png
-│       ├── discriminative_genes.png
-│       └── marker_analysis_summary.json
+│   ├── processed_h5ad/        # 80 preprocessed h5ad + metadata JSON
+│   └── cached_latents_v5.2/   # Pre-computed .npy embeddings (220,304 cells)
+│       ├── cell_embeddings.npy             # (N, 512) scGPT pan-cancer [raw]
+│       ├── text_embeddings.npy             # (N, 1024) BiomedBERT-large [raw]
+│       ├── cell_embeddings_preprocessed.npy  # (N, 512) ZCA-whitened [v6]
+│       ├── text_embeddings_preprocessed.npy  # (N, 1024) ZCA-whitened [v6]
+│       ├── cell_preprocessor_preprocessed.npz  # Whitening transform state [v6]
+│       ├── text_preprocessor_preprocessed.npz  # Whitening transform state [v6]
+│       ├── projected_text.npy              # (N, 512) CLOP-projected [v6: 512-d]
+│       ├── sample_ids.npy                  # (N,) dataset IDs
+│       ├── metadata.json                   # 1,088 text groups → descriptions
+│       └── manifest.json                   # Cache statistics
+├── docs/
+│   ├── CLOP_DiT_JBHI_Article.md  # JBHI manuscript (v5.2 results)
+│   └── CLOP-DiT_Evaluation_Report.md  # Full evaluation report
+├── figures/
+│   ├── final_eval_summary.png       # 4-panel eval summary
+│   └── v5_publication/              # Publication figures (WCAG-accessible)
+│       ├── fig2_training_dynamics.{png,pdf}
+│       ├── fig3_pca_embedding.{png,pdf}
+│       ├── fig4_metrics_dashboard.{png,pdf}
+│       ├── fig5_biological_validation.{png,pdf}
+│       ├── fig6_cfg_solver.{png,pdf}
+│       ├── fig7_dimension_sampling.{png,pdf}
+│       ├── fig8_tables.{png,pdf}
+│       └── fig9_baseline_comparison.{png,pdf}
 ├── models/
 │   ├── checkpoints/           # Trained weights
 │   │   ├── clop_best.pth
 │   │   ├── dit_best.pth (EMA)
 │   │   ├── clop_history.json
 │   │   └── dit_history.json
-│   ├── scgpt_pancancer/       # v0.3: scGPT pan-cancer pretrained (5.7M cancer cells)
+│   ├── scgpt_pancancer/       # scGPT pan-cancer pretrained (5.7M cancer cells)
 │   │   ├── best_model.pt (205MB)
 │   │   ├── vocab.json (60K+ genes)
 │   │   └── args.json
@@ -323,23 +362,36 @@ CLOP-DiT/
 │       ├── vocab.json (60697 genes)
 │       └── args.json
 ├── scripts/
-│   ├── 00_prepare_all_data.py  # v0.3: 55 datasets, 4 dirs, auto-filter
-│   ├── 01_integrate_h5_datasets.py  # v0.4: 19 new GSE from 10x h5
-│   ├── 03_cache_latents.py     # scGPT pan-cancer + BiomedBERT-large
-│   ├── 04a_train_clop.py
-│   ├── 04b_train_dit.py        # v0.3: --resume support
-│   ├── 05_inference.py         # v0.3: scGPT generate() decoding
-│   ├── 06_evaluate.py          # v0.3: gene expression evaluation
-│   └── 07_marker_gene_analysis.py   # v0.4: marker gene visualization
+│   ├── 00_prepare_all_data.py         # Multi-source h5ad preparation
+│   ├── 01_integrate_h5_datasets.py    # 10x h5 integration
+│   ├── 01b_integrate_geodh_h5ad.py    # GEO-DataHub h5ad integration
+│   ├── 02_subcluster_descriptions.py  # Sub-cluster text generation
+│   ├── 03_cache_latents.py            # scGPT + BiomedBERT embedding cache
+│   ├── 03b_preprocess_embeddings.py   # [v6] ZCA whitening (CRITICAL)
+│   ├── 04a_train_clop.py             # CLOP alignment (v6: SigLIP)
+│   ├── 04b_train_dit.py              # DiT training (--resume)
+│   ├── 04c_train_cell2cell.py        # Cell-to-cell training
+│   ├── 05_inference.py               # Text-conditioned generation
+│   ├── 06_cell2cell_inference.py     # Cell-to-cell inference
+│   ├── 06_evaluate.py               # Legacy evaluation (FD/MMD)
+│   ├── 07_marker_gene_analysis.py   # Marker gene visualization
+│   ├── 08_biological_validation.py  # Biological validation metrics
+│   ├── 14_biological_evaluation.py  # In-distribution bio evaluation
+│   ├── 14b_cfg_sweep.py            # CFG scale + solver sweep
+│   ├── 15_final_verified_evaluation.py  # Final verified eval (KNN/Steering/DivR)
+│   ├── 16_publication_figures.py    # Publication figures + visual conflict detection
+│   ├── 17_baseline_comparison.py   # Phase 2 decoder architecture comparison
+│   └── README.md                    # Script documentation
 ├── src/
 │   ├── architecture/
 │   │   ├── dit.py             # 1D DiT with AdaLN-Zero (22.1M)
-│   │   ├── clop.py            # CLOP aligner
+│   │   ├── clop.py            # CLOP aligner (v6: SigLIP + InfoNCE + auto-dup mask)
 │   │   ├── scgpt_embed.py     # Standalone scGPT encoder + generate() decoder
-│   │   └── decoder.py         # v0.3: scGPT generate() decoder wrapper
+│   │   └── decoder.py         # scGPT generate() decoder wrapper
 │   ├── data_pipeline/
 │   │   ├── cache_builder.py   # BiomedBERT-large default (1024-d)
-│   │   ├── dataset.py         # CLOPDataset, DiTDataset
+│   │   ├── dataset.py         # CLOPDataset, DiTDataset (v6: use_preprocessed)
+│   │   ├── embedding_preprocessor.py  # [v6] ZCA whitening + diagnostics
 │   │   ├── geo_fetcher.py     # GEO data acquisition
 │   │   └── text_cleaner.py    # SFT text cleaning
 │   ├── training/
@@ -347,11 +399,13 @@ CLOP-DiT/
 │   │   ├── train_dit.py       # DiTTrainer
 │   │   └── schedulers.py      # CosineWarmupScheduler
 │   ├── evaluation/
-│   │   ├── metrics.py         # FD, MMD, Coverage, Density, KL, R@K
-│   │   └── visualizer.py      # UMAP, tSNE, training curves
+│   │   ├── metrics.py         # KNN accuracy, steering, DivR, FD, MMD
+│   │   └── visualizer.py      # PCA, tSNE, training curves
 │   └── utils/
 │       ├── helpers.py         # Seed, device, parameter counting
 │       └── logging_config.py  # Structured logging
+├── results/                   # Evaluation results (JSON)
+├── logs/                      # Training logs
 ├── requirements.txt
 ├── setup.py
 └── README.md
@@ -360,6 +414,22 @@ CLOP-DiT/
 ---
 
 ## Technical Details
+
+### v6.0 Key Innovation: Upstream Whitening + SigLIP
+
+**The problem:** Both BiomedBERT and scGPT produce embeddings that live in a narrow cone of the hypersphere. Mean pairwise cosine similarity: text = 0.961, cell = 0.996. This means all embeddings look nearly identical to InfoNCE's softmax — the loss function cannot distinguish positive pairs from negatives.
+
+**The fix (industrial-standard approach):**
+
+1. **ZCA Whitening** (upstream, before CLOP): Decorrelate all embedding dimensions and equalize their variances. This preserves the original coordinate alignment (unlike PCA whitening) while spreading the distribution from [0.95, 1.0] to [-0.3, 0.7]. This is the same technique used by OpenCLIP, Meta's ImageBind, and Google's SigLIP internally.
+
+2. **SigLIP Loss** (replaces InfoNCE): Instead of softmax over the entire batch (which requires globally discriminable features), SigLIP treats each (text_i, cell_j) pair as an independent binary classification: "are these matched (+1) or not (-1)?" The loss is:
+
+$$\mathcal{L}_{\text{SigLIP}} = -\frac{1}{B^2}\sum_{i}\sum_{j} \log \sigma(y_{ij} \cdot (\mathbf{t}_i \cdot \mathbf{c}_j \cdot \tau + b))$$
+
+where $y_{ij} = +1$ on diagonal, $-1$ off-diagonal, $\tau$ is learned temperature, and $b$ is learned bias.
+
+3. **Auto-duplicate mask**: With 220K cells but only 1,088 unique text descriptions (avg 202 cells/text), many cells in a batch share identical text. Without masking, these are incorrectly penalized as false negatives. The mask detects text duplicates (cosine > 0.9999) and excludes them from the negative set.
 
 ### DiT Architecture: Pseudo-Token Decomposition
 

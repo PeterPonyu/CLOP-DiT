@@ -132,7 +132,7 @@ def encode_text(prompt, tokenizer, text_model, clop, device="cuda"):
     return cond
 
 
-def generate_cells(dit, cond, num_cells, cell_dim, num_steps=4, cfg_scale=3.0):
+def generate_cells(dit, cond, num_cells, cell_dim, num_steps=20, cfg_scale=3.0):
     """Generate cell embeddings via DiT flow matching."""
     with torch.no_grad():
         cond_expanded = cond.expand(num_cells, -1)

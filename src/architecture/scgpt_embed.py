@@ -643,9 +643,25 @@ class ScGPTCellEncoder:
         self._ref_gene_names = np.array(genes)[valid_mask].tolist()
         self._ref_gene_ids = gene_ids_filtered.copy()
 
-        # Get count matrix
+        # Get count matrix — prefer raw counts for scGPT binning
+        # scGPT tokenization uses value binning on raw counts (official:
+        # bowang-lab/scGPT build_large_scale_data.py preserves counts layer;
+        # finetune examples use raw counts → binning). Using log-normalized
+        # .X would compress dynamic range and degrade binning quality.
         import scipy.sparse as sp
-        count_matrix = adata_filtered.X
+        if "counts" in adata_filtered.layers:
+            count_matrix = adata_filtered.layers["counts"]
+            logger.info("Using raw counts from adata.layers['counts'] for scGPT encoding")
+        elif "counts" in adata.layers:
+            # layers may have been lost during filtering; try original adata
+            count_matrix = adata[:, valid_mask].layers["counts"]
+            logger.info("Using raw counts from original adata.layers['counts']")
+        else:
+            count_matrix = adata_filtered.X
+            logger.warning(
+                "adata.layers['counts'] not found — falling back to adata.X. "
+                "If .X is log-normalized, scGPT binning may produce suboptimal embeddings."
+            )
         if sp.issparse(count_matrix):
             count_matrix = count_matrix.toarray()
         count_matrix = count_matrix.astype(np.float32)
@@ -689,7 +705,7 @@ class ScGPTCellEncoder:
             sampler=SequentialSampler(dataset),
             collate_fn=collator,
             drop_last=False,
-            num_workers=min(4, self.batch_size),
+            num_workers=0,  # Avoid pickle error with local CellDataset class
             pin_memory=True,
         )
 

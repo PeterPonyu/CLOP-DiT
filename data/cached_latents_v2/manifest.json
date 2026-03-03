@@ -1,8 +1,0 @@
-{
-  "total_cells": 81225,
-  "cell_dim": 512,
-  "text_dim": 768,
-  "num_datasets": 43,
-  "cell_encoder": "scgpt",
-  "text_encoder": "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract"
-}

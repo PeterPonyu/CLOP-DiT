@@ -9,7 +9,7 @@ Usage:
     python scripts/03_cache_latents.py \
         --h5ad_dir data/processed_h5ad \
         --metadata data/processed_h5ad/metadata_structured.json \
-        --output_dir data/cached_latents \
+        --output_dir data/cached_latents_v5.2 \
         --cell_encoder pca
 """
 
@@ -28,7 +28,7 @@ def main():
     parser = argparse.ArgumentParser(description="Cache Latent Embeddings")
     parser.add_argument("--h5ad_dir", type=str, default="data/processed_h5ad")
     parser.add_argument("--metadata", type=str, default="data/processed_h5ad/metadata_structured.json")
-    parser.add_argument("--output_dir", type=str, default="data/cached_latents")
+    parser.add_argument("--output_dir", type=str, default="data/cached_latents_v5.2")
     parser.add_argument("--cell_encoder", type=str, default="scgpt",
                         choices=["scgpt", "pca"], help="Cell encoder method (scGPT recommended)")
     parser.add_argument("--scgpt_dir", type=str, default="models/scgpt_pancancer",

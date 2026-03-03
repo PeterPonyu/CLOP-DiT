@@ -231,6 +231,178 @@ class GenerationMetrics:
 
         return metrics
 
+    # ── Biological Validation Metrics (Reviewer Concern: bio plausibility) ──
+
+    @staticmethod
+    def marker_specificity_index(
+        generated: np.ndarray,
+        expected_high_dims: list,
+        expected_low_dims: list = None,
+    ) -> Dict[str, float]:
+        """Marker specificity index: do generated cells up-regulate the
+        expected marker gene dimensions while keeping others baseline?
+
+        Parameters
+        ----------
+        generated : (M, D) generated cell embeddings
+        expected_high_dims : list of int – embedding dimensions that should
+            be elevated for this cell type
+        expected_low_dims : list of int – embedding dimensions that should
+            be low (optional)
+
+        Returns
+        -------
+        metrics : dict with 'marker_specificity', 'marker_mean', 'background_mean'
+        """
+        gen_mean = generated.mean(axis=0)
+        all_dims = set(range(generated.shape[1]))
+        high_set = set(expected_high_dims)
+        bg_dims = list(all_dims - high_set)
+
+        marker_mean = gen_mean[expected_high_dims].mean()
+        bg_mean = gen_mean[bg_dims].mean()
+        bg_std = gen_mean[bg_dims].std() + 1e-8
+
+        specificity = (marker_mean - bg_mean) / bg_std
+
+        result = {
+            "marker_specificity": float(specificity),
+            "marker_mean": float(marker_mean),
+            "background_mean": float(bg_mean),
+        }
+        if expected_low_dims is not None:
+            low_mean = gen_mean[expected_low_dims].mean()
+            result["low_dim_mean"] = float(low_mean)
+
+        return result
+
+    @staticmethod
+    def inter_type_separation(
+        embeddings_dict: Dict[str, np.ndarray],
+    ) -> Dict[str, float]:
+        """Measure how well-separated different cell types are in embedding space.
+
+        Parameters
+        ----------
+        embeddings_dict : dict of cell_type → (M, D) embeddings
+
+        Returns
+        -------
+        metrics : dict with 'mean_inter_cosine', 'min_inter_cosine',
+                  'mean_intra_variance', silhouette-like score
+        """
+        names = list(embeddings_dict.keys())
+        means = {n: embeddings_dict[n].mean(axis=0) for n in names}
+
+        # Inter-type cosine distances
+        inter_sims = []
+        for i in range(len(names)):
+            for j in range(i + 1, len(names)):
+                v1, v2 = means[names[i]], means[names[j]]
+                sim = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2) + 1e-8)
+                inter_sims.append(sim)
+
+        # Intra-type variances
+        intra_vars = {n: np.var(embeddings_dict[n], axis=0).mean() for n in names}
+
+        # Pseudo-silhouette: (inter_distance - intra_distance) / max
+        mean_inter = float(np.mean(inter_sims))
+        mean_intra = float(np.mean(list(intra_vars.values())))
+
+        return {
+            "mean_inter_cosine_sim": mean_inter,
+            "min_inter_cosine_sim": float(np.min(inter_sims)) if inter_sims else 0.0,
+            "max_inter_cosine_sim": float(np.max(inter_sims)) if inter_sims else 0.0,
+            "mean_intra_variance": mean_intra,
+            "separation_score": float(1.0 - mean_inter),  # higher = better separated
+        }
+
+    @staticmethod
+    def diversity_score(generated: np.ndarray, k: int = 5) -> Dict[str, float]:
+        """Measure generation diversity using average pairwise distance.
+
+        Detects mode collapse: all generated samples landing in one point.
+
+        Parameters
+        ----------
+        generated : (M, D) generated cell embeddings
+        k : int – number of nearest neighbors for local diversity
+
+        Returns
+        -------
+        metrics : dict with 'mean_pairwise_dist', 'knn_mean_dist', 'variance_ratio'
+        """
+        n = min(500, len(generated))  # cap for speed
+        sub = generated[:n]
+
+        # Global diversity
+        norms = np.linalg.norm(sub, axis=1, keepdims=True) + 1e-8
+        sub_normed = sub / norms
+        sim_matrix = sub_normed @ sub_normed.T
+        # Exclude diagonal
+        np.fill_diagonal(sim_matrix, 0)
+        mean_sim = sim_matrix.sum() / (n * (n - 1))
+
+        # k-NN local diversity
+        nn = NearestNeighbors(n_neighbors=min(k + 1, n), metric="cosine")
+        nn.fit(sub)
+        dists, _ = nn.kneighbors(sub)
+        knn_dist = dists[:, 1:].mean()
+
+        # Variance ratio (variance of generated / ideal gaussian variance)
+        gen_var = np.var(sub, axis=0).mean()
+
+        return {
+            "mean_pairwise_cosine_sim": float(mean_sim),
+            "knn_mean_cosine_dist": float(knn_dist),
+            "mean_variance": float(gen_var),
+            "diversity_index": float(1.0 - mean_sim),  # higher = more diverse
+        }
+
+    @staticmethod
+    def conditioning_fidelity(
+        generated: np.ndarray,
+        condition: np.ndarray,
+        real: np.ndarray = None,
+    ) -> Dict[str, float]:
+        """Measure how well generated cells respond to the conditioning signal.
+
+        Parameters
+        ----------
+        generated : (M, D) generated cell embeddings
+        condition : (1, D_c) or (D_c,) condition vector
+        real : (N, D) optional real embeddings for reference
+
+        Returns
+        -------
+        metrics : dict with cosine similarities
+        """
+        cond = condition.flatten()
+        gen_mean = generated.mean(axis=0)
+
+        # If dims don't match, project to common space via truncation
+        d = min(len(cond), len(gen_mean))
+        cond_trunc = cond[:d]
+        gen_trunc = gen_mean[:d]
+
+        cos_sim = np.dot(cond_trunc, gen_trunc) / (
+            np.linalg.norm(cond_trunc) * np.linalg.norm(gen_trunc) + 1e-8
+        )
+
+        result = {
+            "cond_gen_cosine_sim": float(cos_sim),
+        }
+
+        if real is not None:
+            real_mean = real.mean(axis=0)[:d]
+            real_sim = np.dot(cond_trunc, real_mean) / (
+                np.linalg.norm(cond_trunc) * np.linalg.norm(real_mean) + 1e-8
+            )
+            result["cond_real_cosine_sim"] = float(real_sim)
+            result["fidelity_gap"] = float(cos_sim - real_sim)
+
+        return result
+
     @classmethod
     def full_evaluation(
         cls,
@@ -263,5 +435,9 @@ class GenerationMetrics:
         # Per-dimension KL
         kl = cls.kl_per_dimension(real, generated)
         metrics.update(kl)
+
+        # Diversity (mode collapse detection)
+        div = cls.diversity_score(generated)
+        metrics.update(div)
 
         return metrics

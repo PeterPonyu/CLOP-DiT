@@ -10,9 +10,15 @@ InferenceDataset: text descriptions → condition vectors for generation
 import json
 import numpy as np
 import torch
-from torch.utils.data import Dataset, DataLoader
+from collections import defaultdict
+from torch.utils.data import Dataset, DataLoader, Subset
 from pathlib import Path
-from typing import Optional, Union, Dict, Tuple
+from typing import Optional, Union, Dict, Tuple, List
+import logging
+
+from .group_aware_sampler import GroupAwareBatchSampler
+
+logger = logging.getLogger(__name__)
 
 
 # ============================================================================
@@ -23,48 +29,153 @@ class CLOPDataset(Dataset):
     """Dataset for contrastive text-cell alignment training.
 
     Loads pre-computed embeddings and forms (text, cell) pairs.
-    Optionally applies data augmentation via embedding noise.
+    Supports two storage formats:
+    - Legacy (v5/v6.0-6.1): Duplicated text_embeddings.npy (N_total, text_dim)
+    - Deduplicated (v6.2+): text_embeddings_unique.npy + text_group_ids.npy
+
+    v6.2 features:
+    - Deduplicated text storage (99.5% space savings)
+    - Caption variant sampling during training (text augmentation)
+    - Explicit text_group_ids for efficient group detection in loss
 
     Parameters
     ----------
     cache_dir : str or Path
         Directory containing cached embeddings.
     noise_std : float
-        Standard deviation of Gaussian noise for augmentation.
-        0.0 = no augmentation.
+        Standard deviation of Gaussian noise for cell augmentation.
     sample_level : bool
         If True, sample at the dataset level (one text per dataset).
-        If False, sample at the cell level (duplicated texts).
+    use_preprocessed : bool
+        If True, load *_preprocessed.npy files (whitened embeddings).
+    variant_prob : float
+        Probability of sampling a caption variant instead of the primary
+        text during training. 0.0 = always use primary, 0.5 = 50% chance
+        of a randomly chosen variant. Only works with v6.2 deduplicated cache.
     """
 
     def __init__(
         self,
-        cache_dir: Union[str, Path] = "data/cached_latents",
+        cache_dir: Union[str, Path] = "data/cached_latents_v5.2",
         noise_std: float = 0.0,
         sample_level: bool = False,
+        use_preprocessed: bool = False,
+        variant_prob: float = 0.0,
+        preprocess_text: bool = True,
+        preprocess_cell: bool = True,
     ):
         cache_dir = Path(cache_dir)
-
-        self.cell_emb = np.load(cache_dir / "cell_embeddings.npy", mmap_mode="r")
-        self.text_emb = np.load(cache_dir / "text_embeddings.npy", mmap_mode="r")
-        self.sample_ids = np.load(cache_dir / "sample_ids.npy")
+        self.cache_dir = cache_dir
         self.noise_std = noise_std
         self.sample_level = sample_level
+        self.variant_prob = variant_prob
+        self._deduplicated = False
+        self._has_variants = False
 
+        # Resolve per-modality preprocessing flags
+        # If use_preprocessed=True, default both to True (backward compat)
+        # Individual flags can override
+        use_pp_text = use_preprocessed and preprocess_text
+        use_pp_cell = use_preprocessed and preprocess_cell
+
+        # ── Detect storage format ──
+        dedup_path = cache_dir / "text_embeddings_unique.npy"
+        group_id_path = cache_dir / "text_group_ids.npy"
+
+        if dedup_path.exists() and group_id_path.exists():
+            self._deduplicated = True
+            logger.info("Using DEDUPLICATED text storage (v6.2)")
+        else:
+            logger.info("Using legacy duplicated text storage")
+
+        # ── Load cell embeddings ──
+        if use_pp_cell:
+            cell_path = cache_dir / "cell_embeddings_preprocessed.npy"
+            if not cell_path.exists():
+                logger.warning("Preprocessed cell embeddings not found — falling back to raw.")
+                cell_path = cache_dir / "cell_embeddings.npy"
+            else:
+                logger.info("Loading PREPROCESSED (whitened) cell embeddings")
+        else:
+            cell_path = cache_dir / "cell_embeddings.npy"
+            if use_preprocessed and not preprocess_cell:
+                logger.info("Loading RAW cell embeddings (cell whitening disabled)")
+
+        self.cell_emb = np.load(cell_path, mmap_mode="r")
+        self.sample_ids = np.load(cache_dir / "sample_ids.npy")
+
+        # ── Load text embeddings ──
+        if self._deduplicated:
+            self.text_emb_unique = np.load(dedup_path, mmap_mode="r")
+            self.text_group_ids = np.load(group_id_path)
+
+            # Load preprocessed unique texts if available
+            if use_pp_text:
+                pp_unique = cache_dir / "text_embeddings_unique_preprocessed.npy"
+                if pp_unique.exists():
+                    self.text_emb_unique = np.load(pp_unique, mmap_mode="r")
+                    logger.info("Loading PREPROCESSED (whitened) unique text embeddings")
+
+            # For legacy compatibility: text_emb used by some code paths
+            self.text_emb = None  # Will be fetched via __getitem__
+
+            # Load variant embeddings if available
+            variant_emb_path = cache_dir / "text_variant_embeddings.npy"
+            variant_map_path = cache_dir / "text_variant_map.json"
+            if variant_emb_path.exists() and variant_map_path.exists() and variant_prob > 0:
+                self._variant_embs = np.load(variant_emb_path, mmap_mode="r")
+                with open(variant_map_path) as f:
+                    variant_map = json.load(f)  # list of [group_id, variant_idx]
+
+                # Build group_id → list of variant embedding indices
+                self._group_variant_indices = defaultdict(list)
+                for emb_idx, (gid, _) in enumerate(variant_map):
+                    self._group_variant_indices[gid].append(emb_idx)
+                self._has_variants = len(self._group_variant_indices) > 0
+                if self._has_variants:
+                    logger.info(
+                        f"Loaded {self._variant_embs.shape[0]} caption variant embeddings "
+                        f"for {len(self._group_variant_indices)} text groups"
+                    )
+        else:
+            # Legacy format: full duplicated text embeddings
+            if use_pp_text:
+                text_path = cache_dir / "text_embeddings_preprocessed.npy"
+                if not text_path.exists():
+                    logger.warning("Preprocessed text embeddings not found — falling back to raw.")
+                    text_path = cache_dir / "text_embeddings.npy"
+                else:
+                    logger.info("Loading PREPROCESSED (whitened) text embeddings")
+            else:
+                text_path = cache_dir / "text_embeddings.npy"
+
+            self.text_emb = np.load(text_path, mmap_mode="r")
+            self.text_group_ids = None
+
+        # ── Sample-level aggregation ──
         if sample_level:
-            # Aggregate to sample level: use mean cell embedding per sample
             unique_ids = np.unique(self.sample_ids)
             self._cell_means = []
             self._text_reps = []
             for sid in unique_ids:
                 mask = self.sample_ids == sid
                 self._cell_means.append(self.cell_emb[mask].mean(axis=0))
-                self._text_reps.append(self.text_emb[mask][0])
+                if self._deduplicated:
+                    gid = self.text_group_ids[mask][0]
+                    self._text_reps.append(self.text_emb_unique[gid])
+                else:
+                    self._text_reps.append(self.text_emb[mask][0])
             self._cell_means = np.stack(self._cell_means)
             self._text_reps = np.stack(self._text_reps)
 
-        assert len(self.cell_emb) == len(self.text_emb), \
-            f"Mismatch: {len(self.cell_emb)} cells vs {len(self.text_emb)} texts"
+        # Validate
+        n_cells = len(self.cell_emb)
+        if not self._deduplicated:
+            assert len(self.text_emb) == n_cells, \
+                f"Mismatch: {n_cells} cells vs {len(self.text_emb)} texts"
+        else:
+            assert len(self.text_group_ids) == n_cells, \
+                f"Mismatch: {n_cells} cells vs {len(self.text_group_ids)} group IDs"
 
     def __len__(self) -> int:
         if self.sample_level:
@@ -78,10 +189,25 @@ class CLOPDataset(Dataset):
             sid = idx
         else:
             cell = torch.from_numpy(np.array(self.cell_emb[idx])).float()
-            text = torch.from_numpy(np.array(self.text_emb[idx])).float()
             sid = int(self.sample_ids[idx])
 
-        # Augmentation
+            if self._deduplicated:
+                gid = int(self.text_group_ids[idx])
+
+                # Caption variant sampling (text augmentation)
+                if self._has_variants and self.variant_prob > 0 and \
+                   np.random.random() < self.variant_prob and \
+                   gid in self._group_variant_indices:
+                    # Sample a random variant embedding
+                    var_indices = self._group_variant_indices[gid]
+                    var_idx = var_indices[np.random.randint(len(var_indices))]
+                    text = torch.from_numpy(np.array(self._variant_embs[var_idx])).float()
+                else:
+                    text = torch.from_numpy(np.array(self.text_emb_unique[gid])).float()
+            else:
+                text = torch.from_numpy(np.array(self.text_emb[idx])).float()
+
+        # Cell noise augmentation
         if self.noise_std > 0 and self.training_mode:
             cell = cell + torch.randn_like(cell) * self.noise_std
 
@@ -97,7 +223,16 @@ class CLOPDataset(Dataset):
 
     @property
     def text_dim(self) -> int:
+        if self._deduplicated:
+            return self.text_emb_unique.shape[1]
         return self.text_emb.shape[1]
+
+    @property
+    def num_text_groups(self) -> int:
+        """Number of unique text groups (for PrototypeSigLIP)."""
+        if self._deduplicated:
+            return self.text_emb_unique.shape[0]
+        return -1  # Unknown without dedup
 
 
 # ============================================================================
@@ -117,16 +252,34 @@ class DiTDataset(Dataset):
     clop_aligner : nn.Module, optional
         Trained CLOP aligner for projecting text embeddings.
         If None, raw text embeddings are used as conditions.
+    time_sampling : str
+        Timestep sampling strategy:
+        - 'uniform': t ~ U[0, 1] (standard)
+        - 'logit_normal': t ~ sigma(N(mean, std)) (SD3/Flux-style,
+          concentrates samples near t=0.5 where the velocity field
+          has the highest curvature and is hardest to learn)
+    time_sampling_mean : float
+        Mean for logit-normal sampling (default 0.0 → centered at t=0.5).
+    time_sampling_std : float
+        Std for logit-normal sampling (default 1.0).
     """
 
     def __init__(
         self,
-        cache_dir: Union[str, Path] = "data/cached_latents",
+        cache_dir: Union[str, Path] = "data/cached_latents_v5.2",
         projected_text_path: Optional[Union[str, Path]] = None,
+        time_sampling: str = "logit_normal",
+        time_sampling_mean: float = 0.0,
+        time_sampling_std: float = 1.0,
     ):
         cache_dir = Path(cache_dir)
 
-        # Load fully into RAM for speed (138K × 512 ≈ 270MB — fits easily)
+        # Time sampling config
+        self.time_sampling = time_sampling
+        self.time_sampling_mean = time_sampling_mean
+        self.time_sampling_std = time_sampling_std
+
+        # Load fully into RAM for speed (190K × 512 ≈ 390MB — fits easily)
         self.cell_emb = np.load(cache_dir / "cell_embeddings.npy")
 
         # Use projected text if available, otherwise raw
@@ -141,6 +294,28 @@ class DiTDataset(Dataset):
         self._cell_tensor = torch.from_numpy(self.cell_emb).float()
         self._cond_tensor = torch.from_numpy(self.text_cond).float()
 
+    def _sample_timestep(self) -> torch.Tensor:
+        """Sample a timestep t ∈ (0, 1).
+
+        - 'uniform': t ~ U[0, 1] (standard baseline)
+        - 'logit_normal': t = sigmoid(N(mean, std²))
+          Concentrates density near t=0.5 where the velocity field
+          has highest curvature. Used by SD3 and Flux.
+        """
+        if self.time_sampling == "logit_normal":
+            # Sample from logit-normal: sigmoid(N(mean, std))
+            u = torch.normal(
+                mean=self.time_sampling_mean,
+                std=self.time_sampling_std,
+                size=(1,),
+            )
+            t = torch.sigmoid(u).squeeze()
+            # Clamp to avoid numerical issues at boundaries
+            t = t.clamp(1e-5, 1.0 - 1e-5)
+        else:
+            t = torch.rand(1).squeeze()
+        return t
+
     def __len__(self) -> int:
         return len(self.cell_emb)
 
@@ -150,7 +325,7 @@ class DiTDataset(Dataset):
 
         # Sample noise and timestep on-the-fly
         z_0 = torch.randn_like(z_1)
-        t = torch.rand(1).squeeze()  # t ∈ [0, 1]
+        t = self._sample_timestep()
 
         # Flow matching interpolation: z_t = (1-t) * z_0 + t * z_1
         z_t = (1 - t) * z_0 + t * z_1
@@ -248,9 +423,22 @@ def create_dataloaders(
     cache_dir: str,
     batch_size: int = 256,
     val_split: float = 0.1,
+    n_folds: int = 1,
+    fold_idx: int = 0,
     num_workers: int = 4,
     stage: str = "clop",
     projected_text_path: Optional[str] = None,
+    time_sampling: str = "logit_normal",
+    time_sampling_mean: float = 0.0,
+    time_sampling_std: float = 1.0,
+    use_preprocessed: bool = False,
+    variant_prob: float = 0.0,
+    preprocess_text: bool = True,
+    preprocess_cell: bool = True,
+    group_aware_sampling: bool = False,
+    groups_per_batch: int = 128,
+    hard_negative_ratio: float = 0.5,
+    hard_negative_k: int = 20,
 ) -> Tuple[DataLoader, DataLoader]:
     """Create train/val DataLoaders for CLOP or DiT training.
 
@@ -260,48 +448,181 @@ def create_dataloaders(
         Path to cached latents directory.
     batch_size : int
     val_split : float
-        Fraction of data for validation.
+        Fraction of data for validation (used when n_folds <= 1).
+    n_folds : int
+        Number of group-level folds for cross-validation. If > 1, val_split
+        is ignored and fold-based split is used.
+    fold_idx : int
+        Validation fold index in [0, n_folds-1] when n_folds > 1.
     num_workers : int
     stage : str
         'clop' for CLOP alignment, 'dit' for DiT flow matching.
     projected_text_path : str, optional
         Path to CLOP-projected text embeddings (for DiT stage).
+    time_sampling : str
+        Timestep sampling strategy for DiT ('uniform' or 'logit_normal').
+    time_sampling_mean : float
+        Mean for logit-normal sampling.
+    time_sampling_std : float
+        Std for logit-normal sampling.
+    use_preprocessed : bool
+        If True, load preprocessed (whitened) embeddings for CLOP.
 
     Returns
     -------
     train_loader, val_loader : DataLoader pair
     """
     if stage == "clop":
-        dataset = CLOPDataset(cache_dir)
+        dataset = CLOPDataset(
+            cache_dir,
+            use_preprocessed=use_preprocessed,
+            variant_prob=variant_prob,
+            preprocess_text=preprocess_text,
+            preprocess_cell=preprocess_cell,
+        )
     elif stage == "dit":
-        dataset = DiTDataset(cache_dir, projected_text_path=projected_text_path)
+        dataset = DiTDataset(
+            cache_dir,
+            projected_text_path=projected_text_path,
+            time_sampling=time_sampling,
+            time_sampling_mean=time_sampling_mean,
+            time_sampling_std=time_sampling_std,
+        )
     else:
         raise ValueError(f"Unknown stage: {stage}")
 
-    # Split
-    n_total = len(dataset)
-    n_val = int(n_total * val_split)
-    n_train = n_total - n_val
+    # Group split by sample_id (dataset-level) to prevent data leakage.
+    # Even when sub-cluster metadata provides per-cluster text diversity,
+    # clusters within the same dataset still share biological context
+    # (same study, tissue, disease, batch effects).  Dataset-level split
+    # is the conservative choice, consistent with standard biomedical ML
+    # practice of splitting by study/patient rather than by sample.
+    sample_ids = dataset.sample_ids
+    unique_ids = np.unique(sample_ids)
 
-    train_dataset, val_dataset = torch.utils.data.random_split(
-        dataset, [n_train, n_val],
-        generator=torch.Generator().manual_seed(42),
-    )
+    if len(unique_ids) < 2:
+        # Fallback: only 1 dataset, use random cell-level split
+        logger.warning("Only 1 unique sample_id — falling back to random split")
+        n_total = len(dataset)
+        n_val = int(n_total * val_split)
+        n_train = n_total - n_val
+        train_dataset, val_dataset = torch.utils.data.random_split(
+            dataset, [n_train, n_val],
+            generator=torch.Generator().manual_seed(42),
+        )
+    else:
+        rng = np.random.default_rng(42)
+        shuffled_ids = unique_ids.copy()
+        rng.shuffle(shuffled_ids)
 
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=batch_size,
-        shuffle=True,
-        num_workers=num_workers,
-        pin_memory=True,
-        drop_last=True,
-        persistent_workers=num_workers > 0,
-    )
+        # K-fold group split (preferred when requested)
+        if n_folds and n_folds > 1:
+            effective_folds = min(int(n_folds), len(shuffled_ids))
+            if effective_folds != n_folds:
+                logger.warning(
+                    f"Requested n_folds={n_folds} but only {len(shuffled_ids)} groups available; "
+                    f"using n_folds={effective_folds}."
+                )
 
+            if fold_idx < 0 or fold_idx >= effective_folds:
+                raise ValueError(
+                    f"fold_idx={fold_idx} out of range for n_folds={effective_folds}."
+                )
+
+            fold_chunks = np.array_split(shuffled_ids, effective_folds)
+            val_ids = fold_chunks[fold_idx]
+            n_val_groups = len(val_ids)
+            val_id_set = set(val_ids.tolist())
+
+            logger.info(
+                f"K-fold group split enabled: fold {fold_idx + 1}/{effective_folds}"
+            )
+        else:
+            n_val_groups = max(1, int(len(shuffled_ids) * val_split))
+            val_id_set = set(shuffled_ids[:n_val_groups].tolist())
+
+        train_indices = [i for i, sid in enumerate(sample_ids) if sid not in val_id_set]
+        val_indices = [i for i, sid in enumerate(sample_ids) if sid in val_id_set]
+
+        logger.info(
+            f"Group split: {len(shuffled_ids) - n_val_groups} train datasets "
+            f"({len(train_indices)} cells) / {n_val_groups} val datasets "
+            f"({len(val_indices)} cells)"
+        )
+
+        train_dataset = Subset(dataset, train_indices)
+        val_dataset = Subset(dataset, val_indices)
+
+    if stage == "clop" and group_aware_sampling:
+        if hasattr(train_dataset, "dataset") and hasattr(train_dataset, "indices"):
+            base_dataset = train_dataset.dataset
+            local_to_global = np.asarray(train_dataset.indices)
+        else:
+            base_dataset = train_dataset
+            local_to_global = np.arange(len(train_dataset))
+
+        if hasattr(base_dataset, "text_group_ids") and base_dataset.text_group_ids is not None:
+            local_group_ids = np.asarray(base_dataset.text_group_ids)[local_to_global]
+            text_embeddings = getattr(base_dataset, "text_emb_unique", None)
+
+            batch_sampler = GroupAwareBatchSampler(
+                group_ids=local_group_ids,
+                batch_size=batch_size,
+                groups_per_batch=groups_per_batch,
+                hard_negative_ratio=hard_negative_ratio,
+                hard_negative_k=hard_negative_k,
+                text_embeddings=text_embeddings,
+                drop_last=True,
+            )
+
+            logger.info(
+                "Using GroupAwareBatchSampler: "
+                f"groups_per_batch={groups_per_batch}, "
+                f"hard_negative_ratio={hard_negative_ratio}, "
+                f"hard_negative_k={hard_negative_k}"
+            )
+
+            train_loader = DataLoader(
+                train_dataset,
+                batch_sampler=batch_sampler,
+                num_workers=num_workers,
+                pin_memory=True,
+                persistent_workers=num_workers > 0,
+            )
+        else:
+            logger.warning(
+                "group_aware_sampling requested but text_group_ids unavailable; "
+                "falling back to shuffle=True"
+            )
+            train_loader = DataLoader(
+                train_dataset,
+                batch_size=batch_size,
+                shuffle=True,
+                num_workers=num_workers,
+                pin_memory=True,
+                drop_last=True,
+                persistent_workers=num_workers > 0,
+            )
+    else:
+        train_loader = DataLoader(
+            train_dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=num_workers,
+            pin_memory=True,
+            drop_last=True,
+            persistent_workers=num_workers > 0,
+        )
+
+    # Shuffle=True for validation: contrastive accuracy requires mixed
+    # batches (cells from different datasets/texts).  Without shuffling,
+    # data is sorted by sample_id → each batch has identical text embeddings
+    # → acc ≈ 1/B (random chance).  Shuffling ensures diverse text content
+    # within each batch for meaningful contrastive evaluation.
     val_loader = DataLoader(
         val_dataset,
         batch_size=batch_size,
-        shuffle=False,
+        shuffle=True,
         num_workers=num_workers,
         pin_memory=True,
         persistent_workers=num_workers > 0,
