@@ -11,12 +11,14 @@ build/
 # Data (large files — binary embeddings and h5ad)
 data/cached_latents*/
 data/processed_h5ad/*.h5ad
+data/processed_h5ad/*.json
 data/processed_h5ad_v*/
 
-# Model weights (large binary files)
+# Model weights and training artifacts (large binary files)
 models/scgpt_human/
 models/scgpt_pancancer/
 models/checkpoints/*.pth
+models/checkpoints/*.json
 models/checkpoints/archive/
 models/checkpoints_v*/
 
@@ -41,6 +43,10 @@ docs/archive/
 preprocess_embeddings
 arch-figure/node_modules/
 arch-figure/.nuxt/
+arch-figure/.output/
+
+# Intermediate analysis (AI session artifacts)
+docs/intermediate_analysis/
 
 # Jupyter
 .ipynb_checkpoints/

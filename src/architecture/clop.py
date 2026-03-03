@@ -389,6 +389,11 @@ class PrototypeSigLIPLoss(nn.Module):
         prototypes = F.normalize(prototypes, dim=-1)
 
         # Representative text for each group (first cell in each group)
+        # NOTE: Using first-cell rather than mean-text is critical for gradient
+        # flow. Mean-text dilutes the signal (tested: temp stuck at 4.2).
+        # When caption variants are active, this cell may have a variant
+        # embedding; see CLOPAligner.forward() for how original embeddings
+        # are preserved for text_rep when needed.
         first_indices = torch.zeros(n_groups, dtype=torch.long, device=device)
         seen = torch.zeros(n_groups, dtype=torch.bool, device=device)
         for i in range(B):
@@ -420,9 +425,20 @@ class PrototypeSigLIPLoss(nn.Module):
 
         total_loss = alignment_loss + self.cohesion_weight * cohesion_loss
 
-        # Temperature regularization: penalize large log_temperature to slow saturation
+        # Temperature regularization: prevent saturation
+        # 1. L2 penalty on log_temperature (prevents unbounded growth)
+        # 2. Soft penalty if temperature approaches max (encourages staying below max)
         if self.temp_reg_weight > 0:
+            # Base L2 penalty
             temp_reg = self.temp_reg_weight * (self.log_temperature ** 2)
+
+            # Additional soft penalty if temperature is close to max
+            # This creates a "soft wall" that discourages but doesn't hard-clamp
+            current_temp = self.log_temperature.exp()
+            if self.max_temperature > 0:
+                excess = torch.clamp(current_temp - self.max_temperature * 0.85, min=0)
+                temp_reg = temp_reg + self.temp_reg_weight * 10 * (excess ** 2)
+
             total_loss = total_loss + temp_reg
 
         # ── Metrics ──
@@ -937,6 +953,8 @@ class CLOPAligner(nn.Module):
         cell_emb: torch.Tensor,
         mask: Optional[torch.Tensor] = None,
         text_sim: Optional[torch.Tensor] = None,
+        mixup_alpha: float = 0.0,
+        group_ids: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, dict]:
         """
         Parameters
@@ -948,15 +966,37 @@ class CLOPAligner(nn.Module):
         text_sim : (B, B), optional
             Cosine similarity of raw text embeddings (for soft labels).
             Computed from RAW embeddings before whitening.
+        mixup_alpha : float
+            If > 0, apply embedding-level MixUp with Beta(alpha, alpha).
+            Mixes embeddings within the same text group to regularize.
+        group_ids : (B,) long tensor, optional
+            Explicit text group IDs from dataset. When provided, these are
+            used directly instead of the cosine-based detection. This is
+            essential when caption variant augmentation changes the text
+            embedding — cosine detection would fragment groups.
+            Values of -1 signal "unknown"; fall back to cosine detection.
 
         Returns
         -------
         loss : scalar
         metrics : dict
         """
+        # Resolve group IDs: prefer explicit, fall back to cosine detection
+        _group_ids = None
+        if group_ids is not None and (group_ids >= 0).all():
+            # Remap to contiguous 0..N-1 (same as _compute_group_ids output)
+            _, _group_ids = group_ids.unique(return_inverse=True)
+        elif self.loss_type == "prototype_siglip" or (self.training and mixup_alpha > 0):
+            _group_ids = self._compute_group_ids(text_emb)
+
         # Cell embedding augmentation during training
         if self.training and self.cell_noise_std > 0:
             cell_emb = cell_emb + torch.randn_like(cell_emb) * self.cell_noise_std
+
+        # Embedding-level MixUp: interpolate cell embeddings within groups
+        if self.training and mixup_alpha > 0:
+            cell_emb = self._embedding_mixup(cell_emb, text_emb, mixup_alpha,
+                                             group_ids=_group_ids)
 
         # Apply text whitening before projection
         text_emb_proj = self._whiten_text(text_emb)
@@ -968,13 +1008,11 @@ class CLOPAligner(nn.Module):
         if self.auto_duplicate_mask and mask is None:
             mask = self._build_duplicate_mask(text_emb)
 
-        # For prototype loss, compute group IDs from RAW text embeddings
-        # (before projection/dropout, so identical inputs map to same group)
+        # For prototype loss, use resolved group IDs
         if self.loss_type == "prototype_siglip":
-            group_ids = self._compute_group_ids(text_emb)
             loss, metrics = self.criterion(
                 text_proj, cell_proj, mask=mask, text_sim=text_sim,
-                group_ids=group_ids,
+                group_ids=_group_ids,
             )
         else:
             loss, metrics = self.criterion(text_proj, cell_proj, mask=mask, text_sim=text_sim)
@@ -984,6 +1022,48 @@ class CLOPAligner(nn.Module):
             self._ema_update()
 
         return loss, metrics
+
+    @torch.no_grad()
+    def _embedding_mixup(
+        self,
+        cell_emb: torch.Tensor,
+        text_emb: torch.Tensor,
+        alpha: float,
+        group_ids: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        """Apply within-group embedding MixUp for regularization.
+
+        For each cell, interpolate with a random cell from the same text group.
+        This smooths the cell embedding space and reduces overfitting.
+
+        Parameters
+        ----------
+        cell_emb : (B, cell_dim)
+        text_emb : (B, text_dim) used for group detection (fallback)
+        alpha : float, Beta distribution parameter
+        group_ids : (B,) long tensor, optional
+            Pre-computed group IDs. If None, computed from text_emb.
+
+        Returns
+        -------
+        mixed_cell_emb : (B, cell_dim)
+        """
+        B = cell_emb.shape[0]
+        device = cell_emb.device
+
+        if group_ids is None:
+            group_ids = self._compute_group_ids(text_emb)
+        lam = torch.distributions.Beta(alpha, alpha).sample((B,)).to(device)
+        lam = lam.unsqueeze(-1)  # (B, 1)
+
+        # For each cell, find a random partner from the same group
+        partners = torch.randperm(B, device=device)
+        # Ensure partners share the same group; otherwise use self
+        same_group = group_ids[partners] == group_ids
+        partners = torch.where(same_group, partners, torch.arange(B, device=device))
+
+        mixed = lam * cell_emb + (1 - lam) * cell_emb[partners]
+        return mixed
 
     @staticmethod
     @torch.no_grad()

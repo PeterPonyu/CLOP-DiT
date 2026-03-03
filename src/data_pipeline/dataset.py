@@ -66,6 +66,7 @@ class CLOPDataset(Dataset):
         text_embeddings_path: Optional[str] = None,
         variant_emb_path: Optional[str] = None,
         variant_map_path: Optional[str] = None,
+        use_deduplicated: bool = False,
     ):
         cache_dir = Path(cache_dir)
         self.cache_dir = cache_dir
@@ -74,6 +75,7 @@ class CLOPDataset(Dataset):
         self.variant_prob = variant_prob
         self._deduplicated = False
         self._has_variants = False
+        self.use_deduplicated = use_deduplicated
 
         # Resolve per-modality preprocessing flags
         # If use_preprocessed=True, default both to True (backward compat)
@@ -82,17 +84,38 @@ class CLOPDataset(Dataset):
         use_pp_cell = use_preprocessed and preprocess_cell
 
         # ── Detect storage format ──
-        dedup_path = cache_dir / "text_embeddings_unique.npy"
-        group_id_path = cache_dir / "text_group_ids.npy"
-
-        if dedup_path.exists() and group_id_path.exists():
-            self._deduplicated = True
-            logger.info("Using DEDUPLICATED text storage (v6.2)")
+        # Priority: user-specified deduplicated > v6.2 deduplicated > v5 legacy
+        if use_deduplicated:
+            dedup_path = cache_dir / "text_embeddings_dedup.npy"
+            group_id_path = cache_dir / "text_group_ids_dedup.npy"
+            if dedup_path.exists() and group_id_path.exists():
+                self._deduplicated = True
+                logger.info("Using USER-DEDUPLICATED text storage (v5.3+)")
+            else:
+                logger.warning(f"Requested dedup but files not found in {cache_dir}; falling back to v6.2")
+                dedup_path = cache_dir / "text_embeddings_unique.npy"
+                group_id_path = cache_dir / "text_group_ids.npy"
+                if dedup_path.exists() and group_id_path.exists():
+                    self._deduplicated = True
+                    logger.info("Using DEDUPLICATED text storage (v6.2)")
+                else:
+                    logger.info("Using legacy duplicated text storage")
         else:
-            logger.info("Using legacy duplicated text storage")
+            dedup_path = cache_dir / "text_embeddings_unique.npy"
+            group_id_path = cache_dir / "text_group_ids.npy"
+
+            if dedup_path.exists() and group_id_path.exists():
+                self._deduplicated = True
+                logger.info("Using DEDUPLICATED text storage (v6.2)")
+            else:
+                logger.info("Using legacy duplicated text storage")
 
         # ── Load cell embeddings ──
-        if use_pp_cell:
+        if use_deduplicated and (cache_dir / "cell_embeddings_dedup.npy").exists():
+            # Load deduplicated cell embeddings (already filtered for uncharacterized cells)
+            cell_path = cache_dir / "cell_embeddings_dedup.npy"
+            logger.info("Loading DEDUPLICATED cell embeddings (uncharacterized cells removed)")
+        elif use_pp_cell:
             cell_path = cache_dir / "cell_embeddings_preprocessed.npy"
             if not cell_path.exists():
                 logger.warning("Preprocessed cell embeddings not found — falling back to raw.")
@@ -105,7 +128,12 @@ class CLOPDataset(Dataset):
                 logger.info("Loading RAW cell embeddings (cell whitening disabled)")
 
         self.cell_emb = np.load(cell_path, mmap_mode="r")
-        self.sample_ids = np.load(cache_dir / "sample_ids.npy")
+
+        # Load sample IDs (use deduplicated version if available)
+        if use_deduplicated and (cache_dir / "sample_ids_dedup.npy").exists():
+            self.sample_ids = np.load(cache_dir / "sample_ids_dedup.npy")
+        else:
+            self.sample_ids = np.load(cache_dir / "sample_ids.npy")
 
         # ── Load text embeddings ──
         if self._deduplicated:
@@ -118,10 +146,22 @@ class CLOPDataset(Dataset):
                 self.text_emb_unique = np.load(str(custom_path), mmap_mode="r")
                 logger.info(f"Loading CUSTOM text embeddings from: {custom_path}")
             else:
-                self.text_emb_unique = np.load(dedup_path, mmap_mode="r")
+                # Try deduplicated version first, fall back to v6.2
+                dedup_text_path = cache_dir / "text_embeddings_dedup.npy"
+                if use_deduplicated and dedup_text_path.exists():
+                    self.text_emb_unique = np.load(str(dedup_text_path), mmap_mode="r")
+                    logger.info("Loading DEDUPLICATED text embeddings (69 unique captions)")
+                else:
+                    self.text_emb_unique = np.load(str(dedup_path), mmap_mode="r")
 
-                # Load preprocessed unique texts if available
-                if use_pp_text:
+                # Load preprocessed unique texts if available.
+                # IMPORTANT: Skip when use_deduplicated=True.
+                # text_embeddings_unique_preprocessed.npy has 1088 rows (original
+                # sub-clusters), while text_group_ids_dedup.npy maps to indices 0–68.
+                # Loading the 1088-row file silently aligns cells to wrong text
+                # embeddings (arbitrary rows 0–68 of 1088 ≠ the 69 deduplicated
+                # cell-type centroids). Dedup embeddings are already L2-normalized.
+                if use_pp_text and not use_deduplicated:
                     pp_unique = cache_dir / "text_embeddings_unique_preprocessed.npy"
                     if pp_unique.exists():
                         self.text_emb_unique = np.load(pp_unique, mmap_mode="r")
@@ -195,11 +235,12 @@ class CLOPDataset(Dataset):
             return len(self._cell_means)
         return len(self.cell_emb)
 
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor, int]:
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor, int, int]:
         if self.sample_level:
             cell = torch.from_numpy(self._cell_means[idx].copy()).float()
             text = torch.from_numpy(self._text_reps[idx].copy()).float()
             sid = idx
+            gid = -1  # no group info in sample_level mode
         else:
             cell = torch.from_numpy(np.array(self.cell_emb[idx])).float()
             sid = int(self.sample_ids[idx])
@@ -219,12 +260,13 @@ class CLOPDataset(Dataset):
                     text = torch.from_numpy(np.array(self.text_emb_unique[gid])).float()
             else:
                 text = torch.from_numpy(np.array(self.text_emb[idx])).float()
+                gid = -1  # no group info in non-deduplicated mode
 
         # Cell noise augmentation
         if self.noise_std > 0 and self.training_mode:
             cell = cell + torch.randn_like(cell) * self.noise_std
 
-        return text, cell, sid
+        return text, cell, sid, gid
 
     @property
     def training_mode(self) -> bool:
@@ -299,7 +341,21 @@ class DiTDataset(Dataset):
         if projected_text_path and Path(projected_text_path).exists():
             self.text_cond = np.load(projected_text_path)
         else:
-            self.text_cond = np.load(cache_dir / "text_embeddings.npy")
+            # Try multiple fallback paths (v6.2+ removed text_embeddings.npy)
+            for candidate in ["projected_text.npy",
+                              "text_embeddings_preprocessed.npy",
+                              "text_embeddings.npy"]:
+                p = cache_dir / candidate
+                if p.exists():
+                    self.text_cond = np.load(p)
+                    logger.info(f"DiTDataset: loaded text conditions from {candidate}")
+                    break
+            else:
+                raise FileNotFoundError(
+                    f"No text embedding file found in {cache_dir}. "
+                    f"Expected projected_text.npy (from CLOP), "
+                    f"text_embeddings_preprocessed.npy, or text_embeddings.npy"
+                )
 
         self.sample_ids = np.load(cache_dir / "sample_ids.npy")
 
@@ -455,6 +511,7 @@ def create_dataloaders(
     text_embeddings_path: Optional[str] = None,
     variant_emb_path: Optional[str] = None,
     variant_map_path: Optional[str] = None,
+    use_deduplicated: bool = False,
 ) -> Tuple[DataLoader, DataLoader]:
     """Create train/val DataLoaders for CLOP or DiT training.
 
@@ -498,6 +555,7 @@ def create_dataloaders(
             text_embeddings_path=text_embeddings_path,
             variant_emb_path=variant_emb_path,
             variant_map_path=variant_map_path,
+            use_deduplicated=use_deduplicated,
         )
     elif stage == "dit":
         dataset = DiTDataset(

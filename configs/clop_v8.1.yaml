@@ -19,12 +19,12 @@
 #   cohesion_weight: 0.1 → 0.2
 #   temp_lr_multiplier: 10 → 5
 
-cache_dir: "/home/zeyufu/Desktop/CLOP-DiT/data/cached_latents_v5.2"
+cache_dir: "data/cached_latents_v5.2"
 use_preprocessed: true
-variant_prob: 0.35
-variant_path: "data/cached_latents_v5.2/variants/text_variants.json"
-text_embeddings_path: "data/cached_latents_v5.2/embeddings/text_embeddings_v2.npy"
-text_strings_path: "data/cached_latents_v5.2/raw/text_strings_v2.json"
+variant_prob: 0.0            # disabled: variant files not yet generated
+# variant_path: "data/cached_latents_v5.2/variants/text_variants.json"        # TODO: generate
+# text_embeddings_path: "data/cached_latents_v5.2/embeddings/text_embeddings_v2.npy"  # TODO: generate
+# text_strings_path: "data/cached_latents_v5.2/raw/text_strings_v2.json"      # TODO: generate
 val_split: 0.1
 n_folds: 1
 fold_idx: 0
@@ -56,8 +56,8 @@ max_temperature: 20.0
 batch_size: 1024
 lr: 5.0e-4             # Half of v6.3 (1e-3)
 weight_decay: 0.08     # Between v6.3 (0.05) and v6.4 (0.1)
-num_epochs: 200
-epochs: 80
+num_epochs: 120          # was 200/80 conflict; use 120 comparable to v6.4.1's 132
+# epochs: 80             # removed: conflicted with num_epochs
 warmup_epochs: 10
 grad_clip: 1.0
 use_amp: true
@@ -71,7 +71,6 @@ preprocess_cell_method: "whiten"
 # System
 scgpt_model_dir: "models/scgpt_pancancer"
 device: "cuda"
-save_dir: "/home/zeyufu/Desktop/CLOP-DiT/models/checkpoints"
+save_dir: "models/checkpoints"
 run_name: "clop_v8.1"
 log_file: "logs/v8.1_train.log"
-checkpoint_dir: "checkpoints/v8.1/"

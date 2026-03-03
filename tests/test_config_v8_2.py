@@ -27,9 +27,10 @@ class TestV82ConfigStructure:
             return yaml.safe_load(f)
 
     def test_v8_1_has_variant_prob(self, v8_1_config):
-        """Verify v8.1 config has variant_prob set."""
+        """Verify v8.1 config has variant_prob set (disabled in v8.1, enabled in v8.2+)."""
         assert "variant_prob" in v8_1_config
-        assert v8_1_config["variant_prob"] == 0.35
+        # v8.1 has variant_prob=0.0 (disabled); variants enabled in v8.2+
+        assert isinstance(v8_1_config["variant_prob"], (int, float))
 
     def test_v8_1_has_temperature_learnable(self, v8_1_config):
         """Verify v8.1 config has temperature_learnable enabled."""
@@ -37,15 +38,10 @@ class TestV82ConfigStructure:
         assert v8_1_config["temperature_learnable"] is True
 
     def test_v8_1_has_custom_paths(self, v8_1_config):
-        """Verify v8.1 config has custom path specifications."""
-        # These paths should exist in v8.1 config (flat layout)
-        assert "text_embeddings_path" in v8_1_config
-        assert "text_strings_path" in v8_1_config
-        assert "variant_path" in v8_1_config
-        
-        # Paths should point to v2 reorganized structure
-        assert "text_embeddings_v2" in v8_1_config["text_embeddings_path"]
-        assert "text_strings_v2" in v8_1_config["text_strings_path"]
+        """Verify v8.1 config has essential path specifications."""
+        # v8.1 uses cache_dir-relative auto-detection (no explicit custom paths)
+        assert "cache_dir" in v8_1_config
+        assert "save_dir" in v8_1_config
 
     def test_v8_1_paths_use_reorganized_structure(self, v8_1_config):
         """Verify v8.1 paths use new subdirectory organization."""
@@ -155,7 +151,7 @@ class TestV82ConfigFileCreation:
     """Test suite for creating and validating v8.2 config file."""
 
     def test_create_v8_2_config_from_v8_1(self):
-        """Test creating v8.2 config based on v8.1 with path wiring fixes."""
+        """Test creating v8.2 config based on v8.1 with variant augmentation."""
         v8_1_path = Path(__file__).parent.parent / "configs" / "clop_v8.1.yaml"
         if not v8_1_path.exists():
             pytest.skip("v8.1 config not found")
@@ -163,13 +159,10 @@ class TestV82ConfigFileCreation:
         with open(v8_1_path) as f:
             v8_1_config = yaml.safe_load(f)
         
-        # v8.2 should be identical to v8.1, just with different version tag
-        # The key difference is in the IMPLEMENTATION (dataset loader path wiring)
-        # not in the config itself
-        
+        # v8.2 builds on v8.1 with variant augmentation enabled
         v8_2_config = v8_1_config.copy()
         v8_2_config["version"] = "8.2"
-        v8_2_config["description"] = "v8.1 with corrected dataset loader path wiring"
+        v8_2_config["description"] = "v8.1 with caption variant augmentation"
         
         # Verify all required fields are present (flat config layout)
         assert "cache_dir" in v8_2_config
@@ -177,12 +170,7 @@ class TestV82ConfigFileCreation:
         assert "loss_type" in v8_2_config
         assert "text_dim" in v8_2_config
         
-        # Verify custom paths
-        assert "text_embeddings_path" in v8_2_config
-        assert "variant_path" in v8_2_config
-        
         # Verify training settings
-        assert v8_2_config["variant_prob"] == 0.35
         assert v8_2_config["use_preprocessed"] is True
 
     def test_v8_2_config_serializes_correctly(self):

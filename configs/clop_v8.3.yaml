@@ -1,0 +1,81 @@
+# clop_v8.3 — Conservative regularization + caption variants
+# Generated on 2026-03-03
+#
+# Changes vs v8.2:
+#   - Remove R-Drop (0.1 → 0.0): Computationally expensive, weak for contrastive
+#   - Remove MixUp (0.2 → 0.0): Too aggressive with prototype-based loss
+#   - Restore cell noise to v8.1 level (0.15 → 0.10)
+#   - Restore label smoothing to v8.1 level (0.12 → 0.10)
+#   - Restore temperature cap to v8.1 level (50 → 20)
+#   - Keep caption variant augmentation (the key v8 feature: variant_prob=0.3)
+#   - Keep explicit group ID propagation fix
+#
+# This isolates the effect of caption variants from other regularization.
+# v8.2 showed all improvements together kill training (train_proto stuck at 0.002).
+#
+# Data path: v6.2 (1088 sub-clusters, 220K cells, preprocessed/whitened)
+# Loss: prototype_siglip with cohesion regularization
+#
+# Previous results for reference:
+#   v6.4.1: best_val_proto_acc = 10.45%, gap = 3.5x (BEST to beat)
+#   v8.1:   best_val_proto_acc =  8.88%, gap = 3.9x
+#   v8.2:   best_val_proto_acc =  1.50%, gap = 0.1x (OVER-REGULARIZED, all stuck)
+
+cache_dir: "data/cached_latents_v5.2"
+use_preprocessed: true
+
+# Caption variant augmentation (KEY FEATURE)
+variant_prob: 0.3           # 30% chance of using a variant caption per sample
+
+val_split: 0.1
+n_folds: 1
+fold_idx: 0
+num_workers: 4
+
+# Model architecture (same as v8.1)
+text_dim: 1024
+cell_dim: 512
+text_encoder_path: "microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract"
+proj_dim: 512
+text_layers: 3
+cell_layers: 3
+dropout: 0.3
+temperature: 14.0
+temperature_init: 14.0
+temperature_learnable: true
+label_smoothing: 0.1        # restored to v8.1 level (was 0.12 in v8.2)
+use_batch_norm: false
+use_ema: false
+cell_noise_std: 0.1         # restored to v8.1 level (was 0.15 in v8.2)
+
+# Loss
+loss_type: "prototype_siglip"
+auto_duplicate_mask: true
+cohesion_weight: 0.2
+max_temperature: 20.0       # restored to v8.1 level (was 50 in v8.2)
+
+# Regularization — only caption variants, no MixUp/R-Drop
+mixup_alpha: 0.0            # disabled (was 0.2 in v8.2)
+rdrop_weight: 0.0           # disabled (was 0.1 in v8.2)
+
+# Training
+batch_size: 1024
+lr: 5.0e-4
+weight_decay: 0.08
+num_epochs: 120
+warmup_epochs: 10
+grad_clip: 1.0
+use_amp: true
+early_stopping_patience: 0  # disabled — let full run complete
+temp_lr_multiplier: 5.0
+
+# Preprocessing
+preprocess_text_method: "whiten"
+preprocess_cell_method: "whiten"
+
+# System
+scgpt_model_dir: "models/scgpt_pancancer"
+device: "cuda"
+save_dir: "models/checkpoints"
+run_name: "clop_v8.3"
+log_file: "logs/v8.3_train.log"

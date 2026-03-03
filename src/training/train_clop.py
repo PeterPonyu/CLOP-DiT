@@ -76,6 +76,8 @@ class CLOPTrainer:
         log_interval: int = 50,
         early_stopping_patience: int = 0,
         temp_lr_multiplier: float = 10.0,
+        mixup_alpha: float = 0.0,
+        rdrop_weight: float = 0.0,
     ):
         self.model = model.to(device)
         self.train_loader = train_loader
@@ -108,6 +110,10 @@ class CLOPTrainer:
         # AMP
         self.scaler = GradScaler("cuda") if use_amp else None
 
+        # Regularization
+        self.mixup_alpha = mixup_alpha
+        self.rdrop_weight = rdrop_weight
+
         # Tracking
         self.best_val_loss = float("inf")
         self.best_val_acc = 0.0
@@ -132,7 +138,13 @@ class CLOPTrainer:
         num_batches = 0
 
         for step, batch in enumerate(self.train_loader):
-            text_emb, cell_emb, sample_ids = batch
+            # Dataset returns (text, cell, sample_id, text_group_id)
+            if len(batch) == 4:
+                text_emb, cell_emb, sample_ids, group_ids = batch
+                group_ids = group_ids.to(self.device)
+            else:
+                text_emb, cell_emb, sample_ids = batch
+                group_ids = None
             text_emb = text_emb.to(self.device)
             cell_emb = cell_emb.to(self.device)
 
@@ -140,7 +152,17 @@ class CLOPTrainer:
 
             if self.use_amp:
                 with autocast("cuda"):
-                    loss, metrics = self.model(text_emb, cell_emb)
+                    loss, metrics = self.model(
+                        text_emb, cell_emb, mixup_alpha=self.mixup_alpha,
+                        group_ids=group_ids,
+                    )
+                    # R-Drop: second forward pass with different dropout
+                    if self.rdrop_weight > 0:
+                        loss2, _ = self.model(
+                            text_emb, cell_emb, mixup_alpha=self.mixup_alpha,
+                            group_ids=group_ids,
+                        )
+                        loss = (loss + loss2) / 2 + self.rdrop_weight * (loss - loss2).abs()
                 self.scaler.scale(loss).backward()
                 if self.grad_clip > 0:
                     self.scaler.unscale_(self.optimizer)
@@ -149,7 +171,16 @@ class CLOPTrainer:
                 self.scaler.update()
                 self.scheduler.step()
             else:
-                loss, metrics = self.model(text_emb, cell_emb)
+                loss, metrics = self.model(
+                    text_emb, cell_emb, mixup_alpha=self.mixup_alpha,
+                    group_ids=group_ids,
+                )
+                if self.rdrop_weight > 0:
+                    loss2, _ = self.model(
+                        text_emb, cell_emb, mixup_alpha=self.mixup_alpha,
+                        group_ids=group_ids,
+                    )
+                    loss = (loss + loss2) / 2 + self.rdrop_weight * (loss - loss2).abs()
                 loss.backward()
                 if self.grad_clip > 0:
                     nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip)
@@ -215,11 +246,17 @@ class CLOPTrainer:
         num_batches = 0
 
         for batch in self.val_loader:
-            text_emb, cell_emb, sample_ids = batch
+            # Dataset returns (text, cell, sample_id, text_group_id)
+            if len(batch) == 4:
+                text_emb, cell_emb, sample_ids, group_ids = batch
+                group_ids = group_ids.to(self.device)
+            else:
+                text_emb, cell_emb, sample_ids = batch
+                group_ids = None
             text_emb = text_emb.to(self.device)
             cell_emb = cell_emb.to(self.device)
 
-            loss, metrics = self.model(text_emb, cell_emb)
+            loss, metrics = self.model(text_emb, cell_emb, group_ids=group_ids)
 
             total_loss += loss.item()
             total_acc_t2c += metrics["acc_t2c"]
@@ -466,6 +503,7 @@ class CLOPTrainer:
             text_embeddings_path=config.get("text_embeddings_path"),
             variant_emb_path=config.get("variant_emb_path"),
             variant_map_path=config.get("variant_map_path"),
+            use_deduplicated=config.get("use_deduplicated", False),
         )
 
         # Auto-detect dimensions from cached data if not specified
@@ -546,6 +584,8 @@ class CLOPTrainer:
             grad_clip=config.get("grad_clip", 1.0),
             early_stopping_patience=config.get("early_stopping_patience", 0),
             temp_lr_multiplier=config.get("temp_lr_multiplier", 10.0),
+            mixup_alpha=config.get("mixup_alpha", 0.0),
+            rdrop_weight=config.get("rdrop_weight", 0.0),
         )
 
     def project_and_save(
@@ -592,9 +632,79 @@ class CLOPTrainer:
         else:
             cache_dir = Path(output_path).parent
 
-        text_emb = np.load(cache_dir / "text_embeddings.npy")
-        projected = []
+        # ── Resolve text embedding file (v6.2+ compatible) ──
+        # Priority: preprocessed > unique (deduplicated) > raw
+        # Must match what the training dataset actually loaded.
+        text_emb = None
+        text_group_ids = None
 
+        # Check if dataset used deduplicated storage
+        if hasattr(ds, '_deduplicated') and ds._deduplicated:
+            # Load unique text embeddings and group_ids to expand
+            if hasattr(ds, 'text_emb_unique') and ds.text_emb_unique is not None:
+                text_emb_unique = np.array(ds.text_emb_unique)
+            else:
+                for candidate in ["text_embeddings_unique_preprocessed.npy",
+                                  "text_embeddings_unique.npy",
+                                  "text_embeddings_dedup.npy"]:
+                    p = cache_dir / candidate
+                    if p.exists():
+                        text_emb_unique = np.load(p)
+                        break
+                else:
+                    raise FileNotFoundError(
+                        f"No unique text embedding file found in {cache_dir}"
+                    )
+
+            # Load group mapping to expand unique → per-cell
+            for gid_name in ["text_group_ids.npy", "text_group_ids_dedup.npy"]:
+                gid_path = cache_dir / gid_name
+                if gid_path.exists():
+                    text_group_ids = np.load(gid_path)
+                    break
+
+            if text_group_ids is not None:
+                # Expand: project unique embeddings, then index by group_ids
+                logger.info(
+                    f"Projecting {text_emb_unique.shape[0]} unique text embeddings, "
+                    f"then expanding to {len(text_group_ids)} cells via group_ids"
+                )
+                projected_unique = []
+                with torch.no_grad():
+                    for i in range(0, len(text_emb_unique), 512):
+                        batch = torch.from_numpy(
+                            text_emb_unique[i:i+512]
+                        ).float().to(self.device)
+                        proj = self.model.project_text(batch)
+                        projected_unique.append(proj.cpu().numpy())
+                projected_unique = np.concatenate(projected_unique, axis=0)
+                projected = projected_unique[text_group_ids]
+                np.save(output_path, projected)
+                logger.info(
+                    f"Projected text embeddings saved: {projected.shape} → {output_path}"
+                )
+                return
+            else:
+                # Unique embeddings but no group IDs; project unique only
+                text_emb = text_emb_unique
+        else:
+            # Legacy duplicated format: load full per-cell text embeddings
+            for candidate in ["text_embeddings_preprocessed.npy",
+                              "text_embeddings.npy"]:
+                p = cache_dir / candidate
+                if p.exists():
+                    text_emb = np.load(p)
+                    logger.info(f"Loading text embeddings from {candidate}")
+                    break
+
+        if text_emb is None:
+            raise FileNotFoundError(
+                f"No text embedding file found in {cache_dir}. "
+                f"Expected one of: text_embeddings_preprocessed.npy, "
+                f"text_embeddings.npy, text_embeddings_unique.npy"
+            )
+
+        projected = []
         with torch.no_grad():
             for i in range(0, len(text_emb), 512):
                 batch = torch.from_numpy(text_emb[i:i+512]).float().to(self.device)

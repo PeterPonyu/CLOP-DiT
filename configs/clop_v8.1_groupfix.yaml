@@ -1,0 +1,65 @@
+# clop_v8.1_groupfix — v8.1 config with explicit group_id propagation
+# This is a CONTROL experiment to measure the effect of explicit group_ids
+# (which give 545 groups vs cosine detection's 504 groups) on training.
+#
+# If this matches v8.1's 8.88%, the group_id fix is neutral.
+# If it differs, the ~40 extra groups affect the difficulty.
+
+cache_dir: "data/cached_latents_v5.2"
+use_preprocessed: true
+
+# NO variants — identical to v8.1
+variant_prob: 0.0
+
+val_split: 0.1
+n_folds: 1
+fold_idx: 0
+num_workers: 4
+
+# Model architecture (v8.1 exact)
+text_dim: 1024
+cell_dim: 512
+text_encoder_path: "microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract"
+proj_dim: 512
+text_layers: 3
+cell_layers: 3
+dropout: 0.3
+temperature: 14.0
+temperature_init: 14.0
+temperature_learnable: true
+label_smoothing: 0.1
+use_batch_norm: false
+use_ema: false
+cell_noise_std: 0.1
+
+# Loss (v8.1 exact)
+loss_type: "prototype_siglip"
+auto_duplicate_mask: true
+cohesion_weight: 0.2
+max_temperature: 20.0
+
+# No extra regularization
+mixup_alpha: 0.0
+rdrop_weight: 0.0
+
+# Training (v8.1 exact)
+batch_size: 1024
+lr: 5.0e-4
+weight_decay: 0.08
+num_epochs: 120
+warmup_epochs: 10
+grad_clip: 1.0
+use_amp: true
+early_stopping_patience: 0
+temp_lr_multiplier: 5.0
+
+# Preprocessing
+preprocess_text_method: "whiten"
+preprocess_cell_method: "whiten"
+
+# System
+scgpt_model_dir: "models/scgpt_pancancer"
+device: "cuda"
+save_dir: "models/checkpoints"
+run_name: "clop_v8.1_groupfix"
+log_file: "logs/v8.1_groupfix_train.log"
