@@ -531,6 +531,7 @@ def create_dataloaders(
     variant_emb_path: Optional[str] = None,
     variant_map_path: Optional[str] = None,
     use_deduplicated: bool = False,
+    split_strategy: str = "stratified",
 ) -> Tuple[DataLoader, DataLoader]:
     """Create train/val DataLoaders for CLOP or DiT training.
 
@@ -559,6 +560,14 @@ def create_dataloaders(
         Std for logit-normal sampling.
     use_preprocessed : bool
         If True, load preprocessed (whitened) embeddings for CLOP.
+    split_strategy : str
+        'stratified' (default): Cell-type-stratified split ensuring ALL cell
+        types appear in both train and val.  For each type, ~val_split
+        fraction of cells are held out.  This prevents the blind-spot
+        problem where dataset-level splits can leave many types unevaluated.
+        'dataset': Legacy dataset-level split by sample_id.  Conservative
+        against batch-effect leakage but may leave many cell types absent
+        from validation.
 
     Returns
     -------
@@ -587,16 +596,60 @@ def create_dataloaders(
     else:
         raise ValueError(f"Unknown stage: {stage}")
 
-    # Group split by sample_id (dataset-level) to prevent data leakage.
-    # Even when sub-cluster metadata provides per-cluster text diversity,
-    # clusters within the same dataset still share biological context
-    # (same study, tissue, disease, batch effects).  Dataset-level split
-    # is the conservative choice, consistent with standard biomedical ML
-    # practice of splitting by study/patient rather than by sample.
+    # ── Split strategy selection ──
+    # "stratified": Cell-type-stratified split.  For each cell type,
+    #   ~val_split of its cells go to validation.  Guarantees ALL types
+    #   appear in both train and val, eliminating the blind-spot problem
+    #   where dataset-level splits leave many types unevaluated.
+    # "dataset": Legacy dataset-level split by sample_id.  Conservative
+    #   against batch-effect leakage but may miss entire cell types.
     sample_ids = dataset.sample_ids
     unique_ids = np.unique(sample_ids)
+    rng = np.random.default_rng(42)
 
-    if len(unique_ids) < 2:
+    use_stratified = (
+        split_strategy == "stratified"
+        and stage == "clop"
+        and hasattr(dataset, "text_group_ids")
+        and dataset.text_group_ids is not None
+    )
+
+    if use_stratified:
+        # ── Stratified split by cell type ──
+        # For each cell type, hold out ~val_split fraction of cells.
+        # This ensures ALL types are represented in validation.
+        group_ids = np.asarray(dataset.text_group_ids)
+        unique_types = np.unique(group_ids)
+
+        train_indices = []
+        val_indices = []
+
+        for gid in unique_types:
+            type_indices = np.where(group_ids == gid)[0]
+            rng.shuffle(type_indices)
+
+            n_val = max(1, int(len(type_indices) * val_split))
+            val_indices.extend(type_indices[:n_val].tolist())
+            train_indices.extend(type_indices[n_val:].tolist())
+
+        # Shuffle to avoid ordering artifacts
+        rng.shuffle(train_indices)
+        rng.shuffle(val_indices)
+
+        # Count types per split for logging
+        train_types = len(np.unique(group_ids[train_indices]))
+        val_types = len(np.unique(group_ids[val_indices]))
+
+        logger.info(
+            f"Stratified split: {len(train_indices)} train cells "
+            f"({train_types} types) / {len(val_indices)} val cells "
+            f"({val_types} types) — ALL {len(unique_types)} types in both splits"
+        )
+
+        train_dataset = Subset(dataset, train_indices)
+        val_dataset = Subset(dataset, val_indices)
+
+    elif len(unique_ids) < 2:
         # Fallback: only 1 dataset, use random cell-level split
         logger.warning("Only 1 unique sample_id — falling back to random split")
         n_total = len(dataset)
@@ -607,7 +660,9 @@ def create_dataloaders(
             generator=torch.Generator().manual_seed(42),
         )
     else:
-        rng = np.random.default_rng(42)
+        # ── Dataset-level split by sample_id ──
+        # Conservative choice against batch-effect leakage.
+        # WARNING: May leave many cell types absent from validation.
         shuffled_ids = unique_ids.copy()
         rng.shuffle(shuffled_ids)
 
@@ -641,7 +696,7 @@ def create_dataloaders(
         val_indices = [i for i, sid in enumerate(sample_ids) if sid in val_id_set]
 
         logger.info(
-            f"Group split: {len(shuffled_ids) - n_val_groups} train datasets "
+            f"Dataset-level split: {len(shuffled_ids) - n_val_groups} train datasets "
             f"({len(train_indices)} cells) / {n_val_groups} val datasets "
             f"({len(val_indices)} cells)"
         )

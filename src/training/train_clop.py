@@ -594,6 +594,7 @@ class CLOPTrainer:
             variant_emb_path=config.get("variant_emb_path"),
             variant_map_path=config.get("variant_map_path"),
             use_deduplicated=config.get("use_deduplicated", False),
+            split_strategy=config.get("split_strategy", "stratified"),
         )
 
         # Auto-detect dimensions from cached data if not specified
