@@ -5,10 +5,12 @@ Generates multi-panel PDF/PNG reports proving training success:
   Panel A: CLOP training dynamics (loss, temperature, prototype accuracy, embedding quality)
   Panel B: CLOP embedding space (UMAP of 69-type prototypes + cell embeddings)
   Panel C: DiT training dynamics (flow-matching loss, cosine similarity, LR schedule)
-  Panel D: Metrics summary table
+  Panel D: Metrics summary table (CLOP + DiT + Generation + Expression)
   Panel E: [Post-inference] Real vs generated cell overlay (type-coloured UMAP)
   Panel F: Text–Cell similarity heatmap (69×69 cosine matrix proving CLOP alignment)
   Panel G: Per-type generation fidelity (centroid cosine + Fréchet distance)
+  Panel H: Gene expression correlation (per-gene scatter + per-type r + marker genes)
+  Panel I: Expression decoder analysis (CV distribution + expression range + per-cell variance)
 
 Usage:
     python -m src.visualization.results_visualizer                  # defaults
@@ -459,6 +461,7 @@ class ResultsVisualizer:
     # PANEL D: Metrics Summary
     # ──────────────────────────────────────────────────────────
     def plot_metrics_summary(self, gen_metrics_path: str = "results/generation_metrics.json",
+                             expr_metrics_path: str = "results/expression_metrics.json",
                              save: bool = True) -> Optional[plt.Figure]:
         """Clean metrics summary table as a figure panel."""
         rows = []
@@ -508,6 +511,21 @@ class ResultsVisualizer:
                 ["Gen", "Min Centroid Cosine", f'{summary.get("min_centroid_cosine", 0):.4f}', "—"],
             ])
 
+        # Add expression metrics if available
+        expr_path = Path(expr_metrics_path)
+        if expr_path.exists():
+            with open(expr_path) as f:
+                expr_data = json.load(f)
+            gene_corr = expr_data.get("gene_correlation", {})
+            per_type_sum = expr_data.get("per_type_summary", {})
+            rows.extend([
+                ["Expr", "Gene Pearson r", f'{gene_corr.get("pearson_r", 0):.6f}', "—"],
+                ["Expr", "Gene Spearman ρ", f'{gene_corr.get("spearman_rho", 0):.6f}', "—"],
+                ["Expr", "Genes Compared", f'{gene_corr.get("n_genes_compared", 0)}', "—"],
+                ["Expr", "Per-Type Mean r", f'{per_type_sum.get("mean_pearson_r", 0):.6f}', "—"],
+                ["Expr", "Per-Type Min r", f'{per_type_sum.get("min_pearson_r", 0):.6f}', "—"],
+            ])
+
         if not rows:
             return None
 
@@ -541,6 +559,8 @@ class ResultsVisualizer:
                     cell.set_facecolor("#E3F2FD" if i % 2 == 0 else "#BBDEFB")
                 elif stage == "DiT":
                     cell.set_facecolor("#E8F5E9" if i % 2 == 0 else "#C8E6C9")
+                elif stage == "Expr":
+                    cell.set_facecolor("#F3E5F5" if i % 2 == 0 else "#E1BEE7")
                 else:  # Gen
                     cell.set_facecolor("#FFF3E0" if i % 2 == 0 else "#FFE0B2")
 
@@ -864,6 +884,255 @@ class ResultsVisualizer:
         return fig
 
     # ──────────────────────────────────────────────────────────
+    # PANEL H: Gene Expression Correlation (scatter + per-type + markers)
+    # ──────────────────────────────────────────────────────────
+    def plot_expression_correlation(
+        self,
+        real_expr_path: str = "results/real_expression.npy",
+        gen_expr_path: str = "results/generated_expression.npy",
+        real_labels_path: str = "results/real_expression_labels.npy",
+        gen_labels_path: str = "results/generated_expression_labels.npy",
+        gene_names_path: str = "results/expression_gene_names.json",
+        metrics_path: str = "results/expression_metrics.json",
+        save: bool = True,
+    ) -> Optional[plt.Figure]:
+        """Gene expression fidelity: per-gene scatter, per-type correlation, marker genes.
+
+        H1: Scatter of per-gene mean expression (real vs generated)
+        H2: Per-type expression Pearson r (bar chart, all types)
+        H3: Marker-gene expression comparison (selected categories)
+        """
+        paths = [real_expr_path, gen_expr_path, metrics_path, gene_names_path]
+        if not all(Path(p).exists() for p in paths):
+            logger.info("Expression data not found — skipping Panel H")
+            return None
+
+        real = np.load(real_expr_path)
+        gen = np.load(gen_expr_path)
+        with open(gene_names_path) as f:
+            gene_names = json.load(f)
+        with open(metrics_path) as f:
+            metrics = json.load(f)
+
+        real_means = real.mean(axis=0)
+        gen_means = gen.mean(axis=0)
+        pearson_r = metrics["gene_correlation"]["pearson_r"]
+        spearman_rho = metrics["gene_correlation"]["spearman_rho"]
+
+        fig, axes = plt.subplots(1, 3, figsize=(20, 7))
+        fig.suptitle(
+            f"Gene Expression Recovery — Pearson r={pearson_r:.6f}, "
+            f"Spearman ρ={spearman_rho:.6f}",
+            fontsize=14, fontweight="bold",
+        )
+
+        # ── H1: Per-gene mean expression scatter ──
+        ax = axes[0]
+        sc = ax.scatter(real_means, gen_means, c=real_means, cmap="viridis",
+                        s=8, alpha=0.6, edgecolors="none")
+        lo = min(real_means.min(), gen_means.min()) - 0.2
+        hi = max(real_means.max(), gen_means.max()) + 0.2
+        ax.plot([lo, hi], [lo, hi], "r--", lw=1, alpha=0.7, label="y = x")
+        ax.set_xlabel("Real Mean Expression")
+        ax.set_ylabel("Generated Mean Expression")
+        ax.set_title(f"H1: Per-Gene Mean Expression (n={len(gene_names)})")
+        ax.legend(fontsize=8)
+        plt.colorbar(sc, ax=ax, label="Expression Level", shrink=0.8)
+
+        # Annotate a few genes with highest real expression
+        top_idx = np.argsort(real_means)[-5:]
+        for i in top_idx:
+            if i < len(gene_names):
+                ax.annotate(gene_names[i], (real_means[i], gen_means[i]),
+                            fontsize=6, xytext=(5, 5), textcoords="offset points",
+                            arrowprops=dict(arrowstyle="-", lw=0.5))
+
+        # ── H2: Per-type expression Pearson r ──
+        ax = axes[1]
+        per_type = metrics.get("per_type_expression_fidelity", {})
+        if per_type:
+            type_names_sorted = sorted(per_type.keys(),
+                                       key=lambda k: per_type[k]["pearson_r"])
+            type_rs = [per_type[n]["pearson_r"] for n in type_names_sorted]
+            short_names = [n[:28] for n in type_names_sorted]
+
+            colors = ["#4CAF50" if r > 0.9999 else "#FF9800" if r > 0.999 else "#F44336"
+                       for r in type_rs]
+            ax.barh(range(len(type_rs)), type_rs, color=colors, height=0.8)
+            ax.set_yticks(range(len(type_rs)))
+            ax.set_yticklabels(short_names, fontsize=4.5)
+            ax.set_xlabel("Pearson r (Gene Expression)")
+            mean_r = metrics.get("per_type_summary", {}).get("mean_pearson_r", 0)
+            ax.axvline(x=mean_r, color="red", linestyle="--", alpha=0.5,
+                       label=f"mean r={mean_r:.6f}")
+            ax.legend(fontsize=7)
+
+            # Smart x-axis: zoom into the interesting range
+            min_r = min(type_rs)
+            ax.set_xlim(min_r - 0.0001, 1.00005)
+        else:
+            ax.text(0.5, 0.5, "No per-type data", ha="center", va="center",
+                    transform=ax.transAxes)
+        ax.set_title("H2: Per-Type Expression Pearson r")
+
+        # ── H3: Marker gene expression — selected categories ──
+        ax = axes[2]
+        marker_dict = metrics.get("marker_genes", {})
+        # Pick up to 6 categories with genes actually in our set
+        selected_cats = []
+        selected_genes = []
+        for cat, genes_list in marker_dict.items():
+            found = [g for g in genes_list if g in gene_names]
+            if found:
+                selected_cats.append(cat)
+                selected_genes.append(found[:3])  # up to 3 per category
+            if len(selected_cats) >= 6:
+                break
+
+        if selected_cats:
+            all_marker_genes = []
+            cat_labels = []
+            for cat, gg in zip(selected_cats, selected_genes):
+                for g in gg:
+                    all_marker_genes.append(g)
+                    cat_labels.append(cat.replace("_", " "))
+
+            gidx = [gene_names.index(g) for g in all_marker_genes]
+            r_vals = [real_means[i] for i in gidx]
+            g_vals = [gen_means[i] for i in gidx]
+
+            x = np.arange(len(all_marker_genes))
+            width = 0.35
+            bars_r = ax.bar(x - width / 2, r_vals, width, label="Real", color="#1976D2", alpha=0.8)
+            bars_g = ax.bar(x + width / 2, g_vals, width, label="Generated", color="#FF7043", alpha=0.8)
+
+            ax.set_xticks(x)
+            ax.set_xticklabels(
+                [f"{g}\n({c[:8]})" for g, c in zip(all_marker_genes, cat_labels)],
+                fontsize=6, rotation=45, ha="right",
+            )
+            ax.set_ylabel("Mean Expression")
+            ax.legend(fontsize=8)
+        else:
+            ax.text(0.5, 0.5, "No marker genes found", ha="center", va="center",
+                    transform=ax.transAxes)
+        ax.set_title("H3: Marker Gene Expression (Real vs Gen)")
+
+        if save:
+            path = self.output / "panel_h_expression_correlation.png"
+            fig.savefig(path, dpi=self.dpi)
+            fig.savefig(path.with_suffix(".pdf"), dpi=self.dpi)
+            logger.info(f"Saved Panel H → {path}")
+        return fig
+
+    # ──────────────────────────────────────────────────────────
+    # PANEL I: Expression Decoder Analysis
+    # ──────────────────────────────────────────────────────────
+    def plot_expression_analysis(
+        self,
+        real_expr_path: str = "results/real_expression.npy",
+        gen_expr_path: str = "results/generated_expression.npy",
+        gene_names_path: str = "results/expression_gene_names.json",
+        metrics_path: str = "results/expression_metrics.json",
+        save: bool = True,
+    ) -> Optional[plt.Figure]:
+        """Expression decoder analysis: variability, range, and per-cell stats.
+
+        I1: Per-gene coefficient of variation (CV) — real vs generated
+        I2: Expression range comparison (gene-level distribution)
+        I3: Per-cell expression variance (real vs generated histograms)
+        """
+        paths = [real_expr_path, gen_expr_path, gene_names_path, metrics_path]
+        if not all(Path(p).exists() for p in paths):
+            logger.info("Expression data not found — skipping Panel I")
+            return None
+
+        real = np.load(real_expr_path)
+        gen = np.load(gen_expr_path)
+        with open(gene_names_path) as f:
+            gene_names = json.load(f)
+        with open(metrics_path) as f:
+            metrics = json.load(f)
+
+        fig, axes = plt.subplots(1, 3, figsize=(20, 7))
+
+        overall = metrics.get("overall", {})
+        fig.suptitle(
+            f"Expression Decoder Analysis — "
+            f"real mean={overall.get('real_mean', 0):.3f}, "
+            f"gen mean={overall.get('gen_mean', 0):.3f}, "
+            f"real cells={real.shape[0]}, gen cells={gen.shape[0]}",
+            fontsize=14, fontweight="bold",
+        )
+
+        # ── I1: Per-gene CV distribution (real vs generated) ──
+        ax = axes[0]
+        real_cv = real.std(axis=0) / (np.abs(real.mean(axis=0)) + 1e-8)
+        gen_cv = gen.std(axis=0) / (np.abs(gen.mean(axis=0)) + 1e-8)
+
+        bins = np.linspace(0, max(real_cv.max(), gen_cv.max()) * 1.05, 50)
+        ax.hist(real_cv, bins=bins, alpha=0.6, color="#1976D2", label=f"Real (mean={real_cv.mean():.5f})",
+                edgecolor="white", linewidth=0.3)
+        ax.hist(gen_cv, bins=bins, alpha=0.6, color="#FF7043", label=f"Gen (mean={gen_cv.mean():.5f})",
+                edgecolor="white", linewidth=0.3)
+        ax.set_xlabel("Coefficient of Variation (CV)")
+        ax.set_ylabel("Number of Genes")
+        ax.set_title("I1: Per-Gene Variability Across Cells")
+        ax.legend(fontsize=8)
+        ax.annotate(
+            "Low CV = decoder dominated\nby gene-level bias\n(minimal cell-specific modulation)",
+            xy=(0.95, 0.95), xycoords="axes fraction", fontsize=7,
+            ha="right", va="top",
+            bbox=dict(boxstyle="round,pad=0.3", facecolor="lightyellow", alpha=0.8),
+        )
+
+        # ── I2: Gene expression range — real vs generated (sorted) ──
+        ax = axes[1]
+        real_means = real.mean(axis=0)
+        gen_means = gen.mean(axis=0)
+        sort_idx = np.argsort(real_means)
+        ax.fill_between(range(len(sort_idx)),
+                        real.min(axis=0)[sort_idx],
+                        real.max(axis=0)[sort_idx],
+                        alpha=0.15, color="#1976D2", label="Real range")
+        ax.fill_between(range(len(sort_idx)),
+                        gen.min(axis=0)[sort_idx],
+                        gen.max(axis=0)[sort_idx],
+                        alpha=0.15, color="#FF7043", label="Gen range")
+        ax.plot(real_means[sort_idx], color="#1976D2", lw=1.2, label="Real mean")
+        ax.plot(gen_means[sort_idx], color="#FF7043", lw=1.2, ls="--", label="Gen mean")
+        ax.set_xlabel("Gene Index (sorted by real mean)")
+        ax.set_ylabel("Expression Value")
+        ax.set_title(f"I2: Gene Expression Range ({len(gene_names)} genes)")
+        ax.legend(fontsize=7, loc="upper left")
+
+        # ── I3: Per-cell expression variance histograms ──
+        ax = axes[2]
+        real_cell_std = real.std(axis=1)
+        gen_cell_std = gen.std(axis=1)
+
+        bins3 = np.linspace(
+            min(real_cell_std.min(), gen_cell_std.min()) - 0.01,
+            max(real_cell_std.max(), gen_cell_std.max()) + 0.01,
+            60,
+        )
+        ax.hist(real_cell_std, bins=bins3, alpha=0.6, color="#1976D2",
+                label=f"Real (μ={real_cell_std.mean():.4f})", edgecolor="white", linewidth=0.3)
+        ax.hist(gen_cell_std, bins=bins3, alpha=0.6, color="#FF7043",
+                label=f"Gen (μ={gen_cell_std.mean():.4f})", edgecolor="white", linewidth=0.3)
+        ax.set_xlabel("Per-Cell Expression Std Dev")
+        ax.set_ylabel("Number of Cells")
+        ax.set_title("I3: Per-Cell Expression Variability")
+        ax.legend(fontsize=8)
+
+        if save:
+            path = self.output / "panel_i_expression_analysis.png"
+            fig.savefig(path, dpi=self.dpi)
+            fig.savefig(path.with_suffix(".pdf"), dpi=self.dpi)
+            logger.info(f"Saved Panel I → {path}")
+        return fig
+
+    # ──────────────────────────────────────────────────────────
     # COMBINED REPORT
     # ──────────────────────────────────────────────────────────
     def generate_full_report(self, include_umap: bool = True) -> List[Path]:
@@ -921,6 +1190,18 @@ class ResultsVisualizer:
         if fig_g:
             saved.append(self.output / "panel_g_per_type_generation.pdf")
             plt.close(fig_g)
+
+        # Panel H: Gene expression correlation
+        fig_h = self.plot_expression_correlation()
+        if fig_h:
+            saved.append(self.output / "panel_h_expression_correlation.pdf")
+            plt.close(fig_h)
+
+        # Panel I: Expression decoder analysis
+        fig_i = self.plot_expression_analysis()
+        if fig_i:
+            saved.append(self.output / "panel_i_expression_analysis.pdf")
+            plt.close(fig_i)
 
         # ── Combine into multi-page PDF ──
         if saved:

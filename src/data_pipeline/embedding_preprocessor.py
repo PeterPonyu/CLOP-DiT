@@ -187,6 +187,67 @@ class EmbeddingPreprocessor:
         self.fit(X)
         return self.transform(X)
 
+    def inverse_transform(
+        self,
+        X: np.ndarray,
+        target_norm: Optional[float] = None,
+    ) -> np.ndarray:
+        """Approximately invert the preprocessing transform.
+
+        Reverses: L2-normalize → ZCA-whiten → mean-center.
+
+        The L2 normalization step is lossy (original norms are discarded).
+        We use ``target_norm`` to set the scale of the recovered embeddings.
+        If not provided, we estimate it by applying the forward transform to
+        the mean vector (which gives a representative scale).
+
+        Parameters
+        ----------
+        X : (N, D) preprocessed embeddings (L2-normalized, whitened)
+        target_norm : float, optional
+            Target L2 norm for the reconstructed raw embeddings.
+            If None, uses the mean norm of the original training data
+            (estimated from the whitening matrix).
+
+        Returns
+        -------
+        X_raw : (N, D) approximately reconstructed raw embeddings
+        """
+        if self.method == "none":
+            return X
+
+        assert self.fitted_, "Must call fit() before inverse_transform()"
+
+        X = X.astype(np.float32)
+
+        if self.whiten_matrix_ is not None:
+            # Compute inverse whitening matrix
+            W_inv = np.linalg.inv(self.whiten_matrix_).astype(np.float32)
+
+            # Estimate pre-L2-norm scale if not provided
+            if target_norm is None:
+                # Use a probe: transform a small identity-like set through
+                # the whitening matrix to estimate the typical output norm
+                # before L2 normalization
+                probe = np.eye(min(50, X.shape[1]), X.shape[1], dtype=np.float32)
+                whitened_probe = probe @ self.whiten_matrix_.T
+                target_norm = float(np.linalg.norm(whitened_probe, axis=1).mean())
+                logger.info(f"Estimated pre-norm scale: {target_norm:.2f}")
+
+            # Scale back from unit sphere to whitened space
+            X = X * target_norm
+
+            # Inverse whiten
+            X = X @ W_inv.T
+        elif target_norm is not None:
+            X = X * target_norm
+
+        # Add mean back
+        if self.mean_ is not None:
+            X = X + self.mean_
+
+        return X
+
     @staticmethod
     def _pairwise_cosine_mean(X: np.ndarray, max_samples: int = 200) -> float:
         """Compute mean pairwise cosine similarity (for diagnostics)."""
