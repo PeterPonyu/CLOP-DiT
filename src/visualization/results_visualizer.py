@@ -5,7 +5,7 @@ Generates multi-panel PDF/PNG reports proving training success:
   Panel A: CLOP training dynamics (loss, temperature, prototype accuracy, embedding quality)
   Panel B: CLOP embedding space (UMAP of 69-type prototypes + cell embeddings)
   Panel C: DiT training dynamics (flow-matching loss, cosine similarity, LR schedule)
-  Panel D: Metrics summary table (CLOP + DiT + Generation + Expression)
+  Panel D: Metrics summary table (grouped two-column: training/gen | diversity/expr/config)
   Panel E: [Post-inference] Real vs generated cell overlay (type-coloured UMAP)
   Panel F: Text–Cell similarity heatmap (69×69 cosine matrix proving CLOP alignment)
   Panel G: Per-type generation fidelity (centroid cosine + Fréchet distance)
@@ -15,6 +15,8 @@ Generates multi-panel PDF/PNG reports proving training success:
   Panel K: Expression diversity (gene std ratio real vs generated)
   Panel L: Noise-scale trade-off (FD + centroid cosine + diversity ratio vs ε)
   Panel M: Conditioning mode comparison (PCA of centroid vs noise vs variant)
+  Panel N: Marker gene comparison (per-type real vs generated expression, focused heatmap)
+  Panel O: Baseline comparison (CLOP-DiT vs Gaussian/Shuffled baselines, radar + bars)
 
 Usage:
     python -m src.visualization.results_visualizer                  # defaults
@@ -462,76 +464,57 @@ class ResultsVisualizer:
         return fig
 
     # ──────────────────────────────────────────────────────────
-    # PANEL D: Metrics Summary
+    # PANEL D: Metrics Summary (grouped, compact, publication-ready)
     # ──────────────────────────────────────────────────────────
     def plot_metrics_summary(self, gen_metrics_path: str = "results/generation_metrics.json",
                              expr_metrics_path: str = "results/expression_metrics.json",
                              div_metrics_path: str = "results/diversity_diagnostics.json",
                              save: bool = True) -> Optional[plt.Figure]:
-        """Clean metrics summary table as a figure panel."""
-        rows = []
+        """Publication-quality grouped metrics summary table.
+
+        Two-column layout: left = training/generation, right = diversity/expression/config.
+        Key metrics highlighted. Directional arrows on metric names.
+        """
+        # ── Collect metrics by category ──
+        cat_training: list = []   # CLOP + DiT
+        cat_gen: list = []        # Generation quality
+        cat_div: list = []        # Diversity
+        cat_expr: list = []       # Expression fidelity
+        cat_cfg: list = []        # Configuration
 
         if self.clop_hist:
             h = self.clop_hist
-            rows.extend([
-                ["CLOP", "Train Loss", f'{h["train_loss"][-1]:.4f}', f'{h["train_loss"][0]:.4f}'],
-                ["CLOP", "Val Loss", f'{h["val_loss"][-1]:.4f}', f'{h["val_loss"][0]:.4f}'],
-                ["CLOP", "Val Proto Accuracy", f'{h["val_proto_acc"][-1]*100:.1f}%',
-                 f'{h["val_proto_acc"][0]*100:.1f}%'],
-                ["CLOP", "Val Top-5 Accuracy", f'{h["val_proto_top5"][-1]*100:.1f}%',
-                 f'{h["val_proto_top5"][0]*100:.1f}%'],
-                ["CLOP", "Text↔Cell Alignment", f'{h["val_text_cell_align"][-1]:.4f}',
-                 f'{h["val_text_cell_align"][0]:.4f}'],
-                ["CLOP", "Inter-type Separation", f'{h["val_inter_sep"][-1]:.4f}',
-                 f'{h["val_inter_sep"][0]:.4f}'],
-                ["CLOP", "Mean Cosine Sim", f'{h["val_mean_cosine_sim"][-1]:.4f}',
-                 f'{h["val_mean_cosine_sim"][0]:.4f}'],
-                ["CLOP", "Temperature (τ)", f'{h["temperature"][-1]:.1f}',
-                 f'{h["temperature"][0]:.1f}'],
+            cat_training.extend([
+                ("CLOP Val Loss ↓", f'{h["val_loss"][-1]:.4f}', True),
+                ("CLOP Proto Accuracy ↑", f'{h["val_proto_acc"][-1]*100:.1f}%', True),
+                ("CLOP Top-5 Acc ↑", f'{h["val_proto_top5"][-1]*100:.1f}%', False),
+                ("Text↔Cell Alignment ↑", f'{h["val_text_cell_align"][-1]:.4f}', False),
+                ("Inter-type Separation ↑", f'{h["val_inter_sep"][-1]:.4f}', False),
             ])
 
         if self.dit_hist:
             h = self.dit_hist
-            rows.extend([
-                ["DiT", "Train Loss", f'{h["train_loss"][-1]:.4f}', f'{h["train_loss"][0]:.4f}'],
-                ["DiT", "Val Loss", f'{h["val_loss"][-1]:.4f}', f'{h["val_loss"][0]:.4f}'],
-                ["DiT", "Val Cosine Sim", f'{h["val_cosine_sim"][-1]:.4f}',
-                 f'{h["val_cosine_sim"][0]:.4f}'],
+            cat_training.extend([
+                ("DiT Val Loss ↓", f'{h["val_loss"][-1]:.4f}', True),
+                ("DiT Val Cosine ↑", f'{h["val_cosine_sim"][-1]:.4f}', True),
             ])
 
-        # Add generation metrics if available
         gen_path = Path(gen_metrics_path)
         if gen_path.exists():
             with open(gen_path) as f:
                 gen_data = json.load(f)
             overall = gen_data.get("overall", {})
             summary = gen_data.get("summary", {})
-            rows.extend([
-                ["Gen", "Fréchet Distance ↓", f'{overall.get("frechet_distance", 0):.4f}', "—"],
-                ["Gen", "MMD-RBF ↓", f'{overall.get("mmd_rbf", 0):.6f}', "—"],
-                ["Gen", "Coverage ↑", f'{overall.get("coverage", 0):.4f}', "—"],
-                ["Gen", "Density", f'{overall.get("density", 0):.2f}', "—"],
-                ["Gen", "Diversity Index", f'{overall.get("diversity_index", 0):.4f}', "—"],
-                ["Gen", "Mean Centroid Cosine", f'{summary.get("mean_centroid_cosine", 0):.4f}', "—"],
-                ["Gen", "Min Centroid Cosine", f'{summary.get("min_centroid_cosine", 0):.4f}', "—"],
-            ])
+            cat_gen = [
+                ("Fréchet Distance ↓", f'{overall.get("frechet_distance", 0):.4f}', True),
+                ("MMD-RBF ↓", f'{overall.get("mmd_rbf", 0):.6f}', False),
+                ("Coverage ↑", f'{overall.get("coverage", 0):.4f}', False),
+                ("Density", f'{overall.get("density", 0):.2f}', False),
+                ("Diversity Index ↑", f'{overall.get("diversity_index", 0):.4f}', False),
+                ("Mean Centroid Cosine ↑", f'{summary.get("mean_centroid_cosine", 0):.4f}', True),
+                ("Min Centroid Cosine", f'{summary.get("min_centroid_cosine", 0):.4f}', False),
+            ]
 
-        # Add expression metrics if available
-        expr_path = Path(expr_metrics_path)
-        if expr_path.exists():
-            with open(expr_path) as f:
-                expr_data = json.load(f)
-            gene_corr = expr_data.get("gene_correlation", {})
-            per_type_sum = expr_data.get("per_type_summary", {})
-            rows.extend([
-                ["Expr", "Gene Pearson r", f'{gene_corr.get("pearson_r", 0):.6f}', "—"],
-                ["Expr", "Gene Spearman ρ", f'{gene_corr.get("spearman_rho", 0):.6f}', "—"],
-                ["Expr", "Genes Compared", f'{gene_corr.get("n_genes_compared", 0)}', "—"],
-                ["Expr", "Per-Type Mean r", f'{per_type_sum.get("mean_pearson_r", 0):.6f}', "—"],
-                ["Expr", "Per-Type Min r", f'{per_type_sum.get("min_pearson_r", 0):.6f}', "—"],
-            ])
-
-        # Add diversity diagnostics if available
         div_path = Path(div_metrics_path)
         if div_path.exists():
             with open(div_path) as f:
@@ -540,72 +523,153 @@ class ResultsVisualizer:
             t2 = div_data.get("test2_memorization", {})
             t5 = div_data.get("test5_condition_sensitivity", {}).get("summary", {})
             t6 = div_data.get("test6_expression_diversity", {}).get("summary", {})
-            rows.extend([
-                ["Div", "Diversity Ratio (gen/real)", f'{t1.get("mean_diversity_ratio", 0):.4f}', "—"],
-                ["Div", "Collapsed Types (<0.5)", f'{t1.get("n_collapsed", 0)}', "—"],
-                ["Div", "NN Distance (mean)", f'{t2.get("nn_cosine_distance", {}).get("mean", 0):.4f}', "—"],
-                ["Div", "Near-Copies (d<0.001)", f'{t2.get("n_very_close", 0)}', "—"],
-                ["Div", "NN Same-Type %", f'{t2.get("nn_same_type_frac", 0):.1%}', "—"],
-                ["Div", "Cond Sensitivity Gain", f'{t5.get("mean_diversity_gain", 0):.4f}×', "—"],
-            ])
+            cat_div = [
+                ("Diversity Ratio ↑ (gen/real)", f'{t1.get("mean_diversity_ratio", 0):.4f}', True),
+                ("Collapsed Types (<0.5)", f'{t1.get("n_collapsed", 0)}/{t1.get("n_collapsed", 0) + t1.get("n_healthy", 0)}', True),
+                ("Memorization (near-copies)", f'{t2.get("n_very_close", 0)}', False),
+                ("NN Distance ↑", f'{t2.get("nn_cosine_distance", {}).get("mean", 0):.4f}', False),
+                ("Cond Sensitivity Gain ↑", f'{t5.get("mean_diversity_gain", 0):.2f}×', True),
+            ]
             if t6:
-                rows.append(
-                    ["Div", "Expr Gene-Std Ratio", f'{t6.get("mean_gene_std_ratio", 0):.4f}', "—"]
+                cat_div.append(
+                    ("Expr Gene-Std Ratio", f'{t6.get("mean_gene_std_ratio", 0):.4f}', False)
                 )
 
-        # Add generation config if metadata file exists
+        expr_path = Path(expr_metrics_path)
+        if expr_path.exists():
+            with open(expr_path) as f:
+                expr_data = json.load(f)
+            gene_corr = expr_data.get("gene_correlation", {})
+            per_type_sum = expr_data.get("per_type_summary", {})
+            cat_expr = [
+                ("Gene Pearson r ↑", f'{gene_corr.get("pearson_r", 0):.6f}', True),
+                ("Gene Spearman ρ ↑", f'{gene_corr.get("spearman_rho", 0):.6f}', False),
+                ("Genes Compared", f'{gene_corr.get("n_genes_compared", 0)}', False),
+                ("Per-Type Mean r ↑", f'{per_type_sum.get("mean_pearson_r", 0):.6f}', True),
+                ("Per-Type Min r", f'{per_type_sum.get("min_pearson_r", 0):.6f}', False),
+            ]
+
         gen_meta_path = Path("results/generation_metadata.json")
         if gen_meta_path.exists():
             with open(gen_meta_path) as f:
                 gen_meta = json.load(f)
-            rows.extend([
-                ["Cfg", "Condition Mode", gen_meta.get("condition_mode", "?"), "—"],
-                ["Cfg", "Noise Scale (ε)", f'{gen_meta.get("noise_scale", 0):.3f}', "—"],
-                ["Cfg", "CFG Scale", f'{gen_meta.get("cfg_scale", 0):.1f}', "—"],
-                ["Cfg", "Cells / Type", f'{gen_meta.get("num_per_type", 0)}', "—"],
-            ])
+            cat_cfg = [
+                ("Condition Mode", gen_meta.get("condition_mode", "?"), False),
+                ("Noise Scale (ε)", f'{gen_meta.get("noise_scale", 0):.3f}', False),
+                ("CFG Scale", f'{gen_meta.get("cfg_scale", 0):.1f}', False),
+                ("Cells / Type", f'{gen_meta.get("num_per_type", 0)}', False),
+                ("Total Generated", f'{gen_meta.get("total_cells", 0):,}', False),
+            ]
 
-        if not rows:
+        # ── Build two-column layout ──
+        # Left column: Training + Generation
+        # Right column: Diversity + Expression + Config
+        left_sections = []
+        if cat_training:
+            left_sections.append(("Training", cat_training, "#1976D2"))
+        if cat_gen:
+            left_sections.append(("Generation Quality", cat_gen, "#E65100"))
+
+        right_sections = []
+        if cat_div:
+            right_sections.append(("Diversity", cat_div, "#C62828"))
+        if cat_expr:
+            right_sections.append(("Expression Fidelity", cat_expr, "#6A1B9A"))
+        if cat_cfg:
+            right_sections.append(("Configuration", cat_cfg, "#37474F"))
+
+        if not left_sections and not right_sections:
             return None
 
-        fig, ax = plt.subplots(figsize=(10, 0.5 * len(rows) + 1.5))
-        ax.axis("off")
-        ax.set_title("Metrics Summary", fontsize=14, fontweight="bold", pad=20)
+        # ── Render as two side-by-side tables ──
+        fig, (ax_left, ax_right) = plt.subplots(1, 2, figsize=(16, 12))
+        fig.suptitle("CLOP-DiT Pipeline — Metrics Summary",
+                     fontsize=15, fontweight="bold", y=0.98)
 
-        col_labels = ["Stage", "Metric", "Final", "Initial"]
-        table = ax.table(
-            cellText=rows,
-            colLabels=col_labels,
-            cellLoc="center",
-            loc="center",
-        )
-        table.auto_set_font_size(False)
-        table.set_fontsize(10)
-        table.scale(1, 1.5)
+        def _render_sections(ax, sections):
+            """Render grouped metric sections on one axes."""
+            ax.axis("off")
+            all_rows = []
+            section_row_indices = []  # (start_idx, color) for header rows
+            for title, items, color in sections:
+                header_idx = len(all_rows)
+                all_rows.append([title, "", ""])
+                section_row_indices.append((header_idx, color))
+                for metric_name, value, is_key in items:
+                    all_rows.append(["", metric_name, value])
 
-        # Style header
-        for j in range(len(col_labels)):
-            cell = table[0, j]
-            cell.set_facecolor("#37474F")
-            cell.set_text_props(color="white", fontweight="bold")
+            col_labels = ["", "Metric", "Value"]
+            tbl = ax.table(
+                cellText=all_rows,
+                colLabels=col_labels,
+                cellLoc="left",
+                loc="upper center",
+                colWidths=[0.01, 0.55, 0.30],
+            )
+            tbl.auto_set_font_size(False)
+            tbl.set_fontsize(10)
+            tbl.scale(1, 1.6)
 
-        # Alternate row colours
-        for i in range(len(rows)):
-            stage = rows[i][0]
-            for j in range(len(col_labels)):
-                cell = table[i + 1, j]
-                if stage == "CLOP":
-                    cell.set_facecolor("#E3F2FD" if i % 2 == 0 else "#BBDEFB")
-                elif stage == "DiT":
-                    cell.set_facecolor("#E8F5E9" if i % 2 == 0 else "#C8E6C9")
-                elif stage == "Expr":
-                    cell.set_facecolor("#F3E5F5" if i % 2 == 0 else "#E1BEE7")
-                elif stage == "Div":
-                    cell.set_facecolor("#FFEBEE" if i % 2 == 0 else "#FFCDD2")
-                elif stage == "Cfg":
-                    cell.set_facecolor("#F5F5F5" if i % 2 == 0 else "#E0E0E0")
-                else:  # Gen
-                    cell.set_facecolor("#FFF3E0" if i % 2 == 0 else "#FFE0B2")
+            # Style column header
+            for j in range(3):
+                cell = tbl[0, j]
+                cell.set_facecolor("#37474F")
+                cell.set_text_props(color="white", fontweight="bold", fontsize=10)
+                cell.set_height(0.04)
+
+            # Style section headers and data rows
+            for i, row_data in enumerate(all_rows):
+                row_idx = i + 1  # offset by column header
+                is_section_header = any(idx == i for idx, _ in section_row_indices)
+
+                if is_section_header:
+                    # Find the color for this section header
+                    color = next(c for idx, c in section_row_indices if idx == i)
+                    for j in range(3):
+                        cell = tbl[row_idx, j]
+                        cell.set_facecolor(color)
+                        cell.set_text_props(color="white", fontweight="bold", fontsize=11)
+                        cell.set_height(0.035)
+                    # Merge-like: put title text in metric column
+                    tbl[row_idx, 1].get_text().set_text(row_data[0])
+                    tbl[row_idx, 0].get_text().set_text("")
+                else:
+                    # Find which section this row belongs to
+                    sec_color = "#FFFFFF"
+                    for idx, color in section_row_indices:
+                        if i > idx:
+                            sec_color = color
+                    # Light tint of section color
+                    import matplotlib.colors as mcolors
+                    base_rgb = mcolors.to_rgb(sec_color)
+                    tint = tuple(c * 0.08 + 0.92 for c in base_rgb)
+                    alt_tint = tuple(c * 0.14 + 0.86 for c in base_rgb)
+                    bg = tint if (i % 2 == 0) else alt_tint
+
+                    # Find if this is a key metric
+                    # Reconstruct: find the section and item index
+                    is_key = False
+                    row_counter = 0
+                    for _, items, _ in sections:
+                        row_counter += 1  # header
+                        for _, _, ik in items:
+                            if row_counter == i:
+                                is_key = ik
+                                break
+                            row_counter += 1
+                        if row_counter > i:
+                            break
+
+                    for j in range(3):
+                        cell = tbl[row_idx, j]
+                        cell.set_facecolor(bg)
+                        if is_key:
+                            cell.set_text_props(fontweight="bold")
+
+            return tbl
+
+        _render_sections(ax_left, left_sections)
+        _render_sections(ax_right, right_sections)
 
         if save:
             path = self.output / "panel_d_metrics_summary.png"
@@ -1191,6 +1255,464 @@ class ResultsVisualizer:
         return fig
 
     # ──────────────────────────────────────────────────────────
+    # PANEL N: Marker Gene Comparison (per-type real vs generated)
+    # ──────────────────────────────────────────────────────────
+
+    # Biologically meaningful markers covering major lineages
+    MARKER_PANEL_GENES = {
+        "CD8+ T":       ["CD8A", "GZMB"],
+        "Myeloid":      ["CD68", "CD163"],
+        "Epithelial":   ["EPCAM", "KRT8"],
+        "Stromal":      ["COL1A1", "COL1A2"],
+    }
+    # Representative types to show per-type breakdown
+    MARKER_PANEL_TYPES = [
+        "CD8+ cytotoxic T lymphocytes",
+        "Tumor-associated macrophages",
+        "Epithelial tumor cells",
+        "Fibroblasts and mesenchymal stromal cell",
+    ]
+
+    def plot_marker_gene_comparison(
+        self,
+        real_expr_path: str = "results/real_expression.npy",
+        gen_expr_path: str = "results/generated_expression.npy",
+        real_labels_path: str = "results/real_expression_labels.npy",
+        gen_labels_path: str = "results/generated_expression_labels.npy",
+        gene_names_path: str = "results/expression_gene_names.json",
+        metrics_path: str = "results/expression_metrics.json",
+        save: bool = True,
+    ) -> Optional[plt.Figure]:
+        """Focused marker-gene comparison: real vs generated expression.
+
+        N1: Paired bar chart — per-marker real vs gen mean expression (all cells)
+        N2: Per-type × marker heatmap pair (real | generated, same color scale)
+        N3: Difference heatmap (gen − real) to highlight biases
+        """
+        paths = [real_expr_path, gen_expr_path, gene_names_path, metrics_path]
+        if not all(Path(p).exists() for p in paths):
+            logger.info("Expression data not found — skipping Panel N")
+            return None
+
+        real = np.load(real_expr_path)
+        gen = np.load(gen_expr_path)
+        real_labels = np.load(real_labels_path) if Path(real_labels_path).exists() else None
+        gen_labels = np.load(gen_labels_path) if Path(gen_labels_path).exists() else None
+        with open(gene_names_path) as f:
+            gene_names = json.load(f)
+
+        # Resolve which markers are available
+        all_marker_genes = []
+        marker_cats = []
+        for cat, genes in self.MARKER_PANEL_GENES.items():
+            for g in genes:
+                if g in gene_names:
+                    all_marker_genes.append(g)
+                    marker_cats.append(cat)
+        if len(all_marker_genes) < 2:
+            logger.warning("Too few markers found — skipping Panel N")
+            return None
+
+        gene_idx = [gene_names.index(g) for g in all_marker_genes]
+
+        # Resolve which types match the desired representative set
+        selected_type_ids = []
+        selected_type_names = []
+        if real_labels is not None:
+            for target_name in self.MARKER_PANEL_TYPES:
+                for tid, tname in self.type_names.items():
+                    if target_name.lower() in tname.lower():
+                        if tid in np.unique(real_labels):
+                            selected_type_ids.append(tid)
+                            selected_type_names.append(tname[:30])
+                            break
+        # Fallback: if too few matched, pick the 4 most populated types
+        if len(selected_type_ids) < 3 and real_labels is not None:
+            unique, counts = np.unique(real_labels, return_counts=True)
+            top4 = unique[np.argsort(counts)[-4:]]
+            selected_type_ids = top4.tolist()
+            selected_type_names = [self.type_names.get(int(t), f"Type_{t}")[:30]
+                                   for t in selected_type_ids]
+
+        n_markers = len(all_marker_genes)
+        n_sel_types = len(selected_type_ids)
+
+        fig = plt.figure(figsize=(22, 10))
+        gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.3, 0.7], wspace=0.3)
+        fig.suptitle("Marker Gene Comparison — Real vs Generated Expression",
+                     fontsize=14, fontweight="bold")
+
+        # ── N1: Overall paired bar chart for each marker gene ──
+        ax = fig.add_subplot(gs[0])
+        real_marker_means = np.array([real[:, gi].mean() for gi in gene_idx])
+        gen_marker_means = np.array([gen[:, gi].mean() for gi in gene_idx])
+        x = np.arange(n_markers)
+        w = 0.35
+        bars_r = ax.bar(x - w/2, real_marker_means, w, label="Real",
+                        color="#1976D2", alpha=0.85, edgecolor="white")
+        bars_g = ax.bar(x + w/2, gen_marker_means, w, label="Generated",
+                        color="#FF7043", alpha=0.85, edgecolor="white")
+        ax.set_xticks(x)
+        ax.set_xticklabels([f"{g}\n({c})" for g, c in zip(all_marker_genes, marker_cats)],
+                           fontsize=8, rotation=30, ha="right")
+        ax.set_ylabel("Mean Expression")
+        ax.set_title("N1: Marker Gene Mean Expression")
+        ax.legend(fontsize=9)
+        # Annotate ratio gen/real
+        for i, (rm, gm) in enumerate(zip(real_marker_means, gen_marker_means)):
+            ratio = gm / (rm + 1e-8)
+            ax.text(i, max(rm, gm) * 1.01, f"{ratio:.4f}×", ha="center",
+                    fontsize=7, color="#333")
+
+        # ── N2: Per-type heatmap pair (real | gen) ──
+        if n_sel_types >= 2 and real_labels is not None and gen_labels is not None:
+            ax2 = fig.add_subplot(gs[1])
+            # Compute per-type per-marker means
+            real_heat = np.zeros((n_sel_types, n_markers))
+            gen_heat = np.zeros((n_sel_types, n_markers))
+            for i, tid in enumerate(selected_type_ids):
+                r_mask = real_labels == tid
+                g_mask = gen_labels == tid
+                if r_mask.any():
+                    for j, gi in enumerate(gene_idx):
+                        real_heat[i, j] = real[r_mask][:, gi].mean()
+                if g_mask.any():
+                    for j, gi in enumerate(gene_idx):
+                        gen_heat[i, j] = gen[g_mask][:, gi].mean()
+
+            # Side-by-side heatmap
+            combined = np.hstack([real_heat, gen_heat])  # (n_types, 2*n_markers)
+            vmin = combined.min()
+            vmax = combined.max()
+
+            # Draw with imshow
+            gap_col = np.full((n_sel_types, 1), np.nan)
+            display = np.hstack([real_heat, gap_col, gen_heat])
+            im = ax2.imshow(display, cmap="YlOrRd", aspect="auto",
+                            vmin=vmin, vmax=vmax)
+            ax2.set_yticks(range(n_sel_types))
+            ax2.set_yticklabels(selected_type_names, fontsize=8)
+            xtick_pos = list(range(n_markers)) + [n_markers] + list(range(n_markers + 1, 2 * n_markers + 1))
+            xtick_labels = all_marker_genes + [""] + all_marker_genes
+            ax2.set_xticks(xtick_pos)
+            ax2.set_xticklabels(xtick_labels, fontsize=7, rotation=45, ha="right")
+            ax2.set_title("N2: Per-Type Marker Expression (Real | Generated)")
+            # Label the two halves
+            ax2.text(n_markers / 2 - 0.5, -0.8, "Real", ha="center",
+                     fontsize=10, fontweight="bold", color="#1976D2")
+            ax2.text(n_markers + 0.5 + n_markers / 2 - 0.5, -0.8, "Generated",
+                     ha="center", fontsize=10, fontweight="bold", color="#FF7043")
+            fig.colorbar(im, ax=ax2, shrink=0.6, label="Expression")
+
+            # ── N3: Difference heatmap ──
+            ax3 = fig.add_subplot(gs[2])
+            diff = gen_heat - real_heat
+            max_abs = max(abs(diff.min()), abs(diff.max()), 0.01)
+            im3 = ax3.imshow(diff, cmap="RdBu_r", aspect="auto",
+                             vmin=-max_abs, vmax=max_abs)
+            ax3.set_yticks(range(n_sel_types))
+            ax3.set_yticklabels(selected_type_names, fontsize=8)
+            ax3.set_xticks(range(n_markers))
+            ax3.set_xticklabels(all_marker_genes, fontsize=7, rotation=45, ha="right")
+            ax3.set_title("N3: Difference (Gen − Real)")
+            fig.colorbar(im3, ax=ax3, shrink=0.6, label="Δ Expression")
+            # Annotate cells
+            for i in range(n_sel_types):
+                for j in range(n_markers):
+                    ax3.text(j, i, f"{diff[i, j]:.3f}", ha="center", va="center",
+                             fontsize=6, color="black" if abs(diff[i, j]) < max_abs * 0.5 else "white")
+        else:
+            # Fallback: skip N2/N3 if no per-type breakdown
+            ax2 = fig.add_subplot(gs[1:])
+            ax2.text(0.5, 0.5, "Per-type labels not available for heatmap",
+                     ha="center", va="center", transform=ax2.transAxes, fontsize=12)
+
+        if save:
+            path = self.output / "panel_n_marker_gene_comparison.png"
+            fig.savefig(path, dpi=self.dpi)
+            fig.savefig(path.with_suffix(".pdf"), dpi=self.dpi)
+            logger.info(f"Saved Panel N → {path}")
+        return fig
+
+    # ──────────────────────────────────────────────────────────
+    # PANEL O: Baseline Comparison (CLOP-DiT vs simple baselines)
+    # ──────────────────────────────────────────────────────────
+    def plot_baseline_comparison(
+        self,
+        gen_metrics_path: str = "results/generation_metrics.json",
+        div_metrics_path: str = "results/diversity_diagnostics.json",
+        baseline_metrics_path: str = "results/baseline_metrics.json",
+        save: bool = True,
+    ) -> Optional[plt.Figure]:
+        """Compare CLOP-DiT generation against simple baselines.
+
+        O1: Bar chart — FD, centroid cosine, diversity ratio across methods
+        O2: Radar / summary comparing 4 key dimensions
+        O3: Textual summary table of best vs baseline
+
+        If no precomputed baseline_metrics.json exists, generates a Gaussian
+        baseline on-the-fly from cached data.
+        """
+        gen_path = Path(gen_metrics_path)
+        if not gen_path.exists():
+            logger.info("No generation metrics — skipping Panel O")
+            return None
+
+        with open(gen_path) as f:
+            gen_data = json.load(f)
+        clop_metrics = gen_data.get("overall", {})
+        clop_summary = gen_data.get("summary", {})
+
+        # Try loading precomputed baseline metrics
+        baselines: Dict[str, Dict] = {}
+        bl_path = Path(baseline_metrics_path)
+        if bl_path.exists():
+            with open(bl_path) as f:
+                baselines = json.load(f)
+        else:
+            # Generate Gaussian baseline on-the-fly
+            logger.info("Computing Gaussian and Shuffled baselines on-the-fly...")
+            baselines = self._compute_baselines()
+
+        if not baselines:
+            logger.info("No baseline data — skipping Panel O")
+            return None
+
+        # Load diversity for CLOP-DiT
+        div_path = Path(div_metrics_path)
+        div_ratio_clop = 0.0
+        if div_path.exists():
+            with open(div_path) as f:
+                div_data = json.load(f)
+            div_ratio_clop = div_data.get(
+                "test1_intratype_diversity", {}
+            ).get("summary", {}).get("mean_diversity_ratio", 0)
+
+        # Build comparison data
+        methods = {"CLOP-DiT": {
+            "FD": clop_metrics.get("frechet_distance", 0),
+            "Centroid Cosine": clop_summary.get("mean_centroid_cosine", 0),
+            "Diversity Ratio": div_ratio_clop,
+            "Coverage": clop_metrics.get("coverage", 0),
+        }}
+        for bl_name, bl_data in baselines.items():
+            methods[bl_name] = {
+                "FD": bl_data.get("frechet_distance", 0),
+                "Centroid Cosine": bl_data.get("mean_centroid_cosine", 0),
+                "Diversity Ratio": bl_data.get("diversity_ratio", 0),
+                "Coverage": bl_data.get("coverage", 0),
+            }
+
+        method_names = list(methods.keys())
+        n_methods = len(method_names)
+        metric_names = ["FD ↓", "Centroid Cosine ↑", "Diversity Ratio ↑", "Coverage ↑"]
+        metric_keys = ["FD", "Centroid Cosine", "Diversity Ratio", "Coverage"]
+
+        fig, axes = plt.subplots(1, 3, figsize=(22, 7),
+                                 gridspec_kw={"width_ratios": [1.5, 1.0, 1.0]})
+        fig.suptitle("Baseline Comparison — CLOP-DiT vs Simple Baselines",
+                     fontsize=14, fontweight="bold")
+
+        # ── O1: Grouped bar chart ──
+        ax = axes[0]
+        x = np.arange(len(metric_names))
+        w = 0.8 / n_methods
+        colors = ["#1976D2", "#FF7043", "#4CAF50", "#9C27B0", "#FFC107"]
+        for i, mname in enumerate(method_names):
+            vals = [methods[mname][k] for k in metric_keys]
+            offset = (i - n_methods / 2 + 0.5) * w
+            bars = ax.bar(x + offset, vals, w, label=mname,
+                          color=colors[i % len(colors)], alpha=0.85,
+                          edgecolor="white")
+            # Value labels
+            for xi, v in zip(x + offset, vals):
+                ax.text(xi, v + 0.005, f"{v:.3f}", ha="center", fontsize=7,
+                        rotation=45)
+        ax.set_xticks(x)
+        ax.set_xticklabels(metric_names, fontsize=10)
+        ax.legend(fontsize=9)
+        ax.set_title("O1: Key Metrics Comparison")
+        ax.set_ylabel("Value")
+
+        # ── O2: Radar chart ──
+        ax = axes[1]
+        # Normalize metrics to [0, 1] for radar
+        # FD: lower is better → invert; others: higher is better
+        all_vals = {k: [methods[m][k] for m in method_names] for k in metric_keys}
+        normalized = {}
+        for k in metric_keys:
+            mn, mx = min(all_vals[k]), max(all_vals[k])
+            rng = mx - mn if mx > mn else 1
+            if k == "FD":  # invert
+                normalized[k] = [(mx - v) / rng for v in all_vals[k]]
+            else:
+                normalized[k] = [(v - mn) / rng for v in all_vals[k]]
+
+        angles = np.linspace(0, 2 * np.pi, len(metric_keys), endpoint=False).tolist()
+        angles += angles[:1]
+        axes[1].remove()  # remove Cartesian placeholder before adding polar
+        ax = fig.add_subplot(132, polar=True)
+        ax.set_theta_offset(np.pi / 2)
+        ax.set_theta_direction(-1)
+        ax.set_thetagrids(np.degrees(angles[:-1]), metric_names, fontsize=8)
+
+        for i, mname in enumerate(method_names):
+            vals = [normalized[k][i] for k in metric_keys]
+            vals += vals[:1]
+            ax.plot(angles, vals, "o-", linewidth=2, label=mname,
+                    color=colors[i % len(colors)], markersize=6)
+            ax.fill(angles, vals, alpha=0.1, color=colors[i % len(colors)])
+        ax.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1), fontsize=8)
+        ax.set_title("O2: Normalized Radar", pad=20)
+
+        # ── O3: Summary table ──
+        ax = axes[2]
+        ax.axis("off")
+        tbl_rows = []
+        for mname in method_names:
+            row = [mname]
+            for k in metric_keys:
+                row.append(f"{methods[mname][k]:.4f}")
+            tbl_rows.append(row)
+
+        tbl = ax.table(
+            cellText=tbl_rows,
+            colLabels=["Method"] + metric_names,
+            cellLoc="center",
+            loc="center",
+        )
+        tbl.auto_set_font_size(False)
+        tbl.set_fontsize(9)
+        tbl.scale(1, 1.8)
+        # Style header
+        for j in range(len(metric_names) + 1):
+            tbl[0, j].set_facecolor("#37474F")
+            tbl[0, j].set_text_props(color="white", fontweight="bold")
+        # Highlight CLOP-DiT row
+        for j in range(len(metric_names) + 1):
+            tbl[1, j].set_facecolor("#E3F2FD")
+            tbl[1, j].set_text_props(fontweight="bold")
+
+        ax.set_title("O3: Summary", fontsize=12, fontweight="bold")
+
+        if save:
+            path = self.output / "panel_o_baseline_comparison.png"
+            fig.savefig(path, dpi=self.dpi)
+            fig.savefig(path.with_suffix(".pdf"), dpi=self.dpi)
+            logger.info(f"Saved Panel O → {path}")
+        return fig
+
+    def _compute_baselines(self) -> Dict[str, Dict]:
+        """Compute simple baselines on-the-fly from cached data.
+
+        Gaussian: Sample from N(μ, Σ) estimated per-type, then L2-normalize.
+        Shuffled: Randomly assign generated embeddings to wrong types.
+        """
+        from src.evaluation.metrics import GenerationMetrics
+
+        cell_path = self.cache / "cell_embeddings_dedup_preprocessed.npy"
+        gid_path = self.cache / "text_group_ids_dedup.npy"
+        gen_path = Path("results/generated_embeddings.npy")
+        gen_lab_path = Path("results/generated_labels.npy")
+
+        if not all(p.exists() for p in [cell_path, gid_path, gen_path, gen_lab_path]):
+            return {}
+
+        real_cells = np.load(cell_path)
+        group_ids = np.load(gid_path)
+        gen_cells = np.load(gen_path)
+        gen_labels = np.load(gen_lab_path)
+
+        unique_types = np.sort(np.unique(group_ids))
+        rng = np.random.default_rng(42)
+
+        # ── Gaussian baseline ──
+        # Per-type: sample from N(centroid, σ²I) where σ = mean intra-type std
+        gauss_cells = []
+        gauss_labels = []
+        n_per = len(gen_cells) // len(unique_types) if len(unique_types) > 0 else 100
+        for tid in unique_types:
+            r = real_cells[group_ids == tid]
+            centroid = r.mean(axis=0)
+            std_val = r.std()  # scalar global std
+            samples = rng.normal(0, std_val, size=(n_per, real_cells.shape[1]))
+            samples += centroid
+            norms = np.linalg.norm(samples, axis=1, keepdims=True) + 1e-8
+            samples = samples / norms
+            gauss_cells.append(samples)
+            gauss_labels.extend([tid] * n_per)
+        gauss_cells = np.concatenate(gauss_cells, axis=0)
+        gauss_labels = np.array(gauss_labels)
+
+        # Evaluate Gaussian baseline
+        n_sub = min(5000, len(gauss_cells), len(real_cells))
+        r_idx = rng.choice(len(real_cells), n_sub, replace=False)
+        g_idx = rng.choice(len(gauss_cells), n_sub, replace=False)
+        gauss_overall = GenerationMetrics.full_evaluation(real_cells[r_idx], gauss_cells[g_idx])
+        gauss_cosines = []
+        gauss_div_ratios = []
+        for tid in unique_types:
+            r = real_cells[group_ids == tid]
+            g = gauss_cells[gauss_labels == tid]
+            if len(r) < 5 or len(g) < 5:
+                continue
+            rc = r.mean(0); rc /= np.linalg.norm(rc) + 1e-8
+            gc = g.mean(0); gc /= np.linalg.norm(gc) + 1e-8
+            gauss_cosines.append(float(np.dot(rc, gc)))
+            # Diversity ratio
+            r_sub = r[rng.choice(len(r), min(100, len(r)), replace=False)]
+            g_sub = g[rng.choice(len(g), min(100, len(g)), replace=False)]
+            r_n = r_sub / (np.linalg.norm(r_sub, axis=1, keepdims=True) + 1e-8)
+            g_n = g_sub / (np.linalg.norm(g_sub, axis=1, keepdims=True) + 1e-8)
+            rr_sim = (r_n @ r_n.T)[np.triu_indices(len(r_n), k=1)].mean()
+            gg_sim = (g_n @ g_n.T)[np.triu_indices(len(g_n), k=1)].mean()
+            real_div = 1.0 - rr_sim
+            gen_div = 1.0 - gg_sim
+            if real_div > 1e-6:
+                gauss_div_ratios.append(gen_div / real_div)
+
+        # ── Shuffled baseline ──
+        shuffled_labels = gen_labels.copy()
+        rng.shuffle(shuffled_labels)
+        shuf_cosines = []
+        for tid in unique_types:
+            r = real_cells[group_ids == tid]
+            g = gen_cells[shuffled_labels == tid]
+            if len(r) < 5 or len(g) < 5:
+                continue
+            rc = r.mean(0); rc /= np.linalg.norm(rc) + 1e-8
+            gc = g.mean(0); gc /= np.linalg.norm(gc) + 1e-8
+            shuf_cosines.append(float(np.dot(rc, gc)))
+
+        shuf_overall = GenerationMetrics.full_evaluation(
+            real_cells[r_idx],
+            gen_cells[rng.choice(len(gen_cells), n_sub, replace=False)]
+        )
+
+        baselines = {
+            "Gaussian N(μ,σ²I)": {
+                "frechet_distance": gauss_overall.get("frechet_distance", 0),
+                "mean_centroid_cosine": float(np.mean(gauss_cosines)) if gauss_cosines else 0,
+                "diversity_ratio": float(np.mean(gauss_div_ratios)) if gauss_div_ratios else 0,
+                "coverage": gauss_overall.get("coverage", 0),
+            },
+            "Shuffled Labels": {
+                "frechet_distance": shuf_overall.get("frechet_distance", 0),
+                "mean_centroid_cosine": float(np.mean(shuf_cosines)) if shuf_cosines else 0,
+                "diversity_ratio": 1.0,  # shuffled retains overall diversity
+                "coverage": shuf_overall.get("coverage", 0),
+            },
+        }
+
+        # Save for reuse
+        bl_path = Path("results/baseline_metrics.json")
+        with open(bl_path, "w") as f:
+            json.dump(baselines, f, indent=2)
+        logger.info(f"Saved baseline metrics → {bl_path}")
+
+        return baselines
+
+    # ──────────────────────────────────────────────────────────
     # COMBINED REPORT
     # ──────────────────────────────────────────────────────────
     def generate_full_report(self, include_umap: bool = True) -> List[Path]:
@@ -1260,6 +1782,18 @@ class ResultsVisualizer:
         if fig_i:
             saved.append(self.output / "panel_i_expression_analysis.pdf")
             plt.close(fig_i)
+
+        # Panel N: Marker gene comparison
+        fig_n = self.plot_marker_gene_comparison()
+        if fig_n:
+            saved.append(self.output / "panel_n_marker_gene_comparison.pdf")
+            plt.close(fig_n)
+
+        # Panel O: Baseline comparison
+        fig_o = self.plot_baseline_comparison()
+        if fig_o:
+            saved.append(self.output / "panel_o_baseline_comparison.pdf")
+            plt.close(fig_o)
 
         # Panels J & K: Diversity diagnostics (generated by diversity_diagnostics.py)
         # Panels L & M: Conditioning analysis (generated by conditioning_analysis.py)

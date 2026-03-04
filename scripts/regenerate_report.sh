@@ -57,9 +57,9 @@ python scripts/conditioning_analysis.py \
     --cfg-scale 1.5 \
     --noise-scale 0.03
 
-# ── Step 5: Generate Panels A–I + combined report ──
+# ── Step 5: Generate Panels A–I, N, O + combined report ──
 echo ""
-echo "▶ Step 5/6: Generating panels A–I + combined PDF..."
+echo "▶ Step 5/6: Generating panels A–I, N, O + combined PDF..."
 python -m src.visualization.results_visualizer $UMAP_FLAG
 
 # ── Step 6: Summary ──
@@ -74,6 +74,8 @@ echo "  Panels J–K:  results/figures/panel_j_diversity_diagnostics.png"
 echo "               results/figures/panel_k_expression_diversity.png"
 echo "  Panels L–M:  results/figures/panel_l_noise_tradeoff.png"
 echo "               results/figures/panel_m_conditioning_umap.png"
+echo "  Panel N:     results/figures/panel_n_marker_gene_comparison.png"
+echo "  Panel O:     results/figures/panel_o_baseline_comparison.png"
 echo "  Combined:    results/figures/clop_dit_full_report.pdf"
 echo ""
 echo "  Metrics:     results/generation_metrics.json"
