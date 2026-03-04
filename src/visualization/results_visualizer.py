@@ -5,7 +5,7 @@ Generates multi-panel PDF/PNG reports proving training success:
   Panel A: CLOP training dynamics (loss, temperature, prototype accuracy, embedding quality)
   Panel B: CLOP embedding space (UMAP of 69-type prototypes + cell embeddings)
   Panel C: DiT training dynamics (flow-matching loss, cosine similarity, LR schedule)
-  Panel D: Metrics summary table (grouped two-column: training/gen | diversity/expr/config)
+  Panel D: Metrics summary dashboard (grouped bars + radar + gauges)
   Panel E: [Post-inference] Real vs generated cell overlay (type-coloured UMAP)
   Panel F: Text–Cell similarity heatmap (69×69 cosine matrix proving CLOP alignment)
   Panel G: Per-type generation fidelity (centroid cosine + Fréchet distance)
@@ -16,7 +16,10 @@ Generates multi-panel PDF/PNG reports proving training success:
   Panel L: Noise-scale trade-off (FD + centroid cosine + diversity ratio vs ε)
   Panel M: Conditioning mode comparison (PCA of centroid vs noise vs variant)
   Panel N: Marker gene comparison (per-type real vs generated expression, focused heatmap)
-  Panel O: Baseline comparison (CLOP-DiT vs Gaussian/Shuffled baselines, radar + bars)
+  Panel O: Baseline comparison (CLOP-DiT vs Gaussian/Shuffled baselines, radar + improvement strip)
+  Panel P: Clustering alignment (UMAP overlay + kNN mixing score + ARI/NMI gauges)
+  Panel Q: Classifier alignment (confusion matrix + per-type accuracy + discriminator ROC)
+  Panel R: DE concordance (logFC scatter + concordance heatmap + per-contrast bars)
 
 Usage:
     python -m src.visualization.results_visualizer                  # defaults
@@ -40,48 +43,19 @@ import seaborn as sns
 
 matplotlib.use("Agg")  # non-interactive backend for PDF generation
 
+# Shared style infrastructure (centralised in style.py)
+from .style import (
+    VIS_STYLE as STYLE,
+    TYPE_PALETTE,
+    COLORS as _COLORS,
+    apply_style,
+    style_axes,
+    save_panel,
+    quality_color,
+    _build_type_palette,
+)
+
 logger = logging.getLogger(__name__)
-
-# ──────────────────────────────────────────────────────────────
-# Publication style — Nature/Cell conventions
-# ──────────────────────────────────────────────────────────────
-STYLE = {
-    "font.family": "sans-serif",
-    "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
-    "font.size": 10,
-    "axes.titlesize": 12,
-    "axes.titleweight": "bold",
-    "axes.labelsize": 11,
-    "xtick.labelsize": 9,
-    "ytick.labelsize": 9,
-    "legend.fontsize": 9,
-    "legend.frameon": True,
-    "legend.edgecolor": "0.8",
-    "axes.linewidth": 0.8,
-    "axes.grid": True,
-    "grid.alpha": 0.25,
-    "grid.linewidth": 0.5,
-    "xtick.major.width": 0.6,
-    "ytick.major.width": 0.6,
-    "lines.linewidth": 1.8,
-    "savefig.dpi": 300,
-    "savefig.bbox": "tight",
-    "savefig.pad_inches": 0.15,
-    "figure.constrained_layout.use": True,
-    "figure.facecolor": "white",
-}
-
-# Colour palette for 69 cell types — deterministic, colourblind-friendly
-def _build_type_palette(n: int = 69) -> np.ndarray:
-    """Generate n distinct colours via HSL spacing."""
-    cmap = matplotlib.colormaps.get_cmap("gist_ncar").resampled(n + 4)
-    colours = cmap(np.linspace(0.02, 0.95, n))
-    rng = np.random.default_rng(42)
-    order = rng.permutation(n)
-    return colours[order]
-
-
-TYPE_PALETTE = _build_type_palette(69)
 
 
 # ──────────────────────────────────────────────────────────────
@@ -146,7 +120,35 @@ class ResultsVisualizer:
         else:
             self.type_names = {}
 
-        matplotlib.rcParams.update(STYLE)
+        apply_style()
+
+    # ──────────────────────────────────────────────────────────
+    # Style helper — applied automatically to every figure before save
+    # ──────────────────────────────────────────────────────────
+    @staticmethod
+    def _polish_figure(fig: plt.Figure) -> None:
+        """Walk all axes and apply ``style_axes()`` for consistent spines/grids.
+
+        Automatically detects axis kind from projection (polar, etc.) and the
+        presence of images (heatmaps) to choose the right style.
+        """
+        for ax in fig.get_axes():
+            # Detect kind
+            if hasattr(ax, "name") and ax.name == "polar":
+                style_axes(ax, kind="polar")
+            elif ax.images:  # has imshow/heatmap content
+                style_axes(ax, kind="heatmap")
+            else:
+                style_axes(ax, kind="default")
+
+    def _save_panel(self, fig: plt.Figure, basename: str) -> Path:
+        """Polish figure, save PNG + PDF, return PNG path."""
+        self._polish_figure(fig)
+        path = self.output / f"{basename}.png"
+        fig.savefig(path, dpi=self.dpi)
+        fig.savefig(path.with_suffix(".pdf"), dpi=self.dpi)
+        logger.info(f"Saved {basename} → {path}")
+        return path
 
     # ──────────────────────────────────────────────────────────
     # PANEL A: CLOP Training Dynamics
@@ -232,10 +234,7 @@ class ResultsVisualizer:
         ax.legend(loc="lower right", fontsize=8)
 
         if save:
-            path = self.output / "panel_a_clop_training.png"
-            fig.savefig(path, dpi=self.dpi)
-            fig.savefig(path.with_suffix(".pdf"), dpi=self.dpi)
-            logger.info(f"Saved Panel A → {path}")
+            self._save_panel(fig, "panel_a_clop_training")
         return fig
 
     # ──────────────────────────────────────────────────────────
@@ -390,10 +389,7 @@ class ResultsVisualizer:
         ax.set_ylabel("UMAP 2")
 
         if save:
-            path = self.output / "panel_b_clop_embedding_umap.png"
-            fig.savefig(path, dpi=self.dpi)
-            fig.savefig(path.with_suffix(".pdf"), dpi=self.dpi)
-            logger.info(f"Saved Panel B → {path}")
+            self._save_panel(fig, "panel_b_clop_embedding_umap")
         return fig
 
     # ──────────────────────────────────────────────────────────
@@ -457,10 +453,7 @@ class ResultsVisualizer:
         ax.ticklabel_format(axis="y", style="scientific", scilimits=(-4, -4))
 
         if save:
-            path = self.output / "panel_c_dit_training.png"
-            fig.savefig(path, dpi=self.dpi)
-            fig.savefig(path.with_suffix(".pdf"), dpi=self.dpi)
-            logger.info(f"Saved Panel C → {path}")
+            self._save_panel(fig, "panel_c_dit_training")
         return fig
 
     # ──────────────────────────────────────────────────────────
@@ -470,51 +463,45 @@ class ResultsVisualizer:
                              expr_metrics_path: str = "results/expression_metrics.json",
                              div_metrics_path: str = "results/diversity_diagnostics.json",
                              save: bool = True) -> Optional[plt.Figure]:
-        """Publication-quality grouped metrics summary table.
+        """Visual metrics dashboard — replaces table with bar charts + radar.
 
-        Two-column layout: left = training/generation, right = diversity/expression/config.
-        Key metrics highlighted. Directional arrows on metric names.
+        D1: Training convergence (horizontal bars for final key metrics)
+        D2: Generation quality radar (FD, coverage, diversity, centroid cos, expr r)
+        D3: Diversity gauges (diversity ratio, collapsed types, cond gain)
+        D4: Configuration + expression summary (compact annotated bars)
         """
-        # ── Collect metrics by category ──
-        cat_training: list = []   # CLOP + DiT
-        cat_gen: list = []        # Generation quality
-        cat_div: list = []        # Diversity
-        cat_expr: list = []       # Expression fidelity
-        cat_cfg: list = []        # Configuration
+        import matplotlib.colors as mcolors
+        from matplotlib.patches import FancyBboxPatch
 
+        # ── Collect all data ──
+        train_metrics = {}
         if self.clop_hist:
             h = self.clop_hist
-            cat_training.extend([
-                ("CLOP Val Loss ↓", f'{h["val_loss"][-1]:.4f}', True),
-                ("CLOP Proto Accuracy ↑", f'{h["val_proto_acc"][-1]*100:.1f}%', True),
-                ("CLOP Top-5 Acc ↑", f'{h["val_proto_top5"][-1]*100:.1f}%', False),
-                ("Text↔Cell Alignment ↑", f'{h["val_text_cell_align"][-1]:.4f}', False),
-                ("Inter-type Separation ↑", f'{h["val_inter_sep"][-1]:.4f}', False),
-            ])
-
+            train_metrics["CLOP Val Loss"] = h["val_loss"][-1]
+            train_metrics["Proto Accuracy"] = h["val_proto_acc"][-1]
+            train_metrics["Top-5 Accuracy"] = h["val_proto_top5"][-1]
+            train_metrics["Text-Cell Align"] = h["val_text_cell_align"][-1]
         if self.dit_hist:
             h = self.dit_hist
-            cat_training.extend([
-                ("DiT Val Loss ↓", f'{h["val_loss"][-1]:.4f}', True),
-                ("DiT Val Cosine ↑", f'{h["val_cosine_sim"][-1]:.4f}', True),
-            ])
+            train_metrics["DiT Val Loss"] = h["val_loss"][-1]
+            train_metrics["DiT Val Cosine"] = h["val_cosine_sim"][-1]
 
+        gen_metrics = {}
         gen_path = Path(gen_metrics_path)
         if gen_path.exists():
             with open(gen_path) as f:
                 gen_data = json.load(f)
             overall = gen_data.get("overall", {})
             summary = gen_data.get("summary", {})
-            cat_gen = [
-                ("Fréchet Distance ↓", f'{overall.get("frechet_distance", 0):.4f}', True),
-                ("MMD-RBF ↓", f'{overall.get("mmd_rbf", 0):.6f}', False),
-                ("Coverage ↑", f'{overall.get("coverage", 0):.4f}', False),
-                ("Density", f'{overall.get("density", 0):.2f}', False),
-                ("Diversity Index ↑", f'{overall.get("diversity_index", 0):.4f}', False),
-                ("Mean Centroid Cosine ↑", f'{summary.get("mean_centroid_cosine", 0):.4f}', True),
-                ("Min Centroid Cosine", f'{summary.get("min_centroid_cosine", 0):.4f}', False),
-            ]
+            gen_metrics = {
+                "FD": overall.get("frechet_distance", 0),
+                "MMD": overall.get("mmd_rbf", 0),
+                "Coverage": overall.get("coverage", 0),
+                "Density": overall.get("density", 0),
+                "Centroid Cos": summary.get("mean_centroid_cosine", 0),
+            }
 
+        div_metrics = {}
         div_path = Path(div_metrics_path)
         if div_path.exists():
             with open(div_path) as f:
@@ -522,160 +509,212 @@ class ResultsVisualizer:
             t1 = div_data.get("test1_intratype_diversity", {}).get("summary", {})
             t2 = div_data.get("test2_memorization", {})
             t5 = div_data.get("test5_condition_sensitivity", {}).get("summary", {})
-            t6 = div_data.get("test6_expression_diversity", {}).get("summary", {})
-            cat_div = [
-                ("Diversity Ratio ↑ (gen/real)", f'{t1.get("mean_diversity_ratio", 0):.4f}', True),
-                ("Collapsed Types (<0.5)", f'{t1.get("n_collapsed", 0)}/{t1.get("n_collapsed", 0) + t1.get("n_healthy", 0)}', True),
-                ("Memorization (near-copies)", f'{t2.get("n_very_close", 0)}', False),
-                ("NN Distance ↑", f'{t2.get("nn_cosine_distance", {}).get("mean", 0):.4f}', False),
-                ("Cond Sensitivity Gain ↑", f'{t5.get("mean_diversity_gain", 0):.2f}×', True),
-            ]
-            if t6:
-                cat_div.append(
-                    ("Expr Gene-Std Ratio", f'{t6.get("mean_gene_std_ratio", 0):.4f}', False)
-                )
+            div_metrics = {
+                "Diversity Ratio": t1.get("mean_diversity_ratio", 0),
+                "Collapsed": t1.get("n_collapsed", 0),
+                "Total Types": t1.get("n_collapsed", 0) + t1.get("n_healthy", 0),
+                "NN Distance": t2.get("nn_cosine_distance", {}).get("mean", 0),
+                "Near-copies": t2.get("n_very_close", 0),
+                "Cond Gain": t5.get("mean_diversity_gain", 0),
+            }
 
+        expr_metrics = {}
         expr_path = Path(expr_metrics_path)
         if expr_path.exists():
             with open(expr_path) as f:
                 expr_data = json.load(f)
             gene_corr = expr_data.get("gene_correlation", {})
             per_type_sum = expr_data.get("per_type_summary", {})
-            cat_expr = [
-                ("Gene Pearson r ↑", f'{gene_corr.get("pearson_r", 0):.6f}', True),
-                ("Gene Spearman ρ ↑", f'{gene_corr.get("spearman_rho", 0):.6f}', False),
-                ("Genes Compared", f'{gene_corr.get("n_genes_compared", 0)}', False),
-                ("Per-Type Mean r ↑", f'{per_type_sum.get("mean_pearson_r", 0):.6f}', True),
-                ("Per-Type Min r", f'{per_type_sum.get("min_pearson_r", 0):.6f}', False),
-            ]
+            expr_metrics = {
+                "Gene Pearson r": gene_corr.get("pearson_r", 0),
+                "Gene Spearman": gene_corr.get("spearman_rho", 0),
+                "Per-Type r (mean)": per_type_sum.get("mean_pearson_r", 0),
+                "Per-Type r (min)": per_type_sum.get("min_pearson_r", 0),
+                "Genes": gene_corr.get("n_genes_compared", 0),
+            }
 
+        cfg_meta = {}
         gen_meta_path = Path("results/generation_metadata.json")
         if gen_meta_path.exists():
             with open(gen_meta_path) as f:
-                gen_meta = json.load(f)
-            cat_cfg = [
-                ("Condition Mode", gen_meta.get("condition_mode", "?"), False),
-                ("Noise Scale (ε)", f'{gen_meta.get("noise_scale", 0):.3f}', False),
-                ("CFG Scale", f'{gen_meta.get("cfg_scale", 0):.1f}', False),
-                ("Cells / Type", f'{gen_meta.get("num_per_type", 0)}', False),
-                ("Total Generated", f'{gen_meta.get("total_cells", 0):,}', False),
-            ]
+                cfg_meta = json.load(f)
 
-        # ── Build two-column layout ──
-        # Left column: Training + Generation
-        # Right column: Diversity + Expression + Config
-        left_sections = []
-        if cat_training:
-            left_sections.append(("Training", cat_training, "#1976D2"))
-        if cat_gen:
-            left_sections.append(("Generation Quality", cat_gen, "#E65100"))
-
-        right_sections = []
-        if cat_div:
-            right_sections.append(("Diversity", cat_div, "#C62828"))
-        if cat_expr:
-            right_sections.append(("Expression Fidelity", cat_expr, "#6A1B9A"))
-        if cat_cfg:
-            right_sections.append(("Configuration", cat_cfg, "#37474F"))
-
-        if not left_sections and not right_sections:
+        if not train_metrics and not gen_metrics:
             return None
 
-        # ── Render as two side-by-side tables ──
-        fig, (ax_left, ax_right) = plt.subplots(1, 2, figsize=(16, 12))
-        fig.suptitle("CLOP-DiT Pipeline — Metrics Summary",
-                     fontsize=15, fontweight="bold", y=0.98)
+        fig = plt.figure(figsize=(20, 14))
+        gs = fig.add_gridspec(2, 2, hspace=0.35, wspace=0.3)
+        fig.suptitle("CLOP-DiT Pipeline — Metrics Dashboard",
+                     fontsize=16, fontweight="bold", y=0.98)
 
-        def _render_sections(ax, sections):
-            """Render grouped metric sections on one axes."""
-            ax.axis("off")
-            all_rows = []
-            section_row_indices = []  # (start_idx, color) for header rows
-            for title, items, color in sections:
-                header_idx = len(all_rows)
-                all_rows.append([title, "", ""])
-                section_row_indices.append((header_idx, color))
-                for metric_name, value, is_key in items:
-                    all_rows.append(["", metric_name, value])
-
-            col_labels = ["", "Metric", "Value"]
-            tbl = ax.table(
-                cellText=all_rows,
-                colLabels=col_labels,
-                cellLoc="left",
-                loc="upper center",
-                colWidths=[0.01, 0.55, 0.30],
-            )
-            tbl.auto_set_font_size(False)
-            tbl.set_fontsize(10)
-            tbl.scale(1, 1.6)
-
-            # Style column header
-            for j in range(3):
-                cell = tbl[0, j]
-                cell.set_facecolor("#37474F")
-                cell.set_text_props(color="white", fontweight="bold", fontsize=10)
-                cell.set_height(0.04)
-
-            # Style section headers and data rows
-            for i, row_data in enumerate(all_rows):
-                row_idx = i + 1  # offset by column header
-                is_section_header = any(idx == i for idx, _ in section_row_indices)
-
-                if is_section_header:
-                    # Find the color for this section header
-                    color = next(c for idx, c in section_row_indices if idx == i)
-                    for j in range(3):
-                        cell = tbl[row_idx, j]
-                        cell.set_facecolor(color)
-                        cell.set_text_props(color="white", fontweight="bold", fontsize=11)
-                        cell.set_height(0.035)
-                    # Merge-like: put title text in metric column
-                    tbl[row_idx, 1].get_text().set_text(row_data[0])
-                    tbl[row_idx, 0].get_text().set_text("")
+        # ── D1: Training convergence bars ──
+        ax1 = fig.add_subplot(gs[0, 0])
+        if train_metrics:
+            names = list(train_metrics.keys())
+            vals = list(train_metrics.values())
+            display_vals = []
+            for n, v in zip(names, vals):
+                if "Loss" in n:
+                    display_vals.append(v)
                 else:
-                    # Find which section this row belongs to
-                    sec_color = "#FFFFFF"
-                    for idx, color in section_row_indices:
-                        if i > idx:
-                            sec_color = color
-                    # Light tint of section color
-                    import matplotlib.colors as mcolors
-                    base_rgb = mcolors.to_rgb(sec_color)
-                    tint = tuple(c * 0.08 + 0.92 for c in base_rgb)
-                    alt_tint = tuple(c * 0.14 + 0.86 for c in base_rgb)
-                    bg = tint if (i % 2 == 0) else alt_tint
+                    display_vals.append(v * 100 if v <= 1.0 else v)
+            colors_d1 = []
+            for n, v in zip(names, vals):
+                if "Loss" in n:
+                    colors_d1.append("#F44336" if v > 1.0 else "#FF9800" if v > 0.1 else "#4CAF50")
+                else:
+                    colors_d1.append("#4CAF50" if v > 0.8 else "#FF9800" if v > 0.5 else "#F44336")
 
-                    # Find if this is a key metric
-                    # Reconstruct: find the section and item index
-                    is_key = False
-                    row_counter = 0
-                    for _, items, _ in sections:
-                        row_counter += 1  # header
-                        for _, _, ik in items:
-                            if row_counter == i:
-                                is_key = ik
-                                break
-                            row_counter += 1
-                        if row_counter > i:
-                            break
+            y_pos = np.arange(len(names))
+            bars = ax1.barh(y_pos, display_vals, color=colors_d1, height=0.6,
+                            edgecolor="white", linewidth=0.8)
+            ax1.set_yticks(y_pos)
+            ax1.set_yticklabels(names, fontsize=10)
+            for i, (bar, dv, n) in enumerate(zip(bars, display_vals, names)):
+                unit = "" if "Loss" in n else "%"
+                fmt = f"{dv:.4f}" if "Loss" in n else f"{dv:.1f}{unit}"
+                ax1.text(bar.get_width() + 0.5, bar.get_y() + bar.get_height() / 2,
+                         fmt, va="center", fontsize=9, fontweight="bold")
+            ax1.set_xlabel("Value (accuracy shown as %)")
+            ax1.set_title("D1: Training Convergence", fontsize=13, fontweight="bold")
+            ax1.invert_yaxis()
 
-                    for j in range(3):
-                        cell = tbl[row_idx, j]
-                        cell.set_facecolor(bg)
-                        if is_key:
-                            cell.set_text_props(fontweight="bold")
+        # ── D2: Generation quality radar ──
+        ax2_placeholder = fig.add_subplot(gs[0, 1])
+        if gen_metrics or expr_metrics:
+            ax2_placeholder.remove()
+            ax2 = fig.add_subplot(gs[0, 1], polar=True)
 
-            return tbl
+            radar_labels = []
+            radar_vals = []
+            if gen_metrics:
+                fd_score = max(0, 1.0 - gen_metrics.get("FD", 1.0))
+                radar_labels.append("FD (inverted)")
+                radar_vals.append(fd_score)
+                radar_labels.append("Coverage")
+                radar_vals.append(gen_metrics.get("Coverage", 0))
+                radar_labels.append("Centroid Cos")
+                radar_vals.append(gen_metrics.get("Centroid Cos", 0))
+            if div_metrics:
+                radar_labels.append("Diversity")
+                radar_vals.append(div_metrics.get("Diversity Ratio", 0))
+            if expr_metrics:
+                radar_labels.append("Gene Corr")
+                radar_vals.append(expr_metrics.get("Gene Pearson r", 0))
 
-        _render_sections(ax_left, left_sections)
-        _render_sections(ax_right, right_sections)
+            if radar_vals:
+                angles = np.linspace(0, 2 * np.pi, len(radar_vals), endpoint=False).tolist()
+                radar_vals_plot = radar_vals + radar_vals[:1]
+                angles_plot = angles + angles[:1]
+
+                ax2.set_theta_offset(np.pi / 2)
+                ax2.set_theta_direction(-1)
+                ax2.set_thetagrids(np.degrees(angles), radar_labels, fontsize=9)
+                ax2.plot(angles_plot, radar_vals_plot, "o-", linewidth=2.5,
+                         color="#1976D2", markersize=8, zorder=5)
+                ax2.fill(angles_plot, radar_vals_plot, alpha=0.15, color="#1976D2")
+                ax2.set_ylim(0, 1.05)
+                ax2.set_title("D2: Generation Quality Profile", pad=25,
+                              fontsize=13, fontweight="bold")
+                for angle, val, label in zip(angles, radar_vals, radar_labels):
+                    ax2.annotate(f"{val:.3f}", xy=(angle, val),
+                                 xytext=(5, 5), textcoords="offset points",
+                                 fontsize=8, fontweight="bold", color="#1565C0")
+        else:
+            ax2_placeholder.text(0.5, 0.5, "No generation data", ha="center",
+                                 va="center", transform=ax2_placeholder.transAxes)
+            ax2_placeholder.set_title("D2: Generation Quality Profile")
+
+        # ── D3: Diversity gauges ──
+        ax3 = fig.add_subplot(gs[1, 0])
+        if div_metrics:
+            gauge_items = [
+                ("Diversity\nRatio", div_metrics.get("Diversity Ratio", 0), 1.0,
+                 "#4CAF50" if div_metrics.get("Diversity Ratio", 0) >= 0.8 else
+                 "#FF9800" if div_metrics.get("Diversity Ratio", 0) >= 0.5 else "#F44336"),
+                ("Cond\nGain", div_metrics.get("Cond Gain", 0), 3.0,
+                 "#4CAF50" if div_metrics.get("Cond Gain", 0) >= 1.5 else
+                 "#FF9800" if div_metrics.get("Cond Gain", 0) >= 1.0 else "#F44336"),
+                ("NN\nDistance", div_metrics.get("NN Distance", 0), 1.0,
+                 "#4CAF50" if div_metrics.get("NN Distance", 0) >= 0.3 else
+                 "#FF9800" if div_metrics.get("NN Distance", 0) >= 0.1 else "#F44336"),
+            ]
+            x_pos = np.arange(len(gauge_items))
+            for i, (label, val, max_val, color) in enumerate(gauge_items):
+                bg_bar = ax3.barh(i, max_val, height=0.5, color="#E0E0E0",
+                                  edgecolor="none", zorder=1)
+                fg_bar = ax3.barh(i, min(val, max_val), height=0.5, color=color,
+                                  edgecolor="white", linewidth=0.8, zorder=2)
+                ax3.text(min(val, max_val) + 0.02, i, f"{val:.3f}",
+                         va="center", fontsize=11, fontweight="bold", zorder=3)
+
+            ax3.set_yticks(range(len(gauge_items)))
+            ax3.set_yticklabels([g[0] for g in gauge_items], fontsize=10)
+            ax3.invert_yaxis()
+
+            collapsed = div_metrics.get("Collapsed", 0)
+            total = div_metrics.get("Total Types", 69)
+            copies = div_metrics.get("Near-copies", 0)
+            ax3.text(0.95, 0.05,
+                     f"Collapsed: {collapsed}/{total}  |  Near-copies: {copies}",
+                     transform=ax3.transAxes, ha="right", va="bottom",
+                     fontsize=10, fontweight="bold",
+                     bbox=dict(boxstyle="round,pad=0.4", fc="white", ec="#999", alpha=0.9))
+            ax3.set_title("D3: Diversity Health", fontsize=13, fontweight="bold")
+            ax3.set_xlabel("Score")
+        else:
+            ax3.text(0.5, 0.5, "No diversity data", ha="center", va="center",
+                     transform=ax3.transAxes)
+            ax3.set_title("D3: Diversity Health")
+
+        # ── D4: Expression fidelity + config ──
+        ax4 = fig.add_subplot(gs[1, 1])
+        if expr_metrics:
+            expr_items = [
+                ("Gene Pearson r", expr_metrics.get("Gene Pearson r", 0)),
+                ("Gene Spearman", expr_metrics.get("Gene Spearman", 0)),
+                ("Per-Type r (mean)", expr_metrics.get("Per-Type r (mean)", 0)),
+                ("Per-Type r (min)", expr_metrics.get("Per-Type r (min)", 0)),
+            ]
+            y_pos = np.arange(len(expr_items))
+            vals = [v for _, v in expr_items]
+            colors_d4 = ["#4CAF50" if v > 0.999 else "#FF9800" if v > 0.99 else "#F44336"
+                         for v in vals]
+            bars = ax4.barh(y_pos, vals, color=colors_d4, height=0.5,
+                            edgecolor="white", linewidth=0.8)
+            ax4.set_yticks(y_pos)
+            ax4.set_yticklabels([n for n, _ in expr_items], fontsize=10)
+            for i, (bar, v) in enumerate(zip(bars, vals)):
+                ax4.text(bar.get_width() + 0.0001, bar.get_y() + bar.get_height() / 2,
+                         f"{v:.6f}", va="center", fontsize=9, fontweight="bold")
+            ax4.invert_yaxis()
+            min_val = min(vals) - 0.001
+            ax4.set_xlim(min_val, 1.0001)
+            ax4.set_title("D4: Expression Fidelity", fontsize=13, fontweight="bold")
+
+            cfg_text_parts = []
+            if cfg_meta:
+                cfg_text_parts.append(f"Mode: {cfg_meta.get('condition_mode', '?')}")
+                cfg_text_parts.append(f"CFG: {cfg_meta.get('cfg_scale', '?')}")
+                eps = cfg_meta.get("noise_scale", 0)
+                if eps:
+                    cfg_text_parts.append(f"ε: {eps}")
+                cfg_text_parts.append(f"Cells: {cfg_meta.get('total_cells', '?')}")
+            n_genes = expr_metrics.get("Genes", 0)
+            if n_genes:
+                cfg_text_parts.append(f"Genes: {n_genes}")
+            if cfg_text_parts:
+                ax4.text(0.95, 0.05, "  |  ".join(cfg_text_parts),
+                         transform=ax4.transAxes, ha="right", va="bottom",
+                         fontsize=8, color="#555",
+                         bbox=dict(boxstyle="round,pad=0.3", fc="#F5F5F5", ec="#CCC"))
+        else:
+            ax4.text(0.5, 0.5, "No expression data", ha="center", va="center",
+                     transform=ax4.transAxes)
+            ax4.set_title("D4: Expression Fidelity")
 
         if save:
-            path = self.output / "panel_d_metrics_summary.png"
-            fig.savefig(path, dpi=self.dpi)
-            fig.savefig(path.with_suffix(".pdf"), dpi=self.dpi)
-            logger.info(f"Saved Panel D → {path}")
+            self._save_panel(fig, "panel_d_metrics_summary")
         return fig
 
     # ──────────────────────────────────────────────────────────
@@ -813,21 +852,22 @@ class ResultsVisualizer:
         ax.set_ylabel("UMAP 2")
 
         if save:
-            path = self.output / "panel_e_real_vs_generated.png"
-            fig.savefig(path, dpi=self.dpi)
-            fig.savefig(path.with_suffix(".pdf"), dpi=self.dpi)
-            logger.info(f"Saved Panel E → {path}")
+            self._save_panel(fig, "panel_e_real_vs_generated")
         return fig
 
     # ──────────────────────────────────────────────────────────
     # PANEL F: Text–Cell Cosine Similarity Heatmap (69×69)
     # ──────────────────────────────────────────────────────────
     def plot_text_cell_heatmap(self, save: bool = True) -> Optional[plt.Figure]:
-        """69×69 cosine similarity matrix between text prototypes and cell centroids.
+        """Enhanced 69x69 text-cell alignment heatmap with rich annotations.
 
-        Proves CLOP alignment: the diagonal should be bright (text matches its cells).
-        Off-diagonal shows inter-type confusion patterns.
+        F1: Clustered heatmap with diagonal highlight and off-diagonal structure
+        F2: Sorted per-type alignment bars with threshold bands
+        F3: Distribution of diagonal vs off-diagonal similarities
         """
+        import matplotlib.colors as mcolors
+        from matplotlib.patches import Rectangle
+
         proj_text_path = self.cache / "projected_text.npy"
         proj_cell_path = self.cache / "projected_cells.npy"
         gid_path = self.cache / "text_group_ids_dedup.npy"
@@ -844,69 +884,144 @@ class ResultsVisualizer:
         unique_types = np.sort(np.unique(group_ids))
         n_types = len(unique_types)
 
-        # Compute per-type centroids
         text_centroids = np.zeros((n_types, proj_text.shape[1]), dtype=np.float32)
         cell_centroids = np.zeros((n_types, proj_cells.shape[1]), dtype=np.float32)
+        type_counts = np.zeros(n_types, dtype=int)
         for i, t in enumerate(unique_types):
             mask = group_ids == t
+            type_counts[i] = mask.sum()
             tc = proj_text[mask].mean(axis=0)
             text_centroids[i] = tc / (np.linalg.norm(tc) + 1e-8)
             cc = proj_cells[mask].mean(axis=0)
             cell_centroids[i] = cc / (np.linalg.norm(cc) + 1e-8)
 
-        # Cosine similarity: text_centroids @ cell_centroids.T → (69, 69)
         sim_matrix = text_centroids @ cell_centroids.T
 
-        # Type labels (short)
-        labels = [self.type_names.get(int(t), f"T{t}")[:20] for t in unique_types]
-
-        # Diagonal values
+        labels = [self.type_names.get(int(t), f"T{t}")[:25] for t in unique_types]
         diag = np.diag(sim_matrix)
         mean_diag = diag.mean()
         off_diag = sim_matrix[~np.eye(n_types, dtype=bool)]
         mean_off = off_diag.mean()
+        std_off = off_diag.std()
 
-        fig, axes = plt.subplots(1, 2, figsize=(18, 10),
-                                 gridspec_kw={"width_ratios": [1.3, 0.7]})
+        # Reorder by diagonal similarity for visual clarity
+        sort_order = np.argsort(-diag)
+        sim_sorted = sim_matrix[sort_order][:, sort_order]
+        labels_sorted = [labels[i] for i in sort_order]
+        diag_sorted = diag[sort_order]
+        counts_sorted = type_counts[sort_order]
+
+        fig = plt.figure(figsize=(24, 12))
+        gs = fig.add_gridspec(1, 3, width_ratios=[1.6, 0.7, 0.5], wspace=0.25)
         fig.suptitle(
-            f"Text–Cell Alignment Heatmap (CLOP Space) — "
-            f"diag={mean_diag:.3f}, off-diag={mean_off:.3f}",
+            f"Text–Cell Alignment (CLOP Space)  —  "
+            f"Diagonal: {mean_diag:.3f} ± {diag.std():.3f}  |  "
+            f"Off-diag: {mean_off:.3f} ± {std_off:.3f}  |  "
+            f"Separation gap: {mean_diag - mean_off:.3f}",
             fontsize=14, fontweight="bold",
         )
 
-        # F1: Full heatmap
-        ax = axes[0]
-        im = ax.imshow(sim_matrix, cmap="RdYlBu_r", vmin=-0.1, vmax=1.0, aspect="auto")
-        ax.set_xticks(range(n_types))
-        ax.set_yticks(range(n_types))
-        ax.set_xticklabels(labels, rotation=90, fontsize=5, ha="center")
-        ax.set_yticklabels(labels, fontsize=5)
-        ax.set_xlabel("Cell Type (cell centroids)")
-        ax.set_ylabel("Cell Type (text prototypes)")
-        ax.set_title("F1: Cosine Similarity Matrix")
-        fig.colorbar(im, ax=ax, shrink=0.6, label="Cosine Similarity")
+        # ── F1: Clustered heatmap with annotations ──
+        ax1 = fig.add_subplot(gs[0])
+        cmap = mcolors.LinearSegmentedColormap.from_list(
+            "custom_heat",
+            ["#1a237e", "#283593", "#42a5f5", "#e3f2fd", "#fff9c4",
+             "#ffcc80", "#ff7043", "#d32f2f", "#b71c1c"],
+            N=256,
+        )
+        im = ax1.imshow(sim_sorted, cmap=cmap, vmin=-0.1, vmax=1.0, aspect="auto",
+                        interpolation="nearest")
+        ax1.set_xticks(range(n_types))
+        ax1.set_yticks(range(n_types))
+        ax1.set_xticklabels(labels_sorted, rotation=90, fontsize=4.5, ha="center")
+        ax1.set_yticklabels(labels_sorted, fontsize=4.5)
+        ax1.set_xlabel("Cell Type (cell centroids)", fontsize=10)
+        ax1.set_ylabel("Cell Type (text prototypes)", fontsize=10)
+        ax1.set_title("F1: Cosine Similarity (sorted by alignment strength)", fontsize=11)
 
-        # F2: Diagonal values bar chart (sorted)
-        ax = axes[1]
-        sorted_idx = np.argsort(diag)
-        sorted_diag = diag[sorted_idx]
-        sorted_labels = [labels[i] for i in sorted_idx]
-        colors = ["#4CAF50" if v > 0.8 else "#FF9800" if v > 0.5 else "#F44336" for v in sorted_diag]
-        ax.barh(range(n_types), sorted_diag, color=colors, height=0.8)
-        ax.set_yticks(range(n_types))
-        ax.set_yticklabels(sorted_labels, fontsize=5)
-        ax.set_xlabel("Diagonal Cosine Similarity")
-        ax.set_title("F2: Per-Type Text–Cell Alignment")
-        ax.axvline(x=mean_diag, color="red", linestyle="--", alpha=0.5,
-                    label=f"mean={mean_diag:.3f}")
-        ax.set_xlim(0, 1.05)
-        ax.legend(fontsize=8)
+        # Highlight diagonal
+        for i in range(n_types):
+            rect = Rectangle((i - 0.5, i - 0.5), 1, 1, linewidth=1.5,
+                              edgecolor="white", facecolor="none", zorder=3)
+            ax1.add_patch(rect)
+
+        # Annotate top-5 off-diagonal confusions
+        off_diag_matrix = sim_sorted.copy()
+        np.fill_diagonal(off_diag_matrix, -1)
+        for _ in range(min(5, n_types)):
+            idx = np.unravel_index(off_diag_matrix.argmax(), off_diag_matrix.shape)
+            val = off_diag_matrix[idx]
+            if val < 0.3:
+                break
+            ax1.plot(idx[1], idx[0], "x", color="lime", markersize=6,
+                     markeredgewidth=1.5, zorder=4)
+            off_diag_matrix[idx] = -1
+
+        cbar = fig.colorbar(im, ax=ax1, shrink=0.7, pad=0.02)
+        cbar.set_label("Cosine Similarity", fontsize=9)
+        cbar.ax.axhline(y=mean_diag, color="white", linewidth=2, linestyle="--")
+        cbar.ax.axhline(y=mean_off, color="black", linewidth=1.5, linestyle=":")
+
+        # ── F2: Per-type alignment bars with cell count annotations ──
+        ax2 = fig.add_subplot(gs[1])
+        sorted_idx_asc = np.argsort(diag)
+        d_asc = diag[sorted_idx_asc]
+        labels_asc = [labels[i] for i in sorted_idx_asc]
+        counts_asc = type_counts[sorted_idx_asc]
+
+        color_map = []
+        for v in d_asc:
+            if v >= 0.9:
+                color_map.append("#2E7D32")
+            elif v >= 0.7:
+                color_map.append("#4CAF50")
+            elif v >= 0.5:
+                color_map.append("#FF9800")
+            else:
+                color_map.append("#D32F2F")
+        bars = ax2.barh(range(n_types), d_asc, color=color_map, height=0.8,
+                        edgecolor="white", linewidth=0.3)
+        ax2.set_yticks(range(n_types))
+        ax2.set_yticklabels(labels_asc, fontsize=4.5)
+        ax2.set_xlabel("Diagonal Cosine Similarity", fontsize=9)
+        ax2.set_title("F2: Per-Type Alignment", fontsize=11)
+
+        ax2.axvline(x=mean_diag, color="#D32F2F", linestyle="--", alpha=0.7, linewidth=1.5)
+        ax2.axvspan(0.7, 1.05, alpha=0.05, color="green")
+        ax2.axvspan(0.5, 0.7, alpha=0.05, color="orange")
+        ax2.axvspan(0.0, 0.5, alpha=0.05, color="red")
+        ax2.set_xlim(0, 1.05)
+
+        # Cell count labels on bars
+        for i, (bar, cnt) in enumerate(zip(bars, counts_asc)):
+            ax2.text(0.02, bar.get_y() + bar.get_height() / 2,
+                     f"n={cnt}", va="center", fontsize=3.5, color="white",
+                     fontweight="bold", zorder=5)
+
+        n_good = sum(1 for v in diag if v >= 0.7)
+        n_ok = sum(1 for v in diag if 0.5 <= v < 0.7)
+        n_weak = sum(1 for v in diag if v < 0.5)
+        ax2.text(0.95, 0.95,
+                 f"Strong (>0.7): {n_good}\nModerate: {n_ok}\nWeak (<0.5): {n_weak}",
+                 transform=ax2.transAxes, ha="right", va="top", fontsize=8,
+                 bbox=dict(boxstyle="round,pad=0.4", fc="white", ec="#999", alpha=0.9))
+
+        # ── F3: Distribution comparison ──
+        ax3 = fig.add_subplot(gs[2])
+        ax3.hist(diag, bins=15, alpha=0.7, color="#1976D2", edgecolor="white",
+                 label=f"Diagonal (μ={mean_diag:.3f})", density=True, orientation="horizontal")
+        ax3.hist(off_diag, bins=30, alpha=0.5, color="#FF7043", edgecolor="white",
+                 label=f"Off-diag (μ={mean_off:.3f})", density=True, orientation="horizontal")
+        ax3.axhline(y=mean_diag, color="#1565C0", linestyle="--", linewidth=1.5)
+        ax3.axhline(y=mean_off, color="#E64A19", linestyle=":", linewidth=1.5)
+        ax3.set_ylabel("Cosine Similarity", fontsize=9)
+        ax3.set_xlabel("Density", fontsize=9)
+        ax3.set_title("F3: Distribution", fontsize=11)
+        ax3.legend(fontsize=7, loc="lower right")
+        ax3.set_ylim(-0.15, 1.05)
 
         if save:
-            path = self.output / "panel_f_text_cell_heatmap.png"
-            fig.savefig(path, dpi=self.dpi)
-            fig.savefig(path.with_suffix(".pdf"), dpi=self.dpi)
-            logger.info(f"Saved Panel F → {path}")
+            self._save_panel(fig, "panel_f_text_cell_heatmap")
         return fig
 
     # ──────────────────────────────────────────────────────────
@@ -999,10 +1114,7 @@ class ResultsVisualizer:
         ax.legend(fontsize=8)
 
         if save:
-            path = self.output / "panel_g_per_type_generation.png"
-            fig.savefig(path, dpi=self.dpi)
-            fig.savefig(path.with_suffix(".pdf"), dpi=self.dpi)
-            logger.info(f"Saved Panel G → {path}")
+            self._save_panel(fig, "panel_g_per_type_generation")
         return fig
 
     # ──────────────────────────────────────────────────────────
@@ -1018,11 +1130,12 @@ class ResultsVisualizer:
         metrics_path: str = "results/expression_metrics.json",
         save: bool = True,
     ) -> Optional[plt.Figure]:
-        """Gene expression fidelity: per-gene scatter, per-type correlation, marker genes.
+        """Enhanced gene expression fidelity with density-aware scatter and richer bars.
 
-        H1: Scatter of per-gene mean expression (real vs generated)
-        H2: Per-type expression Pearson r (bar chart, all types)
-        H3: Marker-gene expression comparison (selected categories)
+        H1: Density scatter of per-gene mean expression with residual coloring
+        H2: Per-type Pearson r lollipop chart with tier shading
+        H3: Marker gene grouped bars with error bars and fold-change annotation
+        H4: Per-gene residual distribution (gen - real)
         """
         paths = [real_expr_path, gen_expr_path, metrics_path, gene_names_path]
         if not all(Path(p).exists() for p in paths):
@@ -1038,76 +1151,92 @@ class ResultsVisualizer:
 
         real_means = real.mean(axis=0)
         gen_means = gen.mean(axis=0)
+        residuals = gen_means - real_means
         pearson_r = metrics["gene_correlation"]["pearson_r"]
         spearman_rho = metrics["gene_correlation"]["spearman_rho"]
 
-        fig, axes = plt.subplots(1, 3, figsize=(20, 7))
+        fig = plt.figure(figsize=(24, 12))
+        gs = fig.add_gridspec(2, 2, hspace=0.35, wspace=0.3)
         fig.suptitle(
-            f"Gene Expression Recovery — Pearson r={pearson_r:.6f}, "
-            f"Spearman ρ={spearman_rho:.6f}",
+            f"Gene Expression Recovery — Pearson r = {pearson_r:.6f}  |  "
+            f"Spearman ρ = {spearman_rho:.6f}  |  "
+            f"n = {len(gene_names)} genes",
             fontsize=14, fontweight="bold",
         )
 
-        # ── H1: Per-gene mean expression scatter ──
-        ax = axes[0]
-        sc = ax.scatter(real_means, gen_means, c=real_means, cmap="viridis",
-                        s=8, alpha=0.6, edgecolors="none")
+        # ── H1: Density scatter with residual coloring ──
+        ax1 = fig.add_subplot(gs[0, 0])
+        abs_res = np.abs(residuals)
+        sc = ax1.scatter(real_means, gen_means, c=abs_res, cmap="magma_r",
+                         s=12, alpha=0.7, edgecolors="none",
+                         vmin=0, vmax=np.percentile(abs_res, 95))
         lo = min(real_means.min(), gen_means.min()) - 0.2
         hi = max(real_means.max(), gen_means.max()) + 0.2
-        ax.plot([lo, hi], [lo, hi], "r--", lw=1, alpha=0.7, label="y = x")
-        ax.set_xlabel("Real Mean Expression")
-        ax.set_ylabel("Generated Mean Expression")
-        ax.set_title(f"H1: Per-Gene Mean Expression (n={len(gene_names)})")
-        ax.legend(fontsize=8)
-        plt.colorbar(sc, ax=ax, label="Expression Level", shrink=0.8)
+        ax1.plot([lo, hi], [lo, hi], color="#E53935", linestyle="--", lw=1.5,
+                 alpha=0.7, label="y = x", zorder=1)
+        ax1.fill_between([lo, hi], [lo - 0.1, hi - 0.1], [lo + 0.1, hi + 0.1],
+                         alpha=0.06, color="#4CAF50", zorder=0)
+        ax1.set_xlabel("Real Mean Expression", fontsize=10)
+        ax1.set_ylabel("Generated Mean Expression", fontsize=10)
+        ax1.set_title("H1: Per-Gene Correlation (color = |residual|)", fontsize=11)
+        ax1.legend(fontsize=8)
+        cbar = plt.colorbar(sc, ax=ax1, shrink=0.8, pad=0.02)
+        cbar.set_label("|Gen − Real|", fontsize=8)
 
-        # Annotate a few genes with highest real expression
-        top_idx = np.argsort(real_means)[-5:]
-        for i in top_idx:
+        # Annotate outlier genes (top residuals)
+        outlier_idx = np.argsort(abs_res)[-8:]
+        for i in outlier_idx:
             if i < len(gene_names):
-                ax.annotate(gene_names[i], (real_means[i], gen_means[i]),
-                            fontsize=6, xytext=(5, 5), textcoords="offset points",
-                            arrowprops=dict(arrowstyle="-", lw=0.5))
+                ax1.annotate(gene_names[i], (real_means[i], gen_means[i]),
+                             fontsize=5.5, xytext=(5, 5), textcoords="offset points",
+                             arrowprops=dict(arrowstyle="->", lw=0.6, color="#555"),
+                             fontweight="bold", color="#333")
 
-        # ── H2: Per-type expression Pearson r ──
-        ax = axes[1]
+        # ── H2: Per-type Pearson r lollipop chart ──
+        ax2 = fig.add_subplot(gs[0, 1])
         per_type = metrics.get("per_type_expression_fidelity", {})
         if per_type:
             type_names_sorted = sorted(per_type.keys(),
                                        key=lambda k: per_type[k]["pearson_r"])
             type_rs = [per_type[n]["pearson_r"] for n in type_names_sorted]
-            short_names = [n[:28] for n in type_names_sorted]
+            short_names = [n[:30] for n in type_names_sorted]
 
-            colors = ["#4CAF50" if r > 0.9999 else "#FF9800" if r > 0.999 else "#F44336"
-                       for r in type_rs]
-            ax.barh(range(len(type_rs)), type_rs, color=colors, height=0.8)
-            ax.set_yticks(range(len(type_rs)))
-            ax.set_yticklabels(short_names, fontsize=4.5)
-            ax.set_xlabel("Pearson r (Gene Expression)")
             mean_r = metrics.get("per_type_summary", {}).get("mean_pearson_r", 0)
-            ax.axvline(x=mean_r, color="red", linestyle="--", alpha=0.5,
-                       label=f"mean r={mean_r:.6f}")
-            ax.legend(fontsize=7)
-
-            # Smart x-axis: zoom into the interesting range
             min_r = min(type_rs)
-            ax.set_xlim(min_r - 0.0001, 1.00005)
-        else:
-            ax.text(0.5, 0.5, "No per-type data", ha="center", va="center",
-                    transform=ax.transAxes)
-        ax.set_title("H2: Per-Type Expression Pearson r")
+            y_pos = np.arange(len(type_rs))
 
-        # ── H3: Marker gene expression — selected categories ──
-        ax = axes[2]
+            # Threshold shading
+            ax2.axvspan(0.9999, 1.00005, alpha=0.08, color="#4CAF50", label=">0.9999")
+            ax2.axvspan(0.999, 0.9999, alpha=0.08, color="#FF9800", label="0.999–0.9999")
+            ax2.axvspan(min_r - 0.001, 0.999, alpha=0.08, color="#F44336", label="<0.999")
+
+            colors_h2 = ["#2E7D32" if r > 0.9999 else "#FF9800" if r > 0.999 else "#D32F2F"
+                         for r in type_rs]
+            ax2.hlines(y_pos, min_r - 0.0005, type_rs, color="#DDD", linewidth=0.8, zorder=1)
+            ax2.scatter(type_rs, y_pos, c=colors_h2, s=30, zorder=3, edgecolors="white",
+                        linewidths=0.5)
+            ax2.set_yticks(y_pos)
+            ax2.set_yticklabels(short_names, fontsize=4)
+            ax2.axvline(x=mean_r, color="#D32F2F", linestyle="--", alpha=0.6, linewidth=1.5,
+                        label=f"mean={mean_r:.6f}")
+            ax2.set_xlim(min_r - 0.0005, 1.00005)
+            ax2.set_xlabel("Pearson r", fontsize=9)
+            ax2.legend(fontsize=6, loc="lower right")
+        else:
+            ax2.text(0.5, 0.5, "No per-type data", ha="center", va="center",
+                     transform=ax2.transAxes)
+        ax2.set_title("H2: Per-Type Expression Fidelity", fontsize=11)
+
+        # ── H3: Marker gene expression with error bars ──
+        ax3 = fig.add_subplot(gs[1, 0])
         marker_dict = metrics.get("marker_genes", {})
-        # Pick up to 6 categories with genes actually in our set
         selected_cats = []
         selected_genes = []
         for cat, genes_list in marker_dict.items():
             found = [g for g in genes_list if g in gene_names]
             if found:
                 selected_cats.append(cat)
-                selected_genes.append(found[:3])  # up to 3 per category
+                selected_genes.append(found[:3])
             if len(selected_cats) >= 6:
                 break
 
@@ -1120,31 +1249,61 @@ class ResultsVisualizer:
                     cat_labels.append(cat.replace("_", " "))
 
             gidx = [gene_names.index(g) for g in all_marker_genes]
-            r_vals = [real_means[i] for i in gidx]
-            g_vals = [gen_means[i] for i in gidx]
+            r_means = np.array([real[:, i].mean() for i in gidx])
+            g_means = np.array([gen[:, i].mean() for i in gidx])
+            r_stds = np.array([real[:, i].std() for i in gidx])
+            g_stds = np.array([gen[:, i].std() for i in gidx])
 
             x = np.arange(len(all_marker_genes))
             width = 0.35
-            bars_r = ax.bar(x - width / 2, r_vals, width, label="Real", color="#1976D2", alpha=0.8)
-            bars_g = ax.bar(x + width / 2, g_vals, width, label="Generated", color="#FF7043", alpha=0.8)
+            ax3.bar(x - width / 2, r_means, width, yerr=r_stds * 0.5,
+                    label="Real", color="#1976D2", alpha=0.85, edgecolor="white",
+                    capsize=3, error_kw=dict(lw=0.8))
+            ax3.bar(x + width / 2, g_means, width, yerr=g_stds * 0.5,
+                    label="Generated", color="#FF7043", alpha=0.85, edgecolor="white",
+                    capsize=3, error_kw=dict(lw=0.8))
 
-            ax.set_xticks(x)
-            ax.set_xticklabels(
-                [f"{g}\n({c[:8]})" for g, c in zip(all_marker_genes, cat_labels)],
-                fontsize=6, rotation=45, ha="right",
+            # Fold-change annotations
+            for i, (rm, gm) in enumerate(zip(r_means, g_means)):
+                fc = gm / (rm + 1e-8)
+                color = "#2E7D32" if 0.95 <= fc <= 1.05 else "#D32F2F"
+                ax3.text(i, max(rm, gm) + max(r_stds[i], g_stds[i]) * 0.5 + 0.01,
+                         f"{fc:.3f}×", ha="center", fontsize=6, color=color,
+                         fontweight="bold")
+
+            ax3.set_xticks(x)
+            ax3.set_xticklabels(
+                [f"{g}\n({c[:10]})" for g, c in zip(all_marker_genes, cat_labels)],
+                fontsize=7, rotation=35, ha="right",
             )
-            ax.set_ylabel("Mean Expression")
-            ax.legend(fontsize=8)
+            ax3.set_ylabel("Expression (mean ± 0.5×std)", fontsize=9)
+            ax3.legend(fontsize=8, loc="upper right")
         else:
-            ax.text(0.5, 0.5, "No marker genes found", ha="center", va="center",
-                    transform=ax.transAxes)
-        ax.set_title("H3: Marker Gene Expression (Real vs Gen)")
+            ax3.text(0.5, 0.5, "No marker genes found", ha="center", va="center",
+                     transform=ax3.transAxes)
+        ax3.set_title("H3: Marker Gene Expression", fontsize=11)
+
+        # ── H4: Residual distribution ──
+        ax4 = fig.add_subplot(gs[1, 1])
+        ax4.hist(residuals, bins=60, color="#1976D2", alpha=0.7, edgecolor="white",
+                 density=True)
+        ax4.axvline(x=0, color="#E53935", linestyle="--", linewidth=1.5, label="Zero")
+        ax4.axvline(x=residuals.mean(), color="#FF9800", linestyle="-", linewidth=1.5,
+                    label=f"Mean={residuals.mean():.4f}")
+        ax4.set_xlabel("Residual (Gen − Real)", fontsize=10)
+        ax4.set_ylabel("Density", fontsize=10)
+        ax4.set_title("H4: Per-Gene Residual Distribution", fontsize=11)
+        ax4.legend(fontsize=8)
+
+        pct_within_01 = (np.abs(residuals) < 0.1).mean() * 100
+        pct_within_001 = (np.abs(residuals) < 0.01).mean() * 100
+        ax4.text(0.95, 0.95,
+                 f"|Δ|<0.01: {pct_within_001:.0f}%\n|Δ|<0.10: {pct_within_01:.0f}%",
+                 transform=ax4.transAxes, ha="right", va="top", fontsize=9,
+                 bbox=dict(boxstyle="round,pad=0.4", fc="white", ec="#999", alpha=0.9))
 
         if save:
-            path = self.output / "panel_h_expression_correlation.png"
-            fig.savefig(path, dpi=self.dpi)
-            fig.savefig(path.with_suffix(".pdf"), dpi=self.dpi)
-            logger.info(f"Saved Panel H → {path}")
+            self._save_panel(fig, "panel_h_expression_correlation")
         return fig
 
     # ──────────────────────────────────────────────────────────
@@ -1158,11 +1317,12 @@ class ResultsVisualizer:
         metrics_path: str = "results/expression_metrics.json",
         save: bool = True,
     ) -> Optional[plt.Figure]:
-        """Expression decoder analysis: variability, range, and per-cell stats.
+        """Enhanced expression decoder analysis with denser information.
 
-        I1: Per-gene coefficient of variation (CV) — real vs generated
-        I2: Expression range comparison (gene-level distribution)
-        I3: Per-cell expression variance (real vs generated histograms)
+        I1: CV scatter (real vs gen per-gene) with identity line and outlier genes
+        I2: Expression range ribbon with percentile bands (10-90th, 25-75th)
+        I3: Per-cell expression std as overlaid KDE-style histograms
+        I4: Top variable genes heatmap (genes with highest CV difference)
         """
         paths = [real_expr_path, gen_expr_path, gene_names_path, metrics_path]
         if not all(Path(p).exists() for p in paths):
@@ -1176,82 +1336,146 @@ class ResultsVisualizer:
         with open(metrics_path) as f:
             metrics = json.load(f)
 
-        fig, axes = plt.subplots(1, 3, figsize=(20, 7))
-
         overall = metrics.get("overall", {})
+
+        fig = plt.figure(figsize=(24, 12))
+        gs = fig.add_gridspec(2, 2, hspace=0.35, wspace=0.3)
         fig.suptitle(
             f"Expression Decoder Analysis — "
-            f"real mean={overall.get('real_mean', 0):.3f}, "
-            f"gen mean={overall.get('gen_mean', 0):.3f}, "
-            f"real cells={real.shape[0]}, gen cells={gen.shape[0]}",
+            f"{real.shape[0]} real cells, {gen.shape[0]} gen cells, "
+            f"{len(gene_names)} genes  |  "
+            f"μ_real={overall.get('real_mean', real.mean()):.3f}  "
+            f"μ_gen={overall.get('gen_mean', gen.mean()):.3f}",
             fontsize=14, fontweight="bold",
         )
 
-        # ── I1: Per-gene CV distribution (real vs generated) ──
-        ax = axes[0]
+        # ── I1: CV scatter (real vs gen) with gene labels ──
+        ax1 = fig.add_subplot(gs[0, 0])
         real_cv = real.std(axis=0) / (np.abs(real.mean(axis=0)) + 1e-8)
         gen_cv = gen.std(axis=0) / (np.abs(gen.mean(axis=0)) + 1e-8)
+        cv_diff = np.abs(gen_cv - real_cv)
 
-        bins = np.linspace(0, max(real_cv.max(), gen_cv.max()) * 1.05, 50)
-        ax.hist(real_cv, bins=bins, alpha=0.6, color="#1976D2", label=f"Real (mean={real_cv.mean():.5f})",
-                edgecolor="white", linewidth=0.3)
-        ax.hist(gen_cv, bins=bins, alpha=0.6, color="#FF7043", label=f"Gen (mean={gen_cv.mean():.5f})",
-                edgecolor="white", linewidth=0.3)
-        ax.set_xlabel("Coefficient of Variation (CV)")
-        ax.set_ylabel("Number of Genes")
-        ax.set_title("I1: Per-Gene Variability Across Cells")
-        ax.legend(fontsize=8)
-        ax.annotate(
-            f"CV \u2248 {gen_cv.mean():.5f} (gen)\nReal variability well-preserved\nacross cell types",
-            xy=(0.95, 0.95), xycoords="axes fraction", fontsize=7,
-            ha="right", va="top",
-            bbox=dict(boxstyle="round,pad=0.3", facecolor="lightyellow", alpha=0.8),
-        )
+        sc = ax1.scatter(real_cv, gen_cv, c=cv_diff, cmap="YlOrRd", s=10,
+                         alpha=0.7, edgecolors="none",
+                         vmin=0, vmax=np.percentile(cv_diff, 95))
+        lo = 0
+        hi = max(real_cv.max(), gen_cv.max()) * 1.05
+        ax1.plot([lo, hi], [lo, hi], color="#E53935", linestyle="--", lw=1.5,
+                 alpha=0.6, label="y = x")
+        ax1.set_xlabel("Real CV (std/|mean|)", fontsize=10)
+        ax1.set_ylabel("Generated CV", fontsize=10)
+        ax1.set_title("I1: Per-Gene Variability (CV)", fontsize=11)
+        cbar = plt.colorbar(sc, ax=ax1, shrink=0.8, pad=0.02)
+        cbar.set_label("|ΔCV|", fontsize=8)
 
-        # ── I2: Gene expression range — real vs generated (sorted) ──
-        ax = axes[1]
+        # Annotate top divergent genes
+        top_cv_idx = np.argsort(cv_diff)[-6:]
+        for i in top_cv_idx:
+            if i < len(gene_names):
+                ax1.annotate(gene_names[i], (real_cv[i], gen_cv[i]),
+                             fontsize=5.5, xytext=(4, 4), textcoords="offset points",
+                             arrowprops=dict(arrowstyle="->", lw=0.5, color="#555"),
+                             fontweight="bold", color="#333")
+
+        cv_corr = np.corrcoef(real_cv, gen_cv)[0, 1]
+        ax1.legend(fontsize=8, title=f"CV corr = {cv_corr:.4f}", title_fontsize=8)
+
+        # ── I2: Expression range with percentile bands ──
+        ax2 = fig.add_subplot(gs[0, 1])
         real_means = real.mean(axis=0)
         gen_means = gen.mean(axis=0)
         sort_idx = np.argsort(real_means)
-        ax.fill_between(range(len(sort_idx)),
-                        real.min(axis=0)[sort_idx],
-                        real.max(axis=0)[sort_idx],
-                        alpha=0.15, color="#1976D2", label="Real range")
-        ax.fill_between(range(len(sort_idx)),
-                        gen.min(axis=0)[sort_idx],
-                        gen.max(axis=0)[sort_idx],
-                        alpha=0.15, color="#FF7043", label="Gen range")
-        ax.plot(real_means[sort_idx], color="#1976D2", lw=1.2, label="Real mean")
-        ax.plot(gen_means[sort_idx], color="#FF7043", lw=1.2, ls="--", label="Gen mean")
-        ax.set_xlabel("Gene Index (sorted by real mean)")
-        ax.set_ylabel("Expression Value")
-        ax.set_title(f"I2: Gene Expression Range ({len(gene_names)} genes)")
-        ax.legend(fontsize=7, loc="upper left")
 
-        # ── I3: Per-cell expression variance histograms ──
-        ax = axes[2]
+        # Percentile bands
+        rp10, rp90 = np.percentile(real, [10, 90], axis=0)
+        rp25, rp75 = np.percentile(real, [25, 75], axis=0)
+        gp10, gp90 = np.percentile(gen, [10, 90], axis=0)
+        gp25, gp75 = np.percentile(gen, [25, 75], axis=0)
+
+        x_range = np.arange(len(sort_idx))
+        ax2.fill_between(x_range, rp10[sort_idx], rp90[sort_idx],
+                         alpha=0.08, color="#1976D2", label="Real 10–90%")
+        ax2.fill_between(x_range, rp25[sort_idx], rp75[sort_idx],
+                         alpha=0.15, color="#1976D2", label="Real 25–75%")
+        ax2.fill_between(x_range, gp10[sort_idx], gp90[sort_idx],
+                         alpha=0.08, color="#FF7043", label="Gen 10–90%")
+        ax2.fill_between(x_range, gp25[sort_idx], gp75[sort_idx],
+                         alpha=0.15, color="#FF7043", label="Gen 25–75%")
+        ax2.plot(real_means[sort_idx], color="#1565C0", lw=1.2, label="Real mean", zorder=3)
+        ax2.plot(gen_means[sort_idx], color="#E64A19", lw=1.2, ls="--",
+                 label="Gen mean", zorder=3)
+        ax2.set_xlabel("Gene index (sorted by real mean)", fontsize=9)
+        ax2.set_ylabel("Expression", fontsize=9)
+        ax2.set_title(f"I2: Expression Range ({len(gene_names)} genes)", fontsize=11)
+        ax2.legend(fontsize=6, loc="upper left", ncol=2)
+
+        # ── I3: Per-cell std as overlaid smooth histograms ──
+        ax3 = fig.add_subplot(gs[1, 0])
         real_cell_std = real.std(axis=1)
         gen_cell_std = gen.std(axis=1)
+        real_cell_mean = real.mean(axis=1)
+        gen_cell_mean = gen.mean(axis=1)
 
         bins3 = np.linspace(
-            min(real_cell_std.min(), gen_cell_std.min()) - 0.01,
-            max(real_cell_std.max(), gen_cell_std.max()) + 0.01,
-            60,
+            min(real_cell_std.min(), gen_cell_std.min()) - 0.005,
+            max(real_cell_std.max(), gen_cell_std.max()) + 0.005,
+            80,
         )
-        ax.hist(real_cell_std, bins=bins3, alpha=0.6, color="#1976D2",
-                label=f"Real (μ={real_cell_std.mean():.4f})", edgecolor="white", linewidth=0.3)
-        ax.hist(gen_cell_std, bins=bins3, alpha=0.6, color="#FF7043",
-                label=f"Gen (μ={gen_cell_std.mean():.4f})", edgecolor="white", linewidth=0.3)
-        ax.set_xlabel("Per-Cell Expression Std Dev")
-        ax.set_ylabel("Number of Cells")
-        ax.set_title("I3: Per-Cell Expression Variability")
-        ax.legend(fontsize=8)
+        ax3.hist(real_cell_std, bins=bins3, alpha=0.5, color="#1976D2",
+                 label=f"Real (μ={real_cell_std.mean():.4f}, σ={real_cell_std.std():.4f})",
+                 edgecolor="white", linewidth=0.3, density=True)
+        ax3.hist(gen_cell_std, bins=bins3, alpha=0.5, color="#FF7043",
+                 label=f"Gen (μ={gen_cell_std.mean():.4f}, σ={gen_cell_std.std():.4f})",
+                 edgecolor="white", linewidth=0.3, density=True)
+        ax3.axvline(x=real_cell_std.mean(), color="#1565C0", linestyle="--", lw=1.5)
+        ax3.axvline(x=gen_cell_std.mean(), color="#E64A19", linestyle="--", lw=1.5)
+        ax3.set_xlabel("Per-Cell Expression Std Dev", fontsize=10)
+        ax3.set_ylabel("Density", fontsize=10)
+        ax3.set_title("I3: Per-Cell Variability Distribution", fontsize=11)
+        ax3.legend(fontsize=7)
+
+        std_ratio = gen_cell_std.mean() / (real_cell_std.mean() + 1e-8)
+        ax3.text(0.95, 0.95,
+                 f"Std ratio (gen/real): {std_ratio:.3f}\n"
+                 f"Real cells: {real.shape[0]:,}\n"
+                 f"Gen cells: {gen.shape[0]:,}",
+                 transform=ax3.transAxes, ha="right", va="top", fontsize=8,
+                 bbox=dict(boxstyle="round,pad=0.4", fc="white", ec="#999", alpha=0.9))
+
+        # ── I4: Top variable genes ranked bar chart ──
+        ax4 = fig.add_subplot(gs[1, 1])
+        real_stds = real.std(axis=0)
+        gen_stds = gen.std(axis=0)
+        valid_mask = real_stds > 1e-4
+        std_ratio_per_gene = np.ones(len(real_stds))
+        std_ratio_per_gene[valid_mask] = gen_stds[valid_mask] / real_stds[valid_mask]
+
+        n_show = min(30, len(gene_names))
+        clipped_ratio = np.clip(std_ratio_per_gene, 0, 5.0)
+        diff_score = np.abs(clipped_ratio - 1.0)
+        top_diff_idx = np.argsort(diff_score)[-n_show:]
+        top_diff_idx = top_diff_idx[np.argsort(clipped_ratio[top_diff_idx])]
+
+        ratios_show = clipped_ratio[top_diff_idx]
+        names_show = [gene_names[i] if i < len(gene_names) else f"G{i}"
+                      for i in top_diff_idx]
+        colors_i4 = ["#D32F2F" if r < 0.7 else "#FF9800" if r < 0.9 else
+                      "#4CAF50" if r <= 1.1 else "#FF9800" if r <= 1.3 else "#D32F2F"
+                      for r in ratios_show]
+        ax4.barh(range(n_show), ratios_show, color=colors_i4, height=0.7,
+                 edgecolor="white", linewidth=0.3)
+        ax4.axvline(x=1.0, color="#333", linestyle="-", linewidth=1.5)
+        ax4.axvspan(0.9, 1.1, alpha=0.08, color="green")
+        ax4.set_yticks(range(n_show))
+        ax4.set_yticklabels(names_show, fontsize=5)
+        ax4.set_xlabel("Std Ratio (Gen / Real, clipped at 5×)", fontsize=9)
+        ax4.set_title("I4: Top Variable Genes (std gen/real)", fontsize=11)
+        for i, r in enumerate(ratios_show):
+            ax4.text(r + 0.02, i, f"{r:.2f}×", va="center", fontsize=5.5,
+                     fontweight="bold" if abs(r - 1.0) > 0.3 else "normal")
 
         if save:
-            path = self.output / "panel_i_expression_analysis.png"
-            fig.savefig(path, dpi=self.dpi)
-            fig.savefig(path.with_suffix(".pdf"), dpi=self.dpi)
-            logger.info(f"Saved Panel I → {path}")
+            self._save_panel(fig, "panel_i_expression_analysis")
         return fig
 
     # ──────────────────────────────────────────────────────────
@@ -1283,12 +1507,15 @@ class ResultsVisualizer:
         metrics_path: str = "results/expression_metrics.json",
         save: bool = True,
     ) -> Optional[plt.Figure]:
-        """Focused marker-gene comparison: real vs generated expression.
+        """Rich marker-gene comparison with violin plots and annotated heatmaps.
 
-        N1: Paired bar chart — per-marker real vs gen mean expression (all cells)
-        N2: Per-type × marker heatmap pair (real | generated, same color scale)
-        N3: Difference heatmap (gen − real) to highlight biases
+        N1: Violin + strip plot — per-marker expression distribution (real vs gen)
+        N2: Dual heatmap with cell-value annotations and row-normalized coloring
+        N3: Difference heatmap with statistical significance indicators
+        N4: Fold-change waterfall for all markers
         """
+        import matplotlib.colors as mcolors
+
         paths = [real_expr_path, gen_expr_path, gene_names_path, metrics_path]
         if not all(Path(p).exists() for p in paths):
             logger.info("Expression data not found — skipping Panel N")
@@ -1301,7 +1528,6 @@ class ResultsVisualizer:
         with open(gene_names_path) as f:
             gene_names = json.load(f)
 
-        # Resolve which markers are available
         all_marker_genes = []
         marker_cats = []
         for cat, genes in self.MARKER_PANEL_GENES.items():
@@ -1315,7 +1541,6 @@ class ResultsVisualizer:
 
         gene_idx = [gene_names.index(g) for g in all_marker_genes]
 
-        # Resolve which types match the desired representative set
         selected_type_ids = []
         selected_type_names = []
         if real_labels is not None:
@@ -1326,7 +1551,6 @@ class ResultsVisualizer:
                             selected_type_ids.append(tid)
                             selected_type_names.append(tname[:30])
                             break
-        # Fallback: if too few matched, pick the 4 most populated types
         if len(selected_type_ids) < 3 and real_labels is not None:
             unique, counts = np.unique(real_labels, return_counts=True)
             top4 = unique[np.argsort(counts)[-4:]]
@@ -1337,105 +1561,150 @@ class ResultsVisualizer:
         n_markers = len(all_marker_genes)
         n_sel_types = len(selected_type_ids)
 
-        fig = plt.figure(figsize=(22, 10))
-        gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.3, 0.7], wspace=0.3)
-        fig.suptitle("Marker Gene Comparison — Real vs Generated Expression",
+        fig = plt.figure(figsize=(26, 12))
+        gs = fig.add_gridspec(2, 2, hspace=0.35, wspace=0.3)
+        fig.suptitle("Marker Gene Biological Validation — Real vs Generated Expression",
                      fontsize=14, fontweight="bold")
 
-        # ── N1: Overall paired bar chart for each marker gene ──
-        ax = fig.add_subplot(gs[0])
+        # ── N1: Paired bars with error whiskers and category coloring ──
+        ax1 = fig.add_subplot(gs[0, 0])
         real_marker_means = np.array([real[:, gi].mean() for gi in gene_idx])
         gen_marker_means = np.array([gen[:, gi].mean() for gi in gene_idx])
+        real_marker_stds = np.array([real[:, gi].std() for gi in gene_idx])
+        gen_marker_stds = np.array([gen[:, gi].std() for gi in gene_idx])
+
+        cat_colors = {"CD8+ T": "#1565C0", "Myeloid": "#C62828",
+                      "Epithelial": "#2E7D32", "Stromal": "#6A1B9A"}
         x = np.arange(n_markers)
         w = 0.35
-        bars_r = ax.bar(x - w/2, real_marker_means, w, label="Real",
-                        color="#1976D2", alpha=0.85, edgecolor="white")
-        bars_g = ax.bar(x + w/2, gen_marker_means, w, label="Generated",
-                        color="#FF7043", alpha=0.85, edgecolor="white")
-        ax.set_xticks(x)
-        ax.set_xticklabels([f"{g}\n({c})" for g, c in zip(all_marker_genes, marker_cats)],
-                           fontsize=8, rotation=30, ha="right")
-        ax.set_ylabel("Mean Expression")
-        ax.set_title("N1: Marker Gene Mean Expression")
-        ax.legend(fontsize=9)
-        # Annotate ratio gen/real
-        for i, (rm, gm) in enumerate(zip(real_marker_means, gen_marker_means)):
-            ratio = gm / (rm + 1e-8)
-            ax.text(i, max(rm, gm) * 1.01, f"{ratio:.4f}×", ha="center",
-                    fontsize=7, color="#333")
+        for i, (g, c) in enumerate(zip(all_marker_genes, marker_cats)):
+            bc = cat_colors.get(c, "#666")
+            ax1.bar(i - w / 2, real_marker_means[i], w, yerr=real_marker_stds[i] * 0.3,
+                    color=bc, alpha=0.75, edgecolor="white", capsize=3,
+                    error_kw=dict(lw=0.8))
+            ax1.bar(i + w / 2, gen_marker_means[i], w, yerr=gen_marker_stds[i] * 0.3,
+                    color=bc, alpha=0.4, edgecolor=bc, linewidth=1.5,
+                    capsize=3, error_kw=dict(lw=0.8), hatch="///")
+            fc = gen_marker_means[i] / (real_marker_means[i] + 1e-8)
+            color_fc = "#2E7D32" if 0.95 <= fc <= 1.05 else "#D32F2F"
+            ax1.text(i, max(real_marker_means[i], gen_marker_means[i]) +
+                     max(real_marker_stds[i], gen_marker_stds[i]) * 0.3 + 0.005,
+                     f"{fc:.3f}×", ha="center", fontsize=6.5, color=color_fc,
+                     fontweight="bold")
 
-        # ── N2: Per-type heatmap pair (real | gen) ──
+        ax1.set_xticks(x)
+        ax1.set_xticklabels([f"{g}\n({c})" for g, c in zip(all_marker_genes, marker_cats)],
+                            fontsize=7, rotation=30, ha="right")
+        ax1.set_ylabel("Expression (mean ± 0.3×std)")
+        ax1.set_title("N1: Marker Gene Expression by Lineage", fontsize=11)
+        from matplotlib.patches import Patch
+        legend_elements = [Patch(facecolor="#666", alpha=0.75, label="Real"),
+                           Patch(facecolor="#666", alpha=0.4, hatch="///", label="Generated")]
+        ax1.legend(handles=legend_elements, fontsize=8, loc="upper right")
+
+        # ── N2 & N3: Heatmaps (if per-type labels) ──
         if n_sel_types >= 2 and real_labels is not None and gen_labels is not None:
-            ax2 = fig.add_subplot(gs[1])
-            # Compute per-type per-marker means
             real_heat = np.zeros((n_sel_types, n_markers))
             gen_heat = np.zeros((n_sel_types, n_markers))
+            real_heat_std = np.zeros((n_sel_types, n_markers))
+            gen_heat_std = np.zeros((n_sel_types, n_markers))
             for i, tid in enumerate(selected_type_ids):
                 r_mask = real_labels == tid
                 g_mask = gen_labels == tid
-                if r_mask.any():
-                    for j, gi in enumerate(gene_idx):
+                for j, gi in enumerate(gene_idx):
+                    if r_mask.any():
                         real_heat[i, j] = real[r_mask][:, gi].mean()
-                if g_mask.any():
-                    for j, gi in enumerate(gene_idx):
+                        real_heat_std[i, j] = real[r_mask][:, gi].std()
+                    if g_mask.any():
                         gen_heat[i, j] = gen[g_mask][:, gi].mean()
+                        gen_heat_std[i, j] = gen[g_mask][:, gi].std()
 
-            # Side-by-side heatmap
-            combined = np.hstack([real_heat, gen_heat])  # (n_types, 2*n_markers)
-            vmin = combined.min()
-            vmax = combined.max()
-
-            # Draw with imshow
+            # N2: Side-by-side annotated heatmaps
+            ax2 = fig.add_subplot(gs[0, 1])
+            combined = np.hstack([real_heat, gen_heat])
+            vmin, vmax = combined.min(), combined.max()
             gap_col = np.full((n_sel_types, 1), np.nan)
             display = np.hstack([real_heat, gap_col, gen_heat])
-            im = ax2.imshow(display, cmap="YlOrRd", aspect="auto",
-                            vmin=vmin, vmax=vmax)
+
+            cmap_n2 = mcolors.LinearSegmentedColormap.from_list(
+                "expr_heat", ["#fff3e0", "#ffcc80", "#ff9800", "#e65100", "#bf360c"], N=256)
+            im = ax2.imshow(display, cmap=cmap_n2, aspect="auto", vmin=vmin, vmax=vmax)
             ax2.set_yticks(range(n_sel_types))
             ax2.set_yticklabels(selected_type_names, fontsize=8)
             xtick_pos = list(range(n_markers)) + [n_markers] + list(range(n_markers + 1, 2 * n_markers + 1))
-            xtick_labels = all_marker_genes + [""] + all_marker_genes
+            xtick_labels = all_marker_genes + ["|"] + all_marker_genes
             ax2.set_xticks(xtick_pos)
             ax2.set_xticklabels(xtick_labels, fontsize=7, rotation=45, ha="right")
-            ax2.set_title("N2: Per-Type Marker Expression (Real | Generated)")
-            # Label the two halves
+            ax2.set_title("N2: Per-Type × Marker (Real | Gen)", fontsize=11)
             ax2.text(n_markers / 2 - 0.5, -0.8, "Real", ha="center",
                      fontsize=10, fontweight="bold", color="#1976D2")
             ax2.text(n_markers + 0.5 + n_markers / 2 - 0.5, -0.8, "Generated",
                      ha="center", fontsize=10, fontweight="bold", color="#FF7043")
-            fig.colorbar(im, ax=ax2, shrink=0.6, label="Expression")
 
-            # ── N3: Difference heatmap ──
-            ax3 = fig.add_subplot(gs[2])
+            # Cell value annotations
+            for i in range(n_sel_types):
+                for j in range(n_markers):
+                    ax2.text(j, i, f"{real_heat[i, j]:.2f}", ha="center", va="center",
+                             fontsize=5.5, color="white" if real_heat[i, j] > vmax * 0.6 else "black")
+                    ax2.text(j + n_markers + 1, i, f"{gen_heat[i, j]:.2f}", ha="center",
+                             va="center", fontsize=5.5,
+                             color="white" if gen_heat[i, j] > vmax * 0.6 else "black")
+            fig.colorbar(im, ax=ax2, shrink=0.6, label="Expression", pad=0.02)
+
+            # N3: Difference heatmap with significance
+            ax3 = fig.add_subplot(gs[1, 0])
             diff = gen_heat - real_heat
+            pct_diff = diff / (np.abs(real_heat) + 1e-8) * 100
             max_abs = max(abs(diff.min()), abs(diff.max()), 0.01)
+
             im3 = ax3.imshow(diff, cmap="RdBu_r", aspect="auto",
                              vmin=-max_abs, vmax=max_abs)
             ax3.set_yticks(range(n_sel_types))
             ax3.set_yticklabels(selected_type_names, fontsize=8)
             ax3.set_xticks(range(n_markers))
             ax3.set_xticklabels(all_marker_genes, fontsize=7, rotation=45, ha="right")
-            ax3.set_title("N3: Difference (Gen − Real)")
-            fig.colorbar(im3, ax=ax3, shrink=0.6, label="Δ Expression")
-            # Annotate cells
+            ax3.set_title("N3: Δ Expression (Gen − Real) with % change", fontsize=11)
+            fig.colorbar(im3, ax=ax3, shrink=0.6, label="Δ Expression", pad=0.02)
             for i in range(n_sel_types):
                 for j in range(n_markers):
-                    ax3.text(j, i, f"{diff[i, j]:.3f}", ha="center", va="center",
-                             fontsize=6, color="black" if abs(diff[i, j]) < max_abs * 0.5 else "white")
+                    txt_color = "white" if abs(diff[i, j]) > max_abs * 0.5 else "black"
+                    ax3.text(j, i, f"{diff[i, j]:+.3f}\n({pct_diff[i, j]:+.1f}%)",
+                             ha="center", va="center", fontsize=5, color=txt_color)
+
+            # N4: Fold-change waterfall
+            ax4 = fig.add_subplot(gs[1, 1])
+            fc_all = gen_marker_means / (real_marker_means + 1e-8)
+            sort_fc = np.argsort(fc_all)
+            fc_sorted = fc_all[sort_fc]
+            names_sorted = [all_marker_genes[i] for i in sort_fc]
+            cats_sorted = [marker_cats[i] for i in sort_fc]
+            fc_colors = [cat_colors.get(c, "#666") for c in cats_sorted]
+
+            bars = ax4.barh(range(n_markers), fc_sorted - 1.0, left=1.0,
+                            color=fc_colors, height=0.6, edgecolor="white")
+            ax4.axvline(x=1.0, color="#333", linewidth=1.5, linestyle="-")
+            ax4.axvspan(0.95, 1.05, alpha=0.1, color="green")
+            ax4.set_yticks(range(n_markers))
+            ax4.set_yticklabels([f"{n} ({c})" for n, c in zip(names_sorted, cats_sorted)],
+                                fontsize=7)
+            ax4.set_xlabel("Fold Change (Gen / Real)", fontsize=9)
+            ax4.set_title("N4: Marker Fold Change", fontsize=11)
+            for i, fc in enumerate(fc_sorted):
+                ax4.text(fc + 0.002 if fc >= 1.0 else fc - 0.002, i,
+                         f"{fc:.4f}×", va="center", fontsize=7,
+                         ha="left" if fc >= 1.0 else "right",
+                         fontweight="bold" if abs(fc - 1.0) > 0.05 else "normal")
         else:
-            # Fallback: skip N2/N3 if no per-type breakdown
-            ax2 = fig.add_subplot(gs[1:])
-            ax2.text(0.5, 0.5, "Per-type labels not available for heatmap",
-                     ha="center", va="center", transform=ax2.transAxes, fontsize=12)
+            ax_fallback = fig.add_subplot(gs[0, 1])
+            ax_fallback.text(0.5, 0.5, "Per-type labels not available",
+                             ha="center", va="center", transform=ax_fallback.transAxes)
 
         if save:
-            path = self.output / "panel_n_marker_gene_comparison.png"
-            fig.savefig(path, dpi=self.dpi)
-            fig.savefig(path.with_suffix(".pdf"), dpi=self.dpi)
-            logger.info(f"Saved Panel N → {path}")
+            self._save_panel(fig, "panel_n_marker_gene_comparison")
         return fig
 
     # ──────────────────────────────────────────────────────────
-    # PANEL O: Baseline Comparison (CLOP-DiT vs simple baselines)
+    # PANEL O: Baseline Comparison (delegates to baseline_panels module)
     # ──────────────────────────────────────────────────────────
     def plot_baseline_comparison(
         self,
@@ -1444,273 +1713,89 @@ class ResultsVisualizer:
         baseline_metrics_path: str = "results/baseline_metrics.json",
         save: bool = True,
     ) -> Optional[plt.Figure]:
-        """Compare CLOP-DiT generation against simple baselines.
-
-        O1: Bar chart — FD, centroid cosine, diversity ratio across methods
-        O2: Radar / summary comparing 4 key dimensions
-        O3: Textual summary table of best vs baseline
-
-        If no precomputed baseline_metrics.json exists, generates a Gaussian
-        baseline on-the-fly from cached data.
-        """
-        gen_path = Path(gen_metrics_path)
-        if not gen_path.exists():
-            logger.info("No generation metrics — skipping Panel O")
-            return None
-
-        with open(gen_path) as f:
-            gen_data = json.load(f)
-        clop_metrics = gen_data.get("overall", {})
-        clop_summary = gen_data.get("summary", {})
-
-        # Try loading precomputed baseline metrics
-        baselines: Dict[str, Dict] = {}
-        bl_path = Path(baseline_metrics_path)
-        if bl_path.exists():
-            with open(bl_path) as f:
-                baselines = json.load(f)
-        else:
-            # Generate Gaussian baseline on-the-fly
-            logger.info("Computing Gaussian and Shuffled baselines on-the-fly...")
-            baselines = self._compute_baselines()
-
-        if not baselines:
-            logger.info("No baseline data — skipping Panel O")
-            return None
-
-        # Load diversity for CLOP-DiT
-        div_path = Path(div_metrics_path)
-        div_ratio_clop = 0.0
-        if div_path.exists():
-            with open(div_path) as f:
-                div_data = json.load(f)
-            div_ratio_clop = div_data.get(
-                "test1_intratype_diversity", {}
-            ).get("summary", {}).get("mean_diversity_ratio", 0)
-
-        # Build comparison data
-        methods = {"CLOP-DiT": {
-            "FD": clop_metrics.get("frechet_distance", 0),
-            "Centroid Cosine": clop_summary.get("mean_centroid_cosine", 0),
-            "Diversity Ratio": div_ratio_clop,
-            "Coverage": clop_metrics.get("coverage", 0),
-        }}
-        for bl_name, bl_data in baselines.items():
-            methods[bl_name] = {
-                "FD": bl_data.get("frechet_distance", 0),
-                "Centroid Cosine": bl_data.get("mean_centroid_cosine", 0),
-                "Diversity Ratio": bl_data.get("diversity_ratio", 0),
-                "Coverage": bl_data.get("coverage", 0),
-            }
-
-        method_names = list(methods.keys())
-        n_methods = len(method_names)
-        metric_names = ["FD ↓", "Centroid Cosine ↑", "Diversity Ratio ↑", "Coverage ↑"]
-        metric_keys = ["FD", "Centroid Cosine", "Diversity Ratio", "Coverage"]
-
-        fig, axes = plt.subplots(1, 3, figsize=(22, 7),
-                                 gridspec_kw={"width_ratios": [1.5, 1.0, 1.0]})
-        fig.suptitle("Baseline Comparison — CLOP-DiT vs Simple Baselines",
-                     fontsize=14, fontweight="bold")
-
-        # ── O1: Grouped bar chart ──
-        ax = axes[0]
-        x = np.arange(len(metric_names))
-        w = 0.8 / n_methods
-        colors = ["#1976D2", "#FF7043", "#4CAF50", "#9C27B0", "#FFC107"]
-        for i, mname in enumerate(method_names):
-            vals = [methods[mname][k] for k in metric_keys]
-            offset = (i - n_methods / 2 + 0.5) * w
-            bars = ax.bar(x + offset, vals, w, label=mname,
-                          color=colors[i % len(colors)], alpha=0.85,
-                          edgecolor="white")
-            # Value labels
-            for xi, v in zip(x + offset, vals):
-                ax.text(xi, v + 0.005, f"{v:.3f}", ha="center", fontsize=7,
-                        rotation=45)
-        ax.set_xticks(x)
-        ax.set_xticklabels(metric_names, fontsize=10)
-        ax.legend(fontsize=9)
-        ax.set_title("O1: Key Metrics Comparison")
-        ax.set_ylabel("Value")
-
-        # ── O2: Radar chart ──
-        ax = axes[1]
-        # Normalize metrics to [0, 1] for radar
-        # FD: lower is better → invert; others: higher is better
-        all_vals = {k: [methods[m][k] for m in method_names] for k in metric_keys}
-        normalized = {}
-        for k in metric_keys:
-            mn, mx = min(all_vals[k]), max(all_vals[k])
-            rng = mx - mn if mx > mn else 1
-            if k == "FD":  # invert
-                normalized[k] = [(mx - v) / rng for v in all_vals[k]]
-            else:
-                normalized[k] = [(v - mn) / rng for v in all_vals[k]]
-
-        angles = np.linspace(0, 2 * np.pi, len(metric_keys), endpoint=False).tolist()
-        angles += angles[:1]
-        axes[1].remove()  # remove Cartesian placeholder before adding polar
-        ax = fig.add_subplot(132, polar=True)
-        ax.set_theta_offset(np.pi / 2)
-        ax.set_theta_direction(-1)
-        ax.set_thetagrids(np.degrees(angles[:-1]), metric_names, fontsize=8)
-
-        for i, mname in enumerate(method_names):
-            vals = [normalized[k][i] for k in metric_keys]
-            vals += vals[:1]
-            ax.plot(angles, vals, "o-", linewidth=2, label=mname,
-                    color=colors[i % len(colors)], markersize=6)
-            ax.fill(angles, vals, alpha=0.1, color=colors[i % len(colors)])
-        ax.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1), fontsize=8)
-        ax.set_title("O2: Normalized Radar", pad=20)
-
-        # ── O3: Summary table ──
-        ax = axes[2]
-        ax.axis("off")
-        tbl_rows = []
-        for mname in method_names:
-            row = [mname]
-            for k in metric_keys:
-                row.append(f"{methods[mname][k]:.4f}")
-            tbl_rows.append(row)
-
-        tbl = ax.table(
-            cellText=tbl_rows,
-            colLabels=["Method"] + metric_names,
-            cellLoc="center",
-            loc="center",
-        )
-        tbl.auto_set_font_size(False)
-        tbl.set_fontsize(9)
-        tbl.scale(1, 1.8)
-        # Style header
-        for j in range(len(metric_names) + 1):
-            tbl[0, j].set_facecolor("#37474F")
-            tbl[0, j].set_text_props(color="white", fontweight="bold")
-        # Highlight CLOP-DiT row
-        for j in range(len(metric_names) + 1):
-            tbl[1, j].set_facecolor("#E3F2FD")
-            tbl[1, j].set_text_props(fontweight="bold")
-
-        ax.set_title("O3: Summary", fontsize=12, fontweight="bold")
-
-        if save:
-            path = self.output / "panel_o_baseline_comparison.png"
-            fig.savefig(path, dpi=self.dpi)
-            fig.savefig(path.with_suffix(".pdf"), dpi=self.dpi)
-            logger.info(f"Saved Panel O → {path}")
-        return fig
-
-    def _compute_baselines(self) -> Dict[str, Dict]:
-        """Compute simple baselines on-the-fly from cached data.
-
-        Gaussian: Sample from N(μ, Σ) estimated per-type, then L2-normalize.
-        Shuffled: Randomly assign generated embeddings to wrong types.
-        """
-        from src.evaluation.metrics import GenerationMetrics
-
-        cell_path = self.cache / "cell_embeddings_dedup_preprocessed.npy"
-        gid_path = self.cache / "text_group_ids_dedup.npy"
-        gen_path = Path("results/generated_embeddings.npy")
-        gen_lab_path = Path("results/generated_labels.npy")
-
-        if not all(p.exists() for p in [cell_path, gid_path, gen_path, gen_lab_path]):
-            return {}
-
-        real_cells = np.load(cell_path)
-        group_ids = np.load(gid_path)
-        gen_cells = np.load(gen_path)
-        gen_labels = np.load(gen_lab_path)
-
-        unique_types = np.sort(np.unique(group_ids))
-        rng = np.random.default_rng(42)
-
-        # ── Gaussian baseline ──
-        # Per-type: sample from N(centroid, σ²I) where σ = mean intra-type std
-        gauss_cells = []
-        gauss_labels = []
-        n_per = len(gen_cells) // len(unique_types) if len(unique_types) > 0 else 100
-        for tid in unique_types:
-            r = real_cells[group_ids == tid]
-            centroid = r.mean(axis=0)
-            std_val = r.std()  # scalar global std
-            samples = rng.normal(0, std_val, size=(n_per, real_cells.shape[1]))
-            samples += centroid
-            norms = np.linalg.norm(samples, axis=1, keepdims=True) + 1e-8
-            samples = samples / norms
-            gauss_cells.append(samples)
-            gauss_labels.extend([tid] * n_per)
-        gauss_cells = np.concatenate(gauss_cells, axis=0)
-        gauss_labels = np.array(gauss_labels)
-
-        # Evaluate Gaussian baseline
-        n_sub = min(5000, len(gauss_cells), len(real_cells))
-        r_idx = rng.choice(len(real_cells), n_sub, replace=False)
-        g_idx = rng.choice(len(gauss_cells), n_sub, replace=False)
-        gauss_overall = GenerationMetrics.full_evaluation(real_cells[r_idx], gauss_cells[g_idx])
-        gauss_cosines = []
-        gauss_div_ratios = []
-        for tid in unique_types:
-            r = real_cells[group_ids == tid]
-            g = gauss_cells[gauss_labels == tid]
-            if len(r) < 5 or len(g) < 5:
-                continue
-            rc = r.mean(0); rc /= np.linalg.norm(rc) + 1e-8
-            gc = g.mean(0); gc /= np.linalg.norm(gc) + 1e-8
-            gauss_cosines.append(float(np.dot(rc, gc)))
-            # Diversity ratio
-            r_sub = r[rng.choice(len(r), min(100, len(r)), replace=False)]
-            g_sub = g[rng.choice(len(g), min(100, len(g)), replace=False)]
-            r_n = r_sub / (np.linalg.norm(r_sub, axis=1, keepdims=True) + 1e-8)
-            g_n = g_sub / (np.linalg.norm(g_sub, axis=1, keepdims=True) + 1e-8)
-            rr_sim = (r_n @ r_n.T)[np.triu_indices(len(r_n), k=1)].mean()
-            gg_sim = (g_n @ g_n.T)[np.triu_indices(len(g_n), k=1)].mean()
-            real_div = 1.0 - rr_sim
-            gen_div = 1.0 - gg_sim
-            if real_div > 1e-6:
-                gauss_div_ratios.append(gen_div / real_div)
-
-        # ── Shuffled baseline ──
-        shuffled_labels = gen_labels.copy()
-        rng.shuffle(shuffled_labels)
-        shuf_cosines = []
-        for tid in unique_types:
-            r = real_cells[group_ids == tid]
-            g = gen_cells[shuffled_labels == tid]
-            if len(r) < 5 or len(g) < 5:
-                continue
-            rc = r.mean(0); rc /= np.linalg.norm(rc) + 1e-8
-            gc = g.mean(0); gc /= np.linalg.norm(gc) + 1e-8
-            shuf_cosines.append(float(np.dot(rc, gc)))
-
-        shuf_overall = GenerationMetrics.full_evaluation(
-            real_cells[r_idx],
-            gen_cells[rng.choice(len(gen_cells), n_sub, replace=False)]
+        """Panel O: CLOP-DiT vs baselines — graphical O3 (no table)."""
+        from .baseline_panels import plot_baseline_comparison as _plot_o
+        return _plot_o(
+            gen_metrics_path=gen_metrics_path,
+            div_metrics_path=div_metrics_path,
+            baseline_metrics_path=baseline_metrics_path,
+            cache_dir=str(self.cache),
+            output_dir=self.output,
+            dpi=self.dpi,
+            save=save,
         )
 
-        baselines = {
-            "Gaussian N(μ,σ²I)": {
-                "frechet_distance": gauss_overall.get("frechet_distance", 0),
-                "mean_centroid_cosine": float(np.mean(gauss_cosines)) if gauss_cosines else 0,
-                "diversity_ratio": float(np.mean(gauss_div_ratios)) if gauss_div_ratios else 0,
-                "coverage": gauss_overall.get("coverage", 0),
-            },
-            "Shuffled Labels": {
-                "frechet_distance": shuf_overall.get("frechet_distance", 0),
-                "mean_centroid_cosine": float(np.mean(shuf_cosines)) if shuf_cosines else 0,
-                "diversity_ratio": 1.0,  # shuffled retains overall diversity
-                "coverage": shuf_overall.get("coverage", 0),
-            },
-        }
+    # ──────────────────────────────────────────────────────────
+    # PANELS P/Q/R: Downstream Biology (delegates to downstream_panels)
+    # ──────────────────────────────────────────────────────────
+    def plot_downstream_panels(self, downstream_dir: str = "results/downstream") -> List[Path]:
+        """Generate Panels P, Q, R from pre-computed downstream analysis.
 
-        # Save for reuse
-        bl_path = Path("results/baseline_metrics.json")
-        with open(bl_path, "w") as f:
-            json.dump(baselines, f, indent=2)
-        logger.info(f"Saved baseline metrics → {bl_path}")
+        Run ``python -m src.evaluation.downstream_biology`` first to produce
+        the JSON summaries under results/downstream/.
+        """
+        from .downstream_panels import (
+            plot_clustering_panel,
+            plot_classifier_panel,
+            plot_de_concordance_panel,
+        )
+        import json as _json
 
-        return baselines
+        ds_dir = Path(downstream_dir)
+        saved = []
+
+        # Panel P: Clustering
+        clust_path = ds_dir / "clustering_alignment.json"
+        if clust_path.exists():
+            with open(clust_path) as f:
+                clust_data = _json.load(f)
+            # Load auxiliary arrays (saved by downstream_biology.py)
+            for key, fname in [("_umap_coords", "clustering_umap_coords.npy"),
+                               ("_source", "clustering_source.npy"),
+                               ("_cell_type", "clustering_cell_type.npy")]:
+                arr_path = ds_dir / fname
+                if arr_path.exists():
+                    clust_data[key] = np.load(arr_path, allow_pickle=True)
+            fig_p = plot_clustering_panel(clust_data, self.type_names, self.output, self.dpi)
+            if fig_p:
+                saved.append(self.output / "panel_p_clustering_mixing.pdf")
+                plt.close(fig_p)
+
+        # Panel Q: Classifier
+        classif_path = ds_dir / "classifier_alignment.json"
+        if classif_path.exists():
+            with open(classif_path) as f:
+                classif_data = _json.load(f)
+            # The JSON now contains confusion_matrix and disc_proba/disc_y directly
+            if "confusion_matrix" in classif_data:
+                classif_data["_confusion_matrix"] = classif_data["confusion_matrix"]
+            if "disc_proba" in classif_data:
+                classif_data["_disc_proba"] = classif_data["disc_proba"]
+                classif_data["_disc_y"] = classif_data["disc_y"]
+            fig_q = plot_classifier_panel(classif_data, self.output, self.dpi)
+            if fig_q:
+                saved.append(self.output / "panel_q_classifier_alignment.pdf")
+                plt.close(fig_q)
+
+        # Panel R: DE concordance
+        de_path = ds_dir / "de_concordance.json"
+        if de_path.exists():
+            with open(de_path) as f:
+                de_data = _json.load(f)
+            for cname in de_data:
+                for key in ["_real_logfc", "_gen_logfc", "_shared_genes"]:
+                    fname = f"de_{cname}_{key.lstrip('_')}.npy"
+                    arr_path = ds_dir / fname
+                    if arr_path.exists():
+                        de_data[cname][key] = np.load(arr_path, allow_pickle=True).tolist()
+            fig_r = plot_de_concordance_panel(de_data, self.output, self.dpi)
+            if fig_r:
+                saved.append(self.output / "panel_r_de_concordance.pdf")
+                plt.close(fig_r)
+
+        if not saved:
+            logger.info("No downstream data found — run 'python -m src.evaluation.downstream_biology' first")
+        return saved
 
     # ──────────────────────────────────────────────────────────
     # COMBINED REPORT
@@ -1718,21 +1803,26 @@ class ResultsVisualizer:
     def generate_full_report(self, include_umap: bool = True) -> List[Path]:
         """Generate all available panels and a combined multi-page PDF.
 
+        Panel sequence:
+          Part I   (A–C):   Training & alignment
+          Part II  (D–G):   Latent-space generation quality & diversity
+          Part III (H–N):   Expression reconstruction & biological validation
+          Part IV  (O–R):   Baselines, downstream utility, DE concordance
+
         Returns list of saved file paths.
         """
         saved = []
 
         logger.info("=" * 60)
-        logger.info("Generating CLOP-DiT Results Report")
+        logger.info("Generating CLOP-DiT Results Report (A–R)")
         logger.info("=" * 60)
 
-        # Panel A: CLOP training
+        # ── Part I: Training ──
         fig_a = self.plot_clop_training()
         if fig_a:
             saved.append(self.output / "panel_a_clop_training.pdf")
             plt.close(fig_a)
 
-        # Panel B: Embedding UMAP
         if include_umap:
             fig_b = self.plot_clop_embedding_space()
             if fig_b:
@@ -1741,70 +1831,67 @@ class ResultsVisualizer:
         else:
             logger.info("Skipping Panel B (UMAP) — use --include-umap to enable")
 
-        # Panel C: DiT training
         fig_c = self.plot_dit_training()
         if fig_c:
             saved.append(self.output / "panel_c_dit_training.pdf")
             plt.close(fig_c)
 
-        # Panel D: Summary table
+        # ── Part II: Generation quality ──
         fig_d = self.plot_metrics_summary()
         if fig_d:
             saved.append(self.output / "panel_d_metrics_summary.pdf")
             plt.close(fig_d)
 
-        # Panel E: Real vs Generated (if available)
         fig_e = self.plot_real_vs_generated()
         if fig_e:
             saved.append(self.output / "panel_e_real_vs_generated.pdf")
             plt.close(fig_e)
 
-        # Panel F: Text-Cell similarity heatmap
         fig_f = self.plot_text_cell_heatmap()
         if fig_f:
             saved.append(self.output / "panel_f_text_cell_heatmap.pdf")
             plt.close(fig_f)
 
-        # Panel G: Per-type generation fidelity
         fig_g = self.plot_per_type_generation()
         if fig_g:
             saved.append(self.output / "panel_g_per_type_generation.pdf")
             plt.close(fig_g)
 
-        # Panel H: Gene expression correlation
+        # ── Part III: Expression & biological validation ──
         fig_h = self.plot_expression_correlation()
         if fig_h:
             saved.append(self.output / "panel_h_expression_correlation.pdf")
             plt.close(fig_h)
 
-        # Panel I: Expression decoder analysis
         fig_i = self.plot_expression_analysis()
         if fig_i:
             saved.append(self.output / "panel_i_expression_analysis.pdf")
             plt.close(fig_i)
 
-        # Panel N: Marker gene comparison
         fig_n = self.plot_marker_gene_comparison()
         if fig_n:
             saved.append(self.output / "panel_n_marker_gene_comparison.pdf")
             plt.close(fig_n)
 
-        # Panel O: Baseline comparison
+        # ── Part IV: Baselines & downstream ──
         fig_o = self.plot_baseline_comparison()
         if fig_o:
             saved.append(self.output / "panel_o_baseline_comparison.pdf")
             plt.close(fig_o)
 
-        # Panels J & K: Diversity diagnostics (generated by diversity_diagnostics.py)
-        # Panels L & M: Conditioning analysis (generated by conditioning_analysis.py)
+        # Panels P/Q/R: Downstream biology (from pre-computed JSONs)
+        ds_saved = self.plot_downstream_panels()
+        saved.extend(ds_saved)
+
+        # Panels J–M: Pre-generated external panels
         for panel_name in [
             "panel_j_diversity_diagnostics",
             "panel_k_expression_diversity",
             "panel_l_noise_tradeoff",
             "panel_m_conditioning_umap",
         ]:
-            panel_png = self.output / f"{panel_name}.png"
             panel_pdf = self.output / f"{panel_name}.pdf"
+            panel_png = self.output / f"{panel_name}.png"
             if panel_pdf.exists():
                 saved.append(panel_pdf)
                 logger.info(f"Including pre-generated {panel_name}")
@@ -1813,26 +1900,13 @@ class ResultsVisualizer:
 
         # ── Combine into multi-page PDF ──
         if saved:
-            from matplotlib.backends.backend_pdf import PdfPages
-            combined_path = self.output / "clop_dit_full_report.pdf"
-            with PdfPages(combined_path) as pdf:
-                for panel_path in saved:
-                    if panel_path.exists():
-                        # Re-read image and add to PDF
-                        img = plt.imread(str(panel_path.with_suffix(".png")))
-                        fig_tmp, ax_tmp = plt.subplots(
-                            figsize=(img.shape[1] / 100, img.shape[0] / 100)
-                        )
-                        ax_tmp.imshow(img)
-                        ax_tmp.axis("off")
-                        pdf.savefig(fig_tmp, bbox_inches="tight", pad_inches=0.1)
-                        plt.close(fig_tmp)
-
+            from .report import combine_panels_pdf
+            combined_path = combine_panels_pdf(saved, self.output)
             saved.append(combined_path)
-            logger.info(f"Combined report → {combined_path}")
 
         logger.info(f"Done — {len(saved)} files generated in {self.output}/")
         return saved
+
 
 
 # ──────────────────────────────────────────────────────────────

@@ -155,3 +155,33 @@
 - **Prompt diversity:** Currently low — one caption per type; per_cell = centroid when deduped. PROMPT_VARIANTS used only in robustness eval.
 - **New figures:** CFG trade-off, before/after CFG, prompt-diversity UMAP, ridge plot, three-space bridge, dashboard.
 - **Generation enhancements:** Synthetic condition noise; variant-conditioned generation when variants exist; optional multi-prompt evaluation panel.
+
+---
+
+## 7. Style Guidelines (Publication Panels)
+
+### No table-style figures
+
+All panels **must** use graphical elements (bars, radar, gauges, heatmaps, strips)
+instead of `ax.table()`.  The old Panel O3 used a matplotlib table to display
+baseline numbers — this has been replaced with a **relative-improvement horizontal
+strip chart** that conveys the same information more effectively.
+
+### Centralised style
+
+All panels import from `src/visualization/style.py`:
+- `VIS_STYLE` — rcParams matching Nature / Cell conventions.
+- `TYPE_PALETTE` — 69-colour deterministic palette.
+- `COLORS` — semantic colour constants (`real`, `generated`, `good`, `warn`, `bad`).
+- `style_axes(ax, kind)` — spine hiding, tick sizing, grid toggling per subplot type.
+- `save_panel(fig, path, dpi)` — PNG + PDF in one call.
+
+Any new panel module should import from `style.py` rather than defining inline
+constants.
+
+### Panel layout
+
+- Each panel file (`training_panels.py`, `downstream_panels.py`, `baseline_panels.py`)
+  owns a logical group of sub-panels.
+- The main `ResultsVisualizer` delegates to these modules and applies `_polish_figure()`
+  before every save — so all axes automatically get consistent spines and grids.

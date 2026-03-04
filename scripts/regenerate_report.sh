@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# regenerate_report.sh — One-command regeneration of all 13 panels (A–M).
+# regenerate_report.sh — One-command regeneration of all 18 panels (A–R).
 #
 # Prerequisites: trained CLOP (clop_best.pth) + DiT (dit_best.pth) + scGPT decoder.
 # All intermediate outputs (embeddings, metrics, figures) are regenerated.
@@ -28,7 +28,7 @@ done
 # ── Step 1: Generate embeddings (condition_noise ε=0.03, CFG=1.5) ──
 if [ "$SKIP_GEN" = false ]; then
     echo ""
-    echo "▶ Step 1/6: Generating cell embeddings..."
+    echo "▶ Step 1/7: Generating cell embeddings..."
     python scripts/generate_embeddings.py \
         --condition-mode condition_noise \
         --noise-scale 0.03 \
@@ -39,30 +39,36 @@ fi
 
 # ── Step 2: Decode gene expression ──
 echo ""
-echo "▶ Step 2/6: Decoding gene expression via scGPT..."
+echo "▶ Step 2/7: Decoding gene expression via scGPT..."
 python scripts/decode_expression.py
 
 # ── Step 3: Diversity diagnostics (Panels J + K) ──
 echo ""
-echo "▶ Step 3/6: Running diversity diagnostics..."
+echo "▶ Step 3/7: Running diversity diagnostics..."
 python scripts/diversity_diagnostics.py \
     --num-per-type 100 \
     --cfg-scales 1.0 1.5 2.0 3.0 5.0 7.0
 
 # ── Step 4: Conditioning analysis (Panels L + M) ──
 echo ""
-echo "▶ Step 4/6: Running conditioning analysis..."
+echo "▶ Step 4/7: Running conditioning analysis..."
 python scripts/conditioning_analysis.py \
     --num-per-type 100 \
     --cfg-scale 1.5 \
     --noise-scale 0.03
 
-# ── Step 5: Generate Panels A–I, N, O + combined report ──
+# ── Step 5: Downstream biology (clustering, classifier, DE → P/Q/R data) ──
 echo ""
-echo "▶ Step 5/6: Generating panels A–I, N, O + combined PDF..."
+echo "▶ Step 5/7: Running downstream biology analysis..."
+python -m src.evaluation.downstream_biology \
+    --output-dir results/downstream
+
+# ── Step 6: Generate Panels A–R + combined report ──
+echo ""
+echo "▶ Step 6/7: Generating panels A–R + combined PDF..."
 python -m src.visualization.results_visualizer $UMAP_FLAG
 
-# ── Step 6: Summary ──
+# ── Step 7: Summary ──
 echo ""
 echo "═══════════════════════════════════════════════════════════════"
 echo "  Report regeneration complete"
@@ -76,6 +82,9 @@ echo "  Panels L–M:  results/figures/panel_l_noise_tradeoff.png"
 echo "               results/figures/panel_m_conditioning_umap.png"
 echo "  Panel N:     results/figures/panel_n_marker_gene_comparison.png"
 echo "  Panel O:     results/figures/panel_o_baseline_comparison.png"
+echo "  Panel P:     results/figures/panel_p_clustering_alignment.png"
+echo "  Panel Q:     results/figures/panel_q_classifier_alignment.png"
+echo "  Panel R:     results/figures/panel_r_de_concordance.png"
 echo "  Combined:    results/figures/clop_dit_full_report.pdf"
 echo ""
 echo "  Metrics:     results/generation_metrics.json"

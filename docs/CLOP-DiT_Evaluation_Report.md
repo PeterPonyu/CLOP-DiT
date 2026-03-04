@@ -340,4 +340,44 @@ The challenge is extreme: real cell type centroids have **pairwise cosine = 0.99
 
 ---
 
+## Appendix: Downstream Biological Validation (Panels P–R)
+
+Beyond distributional and correlation metrics, we evaluate whether generated cells are
+*biologically usable*—i.e., whether standard single-cell workflows produce concordant
+results when run on generated data.
+
+### Clustering alignment (Panel P)
+
+- Build matched AnnData objects from `results/{real,generated}_expression.npy`.
+- Select 2 000 highly-variable genes shared across real and generated data.
+- PCA → Leiden clustering → UMAP on the combined (real + gen) dataset.
+- **Metrics:** Adjusted Rand Index (ARI), Normalized Mutual Information (NMI),
+  cluster purity, per-type kNN mixing score (fraction of k-nearest neighbours in
+  the combined space that come from the opposite origin).
+
+### Classifier alignment (Panel Q)
+
+- Train logistic regression on the real PCA embedding to predict cell type.
+- Evaluate accuracy and macro-F1 on the generated embedding.
+- Train a real-vs-generated discriminator (logistic regression, 5-fold CV) and report
+  AUC — values near 0.5 indicate generated data is indistinguishable.
+
+### DE concordance (Panel R)
+
+- Run Wilcoxon rank-sum differential expression on three biologically meaningful
+  contrasts (CD8 vs CD4 T, TAM vs monocyte, epithelial tumor vs fibroblast).
+- Compare logFC between real and generated: Pearson/Spearman correlation,
+  Jaccard overlap of top-50 DE genes, sign agreement fraction.
+
+### Running
+
+```bash
+python -m src.evaluation.downstream_biology --output-dir results/downstream
+```
+
+The visualizer will automatically detect `results/downstream/*.json` and generate
+Panels P/Q/R in the combined report.
+
+---
+
 *Report generated from verified evaluation results at `/results/v5_final/final_evaluation.json`. All metrics reproduced by `scripts/15_final_verified_evaluation.py` with seed=42.*
