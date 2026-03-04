@@ -1,0 +1,475 @@
+═══════════════════════════════════════════════════════════════════════════════
+DiT (DIFFUSION TRANSFORMER) — TECHNICAL SPECIFICATIONS & DATA FLOW
+═══════════════════════════════════════════════════════════════════════════════
+
+This document specifies exact input/output shapes, conditioning mechanism, and 
+data flow for DiT training/inference using CLOP-aligned embeddings.
+
+═══════════════════════════════════════════════════════════════════════════════
+1. MODEL ARCHITECTURE SUMMARY
+═══════════════════════════════════════════════════════════════════════════════
+
+Name: DiT1D (1D Diffusion Transformer)
+File: src/architecture/dit.py (594 lines)
+
+Components:
+  1. TimestepEmbedder:   t (scalar) → sinusoidal(256-dim) → MLP(256→hidden_dim)
+  2. ConditionEmbedder:  c (512-dim from CLOP) → MLP(512→hidden_dim)
+  3. Combined:           t_emb + c_emb → modulation signal
+  4. DiT Backbone:       N=12 DiTBlock layers (Transformer with AdaLN-Zero)
+  5. DiTFinalLayer:      x → AdaLN + Linear projection → v_pred
+
+═══════════════════════════════════════════════════════════════════════════════
+2. EXACT INPUT/OUTPUT SPECIFICATIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+TRAINING (Forward Pass):
+
+Input Schema:
+  z_t                  torch.Tensor, shape (B, 512)      ← Noisy latent
+  t                    torch.Tensor, shape (B,)          ← Timestep t ∈ [0,1]
+  c                    torch.Tensor, shape (B, 512)      ← CLOP condition
+  group_ids            np.array, shape (B,)              ← Type IDs [0-68]
+
+B = batch_size (e.g., 256)
+All tensors assumed float32, GPU-ready
+
+Processing:
+  1. t_emb = TimestepEmbedder(t)                    → (B, hidden_dim)
+  2. if dropout (training):
+       c = ConditionEmbedder(c, force_drop=False)  → (B, hidden_dim)
+     else:
+       c = ConditionEmbedder(c, force_drop=False)  → (B, hidden_dim)
+  3. cond = t_emb + c_emb                          → (B, hidden_dim)
+  4. for i in range(num_layers):
+       x = DiTBlock(x, cond)                        → (B, seq_len, hidden_dim)
+  5. v_pred = DiTFinalLayer(x, cond)               → (B, seq_len, 512)
+
+Output Schema:
+  v_pred                torch.Tensor, shape (B, 512)   ← Velocity prediction
+
+Loss Computation (Flow Matching):
+  z_0 ~ N(0, I)                                    ← Random noise
+  z_1 = real_cell_emb                              ← Real cell from CLOP
+  z_t = (1-t) * z_0 + t * z_1                      ← Interpolated
+  v_target = z_1 - z_0                             ← Target velocity
+  loss = MSE(v_pred, v_target)                     ← Training objective
+
+INFERENCE (Sampling):
+
+Input Schema:
+  z_T                  torch.Tensor, shape (B, 512)   ← Initial noise N(0,I)
+  c                    torch.Tensor, shape (B, 512)   ← CLOP condition
+  num_steps            int                             ← Solver steps (50-100)
+  guidance_scale       float                           ← CFG coefficient (1.0-7.5)
+
+Processing (Euler method):
+  z := z_T
+  dt = 1.0 / num_steps
+  for t_idx in range(num_steps, 0, -1):
+    t = t_idx / num_steps
+    
+    # Unconditional prediction
+    v_uncond = model.forward(z, t, c_null)                    → (B, 512)
+    
+    # Conditional prediction
+    v_cond   = model.forward(z, t, c)                         → (B, 512)
+    
+    # Classifier-free guidance blend
+    v = v_uncond + guidance_scale * (v_cond - v_uncond)
+    
+    # Euler step
+    z = z - v * dt
+  
+  z_0 = z                                                     ← Generated cell
+
+Output Schema:
+  z_0                  torch.Tensor, shape (B, 512)   ← Generated cells
+
+═══════════════════════════════════════════════════════════════════════════════
+3. CONDITION VECTOR FORMAT (FROM CLOP)
+═══════════════════════════════════════════════════════════════════════════════
+
+Source File: data/cached_latents_v5.2/projected_text.npy
+Shape: (167245, 512)
+Data Type: float32
+Format: Pre-computed CLOP-projected text embeddings
+
+Column Mapping (per sample):
+  sample_idx i
+    → projected_text[i]                      ← (512,) float32 vector
+    → text_group_ids_dedup[i] = group_id     ← Which cell type
+    → cell_embeddings_dedup_preprocessed[i]  ← Real cell (for training)
+
+Preprocessing Applied to Condition:
+✓ L2-normalized (||c|| = 1.0)
+✓ Zero-centered (mean across batch ≈ 0)
+✓ Whitened (principal components separated)
+✓ No NaN or inf values
+
+Example: Batch of 256 cells
+  indices = [0, 1000, 2500, ..., 167244]  ← Random sample
+  c_batch = projected_text[indices]                      → (256, 512)
+  types = text_group_ids_dedup[indices]                  → (256,)
+
+Dropout During Training:
+- ConditionEmbedder.dropout_prob = 0.1 (default)
+- 10% of training batches: c replaced with learned null token
+- Purpose: Enables classifier-free guidance during inference
+
+═══════════════════════════════════════════════════════════════════════════════
+4. TIMESTEP EMBEDDING & MODULATION SCHEME
+═══════════════════════════════════════════════════════════════════════════════
+
+Timestep Encoding:
+  class TimestepEmbedder(nn.Module):
+    sinusoidal_embedding(t, dim=256):
+      half = 128
+      freqs = exp(-log(10000) * [0..127] / 128)
+      args = t[:, None] * freqs[None, :]
+      emb = [cos(args), sin(args)]  → (B, 256)
+    
+    mlp:
+      Linear(256, hidden_dim) + SiLU + Linear(hidden_dim, hidden_dim)
+    
+    output: t_emb ∈ ℝ^(B, hidden_dim)
+
+Combined Conditioning:
+  t_emb = TimestepEmbedder(t)                          → (B, hidden_dim)
+  c_emb = ConditionEmbedder(c)                         → (B, hidden_dim)
+  cond = t_emb + c_emb                                 → (B, hidden_dim)
+
+AdaLN-Zero Modulation (per DiTBlock):
+  class AdaLNZero(nn.Module):
+    forward(x, cond):
+      cond = SiLU(cond)
+      params = Linear(cond, 6*hidden_dim)              → (B, 6*hidden_dim)
+      [gamma1, beta1, alpha1, gamma2, beta2, alpha2] = params.chunk(6)
+      return [(B, 1, hidden_dim) for each param]
+
+  Attention Modulation:
+    h = norm(x)
+    h = h * (1 + gamma1) + beta1          ← Affine transform
+    h_att, _ = attention(h, h, h)
+    x = x + alpha1 * h_att                ← Residual with gating
+
+  FFN Modulation:
+    h = norm(x)
+    h = h * (1 + gamma2) + beta2          ← Affine transform
+    h_ffn = ffn(h)
+    x = x + alpha2 * h_ffn                ← Residual with gating
+
+Key: alpha (gate) initialized to zero, so blocks start as identity (skip connections).
+
+═══════════════════════════════════════════════════════════════════════════════
+5. DIMENSIONS & CONFIGURATION REFERENCE
+═══════════════════════════════════════════════════════════════════════════════
+
+Default DiT1D Config:
+  latent_dim:          512        ← Cell embedding dimension (from scGPT)
+  hidden_dim:          768        ← Internal model dimension
+  num_layers:          12         ← Number of DiTBlocks
+  num_heads:           8          ← Attention heads
+  mlp_ratio:           4.0        ← FFN intermediate = hidden_dim * 4.0
+  attn_drop:           0.0        ← Attention dropout
+  proj_drop:           0.1        ← Projection dropout
+  cond_dim:            512        ← CLOP condition dimension
+  cond_dropout:        0.1        ← Classifier-free guidance dropout
+  timestep_embedding:  256        ← Sinusoidal basis dimension
+
+Derived Dimensions:
+  mlp_hidden = 768 * 4.0 = 3072
+  adaln_params = 6 * 768 = 4608 (per block)
+
+Model Parameter Count:
+  embedders:           ~200K
+  transformer:         ~80M
+  output_layer:        ~400K
+  Total:               ~80M parameters
+
+═══════════════════════════════════════════════════════════════════════════════
+6. DATA LOADER INTEGRATION (PyTorch)
+═══════════════════════════════════════════════════════════════════════════════
+
+During CLOP Training, DiT Dataset Construction:
+
+```
+from src.data_pipeline.dataset import DiTDataset, create_dataloaders
+
+# Create DiT dataset (NOT loaded yet)
+dit_dataset = DiTDataset(
+    cache_dir="data/cached_latents_v5.2",
+    projected_text_path="data/cached_latents_v5.2/projected_text.npy"
+)
+
+# Get loaders (same split as CLOP training)
+train_loader, val_loader = create_dataloaders(
+    cache_dir="data/cached_latents_v5.2",
+    batch_size=256,
+    val_split=0.1,
+    stage="dit",
+    projected_text_path="data/cached_latents_v5.2/projected_text.npy"
+)
+```
+
+Per-Batch Data:
+
+DataLoader.__getitem__(idx):
+  z_real = projected_text[idx]    ← Real cell embedding (512,)
+  
+During training step:
+  batch = next(train_loader)      ← z_real batch  (256, 512)
+  
+  # Sample timestep
+  t = torch.rand(256)             ← (256,) ∈ [0, 1]
+  
+  # Sample noise
+  z_0 = torch.randn(256, 512)     ← (256, 512) ∼ N(0, I)
+  
+  # Interpolate
+  z_t = (1-t[:, None]) * z_0 + t[:, None] * batch  ← (256, 512)
+  
+  # Get condition from mapping
+  group_ids = text_group_ids_dedup[idx]            ← (256,)
+  c = projected_text[idx]                          ← (256, 512)
+  
+  # Forward pass
+  v_pred = model(z_t, t, c)                        ← (256, 512)
+  
+  # Target velocity
+  v_target = batch - z_0                           ← (256, 512)
+  
+  # Loss
+  loss = ((v_pred - v_target) ** 2).mean()
+
+═══════════════════════════════════════════════════════════════════════════════
+7. CLASSIFIER-FREE GUIDANCE (CFG) MECHANISM
+═══════════════════════════════════════════════════════════════════════════════
+
+During Training:
+  - ConditionEmbedder.dropout_prob = 0.1
+  - Each batch: 10% of samples drop condition (replace with null token)
+  - Enables model to learn both conditional and unconditional distributions
+
+During Inference:
+  - Forward pass is called twice per sampling step:
+    1. v_cond   = model(z_t, t, c)             ← Conditional
+    2. v_uncond = model(z_t, t, c_null)        ← Unconditional (force_drop=True)
+  
+  - Blend with guidance scale:
+    v_blended = v_uncond + guidance_scale * (v_cond - v_uncond)
+  
+  - guidance_scale ∈ [1.0, 7.5]:
+    - 1.0: Pure unconditional (ignores condition)
+    - 3.0-5.0: Balanced conditioning
+    - 7.5: Maximum sensitivity to condition (may overfocus on markers)
+
+Example:
+  # During sampling
+  for t_idx in range(100):
+    t = t_idx / 100.0
+    
+    # Get both predictions
+    with torch.no_grad():
+      v_cond   = model(z, t, c)
+      v_uncond = model(z, t, c_null)
+    
+    # Classifier-free guidance
+    guidance_scale = 5.0
+    v = v_uncond + guidance_scale * (v_cond - v_uncond)
+    
+    # Sampling step (Euler)
+    z = z - v * dt
+
+═══════════════════════════════════════════════════════════════════════════════
+8. LOSS FUNCTIONS & OPTIMIZATION
+═══════════════════════════════════════════════════════════════════════════════
+
+Flow Matching Loss (Primary):
+  MSE Loss = (1/N) * Σ ||v_pred(z_t, t, c) - (z_1 - z_0)||²
+  
+  where:
+    z_t = (1-t) * z_0 + t * z_1   ← Linear interpolation
+    z_0 ~ N(0, I)                 ← Noise
+    z_1 = real_cell               ← Real embedding
+    v_pred                        ← Model output
+    v_target = z_1 - z_0          ← Velocity to learn
+
+Weighting Scheme (Optional, for small types):
+  If including per-type weights w_type:
+    loss = (1/N) * Σ w[group_id[i]] * ||v_pred_i - v_target_i||²
+    
+  Example weights:
+    Type with 100 cells:  w = 1.0
+    Type with 50 cells:   w = 2.0
+    Type with 200 cells:  w = 0.5
+
+Optimizer Settings (Recommended):
+  Optimizer:           AdamW
+  Learning Rate:       1e-4
+  Betas:               (0.9, 0.999)
+  Weight Decay:        0.01
+  Warmup:              5 epochs
+  Scheduler:           CosineAnnealingLR (T_max=num_epochs)
+
+Numerical Stability:
+  - Gradient Clipping: max_norm=1.0
+  - Mixed Precision (AMP): enabled
+  - EMA model: optional (decay=0.9999 for stability)
+
+═══════════════════════════════════════════════════════════════════════════════
+9. VALIDATION & EVALUATION METRICS
+═══════════════════════════════════════════════════════════════════════════════
+
+Per-Epoch Validation:
+
+1. MSE (Loss-based):
+   - Compute MSE on validation split (16.7K cells)
+   - Track: val_loss, min_val_loss, early_stopping
+
+2. MMD (Maximum Mean Discrepancy):
+   - For each cell type:
+     real_cells = all type-i cells in validation
+     gen_cells  = sample 100 type-i cells from model
+     mmd_i = ||mean(real) - mean(gen)||² + Σ kernel terms
+   - Per-type MMD score (lower = better)
+   - Aggregate MMD = mean over all types
+
+3. Marker Gene Fidelity:
+   - For each type, compute expected marker genes
+   - Sample cells using DiT, project back to gene space
+   - Compute marker expression consistency
+   - Example: "CD8 T cells should express CD8A, CD8B"
+
+4. UMAP Alignment:
+   - Compute UMAP of real validation cells (per type)
+   - Project generated cells onto same UMAP
+   - Measure overlap (Silhouette score, etc.)
+
+5. Inception Score / FID (if transfer model available):
+   - If pre-trained cell classifier exists:
+     Inception = mean(softmax(classifier(z)))[correct_class]
+   - FID = Fréchet distance between real/gen feature distributions
+
+Early Stopping Criteria:
+  - Monitor: val_loss or mmd_aggregate
+  - Patience: 10 epochs
+  - Restore: best checkpoint (min val_loss)
+
+═══════════════════════════════════════════════════════════════════════════════
+10. REPRODUCIBILITY & SAVED ARTIFACTS
+═══════════════════════════════════════════════════════════════════════════════
+
+During Training:
+
+Saved Checkpoints:
+  checkpoints/dit_best.pth        ← Best epoch model
+  checkpoints/dit_final.pth       ← Final epoch model
+  checkpoints/dit_epoch_{N}.pth   ← Periodic (every 10 epochs)
+
+Saved Logs:
+  logs/dit_training.log           ← Training metrics per step
+  results/dit_history.json        ← Metrics per epoch (dict)
+
+Configuration:
+  configs/dit_v1.yaml             ← Exact hyperparameters used
+
+Reproducibility Key:
+  - RNG seeds: torch.manual_seed(42), np.random.seed(42)
+  - Deterministic ops: torch.backends.cudnn.deterministic = True
+  - Mixed precision: Ensures bit-exact reproducibility with torch.float32
+
+Inference Outputs:
+
+Generated Cells:
+  generated_cells.npy             ← (N_samples, 512) float32
+  sample_types.json               ← {"sample_idx": type_id, ...}
+  sampling_params.json            ← {"guidance_scale": 5.0, "steps": 100}
+
+═══════════════════════════════════════════════════════════════════════════════
+11. EXAMPLE TRAINING LOOP PSEUDOCODE
+═══════════════════════════════════════════════════════════════════════════════
+
+```python
+import torch
+from src.architecture.dit import DiT1D
+from src.data_pipeline.dataset import create_dataloaders
+
+# Setup
+config = load_yaml("configs/dit_v1.yaml")
+model = DiT1D(
+    latent_dim=512,
+    hidden_dim=768,
+    num_layers=12,
+    cond_dim=512
+).to("cuda")
+
+train_loader, val_loader = create_dataloaders(
+    stage="dit",
+    batch_size=256,
+    projected_text_path="data/cached_latents_v5.2/projected_text.npy"
+)
+
+optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+    optimizer, T_max=config["num_epochs"]
+)
+
+# Training loop
+for epoch in range(config["num_epochs"]):
+    # Train
+    model.train()
+    for batch_idx, (z_real, group_ids) in enumerate(train_loader):
+        z_real = z_real.to("cuda")
+        group_ids = group_ids.to("cuda")
+        
+        # Sample timestep & noise
+        t = torch.rand(len(z_real), device="cuda")
+        z_0 = torch.randn_like(z_real)
+        
+        # Interpolate
+        z_t = (1 - t[:, None]) * z_0 + t[:, None] * z_real
+        
+        # Get condition
+        c = projected_text[group_ids].to("cuda")  # (B, 512)
+        
+        # Forward
+        v_pred = model(z_t, t, c)
+        
+        # Loss
+        v_target = z_real - z_0
+        loss = ((v_pred - v_target) ** 2).mean()
+        
+        # Backprop
+        optimizer.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+        optimizer.step()
+    
+    scheduler.step()
+    
+    # Validate
+    model.eval()
+    with torch.no_grad():
+        val_loss = 0
+        for z_real, group_ids in val_loader:
+            z_real = z_real.to("cuda")
+            t = torch.rand(len(z_real), device="cuda")
+            z_0 = torch.randn_like(z_real)
+            z_t = (1 - t[:, None]) * z_0 + t[:, None] * z_real
+            c = projected_text[group_ids].to("cuda")
+            
+            v_pred = model(z_t, t, c)
+            v_target = z_real - z_0
+            val_loss += ((v_pred - v_target) ** 2).mean().item()
+        
+        val_loss /= len(val_loader)
+        print(f"Epoch {epoch}: val_loss={val_loss:.4f}")
+
+# Save best model
+torch.save(model.state_dict(), "checkpoints/dit_best.pth")
+```
+
+═══════════════════════════════════════════════════════════════════════════════
+END OF DiT TECHNICAL SPECIFICATIONS
+═══════════════════════════════════════════════════════════════════════════════
