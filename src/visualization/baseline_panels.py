@@ -16,7 +16,7 @@ from typing import Dict, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import COLORS, save_panel, style_axes
+from .style import COLORS, save_panel, style_axes, GRIDSPEC_TIGHT, set_dense_tick_labels
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +93,7 @@ def plot_baseline_comparison(
     metric_keys = ["FD", "Centroid Cosine", "Diversity Ratio", "Coverage"]
 
     fig = plt.figure(figsize=(22, 7))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.3, 1.0, 1.0], wspace=0.3)
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.3, 1.0, 1.0], **GRIDSPEC_TIGHT)
     fig.suptitle("Baseline Comparison — CLOP-DiT vs Simple Baselines",
                  fontsize=14, fontweight="bold")
 
@@ -185,7 +185,8 @@ def plot_baseline_comparison(
     ax3.barh(y_pos, y_vals, color=bar_colors_final, height=0.6,
              edgecolor="white", linewidth=0.5, alpha=0.85)
     ax3.set_yticks(y_pos)
-    ax3.set_yticklabels(y_labels, fontsize=7)
+    ax3.set_yticklabels(y_labels, fontsize=7, ha="left")
+    set_dense_tick_labels(ax3, axis="y", max_labels=16, fontsize=7, rotation=0)
     ax3.axvline(x=0, color="#333", linewidth=1.2)
     ax3.invert_yaxis()
 
@@ -287,6 +288,60 @@ def _compute_baselines(cache_dir: str = "data/cached_latents_v5.2") -> Dict[str,
         gen_cells[rng.choice(len(gen_cells), n_sub, replace=False)]
     )
 
+    # Random N(0,I) baseline — uninformative prior
+    rand_cells = rng.standard_normal(size=gen_cells.shape)
+    rand_cells = rand_cells / (np.linalg.norm(rand_cells, axis=1, keepdims=True) + 1e-8)
+    rand_labels = rng.choice(unique_types, size=len(gen_cells))
+    rand_overall = GenerationMetrics.full_evaluation(
+        real_cells[r_idx],
+        rand_cells[rng.choice(len(rand_cells), n_sub, replace=False)]
+    )
+    rand_cosines = []
+    rand_div_ratios = []
+    for tid in unique_types:
+        r = real_cells[group_ids == tid]
+        g = rand_cells[rand_labels == tid]
+        if len(r) < 5 or len(g) < 5:
+            continue
+        rc = r.mean(0); rc /= np.linalg.norm(rc) + 1e-8
+        gc = g.mean(0); gc /= np.linalg.norm(gc) + 1e-8
+        rand_cosines.append(float(np.dot(rc, gc)))
+        g_sub = g[rng.choice(len(g), min(100, len(g)), replace=False)]
+        g_n = g_sub / (np.linalg.norm(g_sub, axis=1, keepdims=True) + 1e-8)
+        gg_sim = (g_n @ g_n.T)[np.triu_indices(len(g_n), k=1)].mean()
+        gen_div = 1.0 - gg_sim
+        r_sub = r[rng.choice(len(r), min(100, len(r)), replace=False)]
+        r_n = r_sub / (np.linalg.norm(r_sub, axis=1, keepdims=True) + 1e-8)
+        rr_sim = (r_n @ r_n.T)[np.triu_indices(len(r_n), k=1)].mean()
+        real_div = 1.0 - rr_sim
+        if real_div > 1e-6:
+            rand_div_ratios.append(gen_div / real_div)
+
+    # Mean-only baseline — centroid collapse (zero diversity)
+    mean_cells = []
+    mean_labels = []
+    for tid in unique_types:
+        r = real_cells[group_ids == tid]
+        centroid = r.mean(axis=0)
+        centroid = centroid / (np.linalg.norm(centroid) + 1e-8)
+        mean_cells.append(np.tile(centroid, (n_per, 1)))
+        mean_labels.extend([tid] * n_per)
+    mean_cells = np.concatenate(mean_cells, axis=0)
+    mean_labels = np.array(mean_labels)
+    mean_overall = GenerationMetrics.full_evaluation(
+        real_cells[r_idx],
+        mean_cells[rng.choice(len(mean_cells), n_sub, replace=False)]
+    )
+    mean_cosines = []
+    for tid in unique_types:
+        r = real_cells[group_ids == tid]
+        g = mean_cells[mean_labels == tid]
+        if len(r) < 5 or len(g) < 5:
+            continue
+        rc = r.mean(0); rc /= np.linalg.norm(rc) + 1e-8
+        gc = g.mean(0); gc /= np.linalg.norm(gc) + 1e-8
+        mean_cosines.append(float(np.dot(rc, gc)))
+
     baselines = {
         "Gaussian N(μ,σ²I)": {
             "frechet_distance": gauss_overall.get("frechet_distance", 0),
@@ -299,6 +354,18 @@ def _compute_baselines(cache_dir: str = "data/cached_latents_v5.2") -> Dict[str,
             "mean_centroid_cosine": float(np.mean(shuf_cosines)) if shuf_cosines else 0,
             "diversity_ratio": 1.0,
             "coverage": shuf_overall.get("coverage", 0),
+        },
+        "Random N(0,I)": {
+            "frechet_distance": rand_overall.get("frechet_distance", 0),
+            "mean_centroid_cosine": float(np.mean(rand_cosines)) if rand_cosines else 0,
+            "diversity_ratio": float(np.mean(rand_div_ratios)) if rand_div_ratios else 0,
+            "coverage": rand_overall.get("coverage", 0),
+        },
+        "Mean-only (collapse)": {
+            "frechet_distance": mean_overall.get("frechet_distance", 0),
+            "mean_centroid_cosine": float(np.mean(mean_cosines)) if mean_cosines else 0,
+            "diversity_ratio": 0.0,
+            "coverage": mean_overall.get("coverage", 0),
         },
     }
 

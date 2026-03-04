@@ -17,7 +17,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import COLORS, TYPE_PALETTE, save_panel, style_axes, quality_color
+from .style import COLORS, TYPE_PALETTE, save_panel, style_axes, quality_color, GRIDSPEC_TIGHT, set_dense_tick_labels
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ def plot_clustering_panel(
     cell_type = np.asarray(cell_type)
 
     fig = plt.figure(figsize=(22, 8))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.3, 1.0, 0.8], wspace=0.3)
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.3, 1.0, 0.8], **GRIDSPEC_TIGHT)
     fig.suptitle("Downstream: Clustering & Real–Generated Mixing",
                  fontsize=14, fontweight="bold")
 
@@ -101,6 +101,7 @@ def plot_clustering_panel(
         ax2.barh(y_pos, vals, color=bar_colors, height=0.7, edgecolor="white", linewidth=0.5)
         ax2.set_yticks(y_pos)
         ax2.set_yticklabels(short_names, fontsize=6)
+        set_dense_tick_labels(ax2, axis="y", max_labels=24, fontsize=6, rotation=0)
         ax2.axvline(x=clustering_data.get("mean_mixing_score", 0),
                      color="#D32F2F", linestyle="--", alpha=0.7, linewidth=1.5,
                      label=f"mean={clustering_data.get('mean_mixing_score', 0):.3f}")
@@ -175,7 +176,7 @@ def plot_classifier_panel(
     per_type_acc = classifier_data.get("per_type_accuracy", {})
 
     fig = plt.figure(figsize=(22, 8))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.2, 1.0, 0.9], wspace=0.3)
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.2, 1.0, 0.9], **GRIDSPEC_TIGHT)
     gen_acc = classifier_data.get("gen_accuracy", 0)
     gen_f1 = classifier_data.get("gen_f1", 0)
     disc_auc = classifier_data.get("discriminator_auc", 0)
@@ -196,8 +197,9 @@ def plot_classifier_panel(
 
     ax.set_xticks(range(n_classes))
     ax.set_yticks(range(n_classes))
-    ax.set_xticklabels(short_names, rotation=90, fontsize=max(4, 9 - n_classes // 10))
-    ax.set_yticklabels(short_names, fontsize=max(4, 9 - n_classes // 10))
+    ax.set_xticklabels(short_names, rotation=90, fontsize=max(5, 9 - n_classes // 8), ha="center")
+    ax.set_yticklabels(short_names, fontsize=max(5, 9 - n_classes // 8), ha="right")
+    set_dense_tick_labels(ax, axis="both", max_labels=20, fontsize=max(5, 8 - n_classes // 12), rotation=90, ha="center")
 
     # Highlight diagonal
     for i in range(min(n_classes, cm_norm.shape[0])):
@@ -222,7 +224,8 @@ def plot_classifier_panel(
         ax2.barh(y_pos, vals, color=bar_colors, height=0.7,
                  edgecolor="white", linewidth=0.5)
         ax2.set_yticks(y_pos)
-        ax2.set_yticklabels(short, fontsize=max(5, 8 - len(sorted_types) // 10))
+        ax2.set_yticklabels(short, fontsize=max(5.5, 8 - len(sorted_types) // 8), ha="left")
+        set_dense_tick_labels(ax2, axis="y", max_labels=22, fontsize=max(5.5, 7), rotation=0)
         ax2.axvline(x=gen_acc, color="#D32F2F", linestyle="--", alpha=0.7,
                      linewidth=1.5, label=f"overall={gen_acc:.3f}")
         ax2.set_xlim(0, 1.05)
@@ -302,7 +305,7 @@ def plot_de_concordance_panel(
     n_contrasts = len(contrasts)
 
     fig = plt.figure(figsize=(22, 8))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.2, 0.8, 1.0], wspace=0.3)
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.2, 0.8, 1.0], **GRIDSPEC_TIGHT)
     fig.suptitle("Downstream: DE Concordance — Real vs Generated",
                  fontsize=14, fontweight="bold")
 

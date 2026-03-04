@@ -59,16 +59,21 @@ python scripts/conditioning_analysis.py \
 
 # ── Step 5: Downstream biology (clustering, classifier, DE → P/Q/R data) ──
 echo ""
-echo "▶ Step 5/7: Running downstream biology analysis..."
+echo "▶ Step 5/8: Running downstream biology analysis..."
 python -m src.evaluation.downstream_biology \
     --output-dir results/downstream
 
-# ── Step 6: Generate Panels A–R + combined report ──
+# ── Step 6: Model benchmarking (CLOP-DiT vs 4 baselines) ──
 echo ""
-echo "▶ Step 6/7: Generating panels A–R + combined PDF..."
+echo "▶ Step 6/8: Running model benchmarking..."
+python -m src.evaluation.model_benchmarking
+
+# ── Step 7: Generate Panels A–S + combined report ──
+echo ""
+echo "▶ Step 7/8: Generating panels A–S + combined PDF..."
 python -m src.visualization.results_visualizer $UMAP_FLAG
 
-# ── Step 7: Summary ──
+# ── Step 8: Summary ──
 echo ""
 echo "═══════════════════════════════════════════════════════════════"
 echo "  Report regeneration complete"
@@ -85,11 +90,13 @@ echo "  Panel O:     results/figures/panel_o_baseline_comparison.png"
 echo "  Panel P:     results/figures/panel_p_clustering_alignment.png"
 echo "  Panel Q:     results/figures/panel_q_classifier_alignment.png"
 echo "  Panel R:     results/figures/panel_r_de_concordance.png"
+echo "  Panel S:     results/figures/panel_s_benchmark.png"
 echo "  Combined:    results/figures/clop_dit_full_report.pdf"
 echo ""
 echo "  Metrics:     results/generation_metrics.json"
 echo "               results/generation_metadata.json"
 echo "               results/diversity_diagnostics.json"
 echo "               results/expression_metrics.json"
+echo "               results/benchmark_report.json"
 echo ""
 ls -lh results/figures/clop_dit_full_report.pdf 2>/dev/null || true

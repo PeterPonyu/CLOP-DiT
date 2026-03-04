@@ -20,6 +20,7 @@ Generates multi-panel PDF/PNG reports proving training success:
   Panel P: Clustering alignment (UMAP overlay + kNN mixing score + ARI/NMI gauges)
   Panel Q: Classifier alignment (confusion matrix + per-type accuracy + discriminator ROC)
   Panel R: DE concordance (logFC scatter + concordance heatmap + per-contrast bars)
+  Panel S: Model benchmarking (metrics heatmap + composite score + CI comparison)
 
 Usage:
     python -m src.visualization.results_visualizer                  # defaults
@@ -53,6 +54,8 @@ from .style import (
     save_panel,
     quality_color,
     _build_type_palette,
+    GRIDSPEC_TIGHT,
+    set_dense_tick_labels,
 )
 
 logger = logging.getLogger(__name__)
@@ -168,11 +171,12 @@ class ResultsVisualizer:
         h = self.clop_hist
         epochs = np.arange(1, len(h["train_loss"]) + 1)
 
-        fig, axes = plt.subplots(2, 2, figsize=(14, 9))
+        fig = plt.figure(figsize=(12, 8))
+        gs = fig.add_gridspec(2, 2, **GRIDSPEC_TIGHT)
         fig.suptitle("CLOP Contrastive Pre-training (v9.3)", fontsize=14, fontweight="bold")
 
         # A1: Loss curves
-        ax = axes[0, 0]
+        ax = fig.add_subplot(gs[0, 0])
         ax.plot(epochs, h["train_loss"], label="Train", color="#2196F3")
         ax.plot(epochs, h["val_loss"], label="Val", color="#FF5722", linestyle="--")
         ax.set_xlabel("Epoch")
@@ -186,7 +190,7 @@ class ResultsVisualizer:
                     fontsize=8, color="#FF5722", ha="right")
 
         # A2: Temperature stability
-        ax = axes[0, 1]
+        ax = fig.add_subplot(gs[0, 1])
         ax.plot(epochs, h["temperature"], color="#4CAF50", linewidth=2)
         ax.set_xlabel("Epoch")
         ax.set_ylabel("Temperature (τ)")
@@ -196,7 +200,7 @@ class ResultsVisualizer:
         ax.legend()
 
         # A3: Prototype accuracy
-        ax = axes[1, 0]
+        ax = fig.add_subplot(gs[1, 0])
         ax.plot(epochs, np.array(h["val_proto_acc"]) * 100, label="Val Proto Acc", color="#9C27B0", linewidth=2)
         ax.plot(epochs, np.array(h["train_proto_acc"]) * 100, label="Train Proto Acc",
                 color="#9C27B0", linestyle=":", alpha=0.6)
@@ -218,7 +222,7 @@ class ResultsVisualizer:
                     bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#9C27B0", alpha=0.8))
 
         # A4: Embedding quality metrics
-        ax = axes[1, 1]
+        ax = fig.add_subplot(gs[1, 1])
         quality_metrics = [
             ("val_text_cell_align", "Text↔Cell Alignment", "#E91E63"),
             ("val_inter_sep", "Inter-type Separation", "#FF9800"),
@@ -336,7 +340,7 @@ class ResultsVisualizer:
 
         # ── Plot (3 panels) ──
         fig = plt.figure(figsize=(22, 8))
-        gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.2, 1.2], wspace=0.25)
+        gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.2, 1.2], **GRIDSPEC_TIGHT)
         fig.suptitle("CLOP Alignment Space (UMAP — all embeddings in shared CLOP projection)",
                      fontsize=14, fontweight="bold")
 
@@ -409,11 +413,12 @@ class ResultsVisualizer:
         h = self.dit_hist
         epochs = np.arange(1, len(h["train_loss"]) + 1)
 
-        fig, axes = plt.subplots(1, 3, figsize=(16, 4.5))
+        fig = plt.figure(figsize=(16, 4.5))
+        gs_c = fig.add_gridspec(1, 3, **GRIDSPEC_TIGHT)
         fig.suptitle("DiT Flow-Matching Training", fontsize=14, fontweight="bold")
 
         # C1: Loss
-        ax = axes[0]
+        ax = fig.add_subplot(gs_c[0])
         ax.plot(epochs, h["train_loss"], label="Train MSE", color="#2196F3")
         ax.plot(epochs, h["val_loss"], label="Val MSE", color="#FF5722", linestyle="--")
         ax.set_xlabel("Epoch")
@@ -430,7 +435,7 @@ class ResultsVisualizer:
                     fontsize=8, color="#FF5722", ha="right")
 
         # C2: Cosine similarity
-        ax = axes[1]
+        ax = fig.add_subplot(gs_c[1])
         ax.plot(epochs, h["val_cosine_sim"], color="#4CAF50", linewidth=2)
         ax.set_xlabel("Epoch")
         ax.set_ylabel("Cosine Similarity")
@@ -445,7 +450,7 @@ class ResultsVisualizer:
                     bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#4CAF50", alpha=0.8))
 
         # C3: Learning rate
-        ax = axes[2]
+        ax = fig.add_subplot(gs_c[2])
         ax.plot(epochs, h["lr"], color="#9C27B0", linewidth=1.5)
         ax.set_xlabel("Epoch")
         ax.set_ylabel("Learning Rate")
@@ -542,8 +547,8 @@ class ResultsVisualizer:
         if not train_metrics and not gen_metrics:
             return None
 
-        fig = plt.figure(figsize=(20, 14))
-        gs = fig.add_gridspec(2, 2, hspace=0.35, wspace=0.3)
+        fig = plt.figure(figsize=(16, 11))
+        gs = fig.add_gridspec(2, 2, **GRIDSPEC_TIGHT)
         fig.suptitle("CLOP-DiT Pipeline — Metrics Dashboard",
                      fontsize=16, fontweight="bold", y=0.98)
 
@@ -794,11 +799,12 @@ class ResultsVisualizer:
         real_c = coords[:len(real_sub)]
         gen_c = coords[len(real_sub):]
 
-        fig, axes = plt.subplots(1, 3, figsize=(20, 6))
+        fig = plt.figure(figsize=(18, 5.5))
+        gs_e = fig.add_gridspec(1, 3, **GRIDSPEC_TIGHT)
         fig.suptitle("Real vs Generated Cell Embeddings (DiT v1)", fontsize=14, fontweight="bold")
 
         # E1: Real — type-coloured
-        ax = axes[0]
+        ax = fig.add_subplot(gs_e[0])
         if real_gids_sub is not None:
             for t in np.unique(real_gids_sub):
                 mask = real_gids_sub == t
@@ -812,7 +818,7 @@ class ResultsVisualizer:
         ax.set_ylabel("UMAP 2")
 
         # E2: Generated — type-coloured
-        ax = axes[1]
+        ax = fig.add_subplot(gs_e[1])
         if gen_gids_sub is not None:
             for t in np.unique(gen_gids_sub):
                 mask = gen_gids_sub == t
@@ -826,7 +832,7 @@ class ResultsVisualizer:
         ax.set_ylabel("UMAP 2")
 
         # E3: Overlay — type-coloured, shape-split (circle=real, triangle=gen)
-        ax = axes[2]
+        ax = fig.add_subplot(gs_e[2])
         if real_gids_sub is not None and gen_gids_sub is not None:
             for t in np.unique(np.concatenate([real_gids_sub, gen_gids_sub])):
                 color = TYPE_PALETTE[int(t) % len(TYPE_PALETTE)]
@@ -911,8 +917,8 @@ class ResultsVisualizer:
         diag_sorted = diag[sort_order]
         counts_sorted = type_counts[sort_order]
 
-        fig = plt.figure(figsize=(24, 12))
-        gs = fig.add_gridspec(1, 3, width_ratios=[1.6, 0.7, 0.5], wspace=0.25)
+        fig = plt.figure(figsize=(20, 9))
+        gs = fig.add_gridspec(1, 3, width_ratios=[1.6, 0.7, 0.5], **GRIDSPEC_TIGHT)
         fig.suptitle(
             f"Text–Cell Alignment (CLOP Space)  —  "
             f"Diagonal: {mean_diag:.3f} ± {diag.std():.3f}  |  "
@@ -933,8 +939,9 @@ class ResultsVisualizer:
                         interpolation="nearest")
         ax1.set_xticks(range(n_types))
         ax1.set_yticks(range(n_types))
-        ax1.set_xticklabels(labels_sorted, rotation=90, fontsize=4.5, ha="center")
-        ax1.set_yticklabels(labels_sorted, fontsize=4.5)
+        ax1.set_xticklabels(labels_sorted, rotation=90, fontsize=5, ha="center")
+        ax1.set_yticklabels(labels_sorted, fontsize=5, ha="right")
+        set_dense_tick_labels(ax1, axis="both", max_labels=24, fontsize=5, rotation=90, ha="center")
         ax1.set_xlabel("Cell Type (cell centroids)", fontsize=10)
         ax1.set_ylabel("Cell Type (text prototypes)", fontsize=10)
         ax1.set_title("F1: Cosine Similarity (sorted by alignment strength)", fontsize=11)
@@ -982,7 +989,8 @@ class ResultsVisualizer:
         bars = ax2.barh(range(n_types), d_asc, color=color_map, height=0.8,
                         edgecolor="white", linewidth=0.3)
         ax2.set_yticks(range(n_types))
-        ax2.set_yticklabels(labels_asc, fontsize=4.5)
+        ax2.set_yticklabels(labels_asc, fontsize=5, ha="left")
+        set_dense_tick_labels(ax2, axis="y", max_labels=24, fontsize=5, rotation=0)
         ax2.set_xlabel("Diagonal Cosine Similarity", fontsize=9)
         ax2.set_title("F2: Per-Type Alignment", fontsize=11)
 
@@ -1058,7 +1066,8 @@ class ResultsVisualizer:
         # Short labels
         short_names = [n[:22] for n in names]
 
-        fig, axes = plt.subplots(1, 3, figsize=(20, 8))
+        fig = plt.figure(figsize=(18, 7))
+        gs_g = fig.add_gridspec(1, 3, **GRIDSPEC_TIGHT)
         summary = data.get("summary", {})
         overall = data.get("overall", {})
         fig.suptitle(
@@ -1069,14 +1078,15 @@ class ResultsVisualizer:
         )
 
         # G1: Centroid cosine (sorted)
-        ax = axes[0]
+        ax = fig.add_subplot(gs_g[0])
         sorted_idx = np.argsort(cosines)
         sorted_cos = [cosines[i] for i in sorted_idx]
         sorted_names_cos = [short_names[i] for i in sorted_idx]
         colors = ["#4CAF50" if v > 0.9 else "#FF9800" if v > 0.7 else "#F44336" for v in sorted_cos]
         ax.barh(range(len(sorted_cos)), sorted_cos, color=colors, height=0.8)
         ax.set_yticks(range(len(sorted_cos)))
-        ax.set_yticklabels(sorted_names_cos, fontsize=5)
+        ax.set_yticklabels(sorted_names_cos, fontsize=5.5, ha="left")
+        set_dense_tick_labels(ax, axis="y", max_labels=24, fontsize=5.5, rotation=0)
         ax.set_xlabel("Centroid Cosine Similarity")
         ax.set_title("G1: Real↔Gen Centroid Cosine")
         ax.axvline(x=summary.get("mean_centroid_cosine", 0), color="red",
@@ -1085,14 +1095,15 @@ class ResultsVisualizer:
         ax.legend(fontsize=8)
 
         # G2: Fréchet distance (sorted, larger = worse)
-        ax = axes[1]
+        ax = fig.add_subplot(gs_g[1])
         valid_fd = [(n, f) for n, f in zip(short_names, fds) if np.isfinite(f)]
         if valid_fd:
             fd_names, fd_vals = zip(*sorted(valid_fd, key=lambda x: x[1]))
             colors_fd = ["#4CAF50" if v < 0.1 else "#FF9800" if v < 0.3 else "#F44336" for v in fd_vals]
             ax.barh(range(len(fd_vals)), fd_vals, color=colors_fd, height=0.8)
             ax.set_yticks(range(len(fd_vals)))
-            ax.set_yticklabels(fd_names, fontsize=5)
+            ax.set_yticklabels(fd_names, fontsize=5.5, ha="left")
+            set_dense_tick_labels(ax, axis="y", max_labels=24, fontsize=5.5, rotation=0)
             ax.set_xlabel("Fréchet Distance (lower = better)")
             ax.set_title("G2: Per-Type Fréchet Distance")
         else:
@@ -1100,7 +1111,7 @@ class ResultsVisualizer:
                     transform=ax.transAxes)
 
         # G3: Cosine vs dataset size
-        ax = axes[2]
+        ax = fig.add_subplot(gs_g[2])
         ax.scatter(n_real, cosines, c="#3F51B5", s=40, alpha=0.7, edgecolors="white", linewidth=0.5)
         # Label outliers (low cosine)
         for i, (nr, cos) in enumerate(zip(n_real, cosines)):
@@ -1155,8 +1166,8 @@ class ResultsVisualizer:
         pearson_r = metrics["gene_correlation"]["pearson_r"]
         spearman_rho = metrics["gene_correlation"]["spearman_rho"]
 
-        fig = plt.figure(figsize=(24, 12))
-        gs = fig.add_gridspec(2, 2, hspace=0.35, wspace=0.3)
+        fig = plt.figure(figsize=(20, 10))
+        gs = fig.add_gridspec(2, 2, **GRIDSPEC_TIGHT)
         fig.suptitle(
             f"Gene Expression Recovery — Pearson r = {pearson_r:.6f}  |  "
             f"Spearman ρ = {spearman_rho:.6f}  |  "
@@ -1216,7 +1227,8 @@ class ResultsVisualizer:
             ax2.scatter(type_rs, y_pos, c=colors_h2, s=30, zorder=3, edgecolors="white",
                         linewidths=0.5)
             ax2.set_yticks(y_pos)
-            ax2.set_yticklabels(short_names, fontsize=4)
+            ax2.set_yticklabels(short_names, fontsize=5.5, ha="left")
+            set_dense_tick_labels(ax2, axis="y", max_labels=24, fontsize=5.5, rotation=0)
             ax2.axvline(x=mean_r, color="#D32F2F", linestyle="--", alpha=0.6, linewidth=1.5,
                         label=f"mean={mean_r:.6f}")
             ax2.set_xlim(min_r - 0.0005, 1.00005)
@@ -1338,8 +1350,8 @@ class ResultsVisualizer:
 
         overall = metrics.get("overall", {})
 
-        fig = plt.figure(figsize=(24, 12))
-        gs = fig.add_gridspec(2, 2, hspace=0.35, wspace=0.3)
+        fig = plt.figure(figsize=(20, 10))
+        gs = fig.add_gridspec(2, 2, **GRIDSPEC_TIGHT)
         fig.suptitle(
             f"Expression Decoder Analysis — "
             f"{real.shape[0]} real cells, {gen.shape[0]} gen cells, "
@@ -1467,7 +1479,8 @@ class ResultsVisualizer:
         ax4.axvline(x=1.0, color="#333", linestyle="-", linewidth=1.5)
         ax4.axvspan(0.9, 1.1, alpha=0.08, color="green")
         ax4.set_yticks(range(n_show))
-        ax4.set_yticklabels(names_show, fontsize=5)
+        ax4.set_yticklabels(names_show, fontsize=5.5, ha="left")
+        set_dense_tick_labels(ax4, axis="y", max_labels=18, fontsize=5.5, rotation=0)
         ax4.set_xlabel("Std Ratio (Gen / Real, clipped at 5×)", fontsize=9)
         ax4.set_title("I4: Top Variable Genes (std gen/real)", fontsize=11)
         for i, r in enumerate(ratios_show):
@@ -1561,8 +1574,8 @@ class ResultsVisualizer:
         n_markers = len(all_marker_genes)
         n_sel_types = len(selected_type_ids)
 
-        fig = plt.figure(figsize=(26, 12))
-        gs = fig.add_gridspec(2, 2, hspace=0.35, wspace=0.3)
+        fig = plt.figure(figsize=(22, 10))
+        gs = fig.add_gridspec(2, 2, **GRIDSPEC_TIGHT)
         fig.suptitle("Marker Gene Biological Validation — Real vs Generated Expression",
                      fontsize=14, fontweight="bold")
 
@@ -1807,7 +1820,7 @@ class ResultsVisualizer:
           Part I   (A–C):   Training & alignment
           Part II  (D–G):   Latent-space generation quality & diversity
           Part III (H–N):   Expression reconstruction & biological validation
-          Part IV  (O–R):   Baselines, downstream utility, DE concordance
+          Part IV  (O–S):   Baselines, downstream utility, DE concordance, benchmarking
 
         Returns list of saved file paths.
         """
@@ -1882,6 +1895,20 @@ class ResultsVisualizer:
         # Panels P/Q/R: Downstream biology (from pre-computed JSONs)
         ds_saved = self.plot_downstream_panels()
         saved.extend(ds_saved)
+
+        # Panel S: Model Benchmarking
+        try:
+            from .benchmark_panels import plot_benchmark_panel as _plot_s
+            fig_s = _plot_s(
+                report_path="results/benchmark_report.json",
+                output_dir=self.output,
+                dpi=self.dpi,
+            )
+            if fig_s:
+                saved.append(self.output / "panel_s_benchmark.pdf")
+                plt.close(fig_s)
+        except Exception as exc:
+            logger.warning(f"Panel S (Benchmark) failed: {exc}")
 
         # Panels J–M: Pre-generated external panels
         for panel_name in [

@@ -25,13 +25,13 @@ import numpy as np
 VIS_STYLE: dict = {
     "font.family": "sans-serif",
     "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
-    "font.size": 10,
-    "axes.titlesize": 12,
+    "font.size": 11,
+    "axes.titlesize": 13,
     "axes.titleweight": "bold",
     "axes.labelsize": 11,
     "xtick.labelsize": 9,
     "ytick.labelsize": 9,
-    "legend.fontsize": 9,
+    "legend.fontsize": 10,
     "legend.frameon": True,
     "legend.edgecolor": "0.8",
     "axes.linewidth": 0.8,
@@ -106,13 +106,13 @@ def style_axes(
         Adjusts font sizes and grid visibility to suit the subplot type.
     """
     style_map = {
-        "default":  {"title": 12, "label": 10, "tick": 9,  "grid": True},
-        "bar":      {"title": 12, "label": 10, "tick": 9,  "grid": True},
-        "heatmap":  {"title": 12, "label": 10, "tick": 7,  "grid": False},
-        "scatter":  {"title": 12, "label": 10, "tick": 9,  "grid": True},
-        "umap":     {"title": 12, "label": 10, "tick": 8,  "grid": False},
-        "polar":    {"title": 12, "label": 9,  "tick": 8,  "grid": True},
-        "table":    {"title": 12, "label": 10, "tick": 9,  "grid": False},
+        "default":  {"title": 13, "label": 11, "tick": 9,  "grid": True},
+        "bar":      {"title": 13, "label": 11, "tick": 9,  "grid": True},
+        "heatmap":  {"title": 13, "label": 11, "tick": 8,  "grid": False},
+        "scatter":  {"title": 13, "label": 11, "tick": 9,  "grid": True},
+        "umap":     {"title": 13, "label": 11, "tick": 9,  "grid": False},
+        "polar":    {"title": 13, "label": 10, "tick": 9,  "grid": True},
+        "table":    {"title": 13, "label": 11, "tick": 9,  "grid": False},
     }
     s = style_map.get(kind, style_map["default"])
 
@@ -160,3 +160,44 @@ def quality_color(value: float, thresholds: tuple = (0.8, 0.5)) -> str:
     elif value >= lo:
         return COLORS["warn"]
     return COLORS["bad"]
+
+
+# ──────────────────────────────────────────────────────────────
+# Layout and dense-label helpers (avoid font overlap)
+# ──────────────────────────────────────────────────────────────
+
+# Tighter subplot spacing for condensed figures
+GRIDSPEC_TIGHT = {"wspace": 0.18, "hspace": 0.22}
+GRIDSPEC_DEFAULT = {"wspace": 0.25, "hspace": 0.28}
+
+
+def set_dense_tick_labels(
+    ax: plt.Axes,
+    axis: str = "both",
+    *,
+    max_labels: int = 25,
+    fontsize: int = 6,
+    rotation: int = 45,
+    ha: str = "right",
+) -> None:
+    """Reduce tick label density to avoid overlap when many categories.
+
+    If axis has more than *max_labels* ticks, show every Nth label.
+    """
+    for a in (["x", "y"] if axis == "both" else [axis]):
+        ticks = ax.get_xticklabels() if a == "x" else ax.get_yticklabels()
+        n = len(ticks)
+        if n > max_labels:
+            step = max(1, n // max_labels)
+            for i, t in enumerate(ticks):
+                if i % step != 0:
+                    t.set_visible(False)
+        for t in ticks:
+            if t.get_visible():
+                t.set_fontsize(fontsize)
+                if a == "x":
+                    t.set_rotation(rotation)
+                    t.set_ha(ha)
+                else:
+                    t.set_rotation(0)
+                    t.set_ha("right")
