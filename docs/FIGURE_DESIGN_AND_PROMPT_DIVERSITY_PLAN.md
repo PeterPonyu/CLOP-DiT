@@ -1,0 +1,157 @@
+# Figure Design & Prompt Diversity: Enhancement Plan
+
+## 1. Current Generation Flow: Single vs Multiple Inference
+
+### How it works today
+
+- **`generate_embeddings.py`** loops over 69 types. For each type:
+  1. Builds `cond` (centroid or per-cell sampled from `projected_text[mask]`).
+  2. Calls `model.sample(cond, num_steps=20, cfg_scale=...)` **once** per type.
+  3. Each call: `z_0 ~ N(0,I)` (different noise per cell), then Euler ODE integration.
+  4. Outputs are concatenated: `generated = np.concatenate(all_gen, axis=0)`.
+
+- **Inference structure:**
+  - **69 separate inference runs** (one per type).
+  - **No latent-space integration** — no averaging, ensembling, or merging across runs.
+  - All cells live in the same latent space (preprocessed scGPT); they are simply stacked.
+
+- **Per-cell vs centroid:**
+  - In the deduplicated setup, all cells of a type share the same caption → `projected_text[mask]` rows are identical.
+  - So `per_cell` mode samples the same condition repeatedly → effectively same as centroid.
+  - Diversity comes only from `z_0` and CFG strength.
+
+---
+
+## 2. Diversity in Prompts That Generate Cells
+
+### Current sources of prompt diversity
+
+| Source | Diversity | Where used |
+|--------|-----------|------------|
+| **69 canonical captions** | One per type; no within-type variation | `generate_embeddings.py`, `projected_text.npy` |
+| **Caption variants** | Multiple phrasings per type (if `text_variant_embeddings.npy` exists) | CLOP training with `variant_prob`; not used at generation |
+| **PROMPT_VARIANTS** | 4 phrasings each for CD8_T, Macrophage | `10_full_pipeline.evaluate_prompt_robustness` only |
+| **Free text** | Arbitrary user prompts | `05_inference.py` |
+
+### Gaps
+
+- Evaluation uses **one condition per type** (centroid) for the main report.
+- **Per-cell** mode does not add diversity when captions are deduplicated.
+- **Prompt robustness** (different phrasings → similar cells?) is evaluated but not visualized in the main report.
+
+### Design: prompt-diversity-aware generation
+
+1. **Variant-conditioned generation**  
+   If `text_variant_embeddings.npy` exists: for each type, sample conditions from its variants (not just centroid). Encode variants through CLOP, then use them as conditions. This would give real prompt diversity at generation time.
+
+2. **Synthetic condition noise**  
+   For each cell: `cond = proto + ε * N(0,I)` with small ε (e.g. 0.05), then L2-normalize. Simulates “slightly different prompts” and can increase diversity even with one caption per type.
+
+3. **Multi-prompt evaluation panel**  
+   For 3–5 selected types, generate with:
+   - Centroid
+   - 2–3 alternative phrasings (from PROMPT_VARIANTS or manual)
+   - Optionally centroid + noise  
+   Plot UMAP clouds per prompt; show that semantically similar prompts yield overlapping clouds.
+
+---
+
+## 3. New Figure Types to Enhance Presentation
+
+### A. Narrative / flow figures
+
+| Figure | Description | Assumption |
+|--------|-------------|------------|
+| **Pipeline schematic** | End-to-end: raw data → scGPT → CLOP → DiT → scGPT decode → expression. Highlight text vs cell paths. | Improves clarity for new readers. |
+| **Three-space bridge** | 3 UMAPs: BiomedBERT text space | CLOP space (text + cell) | scGPT cell space. Arrows between them. | Shows how CLOP bridges modalities. |
+| **Trajectory ribbon** | For 1–2 types: plot `z_t` at t=0, 0.25, 0.5, 0.75, 1.0 (or a few steps). Points or ribbons in 2D (UMAP/PCA of latent). | Illustrates flow from noise to data. |
+
+### B. Diversity & conditioning figures
+
+| Figure | Description | Assumption |
+|--------|-------------|------------|
+| **Prompt-diversity UMAP** | For 2–3 types: 4 clouds (centroid, variant1, variant2, centroid+noise). Color by prompt. | Variant prompts produce overlapping but distinct clouds. |
+| **Condition-sensitivity matrix** | Rows = types, columns = condition mode (centroid / per_cell / centroid+noise). Cell = diversity ratio or centroid cosine. | Quantifies effect of conditioning strategy. |
+| **CFG vs diversity trade-off** | X = CFG, Y = diversity ratio (or centroid cosine). One curve per type or mean ± std. | Shows CFG as main diversity lever. |
+| **Ridge plot: real vs gen per type** | For 5–10 types: ridge (joy) plot of pairwise cosine distance. Real vs gen side-by-side. | Highlights which types collapse. |
+
+### C. Biological & expression figures
+
+| Figure | Description | Assumption |
+|--------|-------------|------------|
+| **Marker gene heatmap (real vs gen)** | Rows = types, columns = top markers. Two heatmaps: real mean expr, gen mean expr. | Confirms marker fidelity. |
+| **Violin: expression per marker** | For 3–5 markers: violin of expression in real vs gen (optionally per type). | Shows distribution match, not just mean. |
+| **Gene–gene correlation comparison** | 2×2: real real, real gen, gen real, gen gen. Or difference heatmap. | Checks if gene–gene structure is preserved. |
+
+### D. Robustness & diagnostics figures
+
+| Figure | Description | Assumption |
+|--------|-------------|------------|
+| **Prompt-robustness radar** | For each type in PROMPT_VARIANTS: radar of cross-variant cosine sims. | Shows robustness to wording. |
+| **Seed-stability plot** | Same condition, 3–5 seeds. UMAP with points colored by seed. | Tight clusters = low sensitivity to seed. |
+| **Memorization scatter** | X = distance to nearest real, Y = distance to nearest same-type real. Color by type. | Separates memorization from healthy proximity. |
+
+### E. Summary / dashboard figures
+
+| Figure | Description | Assumption |
+|--------|-------------|------------|
+| **One-page dashboard** | 2×3 or 3×3: FD, MMD, diversity ratio, centroid cos, gene r, collapsed count. Gauges or small bar charts. | Quick overview for reports. |
+| **Type-level scorecard** | Table or heatmap: type × (centroid cos, FD, diversity ratio, n_real). Color-coded. | Identifies weak types. |
+| **Before/after CFG** | Side-by-side UMAP: CFG=3.0 vs CFG=1.0. Same types, same colors. | Visualizes CFG impact. |
+
+---
+
+## 4. Multi-Inference and Latent Integration (Design Options)
+
+### Current: no integration
+
+- 69 independent runs; outputs concatenated.
+- No cross-run aggregation.
+
+### Design: optional integration strategies
+
+1. **Ensemble by condition**  
+   For each type, generate with:
+   - Centroid
+   - Centroid + small noise (3–5 samples)  
+   Concatenate. No latent averaging; just more diverse conditions.
+
+2. **Multi-seed averaging (experimental)**  
+   For each cell “slot”: run 3 seeds, take mean latent.  
+   - Pros: smoother, more stable.  
+   - Cons: can reduce diversity; not standard for diffusion.
+
+3. **Latent interpolation**  
+   Generate with cond_A and cond_B (e.g. two types or two variants). For α ∈ [0,1]: `z = (1-α)*z_A + α*z_B`.  
+   - Use case: interpolate between cell states or types.
+
+4. **Chained generation**  
+   Generate type 1; use a subset of outputs as “anchors”; generate type 2 with conditions that encourage proximity to anchors.  
+   - Use case: structured atlases or trajectories; more complex to implement.
+
+**Recommendation:** Start with (1) — condition-level diversity. (2)–(4) are optional extensions.
+
+---
+
+## 5. Implementation Priority
+
+| Priority | Figure / change | Effort | Impact |
+|----------|-----------------|--------|--------|
+| **P0** | CFG vs diversity trade-off (from diagnostics) | Low | High — directly actionable |
+| **P0** | Before/after CFG UMAP | Low | High — clear visual |
+| **P1** | Prompt-diversity UMAP (2–3 types, PROMPT_VARIANTS) | Medium | High — addresses reviewer concern |
+| **P1** | Ridge plot (real vs gen diversity per type) | Medium | Medium — diagnostic |
+| **P2** | Three-space bridge | Medium | Medium — conceptual |
+| **P2** | Trajectory ribbon | Medium | Low — illustrative |
+| **P2** | One-page dashboard | Low | Medium — summary |
+| **P3** | Synthetic condition noise in generation | Low | Medium — diversity lever |
+| **P3** | Variant-conditioned generation (if variants exist) | Medium | High — real prompt diversity |
+
+---
+
+## 6. Summary
+
+- **Generation:** 69 separate inference runs; outputs concatenated; no latent integration.
+- **Prompt diversity:** Currently low — one caption per type; per_cell = centroid when deduped. PROMPT_VARIANTS used only in robustness eval.
+- **New figures:** CFG trade-off, before/after CFG, prompt-diversity UMAP, ridge plot, three-space bridge, dashboard.
+- **Generation enhancements:** Synthetic condition noise; variant-conditioned generation when variants exist; optional multi-prompt evaluation panel.

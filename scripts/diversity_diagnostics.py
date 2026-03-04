@@ -395,11 +395,13 @@ def test_condition_sensitivity(
     num_steps: int = 20,
     cfg_scale: float = 3.0,
     sample_types: int = 10,
+    noise_scale: float = 0.03,
 ) -> Dict:
-    """Compare generation quality when using centroid vs real per-cell conditions.
+    """Compare generation quality: centroid vs condition_noise vs per_cell.
 
-    - Centroid mode: same condition for all cells in a type (current approach)
-    - Per-cell mode: each cell gets a DIFFERENT real training condition from that type
+    - Centroid mode: same condition for all cells in a type
+    - Condition noise: centroid + ε·N(0,I), L2-normalized (the real diversity lever)
+    - Per-cell mode: sample from per-cell projected_text (no-op when deduped)
     """
     device = next(model.parameters()).device
     unique = np.sort(np.unique(group_ids))
@@ -421,29 +423,30 @@ def test_condition_sensitivity(
         gen_centroid = generate_with_conditions(model, cond_centroid,
                                                 num_steps=num_steps, cfg_scale=cfg_scale)
 
-        # Mode B: Per-cell conditions (sample real conditions)
-        cell_idx = rng.choice(len(type_pts), size=num_per_type, replace=True)
-        cond_percell = torch.from_numpy(type_pts[cell_idx]).float()
+        # Mode B: Condition noise (centroid + Gaussian noise, L2-normed)
+        protos = np.tile(proto, (num_per_type, 1))
+        noise = rng.normal(0, noise_scale, size=protos.shape)
+        noisy = protos + noise
+        norms = np.linalg.norm(noisy, axis=1, keepdims=True) + 1e-8
+        noisy = noisy / norms
+        cond_noise = torch.from_numpy(noisy).float()
 
         seed_everything(42)  # Same seeds for fair comparison
-        gen_percell = generate_with_conditions(model, cond_percell,
-                                               num_steps=num_steps, cfg_scale=cfg_scale)
+        gen_noise = generate_with_conditions(model, cond_noise,
+                                             num_steps=num_steps, cfg_scale=cfg_scale)
 
-        # Diversity: centroid vs per-cell
+        # Diversity: centroid vs condition_noise
         cos_centroid = pairwise_cosine(gen_centroid)
-        cos_percell = pairwise_cosine(gen_percell)
+        cos_noise = pairwise_cosine(gen_noise)
 
         div_centroid = 1.0 - cos_centroid.mean()
-        div_percell = 1.0 - cos_percell.mean()
+        div_noise = 1.0 - cos_noise.mean()
 
         results[int(t_id)] = {
             "centroid_diversity": float(div_centroid),
-            "percell_diversity": float(div_percell),
-            "diversity_gain": float(div_percell / (div_centroid + 1e-8)),
+            "noise_diversity": float(div_noise),
+            "diversity_gain": float(div_noise / (div_centroid + 1e-8)),
             "n_type_cells": int(mask.sum()),
-            "text_cond_spread": float(1.0 - pairwise_cosine(
-                type_pts[rng.choice(len(type_pts), min(100, len(type_pts)), replace=False)]
-            ).mean()),
         }
 
     # Summary
@@ -453,10 +456,11 @@ def test_condition_sensitivity(
         "summary": {
             "mean_diversity_gain": float(np.mean(gains)),
             "max_diversity_gain": float(np.max(gains)),
+            "noise_scale": noise_scale,
             "interpretation": (
-                "gain > 1.0 means per-cell conditions produce MORE diverse outputs. "
-                "gain ≈ 1.0 means the model ignores condition variation. "
-                "The gap reveals how much diversity is lost by centroid conditioning."
+                "gain > 1.0 means condition noise produces MORE diverse outputs. "
+                "gain ≈ 1.0 means the model ignores condition noise. "
+                "The gap reveals how much diversity is added by noisy conditions."
             ),
         },
     }
@@ -637,28 +641,29 @@ def plot_diagnostics(
     else:
         ax.set_title("J3: CFG Scale vs Diversity")
 
-    # J4: Condition sensitivity — centroid vs per-cell
+    # J4: Condition sensitivity — centroid vs condition_noise
     ax = axes[1, 1]
     t5 = all_results.get("test5_condition_sensitivity", {})
     if t5:
         per_type = t5.get("per_type", {})
         type_ids = sorted(per_type.keys(), key=lambda k: per_type[k]["diversity_gain"])
         cent_divs = [per_type[k]["centroid_diversity"] for k in type_ids]
-        cell_divs = [per_type[k]["percell_diversity"] for k in type_ids]
+        noise_divs = [per_type[k]["noise_diversity"] for k in type_ids]
 
         x = np.arange(len(type_ids))
         w = 0.35
         ax.bar(x - w / 2, cent_divs, w, label="Centroid Cond", color="#1976D2", alpha=0.8)
-        ax.bar(x + w / 2, cell_divs, w, label="Per-Cell Cond", color="#FF7043", alpha=0.8)
+        ax.bar(x + w / 2, noise_divs, w, label="Centroid + Noise", color="#FF7043", alpha=0.8)
         ax.set_xticks(x)
         ax.set_xticklabels([str(k) for k in type_ids], fontsize=7)
         ax.set_xlabel("Type ID")
         ax.set_ylabel("Intra-Type Diversity (1 - mean cosine)")
         gain = t5["summary"]["mean_diversity_gain"]
-        ax.set_title(f"J4: Centroid vs Per-Cell Cond (gain={gain:.2f}x)")
+        eps = t5["summary"].get("noise_scale", "?")
+        ax.set_title(f"J4: Centroid vs Noisy Cond (gain={gain:.2f}x, ε={eps})")
         ax.legend(fontsize=8)
     else:
-        ax.set_title("J4: Centroid vs Per-Cell Conditioning")
+        ax.set_title("J4: Centroid vs Noisy Conditioning")
 
     path = out / "panel_j_diversity_diagnostics.png"
     fig.savefig(path, dpi=dpi)
@@ -823,13 +828,13 @@ def main():
 
     # Test 5: Condition sensitivity
     print("\n" + "=" * 60)
-    print("TEST 5: Centroid vs Per-Cell Conditioning")
+    print("TEST 5: Centroid vs Condition Noise")
     print("=" * 60)
     t5 = test_condition_sensitivity(model, projected_text, group_ids,
                                     num_per_type=args.num_per_type,
                                     num_steps=args.num_steps)
     all_results["test5_condition_sensitivity"] = t5
-    print(f"  Mean diversity gain (per-cell/centroid): {t5['summary']['mean_diversity_gain']:.4f}x")
+    print(f"  Mean diversity gain (noise/centroid): {t5['summary']['mean_diversity_gain']:.4f}x")
 
     # Test 6: Expression diversity
     print("\n" + "=" * 60)
@@ -874,9 +879,11 @@ def main():
         verdict_lines.append("NO MEMORIZATION — generated cells are novel")
 
     if t5["summary"]["mean_diversity_gain"] > 1.5:
-        verdict_lines.append("CONDITION-SENSITIVE — per-cell prompts significantly increase diversity")
+        verdict_lines.append("CONDITION-SENSITIVE — noisy conditions significantly increase diversity")
+    elif t5["summary"]["mean_diversity_gain"] > 1.1:
+        verdict_lines.append("CONDITION-RESPONSIVE — noisy conditions moderately help diversity")
     else:
-        verdict_lines.append("CONDITION-INSENSITIVE — model output similar regardless of prompt variation")
+        verdict_lines.append("CONDITION-INSENSITIVE — model output similar regardless of condition noise")
 
     for line in verdict_lines:
         print(f"  {line}")
