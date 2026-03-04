@@ -451,6 +451,25 @@ def main():
     np.save(out / "generated_labels.npy", gen_labels)
     logger.info(f"Saved generated embeddings → {out / 'generated_embeddings.npy'}")
 
+    # Save generation metadata (reproducibility + consumed by Panel D)
+    gen_metadata = {
+        "condition_mode": args.condition_mode,
+        "noise_scale": args.noise_scale,
+        "cfg_scale": args.cfg_scale,
+        "num_per_type": args.num_per_type,
+        "num_steps": args.num_steps,
+        "variant_blend": args.variant_blend if args.condition_mode == "variant" else None,
+        "normalize": not args.no_normalize,
+        "seed": args.seed,
+        "dit_checkpoint": args.dit_checkpoint,
+        "total_cells": int(generated.shape[0]),
+        "num_types": int(len(type_ids)),
+        "latent_dim": int(generated.shape[1]),
+    }
+    with open(out / "generation_metadata.json", "w") as f:
+        json.dump(gen_metadata, f, indent=2)
+    logger.info(f"Saved generation metadata → {out / 'generation_metadata.json'}")
+
     # Compute metrics
     metrics = compute_per_type_metrics(
         real_cells=real_cells,

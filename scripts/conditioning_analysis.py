@@ -155,17 +155,39 @@ def panel_l_noise_tradeoff(
     # Shade optimal region
     ax1.axvspan(0.02, 0.04, alpha=0.1, color="green", label="Sweet spot")
 
+    # Mark chosen production config ε=0.03 with prominent vertical line
+    chosen_eps = 0.03
+    if chosen_eps in noise_scales:
+        idx_chosen = noise_scales.index(chosen_eps)
+        ax1.axvline(x=chosen_eps, color="#9C27B0", linestyle="-", linewidth=2.5,
+                     alpha=0.8, zorder=10, label=f"Production (ε={chosen_eps})")
+        # Add annotation box with production metrics
+        ax1.annotate(
+            f"Production Config\n"
+            f"ε={chosen_eps}, CFG={cfg_scale}\n"
+            f"FD={fds[idx_chosen]:.3f}\n"
+            f"cos={centroids[idx_chosen]:.3f}\n"
+            f"div={div_ratios[idx_chosen]:.3f}",
+            xy=(chosen_eps, fds[idx_chosen]),
+            xytext=(chosen_eps + 0.02, fds[idx_chosen] + 0.05),
+            fontsize=9, fontweight="bold",
+            bbox=dict(boxstyle="round,pad=0.4", facecolor="#F3E5F5", edgecolor="#9C27B0", alpha=0.9),
+            arrowprops=dict(arrowstyle="->", color="#9C27B0", lw=2),
+            zorder=11,
+        )
+
     # Combined legend
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
     ax1.legend(lines1 + lines2, labels1 + labels2, loc="center left", fontsize=10)
 
-    # Annotations
+    # Annotations — best FD point (if different from chosen)
     best_idx = np.argmin(fds)
-    ax1.annotate(f"ε={noise_scales[best_idx]:.2f}\nFD={fds[best_idx]:.3f}",
-                 xy=(noise_scales[best_idx], fds[best_idx]),
-                 xytext=(noise_scales[best_idx] + 0.01, fds[best_idx] + 0.02),
-                 fontsize=9, arrowprops=dict(arrowstyle="->", color="black"))
+    if noise_scales[best_idx] != chosen_eps:
+        ax1.annotate(f"ε={noise_scales[best_idx]:.2f}\nFD={fds[best_idx]:.3f}",
+                     xy=(noise_scales[best_idx], fds[best_idx]),
+                     xytext=(noise_scales[best_idx] + 0.01, fds[best_idx] + 0.02),
+                     fontsize=9, arrowprops=dict(arrowstyle="->", color="black"))
 
     path = Path(output_dir) / "panel_l_noise_tradeoff.png"
     fig.savefig(path, dpi=dpi)
@@ -240,6 +262,32 @@ def panel_m_conditioning_umap(
     coords = pca.fit_transform(combined)
     logger.info(f"PCA variance explained: {pca.explained_variance_ratio_.sum():.2%}")
 
+    # Compute per-mode diversity stats for subtitles
+    mode_diversity = {}
+    for mode_name, (gen, gen_labels) in results.items():
+        divs = []
+        for tid in selected_types:
+            g = gen[gen_labels == tid]
+            if len(g) >= 5:
+                norms = np.linalg.norm(g, axis=1, keepdims=True) + 1e-8
+                g_n = g / norms
+                sim = g_n @ g_n.T
+                idx_tri = np.triu_indices(len(g), k=1)
+                divs.append(1.0 - float(sim[idx_tri].mean()))
+        mode_diversity[mode_name] = np.mean(divs) if divs else 0.0
+
+    # Also compute real diversity for reference
+    real_divs = []
+    for tid in selected_types:
+        rr = real_sub[real_sub_lab == tid]
+        if len(rr) >= 5:
+            norms = np.linalg.norm(rr, axis=1, keepdims=True) + 1e-8
+            rr_n = rr / norms
+            sim = rr_n @ rr_n.T
+            idx_tri = np.triu_indices(len(rr), k=1)
+            real_divs.append(1.0 - float(sim[idx_tri].mean()))
+    real_diversity = np.mean(real_divs) if real_divs else 0.0
+
     # Plot: one subplot per mode + one for real
     n_modes = 1 + len(results)  # real + each mode
     matplotlib.rcParams.update(STYLE)
@@ -267,13 +315,17 @@ def panel_m_conditioning_umap(
 
     # Real cells
     real_mask_bool = combined_source == "Real"
-    plot_one(axes[0], real_mask_bool, f"Real ({real_sub.shape[0]} cells)", alpha=0.2, size=4)
+    plot_one(axes[0], real_mask_bool,
+             f"Real ({real_sub.shape[0]} cells)\ndiversity={real_diversity:.3f}",
+             alpha=0.2, size=4)
     axes[0].legend(fontsize=7, markerscale=2, loc="best")
 
     # Each mode
     for i, mode_name in enumerate(results.keys()):
         mode_mask = combined_source == mode_name
-        plot_one(axes[i + 1], mode_mask, f"{mode_name}\n({mode_mask.sum()} cells)")
+        div_val = mode_diversity.get(mode_name, 0.0)
+        plot_one(axes[i + 1], mode_mask,
+                 f"{mode_name}\n({mode_mask.sum()} cells, div={div_val:.3f})")
 
     path = Path(output_dir) / "panel_m_conditioning_umap.png"
     fig.savefig(path, dpi=dpi)

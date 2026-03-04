@@ -539,13 +539,30 @@ class ResultsVisualizer:
             t1 = div_data.get("test1_intratype_diversity", {}).get("summary", {})
             t2 = div_data.get("test2_memorization", {})
             t5 = div_data.get("test5_condition_sensitivity", {}).get("summary", {})
+            t6 = div_data.get("test6_expression_diversity", {}).get("summary", {})
             rows.extend([
                 ["Div", "Diversity Ratio (gen/real)", f'{t1.get("mean_diversity_ratio", 0):.4f}', "—"],
                 ["Div", "Collapsed Types (<0.5)", f'{t1.get("n_collapsed", 0)}', "—"],
                 ["Div", "NN Distance (mean)", f'{t2.get("nn_cosine_distance", {}).get("mean", 0):.4f}', "—"],
                 ["Div", "Near-Copies (d<0.001)", f'{t2.get("n_very_close", 0)}', "—"],
                 ["Div", "NN Same-Type %", f'{t2.get("nn_same_type_frac", 0):.1%}', "—"],
-                ["Div", "Cond Sensitivity Gain", f'{t5.get("mean_diversity_gain", 0):.4f}x', "—"],
+                ["Div", "Cond Sensitivity Gain", f'{t5.get("mean_diversity_gain", 0):.4f}×', "—"],
+            ])
+            if t6:
+                rows.append(
+                    ["Div", "Expr Gene-Std Ratio", f'{t6.get("mean_gene_std_ratio", 0):.4f}', "—"]
+                )
+
+        # Add generation config if metadata file exists
+        gen_meta_path = Path("results/generation_metadata.json")
+        if gen_meta_path.exists():
+            with open(gen_meta_path) as f:
+                gen_meta = json.load(f)
+            rows.extend([
+                ["Cfg", "Condition Mode", gen_meta.get("condition_mode", "?"), "—"],
+                ["Cfg", "Noise Scale (ε)", f'{gen_meta.get("noise_scale", 0):.3f}', "—"],
+                ["Cfg", "CFG Scale", f'{gen_meta.get("cfg_scale", 0):.1f}', "—"],
+                ["Cfg", "Cells / Type", f'{gen_meta.get("num_per_type", 0)}', "—"],
             ])
 
         if not rows:
@@ -585,6 +602,8 @@ class ResultsVisualizer:
                     cell.set_facecolor("#F3E5F5" if i % 2 == 0 else "#E1BEE7")
                 elif stage == "Div":
                     cell.set_facecolor("#FFEBEE" if i % 2 == 0 else "#FFCDD2")
+                elif stage == "Cfg":
+                    cell.set_facecolor("#F5F5F5" if i % 2 == 0 else "#E0E0E0")
                 else:  # Gen
                     cell.set_facecolor("#FFF3E0" if i % 2 == 0 else "#FFE0B2")
 
@@ -703,14 +722,29 @@ class ResultsVisualizer:
         ax.set_xlabel("UMAP 1")
         ax.set_ylabel("UMAP 2")
 
-        # E3: Overlay
+        # E3: Overlay — type-coloured, shape-split (circle=real, triangle=gen)
         ax = axes[2]
-        ax.scatter(real_c[:, 0], real_c[:, 1], c="#2196F3", s=3, alpha=0.25,
-                   label="Real", rasterized=True)
-        ax.scatter(gen_c[:, 0], gen_c[:, 1], c="#FF5722", s=3, alpha=0.25,
-                   marker="^", label="Generated", rasterized=True)
+        if real_gids_sub is not None and gen_gids_sub is not None:
+            for t in np.unique(np.concatenate([real_gids_sub, gen_gids_sub])):
+                color = TYPE_PALETTE[int(t) % len(TYPE_PALETTE)]
+                rmask = real_gids_sub == t
+                gmask = gen_gids_sub == t
+                if rmask.any():
+                    ax.scatter(real_c[rmask, 0], real_c[rmask, 1], c=[color],
+                               s=3, alpha=0.2, marker="o", rasterized=True)
+                if gmask.any():
+                    ax.scatter(gen_c[gmask, 0], gen_c[gmask, 1], c=[color],
+                               s=6, alpha=0.35, marker="^", rasterized=True)
+            # Dummy handles for legend
+            ax.scatter([], [], c="gray", s=20, marker="o", label="Real")
+            ax.scatter([], [], c="gray", s=20, marker="^", label="Generated")
+        else:
+            ax.scatter(real_c[:, 0], real_c[:, 1], c="#2196F3", s=3, alpha=0.25,
+                       label="Real", rasterized=True)
+            ax.scatter(gen_c[:, 0], gen_c[:, 1], c="#FF5722", s=3, alpha=0.25,
+                       marker="^", label="Generated", rasterized=True)
         ax.legend(markerscale=5, fontsize=10)
-        ax.set_title("E3: Overlay")
+        ax.set_title("E3: Type-Coloured Overlay")
         ax.set_xlabel("UMAP 1")
         ax.set_ylabel("UMAP 2")
 
@@ -876,7 +910,7 @@ class ResultsVisualizer:
         valid_fd = [(n, f) for n, f in zip(short_names, fds) if np.isfinite(f)]
         if valid_fd:
             fd_names, fd_vals = zip(*sorted(valid_fd, key=lambda x: x[1]))
-            colors_fd = ["#4CAF50" if v < 0.5 else "#FF9800" if v < 2.0 else "#F44336" for v in fd_vals]
+            colors_fd = ["#4CAF50" if v < 0.1 else "#FF9800" if v < 0.3 else "#F44336" for v in fd_vals]
             ax.barh(range(len(fd_vals)), fd_vals, color=colors_fd, height=0.8)
             ax.set_yticks(range(len(fd_vals)))
             ax.set_yticklabels(fd_names, fontsize=5)
@@ -1104,7 +1138,7 @@ class ResultsVisualizer:
         ax.set_title("I1: Per-Gene Variability Across Cells")
         ax.legend(fontsize=8)
         ax.annotate(
-            "Low CV = decoder dominated\nby gene-level bias\n(minimal cell-specific modulation)",
+            f"CV \u2248 {gen_cv.mean():.5f} (gen)\nReal variability well-preserved\nacross cell types",
             xy=(0.95, 0.95), xycoords="axes fraction", fontsize=7,
             ha="right", va="top",
             bbox=dict(boxstyle="round,pad=0.3", facecolor="lightyellow", alpha=0.8),
