@@ -46,10 +46,18 @@ logger = logging.getLogger(__name__)
 def load_dit(checkpoint_path: str, device: torch.device) -> DiT1D:
     ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
     cfg = ckpt.get("config", {})
+
+    # Resolve cond_dim from checkpoint
+    cond_dim = cfg.get("cond_dim", None)
+    if cond_dim is None:
+        sd = ckpt.get("ema_state_dict", ckpt.get("model_state_dict", {}))
+        null_cond = sd.get("c_embedder.null_cond")
+        cond_dim = null_cond.shape[-1] if null_cond is not None else 512
+
     model = DiT1D(
         latent_dim=cfg.get("latent_dim", 512),
         hidden_dim=cfg.get("hidden_dim", 512),
-        cond_dim=512,
+        cond_dim=cond_dim,
         num_tokens=cfg.get("num_tokens", 16),
         num_blocks=8,
         num_heads=8,

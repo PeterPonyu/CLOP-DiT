@@ -4,9 +4,14 @@
 Uses cached projected_text conditions (no BiomedBERT needed).
 Generates cells for every type using the best DiT checkpoint.
 
+Supports two conditioning modes:
+  centroid  — one mean condition per type (original approach, less diverse)
+  per_cell  — sample real per-cell conditions (recommended for diversity)
+
 Usage:
-    python scripts/generate_embeddings.py
-    python scripts/generate_embeddings.py --num-per-type 200 --cfg-scale 4.0
+    python scripts/generate_embeddings.py                                  # per_cell + CFG=1.5
+    python scripts/generate_embeddings.py --condition-mode centroid         # original centroid mode
+    python scripts/generate_embeddings.py --cfg-scale 1.0 --num-per-type 200
 """
 
 import argparse
@@ -27,14 +32,22 @@ logger = logging.getLogger(__name__)
 
 
 def load_dit(checkpoint_path: str, device: torch.device) -> DiT1D:
-    """Load trained DiT from checkpoint."""
+    """Load trained DiT from checkpoint, resolving cond_dim from saved config."""
     ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
     cfg = ckpt.get("config", {})
+
+    # Resolve cond_dim: prefer checkpoint config, then probe null_cond shape, fallback 512
+    cond_dim = cfg.get("cond_dim", None)
+    if cond_dim is None:
+        sd = ckpt.get("ema_state_dict", ckpt.get("model_state_dict", {}))
+        null_cond = sd.get("c_embedder.null_cond")
+        cond_dim = null_cond.shape[-1] if null_cond is not None else 512
+    logger.info(f"Resolved cond_dim={cond_dim} from checkpoint")
 
     model = DiT1D(
         latent_dim=cfg.get("latent_dim", 512),
         hidden_dim=cfg.get("hidden_dim", 512),
-        cond_dim=512,  # CLOP projected text dim
+        cond_dim=cond_dim,
         num_tokens=cfg.get("num_tokens", 16),
         num_blocks=8,
         num_heads=8,
@@ -64,41 +77,60 @@ def generate_all_types(
     num_steps: int = 20,
     cfg_scale: float = 3.0,
     normalize: bool = True,
+    condition_mode: str = "per_cell",
     device: torch.device = None,
 ) -> tuple:
-    """Generate cells for every type using per-type text prototype centroids.
+    """Generate cells for every type.
 
     Parameters
     ----------
     model : DiT1D
-    projected_text : (N, 512) per-cell text conditions
+    projected_text : (N, cond_dim) per-cell text conditions
     group_ids : (N,) type IDs
     num_per_type : cells to generate per type
     num_steps : ODE integration steps
     cfg_scale : classifier-free guidance strength
     normalize : L2-normalize generated embeddings (recommended)
+    condition_mode : str
+        'centroid' — one mean condition per type (original, less diverse)
+        'per_cell' — sample real per-cell conditions for each generated cell
+                     (recommended for realistic within-type diversity)
     device : torch device
 
     Returns
     -------
-    generated : (num_types * num_per_type, 512) generated embeddings
+    generated : (num_types * num_per_type, cond_dim) generated embeddings
     gen_labels : (num_types * num_per_type,) type labels
     type_ids : sorted unique type IDs
     """
     unique_types = np.sort(np.unique(group_ids))
     logger.info(f"Generating {num_per_type} cells × {len(unique_types)} types "
-                f"= {num_per_type * len(unique_types)} total")
+                f"= {num_per_type * len(unique_types)} total  "
+                f"[mode={condition_mode}, cfg={cfg_scale}, steps={num_steps}]")
 
+    rng = np.random.default_rng(42)
     all_gen = []
     all_labels = []
 
     for t_id in unique_types:
-        # Compute prototype centroid for this type
         mask = group_ids == t_id
-        proto = projected_text[mask].mean(axis=0)
-        proto = proto / (np.linalg.norm(proto) + 1e-8)  # L2 normalize
+        type_conds = projected_text[mask]  # (n_type, cond_dim)
 
-        cond = torch.from_numpy(proto).float().unsqueeze(0).repeat(num_per_type, 1).to(device)
+        if condition_mode == "centroid":
+            # Original approach: all cells share one centroid condition
+            proto = type_conds.mean(axis=0)
+            proto = proto / (np.linalg.norm(proto) + 1e-8)
+            cond = torch.from_numpy(proto).float().unsqueeze(0).repeat(num_per_type, 1).to(device)
+        elif condition_mode == "per_cell":
+            # Diverse approach: each cell gets a different real condition
+            idx = rng.choice(len(type_conds), size=num_per_type, replace=True)
+            sampled = type_conds[idx]
+            # L2-normalize each condition individually
+            norms = np.linalg.norm(sampled, axis=1, keepdims=True) + 1e-8
+            sampled = sampled / norms
+            cond = torch.from_numpy(sampled).float().to(device)
+        else:
+            raise ValueError(f"Unknown condition_mode: {condition_mode}")
 
         gen = model.sample(cond, num_steps=num_steps, cfg_scale=cfg_scale)
 
@@ -211,7 +243,11 @@ def main():
     parser.add_argument("--output-dir", default="results")
     parser.add_argument("--num-per-type", type=int, default=100)
     parser.add_argument("--num-steps", type=int, default=20)
-    parser.add_argument("--cfg-scale", type=float, default=3.0)
+    parser.add_argument("--cfg-scale", type=float, default=1.5,
+                        help="CFG scale (default 1.5; lower = more diverse)")
+    parser.add_argument("--condition-mode", choices=["centroid", "per_cell"],
+                        default="per_cell",
+                        help="Condition mode: centroid (one per type) or per_cell (diverse)")
     parser.add_argument("--no-normalize", action="store_true")
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
@@ -250,6 +286,7 @@ def main():
         num_steps=args.num_steps,
         cfg_scale=args.cfg_scale,
         normalize=not args.no_normalize,
+        condition_mode=args.condition_mode,
         device=device,
     )
 
