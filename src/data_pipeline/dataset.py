@@ -345,6 +345,8 @@ class DiTDataset(Dataset):
         time_sampling: str = "logit_normal",
         time_sampling_mean: float = 0.0,
         time_sampling_std: float = 1.0,
+        use_deduplicated: bool = False,
+        use_preprocessed: bool = False,
     ):
         cache_dir = Path(cache_dir)
 
@@ -353,10 +355,31 @@ class DiTDataset(Dataset):
         self.time_sampling_mean = time_sampling_mean
         self.time_sampling_std = time_sampling_std
 
-        # Load fully into RAM for speed (190K × 512 ≈ 390MB — fits easily)
-        self.cell_emb = np.load(cache_dir / "cell_embeddings.npy")
+        # ── Load cell embeddings (the generation TARGET z_1) ──
+        # Priority: dedup+preprocessed > dedup raw > preprocessed > raw
+        cell_path = None
+        if use_deduplicated:
+            dedup_pp = cache_dir / "cell_embeddings_dedup_preprocessed.npy"
+            dedup_raw = cache_dir / "cell_embeddings_dedup.npy"
+            if use_preprocessed and dedup_pp.exists():
+                cell_path = dedup_pp
+                logger.info("DiTDataset: loading PREPROCESSED DEDUP cell embeddings (whitened)")
+            elif dedup_raw.exists():
+                cell_path = dedup_raw
+                logger.warning("DiTDataset: loading RAW dedup cell embeddings (not whitened!)")
+        if cell_path is None:
+            pp_path = cache_dir / "cell_embeddings_preprocessed.npy"
+            raw_path = cache_dir / "cell_embeddings.npy"
+            if use_preprocessed and pp_path.exists():
+                cell_path = pp_path
+                logger.info("DiTDataset: loading preprocessed cell embeddings")
+            else:
+                cell_path = raw_path
+                logger.info("DiTDataset: loading raw cell embeddings")
 
-        # Use projected text if available, otherwise raw
+        self.cell_emb = np.load(cell_path)
+
+        # ── Load text conditions (the CLOP-projected condition c) ──
         if projected_text_path and Path(projected_text_path).exists():
             self.text_cond = np.load(projected_text_path)
         else:
@@ -376,7 +399,25 @@ class DiTDataset(Dataset):
                     f"text_embeddings_preprocessed.npy, or text_embeddings.npy"
                 )
 
-        self.sample_ids = np.load(cache_dir / "sample_ids.npy")
+        # ── Load sample IDs (use dedup version when available) ──
+        if use_deduplicated and (cache_dir / "sample_ids_dedup.npy").exists():
+            self.sample_ids = np.load(cache_dir / "sample_ids_dedup.npy")
+        else:
+            self.sample_ids = np.load(cache_dir / "sample_ids.npy")
+
+        # ── Validate shapes match ──
+        if self.cell_emb.shape[0] != self.text_cond.shape[0]:
+            raise ValueError(
+                f"Shape mismatch: cell_emb has {self.cell_emb.shape[0]} rows "
+                f"but text_cond has {self.text_cond.shape[0]} rows. "
+                f"Ensure both use the same dedup/full version. "
+                f"Cell source: {cell_path.name}, Text source: projected_text.npy"
+            )
+
+        logger.info(
+            f"DiTDataset: {self.cell_emb.shape[0]} cells × "
+            f"{self.cell_emb.shape[1]}d (cell) + {self.text_cond.shape[1]}d (cond)"
+        )
 
         # Pre-convert to torch tensors for zero-copy __getitem__
         self._cell_tensor = torch.from_numpy(self.cell_emb).float()
@@ -592,6 +633,8 @@ def create_dataloaders(
             time_sampling=time_sampling,
             time_sampling_mean=time_sampling_mean,
             time_sampling_std=time_sampling_std,
+            use_deduplicated=use_deduplicated,
+            use_preprocessed=use_preprocessed,
         )
     else:
         raise ValueError(f"Unknown stage: {stage}")

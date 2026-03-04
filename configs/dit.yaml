@@ -4,20 +4,23 @@
 # Data
 cache_dir: "data/cached_latents_v5.2"
 projected_text_path: "data/cached_latents_v5.2/projected_text.npy"
+use_deduplicated: true          # Use dedup cell embeddings (167K, matches projected_text)
+use_preprocessed: true          # Use whitened embeddings (ZCA-preprocessed)
+split_strategy: "stratified"     # Cell-type-stratified split (all 69 types in val)
 val_split: 0.1
 n_folds: 1
 fold_idx: 0
 num_workers: 4
 
 # Model Architecture
-latent_dim: 512        # Cell embedding dimension
-hidden_dim: 384        # Transformer hidden dimension
-cond_dim: 512          # v6: increased to match CLOP proj_dim=512
+latent_dim: 512        # Cell embedding dimension (scGPT)
+hidden_dim: 512        # Transformer hidden dimension (was 384, increased for capacity)
+cond_dim: 512          # CLOP proj_dim=512 (must match projected_text dim)
 num_blocks: 8          # Number of DiT transformer blocks
-num_heads: 8           # v6: increased (hidden_dim must be divisible)
+num_heads: 8           # Attention heads (hidden_dim / num_heads = 64 = standard head_dim)
 mlp_ratio: 4.0         # FFN expansion ratio
-num_tokens: 16         # Pseudo-tokens (latent_dim / num_tokens = token_dim)
-cond_drop_prob: 0.15   # v2: increased from 0.1 for stronger CFG
+num_tokens: 16         # Pseudo-tokens (latent_dim / num_tokens = 32-dim tokens)
+cond_drop_prob: 0.15   # Classifier-free guidance dropout
 attn_drop: 0.0         # Attention dropout
 proj_drop: 0.1         # Projection dropout
 

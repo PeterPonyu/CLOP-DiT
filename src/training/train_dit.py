@@ -467,6 +467,9 @@ class DiTTrainer:
             time_sampling=config.get("time_sampling", "logit_normal"),
             time_sampling_mean=config.get("time_sampling_mean", 0.0),
             time_sampling_std=config.get("time_sampling_std", 1.0),
+            use_deduplicated=config.get("use_deduplicated", False),
+            use_preprocessed=config.get("use_preprocessed", False),
+            split_strategy=config.get("split_strategy", "stratified"),
         )
 
         trainer = cls(
