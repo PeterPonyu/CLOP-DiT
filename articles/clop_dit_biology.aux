@@ -1,0 +1,118 @@
+\relax 
+\providecommand*\new@tpo@label[2]{}
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\bibstyle{Definitions/mdpi}
+\citation{ref-scrnaseq-review}
+\citation{ref-scvi}
+\citation{ref-scgen}
+\citation{ref-scdiff}
+\citation{ref-geneformer}
+\citation{ref-clip}
+\citation{ref-biomedclip}
+\citation{ref-dit}
+\citation{ref-flow-matching}
+\newmarginnote{note.1.1}{{1}{10945661sp}}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
+\citation{ref-biomedbert}
+\citation{ref-scgpt}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Materials and Methods}{2}{section.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Overview of the CLOP-DiT pipeline. \textbf  {Stage~1 (CLOP)}: A frozen BiomedBERT-large encoder (340M parameters, 1024-d) and a frozen scGPT encoder (51M parameters, 512-d) produce text and cell embeddings, respectively. Dual MLP projectors map both modalities to a shared 256-dimensional $L_2$-normalized space, trained with a PrototypeSigLIP contrastive loss. ZCA whitening is applied to BiomedBERT embeddings prior to projection. \textbf  {Stage~2 (DiT)}: A 1D Diffusion Transformer (8 AdaLN-Zero blocks, 22.1M parameters) performs conditional flow matching in the 512-dimensional scGPT latent space, using CLOP-projected text as the conditioning signal. An Euler or Midpoint ODE solver integrates the learned velocity field from Gaussian noise $z_0 \sim \mathcal  {N}(0, I)$ to a generated latent $z_1$. Classifier-free guidance (CFG) is applied at inference. \textbf  {Stage~3 (Decoding)}: The frozen scGPT decoder maps $z_1$ back to a gene expression profile.}}{2}{figure.caption.1}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:architecture}{{1}{2}{Overview of the CLOP-DiT pipeline. \textbf {Stage~1 (CLOP)}: A frozen BiomedBERT-large encoder (340M parameters, 1024-d) and a frozen scGPT encoder (51M parameters, 512-d) produce text and cell embeddings, respectively. Dual MLP projectors map both modalities to a shared 256-dimensional $L_2$-normalized space, trained with a PrototypeSigLIP contrastive loss. ZCA whitening is applied to BiomedBERT embeddings prior to projection. \textbf {Stage~2 (DiT)}: A 1D Diffusion Transformer (8 AdaLN-Zero blocks, 22.1M parameters) performs conditional flow matching in the 512-dimensional scGPT latent space, using CLOP-projected text as the conditioning signal. An Euler or Midpoint ODE solver integrates the learned velocity field from Gaussian noise $z_0 \sim \mathcal {N}(0, I)$ to a generated latent $z_1$. Classifier-free guidance (CFG) is applied at inference. \textbf {Stage~3 (Decoding)}: The frozen scGPT decoder maps $z_1$ back to a gene expression profile}{figure.caption.1}{}}
+\newlabel{fig:architecture@cref}{{[figure][1][]1}{[1][2][]2}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Dataset}{2}{subsection.2.1}\protected@file@percent }
+\citation{ref-flow-matching}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}CLOP: Contrastive Language--Omics Pretraining}{3}{subsection.2.2}\protected@file@percent }
+\newlabel{eq:clop}{{1}{3}{CLOP: Contrastive Language--Omics Pretraining}{equation.2.1}{}}
+\newlabel{eq:clop@cref}{{[equation][1][]1}{[1][3][]3}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}DiT: Conditional Flow Matching with Diffusion Transformer}{3}{subsection.2.3}\protected@file@percent }
+\newlabel{eq:fm}{{2}{3}{DiT: Conditional Flow Matching with Diffusion Transformer}{equation.2.2}{}}
+\newlabel{eq:fm@cref}{{[equation][2][]2}{[1][3][]3}}
+\newlabel{eq:cfg}{{3}{3}{DiT: Conditional Flow Matching with Diffusion Transformer}{equation.2.3}{}}
+\newlabel{eq:cfg@cref}{{[equation][3][]3}{[1][3][]3}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Decoding via scGPT}{4}{subsection.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}Evaluation Framework}{4}{subsection.2.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Results}{4}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Training Dynamics}{4}{subsection.3.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Training dynamics of the CLOP-DiT pipeline. \textbf  {Top row (CLOP)}: Contrastive loss, learned temperature ($\tau = 14.0$, fixed), batch classification accuracy, and embedding quality metrics over 200 epochs. Despite modest validation accuracy ($\sim $2.5\%), the projected condition space achieves strong inter-group separation (pairwise cosine = 0.222). \textbf  {Bottom row (DiT)}: Train and validation MSE loss (log scale), velocity cosine similarity, and learning rate schedule over 200 epochs. The EMA model (decay = 0.9999) reaches val\_cosine = 0.976, confirming accurate velocity field learning.}}{5}{figure.caption.2}\protected@file@percent }
+\newlabel{fig:training}{{2}{5}{Training dynamics of the CLOP-DiT pipeline. \textbf {Top row (CLOP)}: Contrastive loss, learned temperature ($\tau = 14.0$, fixed), batch classification accuracy, and embedding quality metrics over 200 epochs. Despite modest validation accuracy ($\sim $2.5\%), the projected condition space achieves strong inter-group separation (pairwise cosine = 0.222). \textbf {Bottom row (DiT)}: Train and validation MSE loss (log scale), velocity cosine similarity, and learning rate schedule over 200 epochs. The EMA model (decay = 0.9999) reaches val\_cosine = 0.976, confirming accurate velocity field learning}{figure.caption.2}{}}
+\newlabel{fig:training@cref}{{[figure][2][]2}{[1][4][]5}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}CLOP Embedding Space}{5}{subsection.3.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Embedding space analysis. \textbf  {Top row (CLOP alignment)}: UMAP of the shared projection space showing text prototypes, cell-type clusters, and cells-per-type histogram. Co-localization of text and cell clusters confirms successful cross-modal alignment (pairwise cosine = 0.222). \textbf  {Bottom row (Real vs.\ Generated)}: UMAP comparison of real and generated cell embeddings, type-coloured, with shape-split overlay (circles = real, triangles = generated). Generated norm (20.97) closely matches real (20.89).}}{6}{figure.caption.3}\protected@file@percent }
+\newlabel{fig:embedding-space}{{3}{6}{Embedding space analysis. \textbf {Top row (CLOP alignment)}: UMAP of the shared projection space showing text prototypes, cell-type clusters, and cells-per-type histogram. Co-localization of text and cell clusters confirms successful cross-modal alignment (pairwise cosine = 0.222). \textbf {Bottom row (Real vs.\ Generated)}: UMAP comparison of real and generated cell embeddings, type-coloured, with shape-split overlay (circles = real, triangles = generated). Generated norm (20.97) closely matches real (20.89)}{figure.caption.3}{}}
+\newlabel{fig:embedding-space@cref}{{[figure][3][]3}{[1][5][]6}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Core Evaluation Metrics}{6}{subsection.3.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Core evaluation results. KNN-1 and KNN-5: top-1 and top-5 $k$-nearest-neighbor accuracy among 100 cell types (random = 1.0\%). Steering: pairwise directional accuracy (random = 50\%). DivR: diversity ratio with ideal = 1.0. LinAcc: logistic regression accuracy. FD: Fr\'{e}chet distance (lower is better, but misleading for conditional generation; see text).}}{7}{table.caption.4}\protected@file@percent }
+\newlabel{tab:core-results}{{1}{7}{Core evaluation results. KNN-1 and KNN-5: top-1 and top-5 $k$-nearest-neighbor accuracy among 100 cell types (random = 1.0\%). Steering: pairwise directional accuracy (random = 50\%). DivR: diversity ratio with ideal = 1.0. LinAcc: logistic regression accuracy. FD: Fr\'{e}chet distance (lower is better, but misleading for conditional generation; see text)}{table.caption.4}{}}
+\newlabel{tab:core-results@cref}{{[table][1][]1}{[1][6][]7}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Metrics dashboard summarizing conditional generation quality. KNN accuracy ($37\times $ random), steering accuracy (81\%), diversity ratio, linear classifier accuracy, and Fr\'{e}chet distance are shown across generation configurations. The collapse of unconditional generation to random baselines validates that text conditioning drives all cell-type specificity.}}{7}{figure.caption.5}\protected@file@percent }
+\newlabel{fig:metrics}{{4}{7}{Metrics dashboard summarizing conditional generation quality. KNN accuracy ($37\times $ random), steering accuracy (81\%), diversity ratio, linear classifier accuracy, and Fr\'{e}chet distance are shown across generation configurations. The collapse of unconditional generation to random baselines validates that text conditioning drives all cell-type specificity}{figure.caption.5}{}}
+\newlabel{fig:metrics@cref}{{[figure][4][]4}{[1][7][]7}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Per-Type Generation Quality and Text--Cell Alignment}{7}{subsection.3.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Per-type fidelity and text--cell alignment. \textbf  {Top row}: Per-type centroid cosine similarity (sorted), per-type Fr\'{e}chet distance, and fidelity vs.\ dataset size scatter. Performance correlates with training abundance and inter-type expression distinctiveness. \textbf  {Bottom row}: 69$\times $69 cosine similarity heatmap between text and cell centroids (strong diagonal dominance), per-type alignment bars, and diagonal vs.\ off-diagonal distribution comparison.}}{8}{figure.caption.6}\protected@file@percent }
+\newlabel{fig:fidelity-alignment}{{5}{8}{Per-type fidelity and text--cell alignment. \textbf {Top row}: Per-type centroid cosine similarity (sorted), per-type Fr\'{e}chet distance, and fidelity vs.\ dataset size scatter. Performance correlates with training abundance and inter-type expression distinctiveness. \textbf {Bottom row}: 69$\times $69 cosine similarity heatmap between text and cell centroids (strong diagonal dominance), per-type alignment bars, and diagonal vs.\ off-diagonal distribution comparison}{figure.caption.6}{}}
+\newlabel{fig:fidelity-alignment@cref}{{[figure][5][]5}{[1][7][]8}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Marker Gene Fidelity}{8}{subsection.3.5}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Marker gene comparison. Expression of canonical marker genes in real vs.\ generated cells across selected cell types. Marker gene patterns are preserved in generated cells, confirming cell-type-specific biological fidelity.}}{9}{figure.caption.7}\protected@file@percent }
+\newlabel{fig:markers}{{6}{9}{Marker gene comparison. Expression of canonical marker genes in real vs.\ generated cells across selected cell types. Marker gene patterns are preserved in generated cells, confirming cell-type-specific biological fidelity}{figure.caption.7}{}}
+\newlabel{fig:markers@cref}{{[figure][6][]6}{[1][8][]9}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6}Expression Correlation and Dimension Analysis}{9}{subsection.3.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Expression correlation analysis. Per-gene Pearson correlation between real and generated mean expression profiles, stratified by cell type. High correlation confirms that the scGPT decoder faithfully reconstructs gene-level signatures from DiT-generated latent vectors.}}{10}{figure.caption.8}\protected@file@percent }
+\newlabel{fig:expr-corr}{{7}{10}{Expression correlation analysis. Per-gene Pearson correlation between real and generated mean expression profiles, stratified by cell type. High correlation confirms that the scGPT decoder faithfully reconstructs gene-level signatures from DiT-generated latent vectors}{figure.caption.8}{}}
+\newlabel{fig:expr-corr@cref}{{[figure][7][]7}{[1][9][]10}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Expression distribution analysis. Coefficient of variation scatter, expression range with percentile bands, per-cell variability distribution, and top variable gene std ratios. Norm comparison: generated 20.97 vs.\ real 20.89.}}{11}{figure.caption.9}\protected@file@percent }
+\newlabel{fig:expr-analysis}{{8}{11}{Expression distribution analysis. Coefficient of variation scatter, expression range with percentile bands, per-cell variability distribution, and top variable gene std ratios. Norm comparison: generated 20.97 vs.\ real 20.89}{figure.caption.9}{}}
+\newlabel{fig:expr-analysis@cref}{{[figure][8][]8}{[1][10][]11}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.7}Conditioning Landscape and Diversity Trade-Offs}{11}{subsection.3.7}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Conditioning landscape. UMAP of the CLOP condition space showing how text conditions and their corresponding generated cell clouds distribute, visualizing the text-to-cell steering mechanism.}}{11}{figure.caption.10}\protected@file@percent }
+\newlabel{fig:cond-umap}{{9}{11}{Conditioning landscape. UMAP of the CLOP condition space showing how text conditions and their corresponding generated cell clouds distribute, visualizing the text-to-cell steering mechanism}{figure.caption.10}{}}
+\newlabel{fig:cond-umap@cref}{{[figure][9][]9}{[1][11][]11}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Diversity diagnostics. Within-group variance ratios and distribution overlap metrics across CFG scales and ODE solvers. KNN accuracy saturates at CFG $\approx $ 2.0--3.0 while diversity decreases monotonically.}}{12}{figure.caption.11}\protected@file@percent }
+\newlabel{fig:diversity}{{10}{12}{Diversity diagnostics. Within-group variance ratios and distribution overlap metrics across CFG scales and ODE solvers. KNN accuracy saturates at CFG $\approx $ 2.0--3.0 while diversity decreases monotonically}{figure.caption.11}{}}
+\newlabel{fig:diversity@cref}{{[figure][10][]10}{[1][12][]12}}
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Noise--scale trade-off and expression diversity. \textbf  {Left}: Fr\'{e}chet distance, centroid cosine, and diversity ratio as a function of noise scale $\varepsilon $ at CFG = 1.5, with the production configuration ($\varepsilon = 0.03$) highlighted. \textbf  {Right}: Gene-expression-level diversity in generated vs.\ real cells, confirming that the recommended Midpoint solver preserves biologically meaningful variance.}}{12}{figure.caption.12}\protected@file@percent }
+\newlabel{fig:diversity-tradeoff}{{11}{12}{Noise--scale trade-off and expression diversity. \textbf {Left}: Fr\'{e}chet distance, centroid cosine, and diversity ratio as a function of noise scale $\varepsilon $ at CFG = 1.5, with the production configuration ($\varepsilon = 0.03$) highlighted. \textbf {Right}: Gene-expression-level diversity in generated vs.\ real cells, confirming that the recommended Midpoint solver preserves biologically meaningful variance}{figure.caption.12}{}}
+\newlabel{fig:diversity-tradeoff@cref}{{[figure][11][]11}{[1][12][]12}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.8}Baseline Comparison and Composite Benchmark}{12}{subsection.3.8}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces Baseline comparison. Head-to-head analysis of CLOP-DiT vs.\ baselines (unconditional CFG\,=\,0, Gaussian per-type sampling, decoder-only) across four evaluation metrics (Fr\'{e}chet distance, centroid cosine similarity, diversity ratio, coverage), rendered as grouped bars, normalized radar chart, and relative improvement strip. CLOP-DiT outperforms all baselines on every metric except FD, which is dominated by mean-matching effects (see Discussion).}}{13}{figure.caption.13}\protected@file@percent }
+\newlabel{fig:baselines}{{12}{13}{Baseline comparison. Head-to-head analysis of CLOP-DiT vs.\ baselines (unconditional CFG\,=\,0, Gaussian per-type sampling, decoder-only) across four evaluation metrics (Fr\'{e}chet distance, centroid cosine similarity, diversity ratio, coverage), rendered as grouped bars, normalized radar chart, and relative improvement strip. CLOP-DiT outperforms all baselines on every metric except FD, which is dominated by mean-matching effects (see Discussion)}{figure.caption.13}{}}
+\newlabel{fig:baselines@cref}{{[figure][12][]12}{[1][13][]13}}
+\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces Composite benchmark. (\textbf  {a})~Normalized metrics heatmap (methods $\times $ eleven metrics; green = high performance). (\textbf  {b})~Composite score aggregating KNN accuracy, steering, diversity ratio, and linear separability (higher = better). (\textbf  {c})~Grouped bar chart of key metrics across methods. (\textbf  {d})~Bootstrap 95\% confidence intervals for composite scores. CLOP-DiT achieves a composite score of 0.668, confirming its advantage as an integrated text-conditioned generation system.}}{14}{figure.caption.14}\protected@file@percent }
+\newlabel{fig:benchmark}{{13}{14}{Composite benchmark. (\textbf {a})~Normalized metrics heatmap (methods $\times $ eleven metrics; green = high performance). (\textbf {b})~Composite score aggregating KNN accuracy, steering, diversity ratio, and linear separability (higher = better). (\textbf {c})~Grouped bar chart of key metrics across methods. (\textbf {d})~Bootstrap 95\% confidence intervals for composite scores. CLOP-DiT achieves a composite score of 0.668, confirming its advantage as an integrated text-conditioned generation system}{figure.caption.14}{}}
+\newlabel{fig:benchmark@cref}{{[figure][13][]13}{[1][13][]14}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.9}Downstream Biological Validation}{14}{subsection.3.9}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces Downstream validation: clustering and classifier alignment. \textbf  {Top row}: Leiden clustering on combined real + generated data with UMAP overlay, per-type $k$-NN mixing scores, and cluster alignment metrics (ARI, NMI, purity). \textbf  {Bottom row}: Cell-type classification confusion matrix (real-trained on generated), per-type accuracy bars, and real-vs.-generated discriminator ROC curve.}}{15}{figure.caption.15}\protected@file@percent }
+\newlabel{fig:downstream-pq}{{14}{15}{Downstream validation: clustering and classifier alignment. \textbf {Top row}: Leiden clustering on combined real + generated data with UMAP overlay, per-type $k$-NN mixing scores, and cluster alignment metrics (ARI, NMI, purity). \textbf {Bottom row}: Cell-type classification confusion matrix (real-trained on generated), per-type accuracy bars, and real-vs.-generated discriminator ROC curve}{figure.caption.15}{}}
+\newlabel{fig:downstream-pq@cref}{{[figure][14][]14}{[1][14][]15}}
+\@writefile{lof}{\contentsline {figure}{\numberline {15}{\ignorespaces DE concordance. Log-fold-change correlation, Jaccard overlap of top DE genes, and sign agreement for three biologically meaningful contrasts (CD8 vs.\ CD4 T, TAM vs.\ monocyte, tumor epithelial vs.\ fibroblast).}}{15}{figure.caption.16}\protected@file@percent }
+\newlabel{fig:downstream-r}{{15}{15}{DE concordance. Log-fold-change correlation, Jaccard overlap of top DE genes, and sign agreement for three biologically meaningful contrasts (CD8 vs.\ CD4 T, TAM vs.\ monocyte, tumor epithelial vs.\ fibroblast)}{figure.caption.16}{}}
+\newlabel{fig:downstream-r@cref}{{[figure][15][]15}{[1][15][]15}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Discussion}{16}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Conclusions}{16}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {A}Appendix~A}{17}{appendix.0.1}\protected@file@percent }
+\bibcite{ref-scrnaseq-review}{{1}{}{{}}{{}}}
+\bibcite{ref-scvi}{{2}{}{{}}{{}}}
+\bibcite{ref-scgen}{{3}{}{{}}{{}}}
+\bibcite{ref-scdiff}{{4}{}{{}}{{}}}
+\bibcite{ref-clip}{{5}{}{{}}{{}}}
+\bibcite{ref-biomedclip}{{6}{}{{}}{{}}}
+\bibcite{ref-dit}{{7}{}{{}}{{}}}
+\bibcite{ref-flow-matching}{{8}{}{{}}{{}}}
+\bibcite{ref-biomedbert}{{9}{}{{}}{{}}}
+\bibcite{ref-scgpt}{{10}{}{{}}{{}}}
+\bibcite{ref-geneformer}{{11}{}{{}}{{}}}
+\@writefile{lot}{\contentsline {table}{\numberline {A1}{\ignorespaces Architecture specifications.}}{18}{table.caption.17}\protected@file@percent }
+\newlabel{tab:architecture}{{A1}{18}{Architecture specifications}{table.caption.17}{}}
+\newlabel{tab:architecture@cref}{{[table][1][2147483647]A1}{[1][17][]18}}
+\@writefile{toc}{\contentsline {section}{\numberline {B}Appendix~B}{18}{appendix.0.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {A2}{\ignorespaces CFG scale sweep (10-step Euler, 50 eval groups).}}{18}{table.caption.18}\protected@file@percent }
+\newlabel{tab:cfg-sweep}{{A2}{18}{CFG scale sweep (10-step Euler, 50 eval groups)}{table.caption.18}{}}
+\newlabel{tab:cfg-sweep@cref}{{[table][2][2147483647]A2}{[1][18][]18}}
+\@writefile{toc}{\contentsline {section}{\numberline {C}References}{18}{appendix.0.3}\protected@file@percent }
+\providecommand\NAT@force@numbers{}\NAT@force@numbers
+\newlabel{LastPage}{{B}{19}{Appendix~C}{page.19}{}}
+\gdef\lastpage@lastpage{19}
+\gdef\lastpage@lastpageHy{19}
+\gdef \@abspage@last{19}

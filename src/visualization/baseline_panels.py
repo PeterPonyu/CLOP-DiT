@@ -89,13 +89,13 @@ def plot_baseline_comparison(
 
     method_names = list(methods.keys())
     n_methods = len(method_names)
-    metric_labels = ["FD ↓", "Centroid Cosine ↑", "Diversity Ratio ↑", "Coverage ↑"]
+    metric_labels = ["FD", "Cos", "Div", "Cov"]
     metric_keys = ["FD", "Centroid Cosine", "Diversity Ratio", "Coverage"]
 
-    fig = plt.figure(figsize=(22, 7))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.3, 1.0, 1.0], **GRIDSPEC_TIGHT)
-    fig.suptitle("Baseline Comparison — CLOP-DiT vs Simple Baselines",
-                 fontsize=14, fontweight="bold")
+    fig = plt.figure(figsize=(13.5, 5.5))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.3, 1.1, 1.0], wspace=0.55)
+    fig.suptitle("CLOP-DiT vs Baselines",
+                 fontsize=11)
 
     # ── O1: Grouped bar chart ──
     ax = fig.add_subplot(gs[0])
@@ -107,12 +107,10 @@ def plot_baseline_comparison(
         bars = ax.bar(x + offset, vals, w, label=mname,
                       color=METHOD_COLORS[i % len(METHOD_COLORS)],
                       alpha=0.85, edgecolor="white")
-        for xi, v in zip(x + offset, vals):
-            ax.text(xi, v + 0.005, f"{v:.3f}", ha="center", fontsize=7, rotation=45)
     ax.set_xticks(x)
-    ax.set_xticklabels(metric_labels, fontsize=10)
-    ax.legend(fontsize=9)
-    style_axes(ax, "bar", title="O1: Key Metrics Comparison", ylabel="Value")
+    ax.set_xticklabels(metric_labels, fontsize=9, rotation=0, ha="center")
+    ax.legend(fontsize=8, loc="upper right", frameon=False)
+    style_axes(ax, "bar", title="Key Metrics Comparison", ylabel="Value")
 
     # ── O2: Radar chart ──
     ax_placeholder = fig.add_subplot(gs[1])
@@ -133,7 +131,7 @@ def plot_baseline_comparison(
     ax_radar = fig.add_subplot(gs[1], polar=True)
     ax_radar.set_theta_offset(np.pi / 2)
     ax_radar.set_theta_direction(-1)
-    ax_radar.set_thetagrids(np.degrees(angles[:-1]), metric_labels, fontsize=8)
+    ax_radar.set_thetagrids(np.degrees(angles[:-1]), metric_labels, fontsize=10)
 
     for i, mname in enumerate(method_names):
         vals = [normalized[k][i] for k in metric_keys]
@@ -142,8 +140,9 @@ def plot_baseline_comparison(
                       color=METHOD_COLORS[i % len(METHOD_COLORS)], markersize=6)
         ax_radar.fill(angles, vals, alpha=0.1,
                       color=METHOD_COLORS[i % len(METHOD_COLORS)])
-    ax_radar.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1), fontsize=8)
-    ax_radar.set_title("O2: Normalized Radar", pad=20)
+    ax_radar.legend(loc="lower center", bbox_to_anchor=(0.5, -0.22), fontsize=8,
+                    frameon=False, ncol=3)
+    ax_radar.set_title("Normalized Radar", pad=20)
 
     # ── O3: Relative improvement strip (graphical — replaces table) ──
     ax3 = fig.add_subplot(gs[2])
@@ -176,7 +175,7 @@ def plot_baseline_comparison(
 
     for bl_name, imps in improvement_data.items():
         for mk in metric_keys:
-            y_labels.append(f"{mk}\nvs {bl_name[:15]}")
+            y_labels.append(f"{mk[:3]}-{bl_name[:10]}"[:15])
             y_vals.append(imps.get(mk, 0) * 100)  # as percentage
             y_colors.append(bl_color_map.get(bl_name, "#999"))
 
@@ -185,20 +184,12 @@ def plot_baseline_comparison(
     ax3.barh(y_pos, y_vals, color=bar_colors_final, height=0.6,
              edgecolor="white", linewidth=0.5, alpha=0.85)
     ax3.set_yticks(y_pos)
-    ax3.set_yticklabels(y_labels, fontsize=7, ha="left")
-    set_dense_tick_labels(ax3, axis="y", max_labels=16, fontsize=7, rotation=0)
+    ax3.set_yticklabels(y_labels, fontsize=8, ha="right")
+    set_dense_tick_labels(ax3, axis="y", max_labels=12, fontsize=8, rotation=0)
     ax3.axvline(x=0, color="#333", linewidth=1.2)
     ax3.invert_yaxis()
 
-    # Value labels
-    for i, v in enumerate(y_vals):
-        sign = "+" if v > 0 else ""
-        ax3.text(v + (2 if v >= 0 else -2), i, f"{sign}{v:.1f}%",
-                 va="center", fontsize=8, fontweight="bold",
-                 color=COLORS["good"] if v > 0 else COLORS["bad"],
-                 ha="left" if v >= 0 else "right")
-
-    style_axes(ax3, "bar", title="O3: CLOP-DiT Relative Improvement",
+    style_axes(ax3, "bar", title="CLOP-DiT Relative Improvement",
                xlabel="Improvement (%)")
 
     if save:

@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
-# regenerate_report.sh — One-command regeneration of all 18 panels (A–R).
+# regenerate_report.sh — One-command regeneration of all 19 panels (A–S) + architecture figure.
 #
 # Prerequisites: trained CLOP (clop_best.pth) + DiT (dit_best.pth) + scGPT decoder.
 # All intermediate outputs (embeddings, metrics, figures) are regenerated.
+# After step 7 (visualization), step 8 verifies all 15 article figures and
+# creates symlinks in articles/figures/ so the LaTeX article builds correctly.
+#
+# Paths come from configs/pipeline.yaml and src.utils.paths; override via env:
+#   CLOPDIT_CACHE_DIR, CLOPDIT_RESULTS_DIR, CLOPDIT_FIG_DIR,
+#   CLOPDIT_ARTICLE_FIGURES_DIR, CLOPDIT_CKPT_DIR
 #
 # Usage:
 #   bash scripts/regenerate_report.sh              # full pipeline (with UMAP)
@@ -25,10 +31,15 @@ for arg in "$@"; do
     esac
 done
 
+# ── Step 0: Generate architecture figure ──
+echo ""
+echo "▶ Step 0/8: Generating architecture figure..."
+python scripts/generate_architecture_figure.py
+
 # ── Step 1: Generate embeddings (condition_noise ε=0.03, CFG=1.5) ──
 if [ "$SKIP_GEN" = false ]; then
     echo ""
-    echo "▶ Step 1/7: Generating cell embeddings..."
+    echo "▶ Step 1/8: Generating cell embeddings..."
     python scripts/generate_embeddings.py \
         --condition-mode condition_noise \
         --noise-scale 0.03 \
@@ -39,19 +50,19 @@ fi
 
 # ── Step 2: Decode gene expression ──
 echo ""
-echo "▶ Step 2/7: Decoding gene expression via scGPT..."
+echo "▶ Step 2/8: Decoding gene expression via scGPT..."
 python scripts/decode_expression.py
 
 # ── Step 3: Diversity diagnostics (Panels J + K) ──
 echo ""
-echo "▶ Step 3/7: Running diversity diagnostics..."
+echo "▶ Step 3/8: Running diversity diagnostics..."
 python scripts/diversity_diagnostics.py \
     --num-per-type 100 \
     --cfg-scales 1.0 1.5 2.0 3.0 5.0 7.0
 
 # ── Step 4: Conditioning analysis (Panels L + M) ──
 echo ""
-echo "▶ Step 4/7: Running conditioning analysis..."
+echo "▶ Step 4/8: Running conditioning analysis..."
 python scripts/conditioning_analysis.py \
     --num-per-type 100 \
     --cfg-scale 1.5 \
@@ -73,25 +84,40 @@ echo ""
 echo "▶ Step 7/8: Generating panels A–S + combined PDF..."
 python -m src.visualization.results_visualizer $UMAP_FLAG
 
-# ── Step 8: Summary ──
+# ── Step 8: Verify article figures + create symlinks ──
+echo ""
+echo "▶ Step 8/8: Verifying article figures + creating symlinks..."
+bash scripts/verify_article_figures.sh
+
+# ── Summary ──
 echo ""
 echo "═══════════════════════════════════════════════════════════════"
 echo "  Report regeneration complete"
 echo "═══════════════════════════════════════════════════════════════"
 echo ""
 echo "Outputs:"
-echo "  Panels A–I:  results/figures/panel_[a-i]_*.png"
-echo "  Panels J–K:  results/figures/panel_j_diversity_diagnostics.png"
-echo "               results/figures/panel_k_expression_diversity.png"
-echo "  Panels L–M:  results/figures/panel_l_noise_tradeoff.png"
-echo "               results/figures/panel_m_conditioning_umap.png"
-echo "  Panel N:     results/figures/panel_n_marker_gene_comparison.png"
-echo "  Panel O:     results/figures/panel_o_baseline_comparison.png"
-echo "  Panel P:     results/figures/panel_p_clustering_alignment.png"
-echo "  Panel Q:     results/figures/panel_q_classifier_alignment.png"
-echo "  Panel R:     results/figures/panel_r_de_concordance.png"
-echo "  Panel S:     results/figures/panel_s_benchmark.png"
+echo "  Architecture: results/figures/fig_architecture.{png,pdf}"
+echo "  Panels A–I:  results/figures/panel_[a-i]_*.{png,pdf}"
+echo "  Panels J–K:  results/figures/panel_j_diversity_diagnostics.{png,pdf}"
+echo "               results/figures/panel_k_expression_diversity.{png,pdf}"
+echo "  Panels L–M:  results/figures/panel_l_noise_tradeoff.{png,pdf}"
+echo "               results/figures/panel_m_conditioning_umap.{png,pdf}"
+echo "  Panel N:     results/figures/panel_n_marker_gene_comparison.{png,pdf}"
+echo "  Panel O:     results/figures/panel_o_baseline_comparison.{png,pdf}"
+echo "  Panel P:     results/figures/panel_p_clustering_mixing.{png,pdf}"
+echo "  Panel Q:     results/figures/panel_q_classifier_alignment.{png,pdf}"
+echo "  Panel R:     results/figures/panel_r_de_concordance.{png,pdf}"
+echo "  Panel S:     results/figures/panel_s_benchmark.{png,pdf}"
+echo ""
+echo "  Merged (article):"
+echo "    results/figures/fig_training_dynamics.{png,pdf}     (A+C)"
+echo "    results/figures/fig_embedding_space.{png,pdf}       (B+E)"
+echo "    results/figures/fig_fidelity_alignment.{png,pdf}    (G+F)"
+echo "    results/figures/fig_diversity_tradeoff.{png,pdf}    (L+K)"
+echo "    results/figures/fig_downstream_pq.{png,pdf}         (P+Q)"
+echo ""
 echo "  Combined:    results/figures/clop_dit_full_report.pdf"
+echo "  Symlinks:    articles/figures/ (15 PDFs → results/figures/)"
 echo ""
 echo "  Metrics:     results/generation_metrics.json"
 echo "               results/generation_metadata.json"

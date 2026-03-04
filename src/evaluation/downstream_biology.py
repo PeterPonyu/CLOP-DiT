@@ -405,6 +405,10 @@ def de_concordance(
 
         real_logfc = np.array([real_de[g]["logfc"] for g in shared_genes])
         gen_logfc = np.array([gen_de[g]["logfc"] for g in shared_genes])
+        real_padj = np.array([real_de[g]["pval_adj"] for g in shared_genes])
+        gen_padj = np.array([gen_de[g]["pval_adj"] for g in shared_genes])
+        real_score = np.array([real_de[g]["score"] for g in shared_genes])
+        gen_score = np.array([gen_de[g]["score"] for g in shared_genes])
 
         r_pearson, _ = pearsonr(real_logfc, gen_logfc)
         r_spearman, _ = spearmanr(real_logfc, gen_logfc)
@@ -435,6 +439,10 @@ def de_concordance(
             "n_top": n_top,
             "_real_logfc": real_logfc.tolist(),
             "_gen_logfc": gen_logfc.tolist(),
+            "_real_padj": real_padj.tolist(),
+            "_gen_padj": gen_padj.tolist(),
+            "_real_score": real_score.tolist(),
+            "_gen_score": gen_score.tolist(),
             "_shared_genes": shared_genes,
         }
 

@@ -298,18 +298,29 @@ def run_benchmark(
     # Compute rankings for each metric
     all_methods = {"CLOP-DiT": clop_results, **baseline_results}
     ranking_metrics = [
+        # Embedding distributional metrics
         ("frechet_distance", "lower"),
         ("mmd_rbf", "lower"),
         ("mean_kl", "lower"),
         ("coverage", "higher"),
         ("density", "higher"),
+        # Per-type quality metrics
         ("mean_centroid_cosine", "higher"),
+        ("min_centroid_cosine", "higher"),
         ("diversity_ratio", "higher"),
+        ("fraction_collapsed", "lower"),
+        # Gene expression fidelity (only CLOP-DiT can produce expression)
+        ("gene_pearson_r", "higher"),
+        ("gene_spearman_rho", "higher"),
     ]
     rankings = {}
     for metric, direction in ranking_metrics:
-        vals = {m: all_methods[m].get(metric, float("inf") if direction == "lower" else 0)
-                for m in all_methods}
+        # For missing/None values: worst possible (inf for lower, -inf for higher)
+        default = float("inf") if direction == "lower" else float("-inf")
+        vals = {}
+        for m in all_methods:
+            v = all_methods[m].get(metric)
+            vals[m] = v if v is not None else default
         sorted_methods = sorted(vals.keys(),
                                 key=lambda m: vals[m],
                                 reverse=(direction == "higher"))
@@ -321,18 +332,32 @@ def run_benchmark(
         }
 
     # Composite score: normalise each metric to [0, 1] and average
+    # Methods missing a metric (None) receive the worst normalised score (0.0)
     composite = {}
     for method in all_methods:
         scores = []
         for metric, direction in ranking_metrics:
-            vals = [all_methods[m].get(metric, 0) for m in all_methods]
-            mn, mx = min(vals), max(vals)
-            rng_val = max(mx - mn, 1e-8)
-            raw = all_methods[method].get(metric, 0)
+            raw_val = all_methods[method].get(metric)
+            if raw_val is None:
+                # Penalise methods that lack capability for this metric
+                scores.append(0.0)
+                continue
+            # Gather non-None values for normalisation range
+            valid_vals = [all_methods[m].get(metric) for m in all_methods
+                          if all_methods[m].get(metric) is not None]
+            if not valid_vals:
+                scores.append(0.0)
+                continue
+            mn, mx = min(valid_vals), max(valid_vals)
+            rng_val = mx - mn
+            if rng_val < 1e-8:
+                # All valid values are identical — having the capability = best
+                scores.append(1.0)
+                continue
             if direction == "lower":
-                norm = 1.0 - (raw - mn) / rng_val
+                norm = 1.0 - (raw_val - mn) / rng_val
             else:
-                norm = (raw - mn) / rng_val
+                norm = (raw_val - mn) / rng_val
             scores.append(norm)
         composite[method] = float(np.mean(scores))
 

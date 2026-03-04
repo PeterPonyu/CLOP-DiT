@@ -126,13 +126,15 @@ All experiments are conducted on a single NVIDIA RTX 5090 Laptop GPU (24.1 GB VR
 
 The training dynamics for both stages are shown in Fig. 2. CLOP InfoNCE loss converges from 2.84 to 1.19 over 200 epochs. Validation accuracy stabilizes at ~2.5% (6.4× random chance with batch size 256), reflecting the model's retrieval difficulty across 1,088 unique cell types, while the learnable temperature τ adapts from 0.070 to 0.060. The DiT flow matching MSE loss converges from 1.48 (epoch 1) to 0.022 (epoch 200), with the EMA model achieving a validation velocity cosine similarity of 0.976, corresponding to a mean angular error of approximately 12.6°.
 
-![Fig. 2. Training dynamics for both stages. (a) CLOP contrastive loss convergence showing train loss (1.19) and val loss (5.47). (b) CLOP validation accuracy (2.5%, 6.4× random) and learned temperature parameter (τ: 0.070 → 0.060). (c) DiT flow matching MSE loss on log scale. (d) Velocity prediction cosine similarity reaching 0.976 with EMA.](../figures/v5_publication/fig2_training_dynamics.png)
+![Fig. 2a. CLOP training: contrastive loss convergence, validation accuracy, and learned temperature (τ).](../results/figures/panel_a_clop_training.png)
+
+![Fig. 2b. DiT training: flow matching MSE loss and velocity prediction cosine similarity (EMA 0.976).](../results/figures/panel_c_dit_training.png)
 
 ### D. Embedding Space Visualization
 
 Fig. 3 shows PCA visualizations of real and generated cell embeddings. Generated cells (triangles, colored by group) overlap with the real cell manifold (gray), demonstrating that CLOP-DiT produces embeddings within the learned data distribution. Per-group coloring confirms that generated cells cluster according to their text-specified cell type identity, with clear separation between distinct groups.
 
-![Fig. 3. PCA visualization of real and generated cell embeddings (CFG=2.0, Euler-10). (a) Real cells (gray) vs. generated cells colored by target group, showing overlap with the real data manifold. (b) Per-group comparison of real (○) vs. generated (△) cells demonstrating type-specific clustering.](../figures/v5_publication/fig3_pca_embedding.png)
+![Fig. 3. Real vs. generated cell embeddings (PCA); generated cells colored by target group, overlapping the real data manifold.](../results/figures/panel_e_real_vs_generated.png)
 
 ### E. Quantitative Evaluation
 
@@ -146,7 +148,7 @@ We evaluate generation quality using biologically meaningful metrics that assess
 5. Diversity ratio → within-group variance preservation (1.0 = ideal)
 6. Linear classifier (LogisticRegression) → stronger separability test
 
-![Fig. 4. Comprehensive quantitative evaluation. (a) KNN classification accuracy across generation configs vs. random and real data baselines. (b) Steering accuracy showing 81% directional control vs. 50% random. (c) Diversity ratio across CFG scales. (d) KNN vs. linear separability correlation. (e) Centroid cosine alignment. (f) Improvement over random chance.](../figures/v5_publication/fig4_metrics_dashboard.png)
+![Fig. 4. Quantitative evaluation: KNN accuracy, steering accuracy (81%), diversity ratio, and related metrics.](../results/figures/panel_d_metrics_summary.png)
 
 **TABLE I: Generation Quality Across Configurations (100 eval groups, 200 cells/group)**
 
@@ -166,7 +168,9 @@ The best conditioned generation (CFG=2.0 Euler-10) achieves 36.9% KNN top-1 accu
 
 Fig. 5 presents biological plausibility analysis of generated cell embeddings. Generated cells form distinct clusters in PCA space with clear separation between groups (panel a). The inter-group cosine similarity matrix (panel b) reveals that generated centroids maintain biologically meaningful relationships — semantically related groups show moderate cross-similarity, while distinct types maintain separation. Intra-group diversity comparison (panel c) shows generated cells preserve real within-group variance, especially with the Midpoint solver (DivR = 0.93). Conditioning fidelity (panel d) confirms generated cells have significantly higher cosine similarity to their target centroid than to wrong centroids, validating type-specific generation.
 
-![Fig. 5. Biological validation of generated cells. (a) PCA projection showing cell-type separation across 10 generated groups. (b) Inter-group cosine similarity heatmap of generated centroids. (c) Intra-group diversity: real vs generated standard deviation. (d) Conditioning fidelity: cosine similarity to target vs wrong centroid.](../figures/v5_publication/fig5_biological_validation.png)
+![Fig. 5a. Text–cell similarity heatmap (biological validation).](../results/figures/panel_f_text_cell_heatmap.png)
+
+![Fig. 5b. Marker gene comparison: real vs. generated.](../results/figures/panel_n_marker_gene_comparison.png)
 
 ### G. CFG Scale Analysis and ODE Solver Comparison
 
@@ -176,13 +180,15 @@ The CFG sweep reveals three key findings: (1) KNN accuracy saturates around CFG 
 
 The Euler vs Midpoint comparison (panels d–f) shows the 2nd-order Midpoint solver does not improve accuracy but significantly improves diversity. At CFG=1.0, Midpoint achieves DivR = 0.929 (near-ideal) vs. Euler's 0.745, with equivalent steering (80.7% vs 81.0%). This suggests Euler's integration error contributes to mode sharpening, and Midpoint better preserves distributional breadth.
 
-![Fig. 6. CFG scale analysis and solver comparison. (a) KNN accuracy vs CFG scale for 10, 20, 50 steps. (b) Steering accuracy stability across CFG. (c) Diversity ratio decrease with CFG. (d–f) Euler vs Midpoint solver comparison for KNN, steering, and diversity.](../figures/v5_publication/fig6_cfg_solver.png)
+![Fig. 6a. Diversity diagnostics across configs.](../results/figures/panel_j_diversity_diagnostics.png)
+
+![Fig. 6b. CFG/noise trade-off and solver comparison.](../results/figures/panel_l_noise_tradeoff.png)
 
 ### H. Dimension and Sampling Analysis
 
 Fig. 7 provides detailed analysis of the generation process. Per-dimension mean comparison (panel a) shows near-perfect correlation ($r > 0.99$) between real and generated embeddings across all 512 dimensions. Per-dimension standard deviation comparison (panel b) confirms generated cells preserve the moment structure of the real data. The ODE sampling trajectory (panel c) visualizes the flow from noise ($z_0$) to data ($z_1$) in PCA space, showing how different samples converge toward the data manifold under CFG=2.0 guidance. The norm distribution comparison (panel d) demonstrates that generated embeddings match the real data norm distribution (generated mean norm 20.83 vs. real 21.08), confirming plausible magnitude.
 
-![Fig. 7. Dimension and sampling analysis. (a) Per-dimension mean correlation between real and generated embeddings ($r > 0.99$). (b) Per-dimension standard deviation correlation. (c) ODE sampling trajectory from noise to cell embedding in PCA space (CFG=2.0). (d) L2 norm distribution comparison.](../figures/v5_publication/fig7_dimension_sampling.png)
+![Fig. 7. Expression/dimension correlation between real and generated embeddings.](../results/figures/panel_h_expression_correlation.png)
 
 ### I. Phase 2 Decoder Architecture Comparison
 
@@ -222,7 +228,7 @@ CLOP-DiT is a two-stage framework: Stage 1 (CLOP) produces 256-d text projection
 
 **Oracle baselines** confirm evaluation calibration: Per-Type Gaussian achieves 95.4% KNN with DivR = 1.00, and Retrieval+Jitter achieves 89.3% with DivR = 1.00.
 
-![Fig. 9. Phase 2 decoder architecture comparison. (a) KNN classification accuracy: Direct Transformer achieves 97.0% (highest) but catastrophically mode-collapses. (b) Diversity ratio — DiT balanced achieves perfect DivR=1.0; Direct Transformer collapses to 0.05; DDPM-DiT fails. (c) Per-group Fréchet Distance on log scale. (d) Accuracy–diversity trade-off showing DiT's unique position enabling CFG-controlled balance.](../figures/v5_publication/fig9_baseline_comparison.png)
+![Fig. 9. Phase 2 decoder comparison: KNN, diversity ratio, FD; DiT vs. Direct Transformer, DDPM-DiT, cVAE, cGAN.](../results/figures/panel_o_baseline_comparison.png)
 
 ### J. ODE Step Count Ablation
 
@@ -245,7 +251,7 @@ The results reveal a counter-intuitive pattern: **2-step Euler achieves the high
 
 **The optimal step count depends on the downstream task:** for maximum type-specific accuracy, 2 steps suffices; for maximum distributional fidelity and diversity, 20–50 steps is preferred; the standard 10 steps represents a balanced default.
 
-![Fig. 10. ODE step count ablation. (a) Classification accuracy peaks at 2 steps then decreases monotonically. (b) Diversity ratio increases toward 1.0 with more steps. (c) Downstream accuracy improves with more steps, confirming the accuracy–diversity trade-off inherent to iterative ODE generation.](../figures/v5_publication/fig10_ode_steps.png)
+![Fig. 10. ODE step count ablation: accuracy vs. diversity trade-off with step count.](../results/figures/panel_l_noise_tradeoff.png)
 
 ### K. Ablation Study
 
@@ -268,7 +274,7 @@ We conduct systematic ablation experiments to validate key design choices. Resul
 
 **EMA is critical:** The saved DiT checkpoint uses EMA (decay = 0.9999). The non-EMA model at epoch 120 achieves val_cosine = 0.756, while the EMA model at epoch 200 reaches 0.976 — a critical distinction for generation quality.
 
-![Fig. 8. Summary tables for generation quality comparison and ablation analysis. Table I shows results across all generation configurations including conditioned, unconditioned, and Gaussian baselines. Table II presents the ablation analysis quantifying contributions of conditioning, CFG, and ODE solver choice.](../figures/v5_publication/fig8_tables.png)
+![Fig. 8. Metrics summary; see Tables I–II in text for generation quality and ablation.](../results/figures/panel_d_metrics_summary.png)
 
 ---
 
@@ -347,15 +353,15 @@ We presented CLOP-DiT, a two-stage framework for text-guided single-cell generat
 | Figure | Description | Panels | File |
 |--------|-------------|--------|------|
 | Fig. 1 | Architecture overview (schematic) | — | To be prepared separately |
-| Fig. 2 | Training dynamics | (a)–(d) | `fig2_training_dynamics.png` |
-| Fig. 3 | PCA embedding space | (a)–(b) | `fig3_pca_embedding.png` |
-| Fig. 4 | Quantitative metrics dashboard | (a)–(f) | `fig4_metrics_dashboard.png` |
-| Fig. 5 | Biological validation | (a)–(d) | `fig5_biological_validation.png` |
-| Fig. 6 | CFG sweep & solver comparison | (a)–(f) | `fig6_cfg_solver.png` |
-| Fig. 7 | Dimension & sampling | (a)–(d) | `fig7_dimension_sampling.png` |
-| Fig. 8 | Comparison & ablation tables | Tables I–II | `fig8_tables.png` |
-| Fig. 9 | Phase 2 decoder comparison | (a)–(d) | `fig9_baseline_comparison.png` |
-| Fig. 10 | ODE step ablation curves | (a)–(c) | `fig10_ode_steps.png` |
+| Fig. 2 | Training dynamics | (a) CLOP, (b) DiT | `panel_a_clop_training.png`, `panel_c_dit_training.png` |
+| Fig. 3 | Real vs. generated embedding | — | `panel_e_real_vs_generated.png` |
+| Fig. 4 | Quantitative metrics dashboard | — | `panel_d_metrics_summary.png` |
+| Fig. 5 | Biological validation | (a) heatmap, (b) marker genes | `panel_f_text_cell_heatmap.png`, `panel_n_marker_gene_comparison.png` |
+| Fig. 6 | CFG & solver | (a) diversity, (b) trade-off | `panel_j_diversity_diagnostics.png`, `panel_l_noise_tradeoff.png` |
+| Fig. 7 | Dimension/expression correlation | — | `panel_h_expression_correlation.png` |
+| Fig. 8 | Summary metrics (Tables I–II in text) | — | `panel_d_metrics_summary.png` |
+| Fig. 9 | Phase 2 decoder comparison | — | `panel_o_baseline_comparison.png` |
+| Fig. 10 | ODE step ablation | — | `panel_l_noise_tradeoff.png` |
 
 | Table | Description | Rows | Columns |
 |-------|-------------|------|---------|

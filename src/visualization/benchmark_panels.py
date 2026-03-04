@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .style import (
-    COLORS, GRIDSPEC_TIGHT, save_panel, set_dense_tick_labels, style_axes
+    COLORS, save_panel, set_dense_tick_labels, style_axes
 )
 
 logger = logging.getLogger(__name__)
@@ -67,22 +67,24 @@ def plot_benchmark_panel(
 
     # Metrics to display in the heatmap
     heatmap_metrics = [
-        ("frechet_distance", "FD ↓", "lower"),
-        ("mmd_rbf", "MMD ↓", "lower"),
-        ("mean_kl", "Mean KL ↓", "lower"),
-        ("coverage", "Coverage ↑", "higher"),
-        ("density", "Density ↑", "higher"),
-        ("mean_centroid_cosine", "Centroid Cos ↑", "higher"),
-        ("min_centroid_cosine", "Min Cos ↑", "higher"),
-        ("diversity_ratio", "Diversity ↑", "higher"),
-        ("fraction_collapsed", "Collapsed ↓", "lower"),
+        ("frechet_distance", "FD\u2193", "lower"),
+        ("mmd_rbf", "MMD\u2193", "lower"),
+        ("mean_kl", "KL\u2193", "lower"),
+        ("coverage", "Cov\u2191", "higher"),
+        ("density", "Den\u2191", "higher"),
+        ("mean_centroid_cosine", "Cos\u2191", "higher"),
+        ("min_centroid_cosine", "Min\u2191", "higher"),
+        ("diversity_ratio", "Div\u2191", "higher"),
+        ("fraction_collapsed", "Col\u2193", "lower"),
+        ("gene_pearson_r", "gPr\u2191", "higher"),
+        ("gene_spearman_rho", "gSp\u2191", "higher"),
     ]
 
-    fig = plt.figure(figsize=(18, 12))
-    gs = fig.add_gridspec(2, 2, **GRIDSPEC_TIGHT)
+    fig = plt.figure(figsize=(15.0, 9.0))
+    gs = fig.add_gridspec(2, 2, wspace=0.55, hspace=0.50)
     fig.suptitle(
         "Model Benchmarking — CLOP-DiT vs Baselines",
-        fontsize=15, fontweight="bold",
+        fontsize=11,
     )
 
     # ── S1: Heatmap (methods × metrics) ──
@@ -91,22 +93,32 @@ def plot_benchmark_panel(
     metric_keys = [m[0] for m in heatmap_metrics]
     directions = [m[2] for m in heatmap_metrics]
 
-    # Build raw values matrix
-    raw = np.zeros((n_methods, len(metric_keys)))
+    # Build raw values matrix (None → NaN for proper handling)
+    raw = np.full((n_methods, len(metric_keys)), np.nan)
     for i, mname in enumerate(method_names):
         for j, mk in enumerate(metric_keys):
-            raw[i, j] = methods_data[mname].get(mk, 0)
+            v = methods_data[mname].get(mk)
+            if v is not None:
+                raw[i, j] = v
 
     # Normalise each column to [0, 1] with direction awareness
+    # NaN (missing capability) → normalised score 0.0 (worst)
     norm = np.zeros_like(raw)
     for j in range(len(metric_keys)):
         col = raw[:, j]
-        mn, mx = col.min(), col.max()
+        valid_mask = ~np.isnan(col)
+        if valid_mask.sum() == 0:
+            continue
+        valid_vals = col[valid_mask]
+        mn, mx = valid_vals.min(), valid_vals.max()
         rng = max(mx - mn, 1e-8)
-        if directions[j] == "lower":
-            norm[:, j] = 1.0 - (col - mn) / rng  # higher norm = better
-        else:
-            norm[:, j] = (col - mn) / rng
+        for i in range(n_methods):
+            if np.isnan(raw[i, j]):
+                norm[i, j] = 0.0  # penalise missing capability
+            elif directions[j] == "lower":
+                norm[i, j] = 1.0 - (raw[i, j] - mn) / rng
+            else:
+                norm[i, j] = (raw[i, j] - mn) / rng
 
     # Plot heatmap
     cmap = matplotlib.colormaps.get_cmap("RdYlGn")
@@ -115,27 +127,18 @@ def plot_benchmark_panel(
     # Labels
     short_method_names = [n[:20] for n in method_names]
     ax1.set_xticks(range(len(metric_labels)))
-    ax1.set_xticklabels(metric_labels, rotation=45, ha="right", fontsize=8)
+    ax1.set_xticklabels(metric_labels, rotation=55, ha="right", fontsize=8)
     ax1.set_yticks(range(n_methods))
-    ax1.set_yticklabels(short_method_names, fontsize=9)
+    ax1.set_yticklabels(short_method_names, fontsize=8)
 
-    # Annotate cells with raw values
-    for i in range(n_methods):
-        for j in range(len(metric_keys)):
-            val = raw[i, j]
-            txt = f"{val:.3f}" if val < 10 else f"{val:.1f}"
-            text_color = "white" if norm[i, j] < 0.3 or norm[i, j] > 0.85 else "black"
-            ax1.text(j, i, txt, ha="center", va="center",
-                     fontsize=7, fontweight="bold", color=text_color)
-
-    # Highlight best cell in each column
+    # Highlight best cell in each column (no cell text — colours tell the story)
     for j in range(len(metric_keys)):
         best_i = norm[:, j].argmax()
         ax1.add_patch(plt.Rectangle((j - 0.5, best_i - 0.5), 1, 1,
                                     fill=False, edgecolor="#1B5E20", linewidth=2.5))
 
     plt.colorbar(im, ax=ax1, shrink=0.6, pad=0.02, label="Normalised Score (1=best)")
-    style_axes(ax1, "heatmap", title="S1: Metrics Comparison Heatmap")
+    style_axes(ax1, "heatmap", title="Metrics Comparison Heatmap")
 
     # ── S2: Composite score bars ──
     ax2 = fig.add_subplot(gs[0, 1])
@@ -144,28 +147,26 @@ def plot_benchmark_panel(
     bar_colors = [METHOD_COLORS.get(m, "#999") for m in sorted_methods]
     short_sorted = [m[:20] for m in sorted_methods]
 
+    # Merge rank badges directly into ytick labels to avoid overlap
+    ranked_labels = []
+    for i, name in enumerate(short_sorted):
+        badge = "#1" if i == 0 else "#2" if i == 1 else "#3" if i == 2 else f"#{i+1}"
+        ranked_labels.append(f"{badge} {name}")
+
     y_pos = np.arange(len(sorted_methods))
     bars = ax2.barh(y_pos, scores, color=bar_colors, height=0.6,
                     edgecolor="white", linewidth=0.8, alpha=0.85)
     ax2.set_yticks(y_pos)
-    ax2.set_yticklabels(short_sorted, fontsize=10)
+    ax2.set_yticklabels(ranked_labels, fontsize=8)
     ax2.invert_yaxis()
 
     for i, (bar, score) in enumerate(zip(bars, scores)):
         ax2.text(bar.get_width() + 0.01, bar.get_y() + bar.get_height() / 2,
-                 f"{score:.4f}", va="center", fontsize=10, fontweight="bold",
-                 color=bar_colors[i])
+                 f"{score:.4f}", va="center", fontsize=8,
+                 color="#333333")
 
-    # Add rank badges
-    for i in range(len(sorted_methods)):
-        badge = "#1" if i == 0 else "#2" if i == 1 else "#3" if i == 2 else f"#{i+1}"
-        badge_color = "#FFD700" if i == 0 else "#C0C0C0" if i == 1 else "#CD7F32" if i == 2 else "#999"
-        ax2.text(-0.02, y_pos[i], badge, ha="right", va="center",
-                 fontsize=10, fontweight="bold", color=badge_color,
-                 transform=ax2.get_yaxis_transform())
-
-    ax2.set_xlim(0, max(scores) * 1.15)
-    style_axes(ax2, "bar", title="S2: Composite Score (higher = better)",
+    ax2.set_xlim(0, max(scores) * 1.25)
+    style_axes(ax2, "bar", title="Composite Score (higher = better)",
                xlabel="Normalised Aggregate Score")
 
     # ── S3: Grouped bar chart for key metrics ──
@@ -175,25 +176,25 @@ def plot_benchmark_panel(
         ("mean_centroid_cosine", "Cos ↑"),
         ("diversity_ratio", "Div ↑"),
         ("coverage", "Cov ↑"),
+        ("gene_pearson_r", "Gene r ↑"),
     ]
 
     x = np.arange(len(key_metrics))
     w = 0.8 / n_methods
 
     for i, mname in enumerate(method_names):
-        vals = [methods_data[mname].get(km[0], 0) for km in key_metrics]
+        vals = [methods_data[mname].get(km[0]) for km in key_metrics]
+        # Replace None with 0 for bar plotting
+        vals_plot = [v if v is not None else 0.0 for v in vals]
         offset = (i - n_methods / 2 + 0.5) * w
         color = METHOD_COLORS.get(mname, f"C{i}")
-        ax3.bar(x + offset, vals, w, label=mname[:18],
+        ax3.bar(x + offset, vals_plot, w, label=mname[:18],
                 color=color, alpha=0.85, edgecolor="white")
-        for xi, v in zip(x + offset, vals):
-            ax3.text(xi, v + 0.005, f"{v:.3f}", ha="center", fontsize=6,
-                     rotation=55, va="bottom")
 
     ax3.set_xticks(x)
     ax3.set_xticklabels([km[1] for km in key_metrics], fontsize=10)
-    ax3.legend(fontsize=7, loc="upper right", ncol=2)
-    style_axes(ax3, "bar", title="S3: Key Metrics Comparison", ylabel="Value")
+    ax3.legend(fontsize=9, loc="upper center", bbox_to_anchor=(0.5, -0.15), ncol=3)
+    style_axes(ax3, "bar", title="Key Metrics Comparison", ylabel="Value")
 
     # ── S4: CI comparison — error-bar plot ──
     ax4 = fig.add_subplot(gs[1, 1])
@@ -221,28 +222,20 @@ def plot_benchmark_panel(
                          label=mname[:18] if mi == 0 else None)
             group_positions.append(all_y)
             group_labels.append(f"{mname[:14]}")
-            all_y += 1
+            all_y += 1.6
         # Add metric group separator
         if mi < len(ci_metrics) - 1:
-            ax4.axhline(y=all_y - 0.5, color="#DDD", linewidth=1, linestyle="--")
-            all_y += 0.5
+            ax4.axhline(y=all_y - 0.8, color="#DDD", linewidth=1, linestyle="--")
+            all_y += 1.2
 
     ax4.set_yticks(group_positions)
-    ax4.set_yticklabels(group_labels, fontsize=6.5)
+    ax4.set_yticklabels(group_labels, fontsize=8)
     ax4.invert_yaxis()
 
-    # Add metric group titles on the right
-    group_mid = 0
-    for mi, (_, _, label) in enumerate(ci_metrics):
-        start = mi * (n_methods + 0.5) if mi > 0 else 0
-        mid = start + n_methods / 2 - 0.5
-        ax4.text(1.02, mid / (all_y - 0.5), label,
-                 transform=ax4.get_yaxis_transform(),
-                 fontsize=9, fontweight="bold", ha="left", va="center",
-                 color="#333")
+    # Add metric group titles on the right — removed: y-labels already convey grouping
 
-    ax4.legend(fontsize=7, loc="lower right", ncol=1)
-    style_axes(ax4, "default", title="S4: 95% Bootstrap CI Comparison",
+    ax4.legend(fontsize=8, loc="upper left", ncol=1)
+    style_axes(ax4, "default", title="95% Bootstrap CI Comparison",
                xlabel="Metric Value")
 
     if save:

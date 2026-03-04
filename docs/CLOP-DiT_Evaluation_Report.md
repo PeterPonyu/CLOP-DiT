@@ -4,6 +4,18 @@
 
 ---
 
+## Current results (report pipeline)
+
+- **Figure and report outputs:** All figures and the full report are written to **`results/figures/`**. The combined report is **`results/figures/clop_dit_full_report.pdf`**.
+- **Regeneration:** From the repo root, run:
+  ```bash
+  bash scripts/regenerate_report.sh
+  ```
+  This uses the config in **`configs/clop_v9.3.yaml`** and produces **19 panels (A–S)** as PNG and PDF (e.g. `panel_a_clop_training.png`, …, `panel_s_benchmark.png`), plus the full PDF report.
+- **Panel mapping and usage:** See **`docs/FIGURE_ORGANIZATION.md`** for the list of panels, short descriptions, and how they map to the MDPI article and JBHI markdown.
+
+---
+
 ## 1. Executive Summary
 
 CLOP-DiT is a two-stage pipeline for **text-conditioned generation of single-cell gene expression profiles** using Flow Matching. This report documents the complete evidence chain—from architectural design through training dynamics to generation validation—establishing that the model successfully learns to generate biologically meaningful, condition-specific cell embeddings.
@@ -380,4 +392,4 @@ Panels P/Q/R in the combined report.
 
 ---
 
-*Report generated from verified evaluation results at `/results/v5_final/final_evaluation.json`. All metrics reproduced by `scripts/15_final_verified_evaluation.py` with seed=42.*
+*Report based on verified evaluation results in `results/`. Metrics reproduced by `scripts/06_evaluate.py` and `bash scripts/regenerate_report.sh` (19 panels A–S, including benchmark Panel S with composite score 0.668). See also `src/evaluation/model_benchmarking.py` and `src/evaluation/downstream_biology.py`.*

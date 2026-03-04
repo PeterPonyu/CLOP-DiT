@@ -1,49 +1,40 @@
-# CLOP-DiT Quick Start Guide (Post-Polishing)
+# CLOP-DiT Quick Start Guide
 ===============================================
 
-## ⚡ TL;DR - Next Steps
+## TL;DR - Regenerate the Full Report
 
 ```bash
-# 1. Re-embed polished texts (CRITICAL - must do first)
-python scripts/re_embed_polished_texts.py --recompute_whitening
+# Generate all 19 panels (A-S) + combined PDF + article symlinks
+bash scripts/regenerate_report.sh
 
-# 2. Run full retraining pipeline (12-24 hours GPU time)
-bash scripts/full_retrain_pipeline.sh
-
-# 3. Monitor results
-tail -f logs/retrain_*/main.log
+# Or skip embedding generation if results already exist
+bash scripts/regenerate_report.sh --skip-gen
 ```
 
-## 📊 Expected Improvements
+The pipeline automatically verifies all 15 article figures and creates symlinks in `articles/figures/`. To verify without regenerating:
 
-| Metric | Before | After (Prediction) | Improvement |
-|--------|--------|-------------------|-------------|
-| CLOP val_proto_acc | 10.45% | **15-25%** | +50-140% |
-| DiT MSE loss | 0.15-0.20 | **<0.10** | Better conditioning |
-| Generated cosine sim | 0.4-0.6 | **>0.75** | More realistic |
-| Sampling steps | 20-50 | **8-20** (or 4-8) | Faster |
+```bash
+bash scripts/verify_article_figures.sh --check   # verify only
+bash scripts/verify_article_figures.sh            # verify + recreate symlinks
+```
 
-## 🎯 What Was Done
+## Current Pipeline (9 Steps)
 
-### ✅ Text Polishing
-- 1088 texts transformed from rigid templates to rich biological descriptions
-- Cell-type biology now front-loaded (was buried under tissue/disease prefix)
-- +241% increase in semantic richness
-- Files: `data/cached_latents_v5.2/text_strings.json` (updated)
+`regenerate_report.sh` orchestrates:
 
-### ✅ Enhanced Architecture
-- **Classifier-free guidance**: Already implemented (10% dropout)
-- **Flow matching**: State-of-the-art velocity field learning
-- **AdaLN-Zero**: Proper conditioning modulation
-- **scGPT decoder**: Verified working (cell_emb → gene expression)
+0. **Architecture figure** → `scripts/generate_architecture_figure.py`
+1. **Generate embeddings** → `scripts/generate_embeddings.py`
+2. **Decode gene expression** → `scripts/decode_expression.py`
+3. **Diversity diagnostics** (Panels J+K) → `scripts/diversity_diagnostics.py`
+4. **Conditioning analysis** (Panels L+M) → `scripts/conditioning_analysis.py`
+5. **Downstream biology** (Panels P/Q/R) → `python -m src.evaluation.downstream_biology`
+6. **Model benchmarking** (Panel S) → `python -m src.evaluation.model_benchmarking`
+7. **Visualization** (all 19 panels + 5 merged figures) → `python -m src.visualization.results_visualizer`
+8. **Verify + symlink** (article figures) → `scripts/verify_article_figures.sh`
 
-### ✅ New Infrastructure
-- `scripts/re_embed_polished_texts.py` → Re-compute BiomedBERT embeddings
-- `src/evaluation/generative_metrics.py` → FID, MMD, coverage, silhouette, UMAP
-- `scripts/rectify_flow.py` → Path straightening for ultra-fast sampling
-- `scripts/full_retrain_pipeline.sh` → Orchestrated end-to-end pipeline
+**Output:** `results/figures/panel_a_*.png` through `panel_s_*.png`, 5 merged `fig_*.pdf`, `clop_dit_full_report.pdf`, and 15 symlinks in `articles/figures/`.
 
-## 🔧 Manual Steps (If Not Using Pipeline Script)
+## Manual Steps (If Not Using Pipeline Script)
 
 ### Step 1: Re-embed (Required)
 ```bash
@@ -59,8 +50,7 @@ python scripts/re_embed_polished_texts.py \
 ### Step 2: Retrain CLOP
 ```bash
 python -m src.training.train_clop \
-    --config configs/clop_v72.yaml \
-    --version_id v8.0_polished_texts \
+    --config configs/clop_v9.3.yaml \
     --cache_dir data/cached_latents_v5.2
 ```
 
@@ -147,10 +137,10 @@ models/checkpoints/
 
 ### Logs & Docs
 ```
-logs/retrain_*/                          # ⏳ Pipeline logs
+logs/retrain_*/                          # Pipeline logs
 docs/
-├── TEXT_POLISHING_SUMMARY.md            # ✅ Polishing details
-└── ENHANCEMENTS_SUMMARY.md              # ✅ Full technical doc
+├── CLOP-DiT_Evaluation_Report.md       # Evaluation details
+└── DIRECTORY_CLEANUP_POLICY.md          # Cleanup and rebuild commands
 ```
 
 ## 🐛 Troubleshooting
@@ -261,16 +251,14 @@ for steps in 4 8 12 20 50; do
 done
 ```
 
-## 📞 Support
+## Support
 
-- **Documentation**: `docs/ENHANCEMENTS_SUMMARY.md` (full technical details)
+- **Documentation**: `docs/CLOP-DiT_Evaluation_Report.md` (evaluation details)
+- **Cleanup policy**: `docs/DIRECTORY_CLEANUP_POLICY.md`
 - **Pipeline logs**: `logs/retrain_*/main.log`
 - **Debug**: Add `--verbose` flag to any script
 
 ---
 
-**Status**: ⏰ **READY TO RETRAIN**  
-**Next**: `bash scripts/full_retrain_pipeline.sh`  
-**Time**: ~12-24 hours
-
-================================================================================
+**Status**: Full 19-panel evaluation pipeline operational.
+**Regenerate**: `bash scripts/regenerate_report.sh`

@@ -25,8 +25,8 @@ models/checkpoints_v*/
 # Generated outputs
 results/
 figures_v*/
-figures/**/*.png
-figures/**/*.pdf
+# Root figures/ is deprecated; pipeline uses results/figures/ and articles/figures/ (symlinks)
+figures/
 generated_*.h5ad
 
 # Logs
@@ -38,15 +38,17 @@ configs/archive/
 
 # Doc archives (AI session reports)
 docs/archive/
+docs/intermediate_analysis/
+!docs/intermediate_analysis/README.md
+
+# Scripts archive
+scripts/archive/
 
 # Misc generated files
 preprocess_embeddings
 arch-figure/node_modules/
 arch-figure/.nuxt/
 arch-figure/.output/
-
-# Intermediate analysis (AI session artifacts)
-docs/intermediate_analysis/
 
 # Jupyter
 .ipynb_checkpoints/

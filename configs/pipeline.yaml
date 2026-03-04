@@ -1,0 +1,17 @@
+# Pipeline config — single source of paths for data → training → evaluation → figures → article.
+# Scripts and run_pipeline.py should use these; override via env (CLOPDIT_*).
+# All paths are relative to project root unless absolute.
+
+cache_dir: "data/cached_latents_v5.2"
+checkpoint_dir: "models/checkpoints"
+results_dir: "results"
+fig_dir: "results/figures"
+article_figures_dir: "articles/figures"
+
+# Optional: data prep and models (used by 03, 03b, decode_expression, etc.)
+processed_h5ad_dir: "data/processed_h5ad"
+scgpt_dir: "models/scgpt_pancancer"
+
+# Article build
+article_dir: "articles"
+article_tex: "clop_dit_biology.tex"

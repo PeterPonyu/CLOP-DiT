@@ -27,14 +27,36 @@
 | `07_marker_gene_analysis.py` | Marker gene visualization |
 | `08_biological_validation.py` | Biological validation metrics |
 
-### Phase 4: v5.2 Evaluation & Publication
-| Script | Purpose |
-|---|---|
-| `14_biological_evaluation.py` | In-distribution biological evaluation |
-| `14b_cfg_sweep.py` | CFG scale + ODE solver sweep |
-| `15_final_verified_evaluation.py` | Final verified evaluation (KNN accuracy, steering, DivR) |
-| `16_publication_figures.py` | Publication figures with WCAG visual conflict detection |
-| `17_baseline_comparison.py` | Phase 2 decoder architecture comparison (6 decoders, 10 metrics) |
+### Phase 4: Evaluation & Publication Pipeline (Current)
+
+The canonical evaluation and figure pipeline is:
+
+```bash
+bash scripts/regenerate_report.sh     # Steps 0–7: generate → evaluate → visualize
+```
+
+This orchestrates:
+
+| Step | Script / Module | Purpose |
+|------|----------------|---------|
+| 0 | `generate_architecture_figure.py` | Architecture diagram (Fig 1) |
+| 1 | `generate_embeddings.py` | Generate latent embeddings from DiT |
+| 2 | `decode_expression.py` | Decode latents → gene expression via scGPT |
+| 3 | `diversity_diagnostics.py` | Panels J + K (diversity, CFG sweep) |
+| 4 | `conditioning_analysis.py` | Panels L + M (noise trade-off, conditioning UMAP) |
+| 5 | `src.evaluation.downstream_biology` | Panels P, Q, R (clustering, classifier, DE) |
+| 6 | `src.evaluation.model_benchmarking` | Panel S (composite benchmark) |
+| 7 | `src.visualization.results_visualizer` | All panels A–S + 5 merged figures + PDF report |
+
+### Legacy / Archived Scripts
+
+Scripts in `scripts/archive/` are from earlier development phases and are **not** part of the current pipeline:
+
+| Script | Status |
+|--------|--------|
+| `15_final_verified_evaluation.py` | Superseded by `regenerate_report.sh` step 7 |
+| `16_publication_figures.py` | Superseded by `results_visualizer` |
+| `17_baseline_comparison.py` | Superseded by `model_benchmarking` |
 
 ### Auxiliary
 | Script | Purpose |

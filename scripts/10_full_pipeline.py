@@ -36,15 +36,17 @@ warnings.filterwarnings("ignore", category=UserWarning)
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.utils.logging_config import setup_logging
+from src.utils.paths import (
+    PROJECT_ROOT,
+    CACHE_DIR,
+    RESULTS_DIR,
+    FIG_DIR,
+    CHECKPOINT_DIR,
+    CONFIG_DIR,
+    LOG_DIR,
+)
 
 logger = logging.getLogger(__name__)
-
-# ── Paths ──
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-CACHE_DIR = PROJECT_ROOT / "data" / "cached_latents_v5.2"
-CKPT_DIR = PROJECT_ROOT / "models" / "checkpoints"
-FIG_DIR = PROJECT_ROOT / "figures" / "v5_publication"
-RESULTS_DIR = PROJECT_ROOT / "results" / "v5_final"
 
 # ── Cell type prompts (Reviewer concern: multi-cell-type coverage) ──
 CELL_TYPE_PROMPTS = {
@@ -96,7 +98,7 @@ def train_clop(num_epochs=200, resume=False):
     logger.info("STAGE 1: CLOP Contrastive Alignment Training")
     logger.info("=" * 70)
 
-    config_path = PROJECT_ROOT / "configs" / "clop.yaml"
+    config_path = CONFIG_DIR / "clop.yaml"
     with open(config_path) as f:
         config = yaml.safe_load(f)
 
@@ -134,13 +136,13 @@ def train_dit(num_epochs=200, resume=False):
     logger.info("STAGE 2: DiT Flow Matching Training")
     logger.info("=" * 70)
 
-    config_path = PROJECT_ROOT / "configs" / "dit.yaml"
+    config_path = CONFIG_DIR / "dit.yaml"
     with open(config_path) as f:
         config = yaml.safe_load(f)
 
     config["num_epochs"] = num_epochs
     if resume:
-        best_ckpt = CKPT_DIR / "dit_best.pth"
+        best_ckpt = CHECKPOINT_DIR / "dit_best.pth"
         if best_ckpt.exists():
             config["resume"] = str(best_ckpt)
 
@@ -200,7 +202,7 @@ def load_models(device="cuda"):
     from src.architecture.dit import DiT1D
 
     # CLOP
-    clop_ckpt = torch.load(CKPT_DIR / "clop_best.pth", map_location=device, weights_only=False)
+    clop_ckpt = torch.load(CHECKPOINT_DIR / "clop_best.pth", map_location=device, weights_only=False)
     clop_cfg = clop_ckpt.get("config", {})
     clop = CLOPAligner(
         text_dim=clop_cfg.get("text_dim", 1024),
@@ -222,7 +224,7 @@ def load_models(device="cuda"):
     clop.to(device).eval()
 
     # DiT
-    dit_ckpt = torch.load(CKPT_DIR / "dit_best.pth", map_location=device, weights_only=False)
+    dit_ckpt = torch.load(CHECKPOINT_DIR / "dit_best.pth", map_location=device, weights_only=False)
     dit_cfg = dit_ckpt.get("config", {})
     dit = DiT1D(
         latent_dim=dit_cfg.get("latent_dim", 512),
@@ -485,8 +487,8 @@ def generate_all_figures(metrics, gen_dict, real_emb, projected_text, sample_ids
     }
 
     # ── Load training histories ──
-    clop_hist = json.load(open(CKPT_DIR / "clop_history.json"))
-    dit_hist = json.load(open(CKPT_DIR / "dit_history.json"))
+    clop_hist = json.load(open(CHECKPOINT_DIR / "clop_history.json"))
+    dit_hist = json.load(open(CHECKPOINT_DIR / "dit_history.json"))
 
     # ──────────────────────────────────────────────────────────────────────
     # FIGURE 1: Training Dynamics (2×2 panel)
@@ -1020,7 +1022,7 @@ def main():
     parser.add_argument("--device", type=str, default="cuda")
     args = parser.parse_args()
 
-    setup_logging(log_file=str(PROJECT_ROOT / "logs" / "pipeline_v6.log"))
+    setup_logging(log_file=str(LOG_DIR / "pipeline_v6.log"))
 
     stages = args.stage
     if stages == "all":

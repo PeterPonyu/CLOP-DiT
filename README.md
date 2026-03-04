@@ -288,15 +288,19 @@ python scripts/04b_train_dit.py --config configs/dit.yaml
 python scripts/04b_train_dit.py --config configs/dit.yaml --resume
 ```
 
-### Step 5: Evaluate (In-Distribution)
+### Step 5: Evaluate & Generate Publication Figures
 
 ```bash
-# Full verified evaluation (KNN, steering, diversity, CFG sweep)
-python scripts/15_final_verified_evaluation.py
+# One-command: runs diversity diagnostics, conditioning analysis,
+# downstream biology, model benchmarking, and all panels A–S
+bash scripts/regenerate_report.sh
 
-# Publication figures
-python scripts/16_publication_figures.py
+# Options:
+#   --skip-gen   Skip embedding generation (reuse existing results/)
+#   --no-umap    Skip slow UMAP panels (B, E) for faster iteration
 ```
+
+See [REPRODUCIBILITY.md](REPRODUCIBILITY.md) and [docs/QUICK_START.md](docs/QUICK_START.md) for detailed one-command figure regeneration and environment setup.
 
 ### Step 6: Generate Cells
 
@@ -309,6 +313,16 @@ python scripts/05_inference.py \
     --reference_h5ad data/processed_h5ad/GSE123902_LungAdreHmCancer_processed.h5ad \
     --output generated_cells.h5ad
 ```
+
+---
+
+## Reproduction
+
+For one-command figure regeneration and full result reproduction:
+- **Quick start:** [docs/QUICK_START.md](docs/QUICK_START.md) — single `bash scripts/regenerate_report.sh` command
+- **Full guide:** [REPRODUCIBILITY.md](REPRODUCIBILITY.md) — environment, data, checkpoints, numeric results
+- **Configs:** All hyperparameters and paths in `configs/clop_v9.3.yaml` and `configs/dit.yaml`
+- **Figures:** 19 standalone panels (A–S) + 5 merged article figures, documented in [docs/FIGURE_ORGANIZATION.md](docs/FIGURE_ORGANIZATION.md)
 
 ---
 

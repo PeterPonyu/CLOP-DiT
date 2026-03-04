@@ -22,17 +22,21 @@ import numpy as np
 # ──────────────────────────────────────────────────────────────
 # Publication rcParams — Nature/Cell conventions
 # ──────────────────────────────────────────────────────────────
+# Calibrated for MDPI column: half-width panels at figsize=(4.5,3.2) scale ~0.71x
+# at 0.48\linewidth (3.21" print on A4 170mm text width).
+# With composed_scale=0.70, sizes must satisfy: size * 0.70 >= 7pt.
+# → min body text ~10pt, titles ~12pt, ticks ~10pt, legends ~10pt.
 VIS_STYLE: dict = {
     "font.family": "sans-serif",
     "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
-    "font.size": 11,
-    "axes.titlesize": 13,
-    "axes.titleweight": "bold",
-    "axes.labelsize": 11,
-    "xtick.labelsize": 9,
-    "ytick.labelsize": 9,
+    "font.size": 10,
+    "axes.titlesize": 11,
+    "axes.titleweight": "normal",
+    "axes.labelsize": 10,
+    "xtick.labelsize": 10,
+    "ytick.labelsize": 10,
     "legend.fontsize": 10,
-    "legend.frameon": True,
+    "legend.frameon": False,
     "legend.edgecolor": "0.8",
     "axes.linewidth": 0.8,
     "axes.grid": True,
@@ -40,11 +44,15 @@ VIS_STYLE: dict = {
     "grid.linewidth": 0.5,
     "xtick.major.width": 0.6,
     "ytick.major.width": 0.6,
-    "lines.linewidth": 1.8,
+    "xtick.major.pad": 3,
+    "ytick.major.pad": 3,
+    "xtick.direction": "out",
+    "ytick.direction": "out",
+    "lines.linewidth": 1.5,
     "savefig.dpi": 300,
     "savefig.bbox": "tight",
-    "savefig.pad_inches": 0.15,
-    "figure.constrained_layout.use": True,
+    "savefig.pad_inches": 0.08,
+    "figure.constrained_layout.use": False,
     "figure.facecolor": "white",
 }
 
@@ -79,6 +87,9 @@ def _build_type_palette(n: int = 69) -> np.ndarray:
 
 TYPE_PALETTE = _build_type_palette(69)
 
+# Consistent suptitle vertical position — keeps title close to axes
+SUPTITLE_Y = 0.98
+
 
 # ──────────────────────────────────────────────────────────────
 # Style helpers
@@ -106,18 +117,18 @@ def style_axes(
         Adjusts font sizes and grid visibility to suit the subplot type.
     """
     style_map = {
-        "default":  {"title": 13, "label": 11, "tick": 9,  "grid": True},
-        "bar":      {"title": 13, "label": 11, "tick": 9,  "grid": True},
-        "heatmap":  {"title": 13, "label": 11, "tick": 8,  "grid": False},
-        "scatter":  {"title": 13, "label": 11, "tick": 9,  "grid": True},
-        "umap":     {"title": 13, "label": 11, "tick": 9,  "grid": False},
-        "polar":    {"title": 13, "label": 10, "tick": 9,  "grid": True},
-        "table":    {"title": 13, "label": 11, "tick": 9,  "grid": False},
+        "default":  {"title": 11, "label": 10, "tick": 10, "grid": True},
+        "bar":      {"title": 11, "label": 10, "tick": 10, "grid": True},
+        "heatmap":  {"title": 11, "label": 10, "tick": 8,  "grid": False},
+        "scatter":  {"title": 11, "label": 10, "tick": 10, "grid": True},
+        "umap":     {"title": 11, "label": 10, "tick": 10, "grid": False},
+        "polar":    {"title": 11, "label": 10, "tick": 10, "grid": True},
+        "table":    {"title": 11, "label": 10, "tick": 10, "grid": False},
     }
     s = style_map.get(kind, style_map["default"])
 
     if title:
-        ax.set_title(title, fontsize=s["title"], fontweight="bold")
+        ax.set_title(title, fontsize=s["title"])
     if xlabel:
         ax.set_xlabel(xlabel, fontsize=s["label"])
     if ylabel:
@@ -135,21 +146,81 @@ def style_axes(
     return ax
 
 
-def save_panel(
+def save_with_vcd(
     fig: plt.Figure,
     path: Path | str,
     dpi: int = 300,
     *,
     close: bool = False,
+    run_vcd: bool = True,
 ) -> Path:
-    """Save *fig* as both PNG and PDF, return the PNG path."""
+    """Canonical save: tight_layout, margins, VCD check, PNG + PDF.
+
+    This is the **single** save path for all CLOP-DiT figures.
+    It avoids mixing constrained_layout with tight_layout and uses
+    consistent ``bbox_inches="tight"`` with ``pad_inches=0.08``.
+
+    Parameters
+    ----------
+    fig : Figure
+    path : output path (PNG; PDF is saved alongside)
+    dpi : resolution
+    close : whether to ``plt.close(fig)`` after saving
+    run_vcd : whether to run visual conflict detection before save
+    """
+    import logging as _logging
+
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(path, dpi=dpi)
-    fig.savefig(path.with_suffix(".pdf"), dpi=dpi)
+    basename = path.stem
+
+    # 1) Apply style_axes to all axes (if not already styled)
+    for ax in fig.get_axes():
+        if hasattr(ax, "name") and ax.name == "polar":
+            style_axes(ax, kind="polar")
+        elif ax.images:
+            style_axes(ax, kind="heatmap")
+        else:
+            style_axes(ax, kind="default")
+
+    # 2) tight_layout — single call with generous rect to leave room for suptitle
+    #    and avoid labels being clipped.  Do NOT follow this with subplots_adjust,
+    #    which would fight the layout engine and produce inconsistent spacing.
+    try:
+        fig.tight_layout(rect=[0.02, 0.03, 0.98, 0.94], pad=0.8)
+    except Exception:
+        pass  # fall back gracefully
+
+    # 4) Run VCD (strict mode)
+    if run_vcd:
+        try:
+            import sys
+            _scripts = Path(__file__).resolve().parent.parent.parent / "scripts"
+            if str(_scripts) not in sys.path:
+                sys.path.insert(0, str(_scripts))
+            from visual_conflict_detector import detect_all_conflicts
+            issues = detect_all_conflicts(fig, label=basename, verbose=True)
+            if issues:
+                n_warn = sum(1 for x in issues if x.get("severity") == "warning")
+                if n_warn > 0:
+                    _logging.getLogger(__name__).warning(
+                        "%s: %d visual conflict warning(s)", basename, n_warn
+                    )
+        except Exception:
+            pass
+
+    # 3) Save PNG + PDF with consistent settings
+    save_kw = dict(dpi=dpi, bbox_inches="tight", pad_inches=0.08)
+    fig.savefig(path, **save_kw)
+    fig.savefig(path.with_suffix(".pdf"), **save_kw)
+
     if close:
         plt.close(fig)
     return path
+
+
+# Backward-compatible alias
+save_panel = save_with_vcd
 
 
 def quality_color(value: float, thresholds: tuple = (0.8, 0.5)) -> str:
@@ -166,9 +237,12 @@ def quality_color(value: float, thresholds: tuple = (0.8, 0.5)) -> str:
 # Layout and dense-label helpers (avoid font overlap)
 # ──────────────────────────────────────────────────────────────
 
-# Tighter subplot spacing for condensed figures
-GRIDSPEC_TIGHT = {"wspace": 0.18, "hspace": 0.22}
-GRIDSPEC_DEFAULT = {"wspace": 0.25, "hspace": 0.28}
+# Subplot spacing presets.
+# hspace / wspace: fraction of subplot size used as inter-subplot gap.
+# Recommended range for dense figures: hspace 0.30–0.55, wspace 0.30–0.55.
+GRIDSPEC_TIGHT   = {"wspace": 0.40, "hspace": 0.45}   # compact multi-row panels
+GRIDSPEC_DEFAULT = {"wspace": 0.50, "hspace": 0.50}   # standard multi-row panels
+GRIDSPEC_1ROW    = {"wspace": 0.40}                   # single-row panels (no hspace needed)
 
 
 def set_dense_tick_labels(
@@ -176,7 +250,7 @@ def set_dense_tick_labels(
     axis: str = "both",
     *,
     max_labels: int = 25,
-    fontsize: int = 6,
+    fontsize: int = 10,
     rotation: int = 45,
     ha: str = "right",
 ) -> None:
