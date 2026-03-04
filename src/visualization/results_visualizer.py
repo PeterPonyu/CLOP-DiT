@@ -6,8 +6,9 @@ Generates multi-panel PDF/PNG reports proving training success:
   Panel B: CLOP embedding space (UMAP of 69-type prototypes + cell embeddings)
   Panel C: DiT training dynamics (flow-matching loss, cosine similarity, LR schedule)
   Panel D: Metrics summary table
-  Panel E: [Post-inference] Real vs generated cell overlay
-  Panel F: [Post-inference] Per-type distribution fidelity
+  Panel E: [Post-inference] Real vs generated cell overlay (type-coloured UMAP)
+  Panel F: Text–Cell similarity heatmap (69×69 cosine matrix proving CLOP alignment)
+  Panel G: Per-type generation fidelity (centroid cosine + Fréchet distance)
 
 Usage:
     python -m src.visualization.results_visualizer                  # defaults
@@ -457,7 +458,8 @@ class ResultsVisualizer:
     # ──────────────────────────────────────────────────────────
     # PANEL D: Metrics Summary
     # ──────────────────────────────────────────────────────────
-    def plot_metrics_summary(self, save: bool = True) -> Optional[plt.Figure]:
+    def plot_metrics_summary(self, gen_metrics_path: str = "results/generation_metrics.json",
+                             save: bool = True) -> Optional[plt.Figure]:
         """Clean metrics summary table as a figure panel."""
         rows = []
 
@@ -487,6 +489,23 @@ class ResultsVisualizer:
                 ["DiT", "Val Loss", f'{h["val_loss"][-1]:.4f}', f'{h["val_loss"][0]:.4f}'],
                 ["DiT", "Val Cosine Sim", f'{h["val_cosine_sim"][-1]:.4f}',
                  f'{h["val_cosine_sim"][0]:.4f}'],
+            ])
+
+        # Add generation metrics if available
+        gen_path = Path(gen_metrics_path)
+        if gen_path.exists():
+            with open(gen_path) as f:
+                gen_data = json.load(f)
+            overall = gen_data.get("overall", {})
+            summary = gen_data.get("summary", {})
+            rows.extend([
+                ["Gen", "Fréchet Distance ↓", f'{overall.get("frechet_distance", 0):.4f}', "—"],
+                ["Gen", "MMD-RBF ↓", f'{overall.get("mmd_rbf", 0):.6f}', "—"],
+                ["Gen", "Coverage ↑", f'{overall.get("coverage", 0):.4f}', "—"],
+                ["Gen", "Density", f'{overall.get("density", 0):.2f}', "—"],
+                ["Gen", "Diversity Index", f'{overall.get("diversity_index", 0):.4f}', "—"],
+                ["Gen", "Mean Centroid Cosine", f'{summary.get("mean_centroid_cosine", 0):.4f}', "—"],
+                ["Gen", "Min Centroid Cosine", f'{summary.get("min_centroid_cosine", 0):.4f}', "—"],
             ])
 
         if not rows:
@@ -520,8 +539,10 @@ class ResultsVisualizer:
                 cell = table[i + 1, j]
                 if stage == "CLOP":
                     cell.set_facecolor("#E3F2FD" if i % 2 == 0 else "#BBDEFB")
-                else:
+                elif stage == "DiT":
                     cell.set_facecolor("#E8F5E9" if i % 2 == 0 else "#C8E6C9")
+                else:  # Gen
+                    cell.set_facecolor("#FFF3E0" if i % 2 == 0 else "#FFE0B2")
 
         if save:
             path = self.output / "panel_d_metrics_summary.png"
@@ -531,7 +552,7 @@ class ResultsVisualizer:
         return fig
 
     # ──────────────────────────────────────────────────────────
-    # PANEL E: Real vs Generated UMAP (post-inference)
+    # PANEL E: Real vs Generated UMAP (post-inference) — type-coloured
     # ──────────────────────────────────────────────────────────
     def plot_real_vs_generated(
         self,
@@ -540,7 +561,7 @@ class ResultsVisualizer:
         n_cells: int = 5000,
         save: bool = True,
     ) -> Optional[plt.Figure]:
-        """3-panel real vs generated comparison (requires inference output).
+        """3-panel real vs generated comparison with type colouring.
 
         E1: Real cells (UMAP, coloured by type)
         E2: Generated cells (UMAP, coloured by type)
@@ -549,36 +570,52 @@ class ResultsVisualizer:
         # Auto-detect generated cells
         if generated_path is None:
             candidates = [
-                "models/checkpoints/generated_cells.npy",
                 "results/generated_embeddings.npy",
+                "models/checkpoints/generated_cells.npy",
             ]
             for c in candidates:
                 if Path(c).exists():
                     generated_path = c
                     break
+        if generated_labels_path is None:
+            candidates = [
+                "results/generated_labels.npy",
+            ]
+            for c in candidates:
+                if Path(c).exists():
+                    generated_labels_path = c
+                    break
 
         if generated_path is None or not Path(generated_path).exists():
             logger.info(
                 "No generated cells found — Panel E deferred until after "
-                "DiT inference (run scripts/05_inference.py first)"
+                "DiT inference (run scripts/generate_embeddings.py first)"
             )
             return None
 
         cell_path = self.cache / "cell_embeddings_dedup_preprocessed.npy"
+        gid_path = self.cache / "text_group_ids_dedup.npy"
         if not cell_path.exists():
             logger.warning(f"Missing {cell_path.name}")
             return None
 
         real = np.load(cell_path)
         gen = np.load(generated_path)
+        real_gids = np.load(gid_path) if gid_path.exists() else None
+        gen_gids = np.load(generated_labels_path) if generated_labels_path and Path(generated_labels_path).exists() else None
         logger.info(f"Real: {real.shape}, Generated: {gen.shape}")
 
-        # Subsample
+        # Stratified subsample of real cells
         rng = np.random.default_rng(42)
         n_real = min(n_cells, len(real))
         n_gen = min(n_cells, len(gen))
-        real_sub = real[rng.choice(len(real), n_real, replace=False)]
-        gen_sub = gen[rng.choice(len(gen), n_gen, replace=False)]
+        real_idx = rng.choice(len(real), n_real, replace=False)
+        gen_idx = rng.choice(len(gen), n_gen, replace=False) if len(gen) > n_cells else np.arange(len(gen))
+
+        real_sub = real[real_idx]
+        gen_sub = gen[gen_idx]
+        real_gids_sub = real_gids[real_idx] if real_gids is not None else None
+        gen_gids_sub = gen_gids[gen_idx] if gen_gids is not None else None
 
         combined = np.vstack([real_sub, gen_sub])
 
@@ -588,31 +625,45 @@ class ResultsVisualizer:
             warnings.simplefilter("ignore")
             coords = reducer.fit_transform(combined)
 
-        real_c = coords[:n_real]
-        gen_c = coords[n_real:]
+        real_c = coords[:len(real_sub)]
+        gen_c = coords[len(real_sub):]
 
-        fig, axes = plt.subplots(1, 3, figsize=(18, 5.5))
-        fig.suptitle("Real vs Generated Cell Embeddings", fontsize=14, fontweight="bold")
+        fig, axes = plt.subplots(1, 3, figsize=(20, 6))
+        fig.suptitle("Real vs Generated Cell Embeddings (DiT v1)", fontsize=14, fontweight="bold")
 
-        # E1: Real
+        # E1: Real — type-coloured
         ax = axes[0]
-        ax.scatter(real_c[:, 0], real_c[:, 1], c="#2196F3", s=4, alpha=0.4, rasterized=True)
-        ax.set_title(f"E1: Real ({n_real} cells)")
+        if real_gids_sub is not None:
+            for t in np.unique(real_gids_sub):
+                mask = real_gids_sub == t
+                color = TYPE_PALETTE[int(t) % len(TYPE_PALETTE)]
+                ax.scatter(real_c[mask, 0], real_c[mask, 1], c=[color], s=4,
+                           alpha=0.4, rasterized=True)
+        else:
+            ax.scatter(real_c[:, 0], real_c[:, 1], c="#2196F3", s=4, alpha=0.4, rasterized=True)
+        ax.set_title(f"E1: Real ({len(real_sub)} cells, {69 if real_gids_sub is not None else '?'} types)")
         ax.set_xlabel("UMAP 1")
         ax.set_ylabel("UMAP 2")
 
-        # E2: Generated
+        # E2: Generated — type-coloured
         ax = axes[1]
-        ax.scatter(gen_c[:, 0], gen_c[:, 1], c="#FF5722", s=4, alpha=0.4, rasterized=True)
-        ax.set_title(f"E2: Generated ({n_gen} cells)")
+        if gen_gids_sub is not None:
+            for t in np.unique(gen_gids_sub):
+                mask = gen_gids_sub == t
+                color = TYPE_PALETTE[int(t) % len(TYPE_PALETTE)]
+                ax.scatter(gen_c[mask, 0], gen_c[mask, 1], c=[color], s=4,
+                           alpha=0.4, rasterized=True)
+        else:
+            ax.scatter(gen_c[:, 0], gen_c[:, 1], c="#FF5722", s=4, alpha=0.4, rasterized=True)
+        ax.set_title(f"E2: Generated ({len(gen_sub)} cells)")
         ax.set_xlabel("UMAP 1")
         ax.set_ylabel("UMAP 2")
 
         # E3: Overlay
         ax = axes[2]
-        ax.scatter(real_c[:, 0], real_c[:, 1], c="#2196F3", s=3, alpha=0.3,
+        ax.scatter(real_c[:, 0], real_c[:, 1], c="#2196F3", s=3, alpha=0.25,
                    label="Real", rasterized=True)
-        ax.scatter(gen_c[:, 0], gen_c[:, 1], c="#FF5722", s=3, alpha=0.3,
+        ax.scatter(gen_c[:, 0], gen_c[:, 1], c="#FF5722", s=3, alpha=0.25,
                    marker="^", label="Generated", rasterized=True)
         ax.legend(markerscale=5, fontsize=10)
         ax.set_title("E3: Overlay")
@@ -624,6 +675,192 @@ class ResultsVisualizer:
             fig.savefig(path, dpi=self.dpi)
             fig.savefig(path.with_suffix(".pdf"), dpi=self.dpi)
             logger.info(f"Saved Panel E → {path}")
+        return fig
+
+    # ──────────────────────────────────────────────────────────
+    # PANEL F: Text–Cell Cosine Similarity Heatmap (69×69)
+    # ──────────────────────────────────────────────────────────
+    def plot_text_cell_heatmap(self, save: bool = True) -> Optional[plt.Figure]:
+        """69×69 cosine similarity matrix between text prototypes and cell centroids.
+
+        Proves CLOP alignment: the diagonal should be bright (text matches its cells).
+        Off-diagonal shows inter-type confusion patterns.
+        """
+        proj_text_path = self.cache / "projected_text.npy"
+        proj_cell_path = self.cache / "projected_cells.npy"
+        gid_path = self.cache / "text_group_ids_dedup.npy"
+
+        for p in [proj_text_path, proj_cell_path, gid_path]:
+            if not p.exists():
+                logger.warning(f"Missing {p.name} — skipping Panel F")
+                return None
+
+        proj_text = np.load(proj_text_path)
+        proj_cells = np.load(proj_cell_path)
+        group_ids = np.load(gid_path)
+
+        unique_types = np.sort(np.unique(group_ids))
+        n_types = len(unique_types)
+
+        # Compute per-type centroids
+        text_centroids = np.zeros((n_types, proj_text.shape[1]), dtype=np.float32)
+        cell_centroids = np.zeros((n_types, proj_cells.shape[1]), dtype=np.float32)
+        for i, t in enumerate(unique_types):
+            mask = group_ids == t
+            tc = proj_text[mask].mean(axis=0)
+            text_centroids[i] = tc / (np.linalg.norm(tc) + 1e-8)
+            cc = proj_cells[mask].mean(axis=0)
+            cell_centroids[i] = cc / (np.linalg.norm(cc) + 1e-8)
+
+        # Cosine similarity: text_centroids @ cell_centroids.T → (69, 69)
+        sim_matrix = text_centroids @ cell_centroids.T
+
+        # Type labels (short)
+        labels = [self.type_names.get(int(t), f"T{t}")[:20] for t in unique_types]
+
+        # Diagonal values
+        diag = np.diag(sim_matrix)
+        mean_diag = diag.mean()
+        off_diag = sim_matrix[~np.eye(n_types, dtype=bool)]
+        mean_off = off_diag.mean()
+
+        fig, axes = plt.subplots(1, 2, figsize=(18, 10),
+                                 gridspec_kw={"width_ratios": [1.3, 0.7]})
+        fig.suptitle(
+            f"Text–Cell Alignment Heatmap (CLOP Space) — "
+            f"diag={mean_diag:.3f}, off-diag={mean_off:.3f}",
+            fontsize=14, fontweight="bold",
+        )
+
+        # F1: Full heatmap
+        ax = axes[0]
+        im = ax.imshow(sim_matrix, cmap="RdYlBu_r", vmin=-0.1, vmax=1.0, aspect="auto")
+        ax.set_xticks(range(n_types))
+        ax.set_yticks(range(n_types))
+        ax.set_xticklabels(labels, rotation=90, fontsize=5, ha="center")
+        ax.set_yticklabels(labels, fontsize=5)
+        ax.set_xlabel("Cell Type (cell centroids)")
+        ax.set_ylabel("Cell Type (text prototypes)")
+        ax.set_title("F1: Cosine Similarity Matrix")
+        fig.colorbar(im, ax=ax, shrink=0.6, label="Cosine Similarity")
+
+        # F2: Diagonal values bar chart (sorted)
+        ax = axes[1]
+        sorted_idx = np.argsort(diag)
+        sorted_diag = diag[sorted_idx]
+        sorted_labels = [labels[i] for i in sorted_idx]
+        colors = ["#4CAF50" if v > 0.8 else "#FF9800" if v > 0.5 else "#F44336" for v in sorted_diag]
+        ax.barh(range(n_types), sorted_diag, color=colors, height=0.8)
+        ax.set_yticks(range(n_types))
+        ax.set_yticklabels(sorted_labels, fontsize=5)
+        ax.set_xlabel("Diagonal Cosine Similarity")
+        ax.set_title("F2: Per-Type Text–Cell Alignment")
+        ax.axvline(x=mean_diag, color="red", linestyle="--", alpha=0.5,
+                    label=f"mean={mean_diag:.3f}")
+        ax.set_xlim(0, 1.05)
+        ax.legend(fontsize=8)
+
+        if save:
+            path = self.output / "panel_f_text_cell_heatmap.png"
+            fig.savefig(path, dpi=self.dpi)
+            fig.savefig(path.with_suffix(".pdf"), dpi=self.dpi)
+            logger.info(f"Saved Panel F → {path}")
+        return fig
+
+    # ──────────────────────────────────────────────────────────
+    # PANEL G: Per-Type Generation Fidelity
+    # ──────────────────────────────────────────────────────────
+    def plot_per_type_generation(
+        self,
+        metrics_path: str = "results/generation_metrics.json",
+        save: bool = True,
+    ) -> Optional[plt.Figure]:
+        """Per-type generation quality: centroid cosine + Fréchet distance.
+
+        G1: Centroid cosine per type (sorted)
+        G2: Fréchet distance per type (sorted, log scale)
+        G3: Scatter of centroid cosine vs n_real (type size dependency)
+        """
+        if not Path(metrics_path).exists():
+            logger.info(f"No generation metrics found at {metrics_path} — skipping Panel G")
+            return None
+
+        with open(metrics_path) as f:
+            data = json.load(f)
+
+        per_type = data.get("per_type", {})
+        if not per_type:
+            logger.warning("No per-type metrics — skipping Panel G")
+            return None
+
+        names = list(per_type.keys())
+        cosines = [per_type[n]["centroid_cosine"] for n in names]
+        fds = [per_type[n].get("frechet_distance", float("nan")) for n in names]
+        n_real = [per_type[n]["n_real"] for n in names]
+
+        # Short labels
+        short_names = [n[:22] for n in names]
+
+        fig, axes = plt.subplots(1, 3, figsize=(20, 8))
+        summary = data.get("summary", {})
+        overall = data.get("overall", {})
+        fig.suptitle(
+            f"Per-Type Generation Fidelity — "
+            f"mean cos={summary.get('mean_centroid_cosine', 0):.3f}, "
+            f"overall FD={overall.get('frechet_distance', 0):.3f}",
+            fontsize=14, fontweight="bold",
+        )
+
+        # G1: Centroid cosine (sorted)
+        ax = axes[0]
+        sorted_idx = np.argsort(cosines)
+        sorted_cos = [cosines[i] for i in sorted_idx]
+        sorted_names_cos = [short_names[i] for i in sorted_idx]
+        colors = ["#4CAF50" if v > 0.9 else "#FF9800" if v > 0.7 else "#F44336" for v in sorted_cos]
+        ax.barh(range(len(sorted_cos)), sorted_cos, color=colors, height=0.8)
+        ax.set_yticks(range(len(sorted_cos)))
+        ax.set_yticklabels(sorted_names_cos, fontsize=5)
+        ax.set_xlabel("Centroid Cosine Similarity")
+        ax.set_title("G1: Real↔Gen Centroid Cosine")
+        ax.axvline(x=summary.get("mean_centroid_cosine", 0), color="red",
+                    linestyle="--", alpha=0.5, label=f"mean={summary.get('mean_centroid_cosine', 0):.3f}")
+        ax.set_xlim(0, 1.05)
+        ax.legend(fontsize=8)
+
+        # G2: Fréchet distance (sorted, larger = worse)
+        ax = axes[1]
+        valid_fd = [(n, f) for n, f in zip(short_names, fds) if np.isfinite(f)]
+        if valid_fd:
+            fd_names, fd_vals = zip(*sorted(valid_fd, key=lambda x: x[1]))
+            colors_fd = ["#4CAF50" if v < 0.5 else "#FF9800" if v < 2.0 else "#F44336" for v in fd_vals]
+            ax.barh(range(len(fd_vals)), fd_vals, color=colors_fd, height=0.8)
+            ax.set_yticks(range(len(fd_vals)))
+            ax.set_yticklabels(fd_names, fontsize=5)
+            ax.set_xlabel("Fréchet Distance (lower = better)")
+            ax.set_title("G2: Per-Type Fréchet Distance")
+        else:
+            ax.text(0.5, 0.5, "No valid FD values", ha="center", va="center",
+                    transform=ax.transAxes)
+
+        # G3: Cosine vs dataset size
+        ax = axes[2]
+        ax.scatter(n_real, cosines, c="#3F51B5", s=40, alpha=0.7, edgecolors="white", linewidth=0.5)
+        # Label outliers (low cosine)
+        for i, (nr, cos) in enumerate(zip(n_real, cosines)):
+            if cos < 0.7:
+                ax.annotate(short_names[i][:12], (nr, cos), fontsize=6,
+                            xytext=(5, -5), textcoords="offset points")
+        ax.set_xlabel("Number of Real Cells")
+        ax.set_ylabel("Centroid Cosine Similarity")
+        ax.set_title("G3: Fidelity vs Dataset Size")
+        ax.axhline(y=0.9, color="green", linestyle=":", alpha=0.4, label="cos=0.9")
+        ax.legend(fontsize=8)
+
+        if save:
+            path = self.output / "panel_g_per_type_generation.png"
+            fig.savefig(path, dpi=self.dpi)
+            fig.savefig(path.with_suffix(".pdf"), dpi=self.dpi)
+            logger.info(f"Saved Panel G → {path}")
         return fig
 
     # ──────────────────────────────────────────────────────────
@@ -672,6 +909,18 @@ class ResultsVisualizer:
         if fig_e:
             saved.append(self.output / "panel_e_real_vs_generated.pdf")
             plt.close(fig_e)
+
+        # Panel F: Text-Cell similarity heatmap
+        fig_f = self.plot_text_cell_heatmap()
+        if fig_f:
+            saved.append(self.output / "panel_f_text_cell_heatmap.pdf")
+            plt.close(fig_f)
+
+        # Panel G: Per-type generation fidelity
+        fig_g = self.plot_per_type_generation()
+        if fig_g:
+            saved.append(self.output / "panel_g_per_type_generation.pdf")
+            plt.close(fig_g)
 
         # ── Combine into multi-page PDF ──
         if saved:
