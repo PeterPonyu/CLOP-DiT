@@ -1,0 +1,68 @@
+# clop_v9.2.yaml — Fixed temperature + moderate regularization
+#
+# Lessons from v9 & v9.1:
+#   v9:   Learnable temp + low reg → temp rockets to 30, t↔c collapses to -0.01
+#   v9.1: Learnable temp + temp_reg=0.01 → temp crashes to 6.3, too soft
+#
+# Root insight: The temperature dynamics ALWAYS hurt in our setting:
+#   - With 67 training prototypes, temp always wants to climb (sharp = easy)
+#   - Climbing temp → overconfident prototypes → destroyed text-cell alignment
+#   - Penalizing temp growth → overcorrects, drops temp below useful range
+#
+# Solution: FIX temperature at 14.0 (CLIP standard), no learning.
+#   This removes the entire temperature optimization failure mode.
+#   The model must learn good projections, not sharp logits.
+#
+# Regularization: moderate (between v9 and v9.1)
+#   Higher than v9 (prevent overfitting) but lower than v9.1 (prevent underfitting)
+
+cache_dir: "data/cached_latents_v5.2"
+use_preprocessed: true
+use_deduplicated: true
+
+variant_prob: 0.0
+val_split: 0.1
+n_folds: 1
+fold_idx: 0
+num_workers: 4
+
+# Model — fixed temperature, moderate regularization
+text_dim: 1024
+cell_dim: 512
+proj_dim: 512
+text_layers: 3
+cell_layers: 3
+dropout: 0.2                    # Between v9(0.15) and v9.1(0.3)
+temperature: 14.0               # CLIP standard = exp(2.64)
+temperature_init: 14.0
+temperature_learnable: false     # KEY: fixed temperature eliminates runaway
+label_smoothing: 0.1
+use_batch_norm: false
+use_ema: false
+cell_noise_std: 0.03            # Between v9(0.02) and v9.1(0.05)
+use_whitening: false
+
+# Loss
+loss_type: "prototype_siglip"
+auto_duplicate_mask: true
+cohesion_weight: 0.15           # Between v9(0.1) and v9.1(0.2)
+max_temperature: 16.0           # Safety only (temp is fixed anyway)
+temp_reg_weight: 0.0            # Not needed with fixed temp
+
+# Training
+batch_size: 1024
+lr: 5.0e-4
+weight_decay: 0.06              # Between v9(0.05) and v9.1(0.1)
+num_epochs: 60
+warmup_epochs: 5
+grad_clip: 1.0
+use_amp: true
+early_stopping_patience: 0
+temp_lr_multiplier: 0.0         # Zero since temp not learnable
+
+# Preprocessing
+preprocess_text_method: "whiten"
+preprocess_cell_method: "whiten"
+
+device: "cuda"
+save_dir: "models/checkpoints"

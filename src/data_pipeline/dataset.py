@@ -111,10 +111,25 @@ class CLOPDataset(Dataset):
                 logger.info("Using legacy duplicated text storage")
 
         # ── Load cell embeddings ──
-        if use_deduplicated and (cache_dir / "cell_embeddings_dedup.npy").exists():
-            # Load deduplicated cell embeddings (already filtered for uncharacterized cells)
-            cell_path = cache_dir / "cell_embeddings_dedup.npy"
-            logger.info("Loading DEDUPLICATED cell embeddings (uncharacterized cells removed)")
+        if use_deduplicated:
+            # Prefer preprocessed dedup > raw dedup > preprocessed full > raw full
+            dedup_pp_path = cache_dir / "cell_embeddings_dedup_preprocessed.npy"
+            dedup_raw_path = cache_dir / "cell_embeddings_dedup.npy"
+            if use_pp_cell and dedup_pp_path.exists():
+                cell_path = dedup_pp_path
+                logger.info("Loading PREPROCESSED DEDUPLICATED cell embeddings (whitened, unchar removed)")
+            elif dedup_raw_path.exists():
+                cell_path = dedup_raw_path
+                logger.warning(
+                    "Loading RAW deduplicated cell embeddings (NOT whitened). "
+                    "Run preprocessing to create cell_embeddings_dedup_preprocessed.npy"
+                )
+            elif use_pp_cell and (cache_dir / "cell_embeddings_preprocessed.npy").exists():
+                cell_path = cache_dir / "cell_embeddings_preprocessed.npy"
+                logger.info("Loading PREPROCESSED cell embeddings (full set, no dedup filtering)")
+            else:
+                cell_path = cache_dir / "cell_embeddings.npy"
+                logger.warning("Loading RAW cell embeddings (no whitening, no dedup)")
         elif use_pp_cell:
             cell_path = cache_dir / "cell_embeddings_preprocessed.npy"
             if not cell_path.exists():
@@ -146,21 +161,25 @@ class CLOPDataset(Dataset):
                 self.text_emb_unique = np.load(str(custom_path), mmap_mode="r")
                 logger.info(f"Loading CUSTOM text embeddings from: {custom_path}")
             else:
-                # Try deduplicated version first, fall back to v6.2
+                # Try preprocessed deduplicated first, then raw deduplicated, then v6.2
+                dedup_text_pp_path = cache_dir / "text_embeddings_dedup_preprocessed.npy"
                 dedup_text_path = cache_dir / "text_embeddings_dedup.npy"
-                if use_deduplicated and dedup_text_path.exists():
+                if use_pp_text and use_deduplicated and dedup_text_pp_path.exists():
+                    self.text_emb_unique = np.load(str(dedup_text_pp_path), mmap_mode="r")
+                    logger.info("Loading PREPROCESSED DEDUPLICATED text embeddings (69 unique, whitened)")
+                elif use_deduplicated and dedup_text_path.exists():
                     self.text_emb_unique = np.load(str(dedup_text_path), mmap_mode="r")
                     logger.info("Loading DEDUPLICATED text embeddings (69 unique captions)")
                 else:
                     self.text_emb_unique = np.load(str(dedup_path), mmap_mode="r")
 
-                # Load preprocessed unique texts if available.
-                # IMPORTANT: Skip when use_deduplicated=True.
+                # Load preprocessed unique texts if available (v6.2 only).
+                # IMPORTANT: Skip when use_deduplicated=True because
                 # text_embeddings_unique_preprocessed.npy has 1088 rows (original
                 # sub-clusters), while text_group_ids_dedup.npy maps to indices 0–68.
                 # Loading the 1088-row file silently aligns cells to wrong text
                 # embeddings (arbitrary rows 0–68 of 1088 ≠ the 69 deduplicated
-                # cell-type centroids). Dedup embeddings are already L2-normalized.
+                # cell-type centroids).
                 if use_pp_text and not use_deduplicated:
                     pp_unique = cache_dir / "text_embeddings_unique_preprocessed.npy"
                     if pp_unique.exists():

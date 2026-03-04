@@ -442,18 +442,22 @@ class CLOPTrainer:
             )
 
             # ── Best-model selection: composite quality score ──
-            # Combines alignment (lower=better → negate) with mean cosine sim
-            # (higher=better) and optionally text-cell centroid alignment.
-            # This better predicts downstream generation quality than proto acc.
+            # Combines prototype accuracy (discrimination) with text-cell
+            # alignment (conditioning fidelity), inter-type separation, and
+            # mean cosine similarity. All higher = better.
+            # This predicts downstream generation quality better than any
+            # single metric alone.
             cos_sim = val_metrics.get("val_mean_cosine_sim", 0.0)
             tc_align = val_metrics.get("val_text_cell_align", 0.0)
-            align = val_metrics.get("val_alignment", 2.0)  # default 2.0 (worst)
+            sep = val_metrics.get("val_inter_separation", 0.0)
+            proto = val_metrics.get("val_proto_acc", 0.0)
+
             # quality_score: higher is better
-            # cos_sim ∈ [-1,1], tc_align ∈ [-1,1], alignment ∈ [0,4]
-            quality_score = cos_sim + 0.5 * tc_align - 0.25 * align
+            # proto ∈ [0,1], tc_align ∈ [-1,1], sep ∈ [0,2], cos_sim ∈ [-1,1]
+            quality_score = 0.3 * proto + 0.3 * tc_align + 0.2 * sep + 0.2 * cos_sim
 
             # Fall back to proto acc if quality metrics aren't available
-            if cos_sim == 0.0 and tc_align == 0.0:
+            if cos_sim == 0.0 and tc_align == 0.0 and sep == 0.0:
                 tracking_metric = val_proto_acc if "val_proto_acc" in val_metrics else val_metrics["val_acc"]
             else:
                 tracking_metric = quality_score
@@ -627,6 +631,15 @@ class CLOPTrainer:
             temp_reg_weight=config.get("temp_reg_weight", 0.0),
         )
 
+        # Freeze temperature if configured as non-learnable (prevents temp runaway)
+        if not config.get("temperature_learnable", True):
+            if hasattr(model, 'criterion') and hasattr(model.criterion, 'log_temperature'):
+                model.criterion.log_temperature.requires_grad_(False)
+                logger.info(f"Temperature FIXED at {model.criterion.temperature:.1f} (non-learnable)")
+            if hasattr(model, 'criterion') and hasattr(model.criterion, 'bias'):
+                model.criterion.bias.requires_grad_(False)
+                logger.info("SigLIP bias FIXED (non-learnable)")
+
         # Run embedding preprocessing if needed and preprocessed files don't exist
         if config.get("use_preprocessed", False):
             from ..data_pipeline.embedding_preprocessor import preprocess_cached_embeddings
@@ -743,7 +756,13 @@ class CLOPTrainer:
                     )
 
             # Load group mapping to expand unique → per-cell
-            for gid_name in ["text_group_ids.npy", "text_group_ids_dedup.npy"]:
+            # IMPORTANT: use_deduplicated must use dedup group_ids (0-68)
+            # not the original group_ids (0-862) which index 1088 sub-clusters
+            if hasattr(ds, 'use_deduplicated') and ds.use_deduplicated:
+                gid_order = ["text_group_ids_dedup.npy"]
+            else:
+                gid_order = ["text_group_ids.npy", "text_group_ids_dedup.npy"]
+            for gid_name in gid_order:
                 gid_path = cache_dir / gid_name
                 if gid_path.exists():
                     text_group_ids = np.load(gid_path)
