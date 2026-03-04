@@ -230,44 +230,75 @@ class ResultsVisualizer:
         return fig
 
     # ──────────────────────────────────────────────────────────
-    # PANEL B: CLOP Embedding Space (UMAP)
+    # PANEL B: CLOP Alignment Space (UMAP) — all in CLOP shared space
     # ──────────────────────────────────────────────────────────
     def plot_clop_embedding_space(
         self, n_cells: int = 8000, save: bool = True
     ) -> Optional[plt.Figure]:
-        """2-panel UMAP of CLOP-projected embeddings.
+        """3-panel CLOP alignment visualization.
 
+        IMPORTANT: Both cells and text must be in the *same* CLOP projection
+        space.  projected_cells.npy = CLOPAligner.project_cell(cell_emb),
+        projected_text.npy = CLOPAligner.project_text(text_emb).
+        Using raw cell_embeddings_dedup_preprocessed.npy would mix two
+        different representation spaces and produce misleading UMAP.
+
+        B0: Cells-per-type histogram (data balance check)
         B1: 69 text prototypes (centroids of projected text per type), labelled
-        B2: Subsampled cell embeddings coloured by type, prototype centroids overlaid.
+        B2: Subsampled CLOP-projected cells coloured by type + text proto overlay
         """
-        # Load data
-        proj_path = self.cache / "projected_text.npy"
-        cell_path = self.cache / "cell_embeddings_dedup_preprocessed.npy"
+        # ── Load CLOP-projected data (SAME space) ──
+        proj_text_path = self.cache / "projected_text.npy"
+        proj_cell_path = self.cache / "projected_cells.npy"
         gid_path = self.cache / "text_group_ids_dedup.npy"
 
-        for p in [proj_path, cell_path, gid_path]:
+        for p in [proj_text_path, gid_path]:
             if not p.exists():
                 logger.warning(f"Missing {p.name} — skipping Panel B")
                 return None
 
-        cell_emb = np.load(cell_path)  # (167245, 512)
-        proj_text = np.load(proj_path)  # (167245, 512) — CLOP-projected, per cell
-        group_ids = np.load(gid_path)  # (167245,)
-        logger.info(f"Loaded group IDs from {gid_path.name}: {group_ids.shape}")
+        if not proj_cell_path.exists():
+            logger.warning(
+                f"Missing projected_cells.npy — run CLOP cell projection first.\n"
+                f"  Hint: project cells through CLOPAligner.project_cell() and save.\n"
+                f"  Falling back to raw cell embeddings (DIFFERENT space — prototypes "
+                f"  will NOT align with cells in UMAP)."
+            )
+            fallback_path = self.cache / "cell_embeddings_dedup_preprocessed.npy"
+            if not fallback_path.exists():
+                logger.warning(f"Missing {fallback_path.name} too — skipping Panel B")
+                return None
+            cell_proj = np.load(fallback_path)
+            space_label = "scGPT latent (WARNING: different space from prototypes)"
+        else:
+            cell_proj = np.load(proj_cell_path)
+            space_label = "CLOP shared projection"
 
-        # Compute per-type prototype centroids from projected text
+        proj_text = np.load(proj_text_path)  # (167245, 512) — CLOP-projected, per cell
+        group_ids = np.load(gid_path)  # (167245,)
+        logger.info(
+            f"Panel B: {cell_proj.shape[0]} cells ({space_label}), "
+            f"{proj_text.shape[0]} text conditions"
+        )
+
+        # Compute per-type text prototype centroids (in CLOP space)
         unique_types = np.unique(group_ids)
         n_types = len(unique_types)
         proto_dim = proj_text.shape[1]
         text_proto = np.zeros((n_types, proto_dim), dtype=np.float32)
         for i, t in enumerate(unique_types):
             text_proto[i] = proj_text[group_ids == t].mean(axis=0)
-        logger.info(f"Computed {n_types} prototype centroids from projected text")
+        # L2-normalize prototypes (they should already be near-unit but ensure)
+        norms = np.linalg.norm(text_proto, axis=1, keepdims=True) + 1e-8
+        text_proto = text_proto / norms
+        logger.info(f"Computed {n_types} text prototype centroids")
 
-        # Subsample for UMAP (stratified)
+        # Cells-per-type counts
+        type_counts = np.array([np.sum(group_ids == t) for t in unique_types])
+
+        # ── Stratified subsample for UMAP ──
         rng = np.random.default_rng(42)
-        unique_types = np.unique(group_ids)
-        n_per_type = max(10, n_cells // len(unique_types))
+        n_per_type = max(10, n_cells // n_types)
         sampled_idx = []
         for t in unique_types:
             t_idx = np.where(group_ids == t)[0]
@@ -276,13 +307,12 @@ class ResultsVisualizer:
         sampled_idx = np.array(sampled_idx)
         rng.shuffle(sampled_idx)
 
-        cell_sub = cell_emb[sampled_idx]
-        proj_sub = proj_text[sampled_idx]
+        cell_sub = cell_proj[sampled_idx]  # CLOP-projected cells
         gids_sub = group_ids[sampled_idx]
 
-        logger.info(f"UMAP: {len(sampled_idx)} cells + {len(text_proto)} prototypes")
+        logger.info(f"UMAP: {len(sampled_idx)} cells + {n_types} prototypes (all in CLOP space)")
 
-        # Compute UMAP on combined (cells + prototypes)
+        # ── Compute UMAP on combined (cells + text prototypes, SAME space) ──
         import umap as umap_lib
         combined = np.vstack([cell_sub, text_proto])
         reducer = umap_lib.UMAP(
@@ -296,40 +326,57 @@ class ResultsVisualizer:
         cell_coords = coords[:len(sampled_idx)]
         proto_coords = coords[len(sampled_idx):]
 
-        # ── Plot ──
-        fig, axes = plt.subplots(1, 2, figsize=(18, 8))
-        fig.suptitle("CLOP Embedding Space (UMAP)", fontsize=14, fontweight="bold")
+        # ── Plot (3 panels) ──
+        fig = plt.figure(figsize=(22, 8))
+        gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.2, 1.2], wspace=0.25)
+        fig.suptitle("CLOP Alignment Space (UMAP — all embeddings in shared CLOP projection)",
+                     fontsize=14, fontweight="bold")
 
-        # B1: Prototypes only
-        ax = axes[0]
+        # B0: Cells-per-type histogram
+        ax = fig.add_subplot(gs[0])
+        sorted_order = np.argsort(type_counts)[::-1]
+        bar_colors = [TYPE_PALETTE[t % len(TYPE_PALETTE)] for t in unique_types[sorted_order]]
+        bar_labels = [self.type_names.get(int(t), f"Type {t}")[:20] for t in unique_types[sorted_order]]
+        y_pos = np.arange(n_types)
+        ax.barh(y_pos, type_counts[sorted_order], color=bar_colors, height=0.8)
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels(bar_labels, fontsize=5)
+        ax.invert_yaxis()
+        ax.set_xlabel("Cells")
+        ax.set_title("B0: Cells per Type")
+        # Annotate min/max
+        ax.axvline(x=np.median(type_counts), color="red", linestyle="--", alpha=0.5, label=f"median={int(np.median(type_counts))}")
+        ax.legend(fontsize=7)
+
+        # B1: Prototypes only (labelled)
+        ax = fig.add_subplot(gs[1])
         for i, (x, y) in enumerate(proto_coords):
             color = TYPE_PALETTE[i % len(TYPE_PALETTE)]
             ax.scatter(x, y, c=[color], s=120, marker="D", edgecolors="black",
                        linewidths=0.6, zorder=5)
-            name = self.type_names.get(i, f"Type {i}")
-            # Truncate long names
+            name = self.type_names.get(int(unique_types[i]), f"Type {i}")
             short = name[:25] + "…" if len(name) > 25 else name
             ax.annotate(short, (x, y), fontsize=5.5, ha="center", va="bottom",
                         xytext=(0, 5), textcoords="offset points")
 
-        ax.set_title("B1: 69 Cell-Type Text Prototypes")
+        ax.set_title("B1: 69 Text Prototypes (CLOP space)")
         ax.set_xlabel("UMAP 1")
         ax.set_ylabel("UMAP 2")
 
         # B2: Cells coloured by type + prototype centroids
-        ax = axes[1]
+        ax = fig.add_subplot(gs[2])
         for t in unique_types:
             mask = gids_sub == t
-            color = TYPE_PALETTE[t % len(TYPE_PALETTE)]
+            color = TYPE_PALETTE[int(t) % len(TYPE_PALETTE)]
             ax.scatter(cell_coords[mask, 0], cell_coords[mask, 1],
                        c=[color], s=3, alpha=0.4, rasterized=True)
-        # Overlay prototypes
+        # Overlay text prototypes as stars
         for i, (x, y) in enumerate(proto_coords):
-            color = TYPE_PALETTE[i % len(TYPE_PALETTE)]
+            color = TYPE_PALETTE[int(unique_types[i]) % len(TYPE_PALETTE)]
             ax.scatter(x, y, c=[color], s=80, marker="*", edgecolors="black",
                        linewidths=0.5, zorder=6)
 
-        ax.set_title(f"B2: {len(sampled_idx)} Cells by Type (★ = prototype)")
+        ax.set_title(f"B2: {len(sampled_idx)} Cells + ★ Text Proto (CLOP space)")
         ax.set_xlabel("UMAP 1")
         ax.set_ylabel("UMAP 2")
 
