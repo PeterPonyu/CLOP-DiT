@@ -57,11 +57,7 @@ def plot_diagnostics(
         ax.set_xlabel("Diversity Ratio (gen / real)")
         ax.legend(fontsize=8, loc="lower right", frameon=False)
         summary = all_results["test1_intratype_diversity"]["summary"]
-        ax.set_title(
-            f"Intra-Type Diversity Ratio\n"
-            f"mean={summary['mean_diversity_ratio']:.4f}, "
-            f"collapsed={summary['n_collapsed']}/{summary['n_collapsed'] + summary['n_healthy']}"
-        )
+        ax.set_title("Intra-Type Diversity Ratio")
     else:
         ax.text(0.5, 0.5, "No data", ha="center", va="center", transform=ax.transAxes)
         ax.set_title("Intra-Type Diversity Ratio")
@@ -77,11 +73,7 @@ def plot_diagnostics(
         ax.set_ylabel("Cosine Distance to Nearest Real Cell")
         ax.axhline(y=0.01, color="red", ls=":", alpha=0.5, label="memorization threshold")
         ax.legend(fontsize=8, frameon=False)
-        ax.set_title(
-            f"Nearest-Neighbour Distance\n"
-            f"n_near_copy(d<0.001)={t2['n_very_close']}, "
-            f"same_type_nn={t2['nn_same_type_frac']:.1%}"
-        )
+        ax.set_title("Nearest-Neighbour Distance")
     else:
         ax.set_title("Nearest-Neighbour Distance")
 
@@ -130,7 +122,7 @@ def plot_diagnostics(
         ax.set_ylabel("Intra-Type Diversity (1 - mean cosine)")
         gain = t5["summary"]["mean_diversity_gain"]
         eps = t5["summary"].get("noise_scale", "?")
-        ax.set_title(f"Centroid vs Noisy Conditioning\ngain={gain:.2f}x, \u03b5={eps}")
+        ax.set_title("Centroid vs Noisy Conditioning")
         ax.legend(fontsize=8, frameon=False)
     else:
         ax.set_title("Centroid vs Noisy Conditioning")

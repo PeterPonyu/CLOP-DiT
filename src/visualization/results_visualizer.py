@@ -44,6 +44,7 @@ matplotlib.use("Agg")  # non-interactive backend for PDF generation
 # Shared style infrastructure (centralised in style.py)
 from .style import (
     apply_style,
+    set_figure_suptitle,
     style_axes,
     GRIDSPEC_TIGHT,
 )
@@ -597,7 +598,7 @@ class ResultsVisualizer:
 
         fig = plt.figure(figsize=(13.6, 9.3), dpi=self.dpi)
         gs = fig.add_gridspec(2, 2, height_ratios=[1.0, 0.92], wspace=0.05, hspace=0.28)
-        fig.suptitle("Diversity Trade-off and Expression Variance", fontsize=12, y=0.985)
+        set_figure_suptitle(fig, "Diversity Trade-off and Expression Variance", fontsize=12)
 
         for col, (_, image) in enumerate(images[:2]):
             ax = fig.add_subplot(gs[0, col])

@@ -3,7 +3,7 @@
 *Last revised: 2026-03-06*
 
 **Date:** 2026-03-06
-**Status:** Code cleanup complete; figures stale; regeneration required
+**Status:** Policy fixes applied; article figures regenerated and article PDF refreshed
 
 ---
 
@@ -16,18 +16,17 @@
 4. **Pipeline verification** — Added `scripts/verify_article_figures.sh` to verify all 15 PDFs exist and manage symlinks
 5. **Documentation** — Updated FIGURE_ORGANIZATION.md with canonical producers table, QUICK_START.md with steps 0-8
 
-### Figure Staleness Issue ⚠️
+### Regeneration Status ✅
 
-**7 of 15 article figures are stale** (generated before recent code changes):
+Article figures have been regenerated in a working environment with PyTorch, checkpoints, and cached data available.
 
-| Figures | Stale by | Issue |
-|---------|----------|-------|
-| Figs 3, 4, 5 | 2-18 min | `panels_quality.py` modified 09:38 (untracked file, unclear delta) |
-| Fig 9 | ~21 hours | `conditioning_analysis.py` has extensive visual changes (sizes, titles, legends, save method) |
-| Fig 10 | ~22 hours | `diversity_diagnostics.py` has extensive visual changes (figure size halved, titles, tick labels, layout) |
-| Fig 11 | Depends on J/K | Composed from stale panels J/K; also `results_visualizer.py` modified 10:04 |
-| Fig 14 | ~41-44 min | `downstream_panels.py` has extensive visual changes (P/Q layout, gauge redesign) |
-| Fig 15 | ~41-44 min | `downstream_panels.py` has extensive visual changes (sizes, titles, annotations) |
+Refreshed on 2026-03-06:
+
+| Figures | Status | Notes |
+|---------|--------|-------|
+| Figs 9–12 | Regenerated | Policy fixes applied and outputs refreshed |
+| Article figure symlinks | Verified | `scripts/verify_article_figures.sh` reports all 15 PDFs present |
+| LaTeX article PDF | Rebuilt | `articles/clop_dit_biology.pdf` refreshed after figure regeneration |
 
 ### Why Regeneration Is Essential
 
@@ -39,7 +38,11 @@ The code changes to stale figures include:
 - **Save method upgrade** (switched to `save_with_vcd()` for visual conflict detection)
 - **Layout optimization** (gridspec_kw parameters for better spacing)
 
-**These changes are NOT reflected in the current PDFs.** The LaTeX article is using outdated versions.
+These policy and layout changes are now reflected in the regenerated figure PDFs and refreshed article PDF.
+
+For regeneration and policy specific to Figures 9–12 (conditioning, diversity, baselines), see [FIGURES_9-12_POLICY.md](FIGURES_9-12_POLICY.md).
+
+**Policy fixes applied (2026-03-06):** Figs 9, 10, 11, 12 now use `set_figure_suptitle`; Panel J stats reduced (moved to caption); Fig 11 violin dependencies documented. Regeneration has been completed in a valid environment and the updated PDFs are present in `results/figures/`.
 
 ---
 

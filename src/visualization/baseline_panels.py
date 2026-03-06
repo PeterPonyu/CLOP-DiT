@@ -16,7 +16,7 @@ from typing import Dict, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import COLORS, save_panel, style_axes, set_dense_tick_labels
+from .style import COLORS, save_panel, style_axes, set_dense_tick_labels, set_figure_suptitle
 from src.utils.paths import CACHE_DIR, RESULTS_DIR, FIG_DIR
 
 logger = logging.getLogger(__name__)
@@ -106,8 +106,7 @@ def plot_baseline_comparison(
 
     fig = plt.figure(figsize=(13.8, 5.8))
     gs = fig.add_gridspec(1, 3, width_ratios=[1.3, 1.1, 1.0], wspace=0.58)
-    fig.suptitle("CLOP-DiT vs Baselines",
-                 fontsize=11)
+    set_figure_suptitle(fig, "CLOP-DiT vs Baselines", fontsize=11)
 
     # ── O1: Grouped bar chart ──
     ax = fig.add_subplot(gs[0])

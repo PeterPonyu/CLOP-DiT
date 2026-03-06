@@ -43,6 +43,11 @@ Data for all of these already exists in `results/*.json`; see the roadmap for ex
 - **Save policy:** All article figure saves go through `save_with_vcd()` (or a `save_panel_fn` that uses it). Merged figures (G+F, L+K) now use this path.
 - **Default output_dir:** Panel modules default to `output_dir="results/figures"`.
 - **Docs:** [docs/INDEX.md](INDEX.md) indexes all docs; [FIGURE_ORGANIZATION.md](FIGURE_ORGANIZATION.md) documents the save and presentation policy.
+- **Figures 9–12:** Regeneration and policy for conditioning, diversity, and baselines — see [FIGURES_9-12_POLICY.md](FIGURES_9-12_POLICY.md).
+- **Fig 9:** Suptitle via `set_figure_suptitle`; subplot titles simplified to one line.
+- **Fig 10:** Stats moved from subplot titles to caption (annotation budget).
+- **Fig 11:** Violin panel integrated; suptitle via `set_figure_suptitle`.
+- **Fig 12:** Suptitle via `set_figure_suptitle`; save via `save_panel` (PNG+PDF).
 
 ---
 

@@ -14,7 +14,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import COLORS, TYPE_PALETTE, apply_style, save_with_vcd
+from .style import COLORS, TYPE_PALETTE, apply_style, save_with_vcd, set_figure_suptitle
 
 matplotlib.use("Agg")
 logger = logging.getLogger(__name__)
@@ -116,7 +116,8 @@ def plot_panel_m(
                              gridspec_kw={"wspace": 0.40}, squeeze=False)
     axes = axes[0]
 
-    fig.suptitle(
+    set_figure_suptitle(
+        fig,
         f"Conditioning Mode Comparison (CFG={cfg_scale}, {len(selected_types)} types, PCA 2D)",
         fontsize=11,
     )
@@ -139,7 +140,7 @@ def plot_panel_m(
 
     real_mask_bool = combined_source == "Real"
     plot_one(axes[0], real_mask_bool,
-             f"Real ({n_real} cells)\ndiversity={real_diversity:.3f}",
+             f"Real ({n_real} cells), div={real_diversity:.3f}",
              alpha=0.2, size=4)
 
     mode_counts = mode_counts or {}
@@ -148,7 +149,7 @@ def plot_panel_m(
         div_val = mode_diversity.get(mode_name, 0.0)
         count = mode_counts.get(mode_name, mode_mask.sum())
         plot_one(axes[i + 1], mode_mask,
-                 f"{mode_name}\n({count} cells, div={div_val:.3f})")
+                 f"{mode_name} ({count} cells), div={div_val:.3f}")
 
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="lower center",

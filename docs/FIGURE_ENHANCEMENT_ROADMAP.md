@@ -59,10 +59,10 @@ The pipeline computes rich statistics that are underutilized:
 
 ---
 
-#### 1.2 Distribution Tails & Outlier Analysis in Diversity (Enhancement to Figs 10, 11)
+#### 1.2 Distribution Tails & Outlier Analysis in Diversity (Enhancement to Figs 10, 11) — DONE for Fig 11
 **Problem:** Current diversity metrics show aggregate ratios, not whether diversity is distributed or tail-weighted.
 
-**Solution:** Replace or supplement current Fig 11 with **violin plots**:
+**Solution:** Replace or supplement current Fig 11 with **violin plots** (implemented in `plot_diversity_distributions_violin`, composed in `_compose_diversity_tradeoff`):
 - **For top 6 cell types** (by diversity):
   - X-axis: Cell type
   - Y-axis: Cosine similarity distribution

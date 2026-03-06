@@ -350,6 +350,8 @@ We presented CLOP-DiT, a two-stage framework for text-guided single-cell generat
 
 ## Appendix: Figure and Table Inventory
 
+> **Figure numbering note:** This JBHI markdown uses a different figure order than the LaTeX article (`articles/clop_dit_biology.tex`). The LaTeX article (authoritative) maps: Fig 9 = conditioning UMAP (M), Fig 10 = diversity diagnostics (J), Fig 11 = diversity trade-off merged (L+K), Fig 12 = baselines (O). See [FIGURES_9-12_POLICY.md](FIGURES_9-12_POLICY.md) for details.
+
 | Figure | Description | Panels | File |
 |--------|-------------|--------|------|
 | Fig. 1 | Architecture overview (schematic) | — | To be prepared separately |
