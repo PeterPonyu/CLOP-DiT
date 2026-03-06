@@ -1,5 +1,5 @@
 # Fdb version 4
-["pdflatex"] 1772802587.94451 "clop_dit_biology.tex" "clop_dit_biology.pdf" "clop_dit_biology" 1772802589.1309 0
+["pdflatex"] 1772804293.22273 "clop_dit_biology.tex" "clop_dit_biology.pdf" "clop_dit_biology" 1772804294.2414 0
   "/etc/texmf/web2c/texmf.cnf" 1760892491.22511 475 c0e671620eb5563b2130f56340a5fde8 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -261,12 +261,12 @@
   "Definitions/logo-mdpi.eps" 1710886424 563678 6065ff936803124b091b05458e057116 ""
   "Definitions/logo-orcid.pdf" 1639950376 12671 39a20ba789123aa897c7efc569fb5270 ""
   "Definitions/mdpi.cls" 1765875590 62373 522ff94f7feedac3af8d56ada889ebe8 ""
-  "clop_dit_biology.aux" 1772802589.04011 26377 fe456c21acb3b7821e090d82a0705e83 "pdflatex"
-  "clop_dit_biology.out" 1772802589.04111 3949 a81d0861757bdab35c04ea387436aac7 "pdflatex"
+  "clop_dit_biology.aux" 1772804294.16479 26377 fe456c21acb3b7821e090d82a0705e83 "pdflatex"
+  "clop_dit_biology.out" 1772804294.16579 3949 a81d0861757bdab35c04ea387436aac7 "pdflatex"
   "clop_dit_biology.tex" 1772792653.3969 64601 10fce5614565218064d470f9d2da815a ""
   "figures/fig_architecture.pdf" 1772799872.29189 50755 95b349e1dab325dd05be0e08499c6436 ""
   "figures/fig_diversity_tradeoff.pdf" 1772802483.00815 386298 32371c71181bf92e9841f323451fe454 ""
-  "figures/fig_downstream_pq.pdf" 1772802479.61994 868537 7c23a742df22a3d816a37fcc55230688 ""
+  "figures/fig_downstream_pq.pdf" 1772804270.61945 865760 b171d8f67cdd07128035bd1e3a534e56 ""
   "figures/fig_embedding_space.pdf" 1772797072.41312 591438 4ac8dfb6dfac3c2a733733da7e74c623 ""
   "figures/fig_fidelity_alignment.pdf" 1772802471.6617 1409898 eccbf03411a6ea2e704933bd151913ac ""
   "figures/fig_training_dynamics.pdf" 1772802428.24214 37658 b68c4cafbea709f7ef5eed42ed63ed5d ""
@@ -276,9 +276,9 @@
   "figures/panel_j_diversity_diagnostics.pdf" 1772802221.45045 29409 d447a1982c784bec8f185759083a2487 ""
   "figures/panel_m_conditioning_umap.pdf" 1772802546.22293 85657 68ddfddb498e2b2ad07fb2c014c518ab ""
   "figures/panel_n_marker_gene_comparison.pdf" 1772802474.80497 38149 fab7c1490fc22621f433c46d1ab1ce06 ""
-  "figures/panel_o_baseline_comparison.pdf" 1772802475.34108 27254 15e364ff15d93f5e7aaf819f54ccf81c ""
-  "figures/panel_r_de_concordance.pdf" 1772802480.59826 372275 c2743ef89eefad89cf4cd65328c0fb6e ""
-  "figures/panel_s_benchmark.pdf" 1772802481.63921 44855 ded6a7823156db236894445db4c469fb ""
+  "figures/panel_o_baseline_comparison.pdf" 1772804187.86926 27254 6d443058b65dc3411f81cd242bca040e ""
+  "figures/panel_r_de_concordance.pdf" 1772804271.36285 372120 971eaae4e7034efeffdfa6440c169fd4 ""
+  "figures/panel_s_benchmark.pdf" 1772804188.66871 44325 89281b97cbb7c6c57d98fcbb9222e4ce ""
   (generated)
   "clop_dit_biology.aux"
   "clop_dit_biology.log"

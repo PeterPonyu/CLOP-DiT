@@ -33,7 +33,7 @@ Use this checklist before submitting the manuscript. Full rationale and task det
 
 | # | Task | Done |
 |---|------|------|
-| 12 | Confirm Fig 12 and Fig 14/15 files and captions; reference pass | ☐ |
+| 12 | Confirm Fig 12 and Fig 14/15 files and captions per [FIGURES_12-15_POLICY.md](FIGURES_12-15_POLICY.md); reference pass | ☐ |
 | 13 | Optional: downstream numbers in abstract/conclusions; supplement list | ☐ |
 
 ---
@@ -41,5 +41,6 @@ Use this checklist before submitting the manuscript. Full rationale and task det
 ## Before submission
 
 - [ ] All 15 article figures regenerated and verified: `bash scripts/verify_article_figures.sh`
+- [ ] Figs 12–15 present: `panel_o_baseline_comparison.pdf`, `panel_s_benchmark.pdf`, `fig_downstream_pq.pdf`, `panel_r_de_concordance.pdf` (see [FIGURES_12-15_POLICY.md](FIGURES_12-15_POLICY.md))
 - [ ] Article builds: `cd articles && latexmk -pdf clop_dit_biology.tex`
 - [ ] No TODO or "Please add" placeholders remain in `.tex`

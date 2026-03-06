@@ -60,7 +60,7 @@ def _plot_classifier_metric_heatmap(
     ax: plt.Axes,
     cm: np.ndarray,
     class_names: List[str],
-    max_rows: Optional[int] = 35,
+    max_rows: Optional[int] = 24,
     title: Optional[str] = None,
 ) -> Dict[str, np.ndarray]:
     """Render a per-type precision/recall/F1 heatmap sorted by hardest classes."""

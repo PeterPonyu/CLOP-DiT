@@ -23,10 +23,12 @@ from .panels_de_concordance import plot_de_concordance_panel
 from .style import (
     COLORS,
     TYPE_PALETTE,
+    add_colorbar_safe,
     apply_style,
     quality_color,
     save_panel,
     set_dense_tick_labels,
+    set_figure_suptitle,
     style_axes,
 )
 from src.utils.paths import RESULTS_DIR, FIG_DIR
@@ -49,8 +51,7 @@ def plot_clustering_and_classifier_merged(
     gs = fig.add_gridspec(2, 3, wspace=0.56, hspace=0.44,
                           height_ratios=[1, 1.1],
                           width_ratios=[1.65, 1.15, 0.95])
-    fig.suptitle("Downstream Validation: Clustering & Classifier Alignment",
-                 fontsize=12, y=0.98)
+    set_figure_suptitle(fig, "Downstream Validation: Clustering & Classifier Alignment", fontsize=12)
 
     umap_coords = clustering_data.get("_umap_coords")
     source = clustering_data.get("_source")
@@ -82,9 +83,8 @@ def plot_clustering_and_classifier_merged(
                       linewidths=0.3, label="Generated")
         ax_p1.legend(
             fontsize=8,
-            loc="upper left",
-            bbox_to_anchor=(1.02, 1.0),
-            borderaxespad=0.0,
+            loc="lower left",
+            borderaxespad=0.3,
             markerscale=2,
             frameon=False,
         )
@@ -163,8 +163,8 @@ def plot_clustering_and_classifier_merged(
             ax_q1.set_yticks(range(n_classes))
             ax_q1.set_xticklabels(short, rotation=90, fontsize=8, ha="center")
             ax_q1.set_yticklabels(short, fontsize=8, ha="right")
-        fig.colorbar(im, ax=ax_q1, shrink=0.4, pad=0.08, label="Recall",
-                     orientation="horizontal", aspect=20)
+        add_colorbar_safe(im, ax=ax_q1, label="Recall",
+                         shrink=0.4, pad=0.08, orientation="horizontal", aspect=20)
         style_axes(ax_q1, "heatmap", title="Confusion Matrix",
                    xlabel="Predicted", ylabel="True Type")
     else:
@@ -173,16 +173,23 @@ def plot_clustering_and_classifier_merged(
 
     ax_q2 = fig.add_subplot(gs[1, 1])
     if per_type_acc and cm is not None:
-        summary = _plot_classifier_metric_heatmap(fig, ax_q2, np.array(cm), class_names or [f"C{i}" for i in range(np.array(cm).shape[0])])
+        summary = _plot_classifier_metric_heatmap(
+            fig,
+            ax_q2,
+            np.array(cm),
+            class_names or [f"C{i}" for i in range(np.array(cm).shape[0])],
+            max_rows=20,
+        )
         ax_q2.text(
-            0.0,
-            1.02,
+            0.98,
+            0.98,
             f"Overall acc={gen_acc:.3f}  |  Median F1={np.median(summary['f1']):.3f}",
             transform=ax_q2.transAxes,
-            ha="left",
-            va="bottom",
+            ha="right",
+            va="top",
             fontsize=8,
             color=COLORS["neutral"],
+            bbox=dict(boxstyle="round,pad=0.18", fc="white", ec="#DDDDDD", alpha=0.92),
         )
     else:
         ax_q2.text(0.5, 0.5, "No per-type data", ha="center", va="center",

@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .style import (
-    COLORS, save_panel, style_axes
+    COLORS, add_colorbar_safe, save_panel, set_figure_suptitle, style_axes
 )
 from src.utils.paths import RESULTS_DIR, FIG_DIR
 
@@ -85,10 +85,7 @@ def plot_benchmark_panel(
 
     fig = plt.figure(figsize=(15.0, 9.0))
     gs = fig.add_gridspec(2, 2, wspace=0.55, hspace=0.50)
-    fig.suptitle(
-        "Model Benchmarking — CLOP-DiT vs Baselines",
-        fontsize=11,
-    )
+    set_figure_suptitle(fig, "Model Benchmarking — CLOP-DiT vs Baselines", fontsize=11)
 
     # ── S1: Heatmap (methods × metrics) ──
     ax1 = fig.add_subplot(gs[0, 0])
@@ -140,7 +137,7 @@ def plot_benchmark_panel(
         ax1.add_patch(plt.Rectangle((j - 0.5, best_i - 0.5), 1, 1,
                                     fill=False, edgecolor=COLORS["good"], linewidth=2.5))
 
-    plt.colorbar(im, ax=ax1, shrink=0.6, pad=0.02, label="Normalised Score (1=best)")
+    add_colorbar_safe(im, ax=ax1, label="Normalised Score (1=best)", shrink=0.6, pad=0.08)
     style_axes(ax1, "heatmap", title="Metrics Comparison Heatmap")
 
     # ── S2: Composite score bars ──

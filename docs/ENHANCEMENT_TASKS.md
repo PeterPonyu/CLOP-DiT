@@ -48,6 +48,7 @@ Data for all of these already exists in `results/*.json`; see the roadmap for ex
 - **Fig 10:** Stats moved from subplot titles to caption (annotation budget).
 - **Fig 11:** Violin panel integrated; suptitle via `set_figure_suptitle`.
 - **Fig 12:** Suptitle via `set_figure_suptitle`; save via `save_panel` (PNG+PDF).
+- **Figs 13–15:** Policy and scope in [FIGURES_12-15_POLICY.md](FIGURES_12-15_POLICY.md). Fig 13, 14, 15: Suptitle via `set_figure_suptitle`; save via `save_panel`.
 
 ---
 

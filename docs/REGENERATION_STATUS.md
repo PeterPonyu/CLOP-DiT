@@ -59,6 +59,7 @@ You must have:
 - ✅ Cached embedding data:
   - `data/cached_latents_v5.2/` with text/cell embeddings
 - ✅ Computed downstream results in `results/downstream/`
+- ✅ For Fig 12 (Panel O): `generation_metrics.json` and either `baseline_metrics.json` or cache for on-the-fly `_compute_baselines()`; if missing, Panel O is skipped (see [FIGURES_12-15_POLICY.md](FIGURES_12-15_POLICY.md))
 
 ### Command to Run (In Your Development Environment)
 

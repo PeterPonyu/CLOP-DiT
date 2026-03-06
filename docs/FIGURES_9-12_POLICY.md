@@ -83,3 +83,4 @@ See [REGENERATION_STATUS.md](REGENERATION_STATUS.md) for prerequisites and [todo
 - [LEGEND_CAPTION_POLICY.md](LEGEND_CAPTION_POLICY.md) — Legends vs captions
 - [REGENERATION_STATUS.md](REGENERATION_STATUS.md) — Staleness, prerequisites, regeneration command
 - [ENHANCEMENT_TASKS.md](ENHANCEMENT_TASKS.md) — Tier 1/2 enhancements, including Figs 10/11 diversity violins
+- [FIGURES_12-15_POLICY.md](FIGURES_12-15_POLICY.md) — Figs 12–15 (benchmark, downstream, DE concordance)

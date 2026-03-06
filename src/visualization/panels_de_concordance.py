@@ -12,7 +12,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import COLORS, save_panel, style_axes
+from .style import COLORS, add_colorbar_safe, save_panel, set_figure_suptitle, style_axes
 
 matplotlib.use("Agg")
 logger = logging.getLogger(__name__)
@@ -39,8 +39,7 @@ def plot_de_concordance_panel(
 
     fig = plt.figure(figsize=(14.4, 6.9))
     gs = fig.add_gridspec(1, 3, width_ratios=[1.35, 1.05, 1.0], wspace=0.62)
-    fig.suptitle("DE Concordance — Real vs Generated",
-                 fontsize=11)
+    set_figure_suptitle(fig, "DE Concordance — Real vs Generated", fontsize=11)
 
     ax = fig.add_subplot(gs[0])
     first_key = contrasts[0]
@@ -97,7 +96,7 @@ def plot_de_concordance_panel(
         ax.axvline(0, color="#666", linestyle=":", linewidth=1.0, alpha=0.6)
 
         residuals = np.abs(gen_logfc - real_logfc) * np.maximum(effect_size, 1e-6)
-        top_idx = np.argsort(residuals)[-min(4, len(residuals)):]
+        top_idx = np.argsort(residuals)[-min(2, len(residuals)):]
         for i in top_idx:
             if i < len(shared_genes):
                 ax.annotate(shared_genes[i], (real_logfc[i], gen_logfc[i]),
@@ -109,19 +108,23 @@ def plot_de_concordance_panel(
         sign_agreement = first.get("top_k_sign_agreement", 0)
         ax.legend(
             fontsize=8,
-            title=f"Pearson r = {r_val:.3f}\nSign = {sign_agreement:.3f}",
             frameon=False,
             loc="lower right",
         )
-        fig.colorbar(sc, ax=ax, shrink=0.5, pad=0.08, label=cbar_label,
-                     orientation="horizontal", aspect=20)
+        ax.text(
+            0.98, 0.98, f"r = {r_val:.3f}, sign = {sign_agreement:.3f}",
+            transform=ax.transAxes, ha="right", va="top", fontsize=8,
+            bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#CCCCCC", alpha=0.9),
+        )
+        add_colorbar_safe(sc, ax=ax, label=cbar_label,
+                         shrink=0.5, pad=0.08, orientation="horizontal", aspect=20)
 
-    contrast_display = first_key.replace("_", " ")[:44]
+    contrast_display = first_key.replace("_", " ")[:28]
     style_axes(ax, "scatter", title="Effect-Size Concordance",
                xlabel="Real logFC", ylabel="Generated logFC")
     ax.text(
         0.02,
-        0.98,
+        0.90,
         contrast_display,
         transform=ax.transAxes,
         ha="left",
@@ -162,9 +165,8 @@ def plot_de_concordance_panel(
             ax2.text(j, i, f"{val:.2f}", ha="center", va="center",
                      fontsize=8, color=color)
 
-    fig.colorbar(im, ax=ax2, shrink=0.6)
+    add_colorbar_safe(im, ax=ax2, shrink=0.6)
     style_axes(ax2, "heatmap", title="Concordance Across Contrasts")
-    ax2.set_xticklabels(metric_names, fontsize=10, rotation=45, ha="right")
 
     ax3 = fig.add_subplot(gs[2])
     x = np.arange(n_contrasts)
