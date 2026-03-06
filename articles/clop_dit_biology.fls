@@ -593,12 +593,12 @@ INPUT ./figures/fig_training_dynamics.pdf
 INPUT ./figures/fig_training_dynamics.pdf
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/mathpazo/zplmb7t.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/mathpazo/zplmb7t.tfm
+INPUT ./figures/fig_embedding_space.pdf
+INPUT ./figures/fig_embedding_space.pdf
+INPUT ./figures/fig_embedding_space.pdf
+INPUT ./figures/fig_embedding_space.pdf
+INPUT ./figures/fig_embedding_space.pdf
 INPUT /usr/share/texlive/texmf-dist/fonts/vf/adobe/palatino/pplr8c.vf
-INPUT ./figures/fig_embedding_space.pdf
-INPUT ./figures/fig_embedding_space.pdf
-INPUT ./figures/fig_embedding_space.pdf
-INPUT ./figures/fig_embedding_space.pdf
-INPUT ./figures/fig_embedding_space.pdf
 INPUT ./figures/panel_d_metrics_summary.pdf
 INPUT ./figures/panel_d_metrics_summary.pdf
 INPUT ./figures/panel_d_metrics_summary.pdf

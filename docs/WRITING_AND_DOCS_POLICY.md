@@ -22,6 +22,8 @@ Before submission, use the task list in [REVIEWER_CONCERNS_AND_NEXT_STEPS.md](RE
 - **Journal:** MDPI Biology author instructions apply for format and structure.
 - **Terminology:** Use consistently: CLOP-DiT, scGPT, flow matching, BiomedBERT, AdaLN-Zero, classifier-free guidance (CFG). Avoid mixing naming (e.g. "CLOP-DiT" not "CLOP-DIT" or "CLOP DiT").
 - **Figure-related text:** For figure production, layout, and limitations, see [FIGURE_ORGANIZATION.md](FIGURE_ORGANIZATION.md) (including the "Figure logic and limitations" section).
+- **Subsection-level writing:** For subsection structure, figure-text alignment, and style rules, see [ARTICLE_SUBSECTION_POLICY.md](ARTICLE_SUBSECTION_POLICY.md). Human and agent edits to the article should follow these rules.
+- **Multi-agent improvement:** For the trunk definition, 2-agent trunk optimization, and 8-agent full-article plan, see [ARTICLE_AGENT_PLAN.md](ARTICLE_AGENT_PLAN.md).
 
 ---
 

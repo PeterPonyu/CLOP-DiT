@@ -1,5 +1,5 @@
 # Fdb version 4
-["pdflatex"] 1772808636.47387 "clop_dit_biology.tex" "clop_dit_biology.pdf" "clop_dit_biology" 1772808637.48823 0
+["pdflatex"] 1772809929.45456 "clop_dit_biology.tex" "clop_dit_biology.pdf" "clop_dit_biology" 1772809930.46736 0
   "/etc/texmf/web2c/texmf.cnf" 1760892491.22511 475 c0e671620eb5563b2130f56340a5fde8 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -261,9 +261,9 @@
   "Definitions/logo-mdpi.eps" 1710886424 563678 6065ff936803124b091b05458e057116 ""
   "Definitions/logo-orcid.pdf" 1639950376 12671 39a20ba789123aa897c7efc569fb5270 ""
   "Definitions/mdpi.cls" 1765875590 62373 522ff94f7feedac3af8d56ada889ebe8 ""
-  "clop_dit_biology.aux" 1772808637.41131 26429 729dee7c088cfe29ef5ca0d04edc0ae8 "pdflatex"
-  "clop_dit_biology.out" 1772808637.41231 3949 a81d0861757bdab35c04ea387436aac7 "pdflatex"
-  "clop_dit_biology.tex" 1772806124.5125 64510 434e2aa54dc2711c7f5af20300db419c ""
+  "clop_dit_biology.aux" 1772809930.39045 26427 b215996374597fad188e95ce232d4e06 "pdflatex"
+  "clop_dit_biology.out" 1772809930.39145 3949 a81d0861757bdab35c04ea387436aac7 "pdflatex"
+  "clop_dit_biology.tex" 1772809914.71155 65145 2e7fbbe6239754afe0c6376531d8ff5f ""
   "figures/fig_architecture.pdf" 1772806393.76748 50646 0215f9ca7ba69e89847ca6a8d9e7ceed ""
   "figures/fig_diversity_tradeoff.pdf" 1772808555.59839 393547 74701fe0f62bb0b9cce836810ddd4bfb ""
   "figures/fig_downstream_pq.pdf" 1772808552.97439 865760 c0b16dcebd5d0dfeb35124ff7eb022ae ""
