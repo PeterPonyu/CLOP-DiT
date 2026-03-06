@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from . import io as viz_io
-from .style import COLORS, TYPE_PALETTE, apply_style, set_dense_tick_labels, style_axes
+from .style import COLORS, FONT_LEGEND, TYPE_PALETTE, apply_style, set_dense_tick_labels, set_figure_suptitle, style_axes
 from .panels_heatmaps import plot_per_type_generation, plot_text_cell_heatmap
 
 matplotlib.use("Agg")
@@ -87,7 +87,7 @@ def plot_embedding_space_merged(
     fig = plt.figure(figsize=(14.2, 5.4 * n_rows))
     gs = fig.add_gridspec(n_rows, 3, wspace=0.46, hspace=0.48,
                           width_ratios=[1.2, 1.2, 1.0])
-    fig.suptitle("Embedding Space Analysis", fontsize=12, y=0.98)
+    set_figure_suptitle(fig, "Embedding Space Analysis", fontsize=11)
     row = 0
 
     if has_b:
@@ -232,7 +232,7 @@ def plot_embedding_space_merged(
             ax.scatter([], [], c=COLORS["generated"], s=30, marker="^", label="Generated")
             ax.legend(
                 markerscale=2.0,
-                fontsize=9,
+                fontsize=FONT_LEGEND,
                 loc="upper left",
                 bbox_to_anchor=(1.02, 1.0),
                 borderaxespad=0.0,

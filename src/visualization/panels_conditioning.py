@@ -58,7 +58,7 @@ def plot_panel_l(
     ax1.set_xticks(xticks, [f"{x:.2f}" for x in xticks])
     ax1.set_xlim(min(xticks) - 0.004, max(xticks) + 0.004)
 
-    ax1.axvspan(0.02, 0.04, alpha=0.1, color="green", label="Sweet spot")
+    ax1.axvspan(0.02, 0.04, alpha=0.1, color=COLORS["good"], label="Sweet spot")
 
     chosen_eps = 0.03
     summary_chunks = []

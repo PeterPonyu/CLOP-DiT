@@ -153,17 +153,17 @@ def plot_text_cell_heatmap(
     ax3 = fig.add_subplot(gs[2])
     # Legend keys kept short; μ values are in suptitle/caption
     ax3.hist(
-        diag, bins=10, alpha=0.7, color="#1976D2", edgecolor="white",
+        diag, bins=10, alpha=0.7, color=COLORS["real"], edgecolor="white",
         label="Diag", density=True,
         orientation="horizontal",
     )
     ax3.hist(
-        off_diag, bins=20, alpha=0.5, color="#FF7043", edgecolor="white",
+        off_diag, bins=20, alpha=0.5, color=COLORS["generated"], edgecolor="white",
         label="Off-diag", density=True,
         orientation="horizontal",
     )
-    ax3.axhline(y=mean_diag, color="#1565C0", linestyle="--", linewidth=1.5)
-    ax3.axhline(y=mean_off, color="#E64A19", linestyle=":", linewidth=1.5)
+    ax3.axhline(y=mean_diag, color=COLORS["real"], linestyle="--", linewidth=1.5)
+    ax3.axhline(y=mean_off, color=COLORS["generated"], linestyle=":", linewidth=1.5)
     ax3.set_ylabel("Cosine Similarity", fontsize=10)
     ax3.set_xlabel("Density", fontsize=10)
     ax3.set_title("Distribution", fontsize=11)
@@ -286,7 +286,7 @@ def plot_per_type_generation(
     ax.set_yticklabels(_ytlg, fontsize=8, ha="right")
     set_dense_tick_labels(ax, axis="y", max_labels=10, fontsize=8, rotation=0)
     ax.set_xlabel("Centroid Cosine Similarity")
-    ax.set_title("Real\u2194Gen Centroid Cosine")
+    ax.set_title("Real\u2194Gen Centroid Cosine", fontsize=11)
     ax.axvline(
         x=summary.get("mean_centroid_cosine", 0), color=COLORS["bad"],
         linestyle="--", alpha=0.5,
@@ -352,7 +352,7 @@ def plot_per_type_generation(
         ax.scatter(
             x_vals,
             cos_array,
-            c="#3F51B5",
+            c=COLORS["real"],
             s=bubble_sizes,
             alpha=0.78,
             edgecolors="white",

@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from . import io as viz_io
-from .style import COLORS, apply_style
+from .style import COLORS, FONT_LEGEND_DENSE, apply_style, set_figure_suptitle
 from ._utils import sample_pairwise_cosines
 from src.utils.paths import CACHE_DIR, RESULTS_DIR, FIG_DIR, CHECKPOINT_DIR
 
@@ -188,7 +188,7 @@ def plot_diversity_distributions_violin(
     )
     for label, color in colors.items():
         ax.plot([], [], color=color, linewidth=6, alpha=0.8, label=label)
-    ax.legend(loc="upper right", fontsize=8, ncol=3, frameon=False)
+    ax.legend(loc="upper right", fontsize=FONT_LEGEND_DENSE, ncol=3, frameon=False)
 
     if created_fig and save:
         viz_io.save_to_dir(fig, "panel_k_diversity_distributions_violin", output_dir, dpi, save_panel_fn)
@@ -319,8 +319,7 @@ def plot_metrics_summary(
 
     fig = plt.figure(figsize=(12.4, 7.8))
     gs = fig.add_gridspec(2, 2, wspace=0.58, hspace=0.52)
-    fig.suptitle("Core Evaluation Metrics Dashboard",
-                 fontsize=11, y=0.99)
+    set_figure_suptitle(fig, "Core Evaluation Metrics Dashboard", fontsize=11)
 
     # ── D1: Training convergence bars ──
     ax1 = fig.add_subplot(gs[0, 0])

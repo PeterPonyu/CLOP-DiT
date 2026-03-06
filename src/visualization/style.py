@@ -8,7 +8,7 @@ Provides:
   - apply_style(): activate rcParams globally
   - style_axes(ax, kind): per-subplot typography & spine cleanup
   - save_panel(fig, path, dpi): save PNG + PDF in one call
-  - FONT_LEGEND: standard legend font size
+    - FONT_LEGEND / FONT_LEGEND_DENSE: standard and dense legend font sizes
   - add_colorbar_safe(): colorbar helper with consistent defaults
   - set_figure_suptitle(): suptitle helper using SUPTITLE_Y
 """
@@ -97,6 +97,8 @@ TYPE_PALETTE = _build_type_palette(69)
 SUPTITLE_Y = 0.98
 # Standard legend font size (matches VIS_STYLE legend.fontsize)
 FONT_LEGEND = 10
+# Dense multi-panel figures where 10pt legends would crowd the layout
+FONT_LEGEND_DENSE = 8
 # Architecture diagram (Fig 1) — diagram-specific labels (min 5.5pt per VCD)
 FONT_ARCH_LABEL = 7
 FONT_ARCH_SUBLABEL = 7

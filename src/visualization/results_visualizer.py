@@ -596,7 +596,7 @@ class ResultsVisualizer:
 
         fig = plt.figure(figsize=(13.6, 9.3), dpi=self.dpi)
         gs = fig.add_gridspec(2, 2, height_ratios=[1.0, 0.92], wspace=0.05, hspace=0.28)
-        set_figure_suptitle(fig, "Diversity Trade-off and Expression Variance", fontsize=12)
+        set_figure_suptitle(fig, "Diversity Trade-off and Expression Variance", fontsize=11)
 
         for col, (_, image) in enumerate(images):
             ax = fig.add_subplot(gs[0, col])

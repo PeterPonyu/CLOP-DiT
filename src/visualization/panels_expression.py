@@ -645,9 +645,9 @@ def plot_marker_gene_comparison(
         ax2.set_xticklabels(xtick_labels, fontsize=8, rotation=90, ha="center")
         ax2.set_title("Per-Type \u00d7 Marker (Real | Gen)", fontsize=10, pad=8)
         ax2.text(n_markers / 2 - 0.5, -1.2, "Real", ha="center",
-                 fontsize=10, color="#1976D2")
+             fontsize=10, color=COLORS["real"])
         ax2.text(n_markers + 0.5 + n_markers / 2 - 0.5, -1.2, "Generated",
-                 ha="center", fontsize=10, color="#FF7043")
+             ha="center", fontsize=10, color=COLORS["generated"])
 
         add_colorbar_safe(im, ax=ax2, label="Expr.", shrink=0.6, pad=0.05)
 

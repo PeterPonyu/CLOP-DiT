@@ -51,7 +51,7 @@ def plot_clustering_and_classifier_merged(
     gs = fig.add_gridspec(2, 3, wspace=0.56, hspace=0.44,
                           height_ratios=[1, 1.1],
                           width_ratios=[1.65, 1.15, 0.95])
-    set_figure_suptitle(fig, "Downstream Validation: Clustering & Classifier Alignment", fontsize=12)
+    set_figure_suptitle(fig, "Downstream Validation: Clustering & Classifier Alignment", fontsize=11)
 
     umap_coords = clustering_data.get("_umap_coords")
     source = clustering_data.get("_source")

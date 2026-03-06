@@ -15,7 +15,7 @@ from typing import Callable, Dict, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import COLORS, apply_style, save_with_vcd, set_scientific_tickformat
+from .style import COLORS, FONT_LEGEND_DENSE, apply_style, save_with_vcd, set_figure_suptitle, set_scientific_tickformat
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ def plot_clop_training(
 
     fig = plt.figure(figsize=(7.4, 6.0))
     gs = fig.add_gridspec(2, 2, wspace=0.45, hspace=0.50)
-    fig.suptitle("CLOP Contrastive Pre-training (v9.3)", fontsize=11, y=0.99)
+    set_figure_suptitle(fig, "CLOP Contrastive Pre-training (v9.3)", fontsize=11)
 
     # ── A1: Loss curves ──
     ax = fig.add_subplot(gs[0, 0])
@@ -94,7 +94,7 @@ def plot_clop_training(
     ax.set_xlabel("Epoch", fontsize=10)
     ax.set_ylabel("Contrastive Loss", fontsize=10)
     ax.set_title("Loss Convergence", fontsize=11)
-    ax.legend(loc="upper right", fontsize=8, frameon=False)
+    ax.legend(loc="upper right", fontsize=FONT_LEGEND_DENSE, frameon=False)
     ax.set_xlim(0, max(epochs) * 1.08)
     ax.locator_params(axis='x', nbins=3)
     ax.locator_params(axis='y', nbins=4)
@@ -107,7 +107,7 @@ def plot_clop_training(
     ax.set_title("Temperature Stability", fontsize=11)
     ax.axhline(y=14.0, color="gray", linestyle=":", alpha=0.5, label="\u03c4=14.0")
     ax.set_ylim(13.5, 14.5)
-    ax.legend(loc="lower right", fontsize=8, frameon=False)
+    ax.legend(loc="lower right", fontsize=FONT_LEGEND_DENSE, frameon=False)
     ax.set_xlim(0, max(epochs) * 1.08)
     ax.locator_params(axis='x', nbins=4)
     ax.locator_params(axis='y', nbins=4)
@@ -136,7 +136,7 @@ def plot_clop_training(
     ax.set_ylabel("Accuracy (%)", fontsize=10)
     ax.set_title("Classification Accuracy", fontsize=11)
     ax.set_ylim(0, 105)
-    ax.legend(loc="lower right", fontsize=8, frameon=False, ncol=2)
+    ax.legend(loc="lower right", fontsize=FONT_LEGEND_DENSE, frameon=False, ncol=2)
     ax.set_xlim(0, max(epochs) * 1.08)
     ax.locator_params(axis='x', nbins=4)
     ax.locator_params(axis='y', nbins=4)
@@ -155,7 +155,7 @@ def plot_clop_training(
     ax.set_ylabel("Score", fontsize=10)
     ax.set_title("Embedding Quality", fontsize=11)
     ax.set_ylim(0, 1.05)
-    ax.legend(loc="center right", fontsize=8, frameon=False)
+    ax.legend(loc="center right", fontsize=FONT_LEGEND_DENSE, frameon=False)
     ax.set_xlim(0, max(epochs) * 1.08)
     ax.locator_params(axis='x', nbins=4)
     ax.locator_params(axis='y', nbins=4)
@@ -219,7 +219,7 @@ def plot_dit_training(
     fig = plt.figure(figsize=(9.8, 6.9))
     gs_c = fig.add_gridspec(2, 2, wspace=0.45, hspace=0.50)
     fig.subplots_adjust(top=0.92, bottom=0.10, left=0.11, right=0.95)
-    fig.suptitle("DiT Flow-Matching Training", fontsize=11, y=0.98)
+    set_figure_suptitle(fig, "DiT Flow-Matching Training", fontsize=11)
 
     # ── C1: Loss ──
     ax = fig.add_subplot(gs_c[0, 0])
@@ -234,7 +234,7 @@ def plot_dit_training(
     _ymin = max(min(_arr) * 0.6, 1e-5)
     _ymax = max(_arr) * 2.5
     ax.set_ylim(_ymin, _ymax)
-    ax.legend(fontsize=8, loc="upper right", frameon=False)
+    ax.legend(fontsize=FONT_LEGEND_DENSE, loc="upper right", frameon=False)
     ax.set_xlim(0, max(epochs) * 1.02)
     from matplotlib.ticker import MaxNLocator, FixedLocator
     import math
@@ -337,7 +337,7 @@ def plot_training_dynamics_combined(
     fig = plt.figure(figsize=(14.4, 8.2))
     gs = fig.add_gridspec(2, 4, wspace=0.55, hspace=0.52,
                           width_ratios=[1.0, 1.0, 1.0, 1.2], height_ratios=[1, 1])
-    fig.suptitle("Training Dynamics (CLOP + DiT)", fontsize=12, y=0.98)
+    set_figure_suptitle(fig, "Training Dynamics (CLOP + DiT)", fontsize=11)
 
     # ════════════════════════════════════════════════════════════
     # Top row: CLOP (4 panels spanning columns 0-3)
@@ -353,7 +353,7 @@ def plot_training_dynamics_combined(
         ax.set_xlabel("Epoch", fontsize=10)
         ax.set_ylabel("Contrastive Loss", fontsize=10)
         ax.set_title("CLOP Loss", fontsize=11)
-        ax.legend(loc="upper right", fontsize=8, frameon=False)
+        ax.legend(loc="upper right", fontsize=FONT_LEGEND_DENSE, frameon=False)
         ax.set_xlim(0, max(epochs) * 1.08)
         ax.locator_params(axis='x', nbins=3)
         ax.locator_params(axis='y', nbins=4)
@@ -367,7 +367,7 @@ def plot_training_dynamics_combined(
         ax.set_title("Temperature Stability", fontsize=11)
         ax.axhline(y=14.0, color="gray", linestyle=":", alpha=0.5, label="\u03c4=14.0")
         ax.set_ylim(13.5, 14.5)
-        ax.legend(loc="lower right", fontsize=8, frameon=False)
+        ax.legend(loc="lower right", fontsize=FONT_LEGEND_DENSE, frameon=False)
         ax.set_xlim(0, max(epochs) * 1.08)
         ax.locator_params(axis='x', nbins=4)
         ax.locator_params(axis='y', nbins=4)
@@ -388,7 +388,7 @@ def plot_training_dynamics_combined(
         ax.set_ylabel("Accuracy (%)", fontsize=10)
         ax.set_title("Classification Accuracy", fontsize=11)
         ax.set_ylim(0, 105)
-        ax.legend(loc="lower right", fontsize=8, frameon=False, ncol=2)
+        ax.legend(loc="lower right", fontsize=FONT_LEGEND_DENSE, frameon=False, ncol=2)
         ax.set_xlim(0, max(epochs) * 1.08)
         ax.locator_params(axis='x', nbins=4)
         ax.locator_params(axis='y', nbins=4)
@@ -407,7 +407,7 @@ def plot_training_dynamics_combined(
         ax.set_ylabel("Score", fontsize=10)
         ax.set_title("Embedding Quality", fontsize=11)
         ax.set_ylim(0, 1.05)
-        ax.legend(loc="center right", fontsize=8, frameon=False)
+        ax.legend(loc="center right", fontsize=FONT_LEGEND_DENSE, frameon=False)
         ax.set_xlim(0, max(epochs) * 1.08)
         ax.locator_params(axis='x', nbins=4)
         ax.locator_params(axis='y', nbins=4)
@@ -435,7 +435,7 @@ def plot_training_dynamics_combined(
         _ymin = max(min(_arr) * 0.6, 1e-5)
         _ymax = max(_arr) * 2.5
         ax.set_ylim(_ymin, _ymax)
-        ax.legend(fontsize=8, loc="upper right", frameon=False)
+        ax.legend(fontsize=FONT_LEGEND_DENSE, loc="upper right", frameon=False)
         ax.set_xlim(0, max(epochs) * 1.02)
         ax.xaxis.set_major_locator(MaxNLocator(nbins=2, integer=True, prune="both"))
         _lo_exp = math.ceil(math.log10(_ymin * 1.01))

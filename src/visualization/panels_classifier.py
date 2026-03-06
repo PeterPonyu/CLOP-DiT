@@ -16,6 +16,7 @@ import numpy as np
 
 from .style import (
     COLORS,
+    FONT_LEGEND,
     add_colorbar_safe,
     save_panel,
     set_dense_tick_labels,
@@ -101,7 +102,7 @@ def _plot_classifier_metric_heatmap(
     # ax.set_xlabel("Metric")  # Removed to reduce label density
 
     cbar = add_colorbar_safe(im, ax=ax, orientation="horizontal", shrink=0.55, pad=0.12, aspect=24)
-    cbar.set_label("Score", fontsize=8)
+    cbar.set_label("Score", fontsize=10)
     cbar.ax.tick_params(labelsize=8)
     return summary
 
@@ -221,7 +222,7 @@ def plot_classifier_panel(
         ax3.set_xlim(-0.02, 1.02)
         ax3.set_ylim(-0.02, 1.02)
         ax3.set_aspect("equal")
-        ax3.legend(fontsize=9, loc="lower left", frameon=False)
+        ax3.legend(fontsize=FONT_LEGEND, loc="lower left", frameon=False)
         from matplotlib.ticker import MaxNLocator
         ax3.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
         ax3.yaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
@@ -236,7 +237,7 @@ def plot_classifier_panel(
             interp = "Easily separable"
             color = COLORS["bad"]
         ax3.text(0.05, 0.95, interp, transform=ax3.transAxes,
-                 fontsize=8, color="#333333", va="top",
+                 fontsize=8, color=COLORS["neutral"], va="top",
                  bbox=dict(boxstyle="round,pad=0.3", fc="white", ec=color,
                            alpha=0.9, linewidth=1.5))
     else:

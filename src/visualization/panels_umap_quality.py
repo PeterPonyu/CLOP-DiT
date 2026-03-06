@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from . import io as viz_io
-from .style import TYPE_PALETTE, set_figure_suptitle
+from .style import COLORS, FONT_LEGEND, TYPE_PALETTE, set_figure_suptitle
 from src.utils.paths import FIG_DIR
 
 logger = logging.getLogger(__name__)
@@ -128,7 +128,7 @@ def plot_real_vs_generated(
     else:
         ax.scatter(
             real_c[:, 0], real_c[:, 1],
-            c="#2196F3", s=4, alpha=0.4, rasterized=True,
+            c=COLORS["real"], s=4, alpha=0.4, rasterized=True,
         )
     ax.set_title(
         f"Real ({len(real_sub)} cells, "
@@ -150,7 +150,7 @@ def plot_real_vs_generated(
     else:
         ax.scatter(
             gen_c[:, 0], gen_c[:, 1],
-            c="#FF5722", s=4, alpha=0.4, rasterized=True,
+            c=COLORS["generated"], s=4, alpha=0.4, rasterized=True,
         )
     ax.set_title(f"Generated ({len(gen_sub)} cells)")
     ax.set_xlabel("UMAP 1")
@@ -174,19 +174,19 @@ def plot_real_vs_generated(
                     c=[color], s=6, alpha=0.35, marker="^", rasterized=True,
                 )
         # Dummy handles for legend
-        ax.scatter([], [], c="gray", s=20, marker="o", label="Real")
-        ax.scatter([], [], c="gray", s=20, marker="^", label="Generated")
+        ax.scatter([], [], c=COLORS["real"], s=20, marker="o", label="Real")
+        ax.scatter([], [], c=COLORS["generated"], s=20, marker="^", label="Generated")
     else:
         ax.scatter(
             real_c[:, 0], real_c[:, 1],
-            c="#2196F3", s=3, alpha=0.25, label="Real", rasterized=True,
+            c=COLORS["real"], s=3, alpha=0.25, label="Real", rasterized=True,
         )
         ax.scatter(
             gen_c[:, 0], gen_c[:, 1],
-            c="#FF5722", s=3, alpha=0.25, marker="^",
+            c=COLORS["generated"], s=3, alpha=0.25, marker="^",
             label="Generated", rasterized=True,
         )
-    ax.legend(markerscale=3, fontsize=9, frameon=False, loc="upper right")
+    ax.legend(markerscale=3, fontsize=FONT_LEGEND, frameon=False, loc="upper right")
     ax.set_title("Type-Coloured Overlay", fontsize=11)
     ax.set_xlabel("UMAP 1", fontsize=10)
     ax.set_ylabel("UMAP 2", fontsize=10)
