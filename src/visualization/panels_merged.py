@@ -261,6 +261,10 @@ def plot_fidelity_and_alignment_merged(
 
     Top row (G): Per-type generation fidelity
     Bottom row (F): Text-cell alignment
+
+    Composed via PIL image stack; save_panel_fn (or save_with_vcd) produces
+    both PNG and PDF. For vector output, a future refactor could use a
+    single Matplotlib GridSpec (2 rows) instead of raster composition.
     """
     fig_g = plot_per_type_generation(
         metrics_path=metrics_path,

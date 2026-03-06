@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from . import io as viz_io
-from .style import FONT_LEGEND, add_colorbar_safe, set_dense_tick_labels, set_figure_suptitle
+from .style import COLORS, FONT_LEGEND, add_colorbar_safe, quality_color, set_dense_tick_labels, set_figure_suptitle
 from src.utils.paths import FIG_DIR
 
 logger = logging.getLogger(__name__)
@@ -136,16 +136,8 @@ def plot_text_cell_heatmap(
     d_asc = diag[sorted_idx_asc]
     labels_asc = [labels[i] for i in sorted_idx_asc]
 
-    color_map = []
-    for v in d_asc:
-        if v >= 0.9:
-            color_map.append("#2E7D32")
-        elif v >= 0.7:
-            color_map.append("#4CAF50")
-        elif v >= 0.5:
-            color_map.append("#FF9800")
-        else:
-            color_map.append("#D32F2F")
+    # Thresholds (0.9, 0.7): alignment quality bands per FIGURE_PRESENTATION_POLICY
+    color_map = [quality_color(v, (0.9, 0.7)) for v in d_asc]
     ax2.barh(range(n_types), d_asc, color=color_map, height=0.8,
              edgecolor="white", linewidth=0.3)
     ax2.set_yticks(range(n_types))
@@ -154,7 +146,7 @@ def plot_text_cell_heatmap(
     ax2.set_yticklabels(_ytl2, fontsize=8, ha="right")
     set_dense_tick_labels(ax2, axis="y", max_labels=10, fontsize=8, rotation=0)
     ax2.set_title("Per-Type Alignment", fontsize=11)
-    ax2.axvline(x=mean_diag, color="#D32F2F", linestyle="--", alpha=0.7, linewidth=1.5)
+    ax2.axvline(x=mean_diag, color=COLORS["bad"], linestyle="--", alpha=0.7, linewidth=1.5)
     ax2.set_xlim(0, 1.05)
 
     # ── F3: Distribution comparison ──
@@ -278,17 +270,13 @@ def plot_per_type_generation(
     sorted_cos = [cosines[i] for i in sorted_idx]
     sorted_names_cos = [short_names[i] for i in sorted_idx]
     sorted_type_ids = [type_ids[i] for i in sorted_idx]
+    # Thresholds (0.9, 0.7): centroid cosine quality bands per FIGURE_PRESENTATION_POLICY
     colors = []
     for v, t_id in zip(sorted_cos, sorted_type_ids):
         if t_id is not None and int(t_id) in collapsed_type_ids:
-            colors.append("#B71C1C")
+            colors.append(COLORS["bad"])
         else:
-            if v > 0.9:
-                colors.append("#4CAF50")
-            elif v > 0.7:
-                colors.append("#FF9800")
-            else:
-                colors.append("#F44336")
+            colors.append(quality_color(v, (0.9, 0.7)))
     ax.barh(range(len(sorted_cos)), sorted_cos, color=colors, height=0.8)
     ax.set_yticks(range(len(sorted_cos)))
     _ytlg = [
@@ -300,7 +288,7 @@ def plot_per_type_generation(
     ax.set_xlabel("Centroid Cosine Similarity")
     ax.set_title("Real\u2194Gen Centroid Cosine")
     ax.axvline(
-        x=summary.get("mean_centroid_cosine", 0), color="red",
+        x=summary.get("mean_centroid_cosine", 0), color=COLORS["bad"],
         linestyle="--", alpha=0.5,
         label="mean (see caption)",
     )
@@ -321,7 +309,7 @@ def plot_per_type_generation(
         ax.hlines(y_pos, 0, fd_vals, color=colors_fd, linewidth=2.8, alpha=0.85)
         ax.scatter(fd_vals, y_pos, s=28 + 70 * fd_norm, color=colors_fd, edgecolors="white", linewidths=0.4, zorder=3)
         if np.isfinite(fd_mean):
-            ax.axvline(fd_mean, color="#D32F2F", linestyle="--", alpha=0.7, linewidth=1.5, label="mean (see caption)")
+            ax.axvline(fd_mean, color=COLORS["bad"], linestyle="--", alpha=0.7, linewidth=1.5, label="mean (see caption)")
         ax.set_yticks(y_pos)
         ax.set_yticklabels([fd_names[i] if i % 7 == 0 else "" for i in range(len(fd_vals))], fontsize=8, ha="right")
         set_dense_tick_labels(ax, axis="y", max_labels=10, fontsize=8, rotation=0)
@@ -388,7 +376,7 @@ def plot_per_type_generation(
     ax.set_xlabel("log10(Number of Real Cells)")
     ax.set_ylabel("Centroid Cosine Similarity")
     ax.set_title("Fidelity vs Abundance")
-    ax.axhline(y=0.9, color="green", linestyle=":", alpha=0.4, label="Target (0.9)")
+    ax.axhline(y=0.9, color=COLORS["good"], linestyle=":", alpha=0.4, label="Target (0.9)")
     ax.legend(fontsize=FONT_LEGEND, frameon=False, loc="upper left")
     from matplotlib.ticker import MaxNLocator
     ax.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))

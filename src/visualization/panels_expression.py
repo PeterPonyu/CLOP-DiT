@@ -21,7 +21,7 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import COLORS, save_with_vcd, style_axes
+from .style import COLORS, add_colorbar_safe, quality_color, save_with_vcd, set_figure_suptitle, style_axes
 
 logger = logging.getLogger(__name__)
 
@@ -104,7 +104,8 @@ def plot_expression_correlation(
 
     fig = plt.figure(figsize=(11.2, 7.8))
     gs = fig.add_gridspec(2, 2, wspace=0.62, hspace=0.56)
-    fig.suptitle(
+    set_figure_suptitle(
+        fig,
         f"Gene Expression Recovery \u2014 r={pearson_r:.6f}, "
         f"\u03c1={spearman_rho:.6f}, n={len(gene_names)}",
         fontsize=11,
@@ -121,7 +122,7 @@ def plot_expression_correlation(
     ax1.plot([lo, hi], [lo, hi], color=COLORS["bad"], linestyle="--", lw=1.5,
              alpha=0.7, label="y = x", zorder=1)
     ax1.fill_between([lo, hi], [lo - 0.1, hi - 0.1], [lo + 0.1, hi + 0.1],
-                     alpha=0.06, color="#4CAF50", zorder=0)
+                     alpha=0.06, color=COLORS["good"], zorder=0)
     ax1.set_xlabel("Real Mean Expression", fontsize=10)
     ax1.set_ylabel("Generated Mean Expression", fontsize=10)
     ax1.set_title("Per-Gene Correlation", fontsize=11)
@@ -129,8 +130,7 @@ def plot_expression_correlation(
     from matplotlib.ticker import MaxNLocator as _MaxNLoc
     ax1.xaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
     ax1.yaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
-    cbar = plt.colorbar(sc, ax=ax1, orientation="vertical", shrink=0.78, pad=0.03, aspect=24)
-    cbar.set_label("|Resid|", fontsize=10)
+    cbar = add_colorbar_safe(sc, ax=ax1, label="|Resid|", shrink=0.78, pad=0.03, aspect=24)
     cbar.ax.tick_params(labelsize=8)
     cbar.ax.xaxis.set_major_locator(_MaxNLoc(nbins=2, prune="both"))
 
@@ -168,15 +168,15 @@ def plot_expression_correlation(
         ax2.axvspan(0.999, 0.9999, alpha=0.08, color=COLORS["warn"])
         ax2.axvspan(min_r - 0.001, 0.999, alpha=0.08, color=COLORS["bad"])
 
-        colors_h2 = [COLORS["good"] if r > 0.9999 else COLORS["warn"] if r > 0.999 else COLORS["bad"]
-                     for r in type_rs]
+        # Pearson r thresholds (0.9999, 0.999) per FIGURE_PRESENTATION_POLICY
+        colors_h2 = [quality_color(r, (0.9999, 0.999)) for r in type_rs]
         ax2.hlines(y_pos, min_r - 0.0005, type_rs, color="#DDD", linewidth=0.8, zorder=1)
         ax2.scatter(type_rs, y_pos, c=colors_h2, s=30, zorder=3, edgecolors="white",
                     linewidths=0.5)
         ax2.set_yticks(y_pos)
         ax2.set_yticklabels(short_names, fontsize=8, ha="right")
         ax2.axvline(x=mean_r, color=COLORS["bad"], linestyle="--", alpha=0.6, linewidth=1.5,
-                    label=f"mean={mean_r:.6f}")
+                    label="mean (see caption)")
         ax2.set_xlim(min_r - 0.0005, 1.00005)
         ax2.set_xlabel("Pearson r", fontsize=10)
         ax2.legend(
@@ -330,12 +330,12 @@ def plot_expression_analysis(
 
     fig = plt.figure(figsize=(9.8, 7.4))
     gs = fig.add_gridspec(2, 2, wspace=0.58, hspace=0.56)
-    fig.suptitle(
+    set_figure_suptitle(
+        fig,
         f"Expression Decoder \u2014 "
         f"{real.shape[0]} real, {gen.shape[0]} gen, "
         f"{len(gene_names)} genes",
         fontsize=11,
-        y=0.98,
     )
 
     # -- I1: CV scatter (real vs gen) with gene labels --
@@ -354,11 +354,10 @@ def plot_expression_analysis(
     ax1.set_xlabel("Real CV (std/|mean|)", fontsize=10)
     ax1.set_ylabel("Generated CV", fontsize=10)
     ax1.set_title("Per-Gene Variability (CV)", fontsize=11)
-    cbar = plt.colorbar(sc, ax=ax1, shrink=0.8, pad=0.02)
-    cbar.set_label("|\u0394CV|", fontsize=10)
+    add_colorbar_safe(sc, ax=ax1, label="|\u0394CV|", shrink=0.8, pad=0.02)
 
-    # Annotate top 3 divergent genes (reduced to limit overlap)
-    top_cv_idx = np.argsort(cv_diff)[-3:]
+    # Annotate top 2 divergent genes (annotation budget: at most two per subplot)
+    top_cv_idx = np.argsort(cv_diff)[-2:]
     for i in top_cv_idx:
         if i < len(gene_names):
             ax1.annotate(gene_names[i], (real_cv[i], gen_cv[i]),
@@ -367,7 +366,10 @@ def plot_expression_analysis(
                          color="#333")
 
     cv_corr = np.corrcoef(real_cv, gen_cv)[0, 1]
-    ax1.legend(fontsize=8, title=f"CV corr = {cv_corr:.4f}", title_fontsize=8, frameon=False)
+    ax1.legend(fontsize=8, frameon=False)
+    ax1.text(0.98, 0.02, f"CV corr = {cv_corr:.4f}", transform=ax1.transAxes,
+             ha="right", va="bottom", fontsize=8,
+             bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="#999", alpha=0.9))
     from matplotlib.ticker import MaxNLocator
     ax1.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
     ax1.yaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
@@ -450,13 +452,12 @@ def plot_expression_analysis(
     ratios_show = clipped_ratio[top_diff_idx]
     names_show = [gene_names[i] if i < len(gene_names) else f"G{i}"
                   for i in top_diff_idx]
-    colors_i4 = [COLORS["bad"] if r < 0.7 else COLORS["warn"] if r < 0.9 else
-                  COLORS["good"] if r <= 1.1 else COLORS["warn"] if r <= 1.3 else COLORS["bad"]
-                  for r in ratios_show]
+    # Std ratio thresholds (0.9, 1.1) good band; (0.7, 0.9)/(1.1, 1.3) warn
+    colors_i4 = [quality_color(min(r, 1 / (r + 1e-8)), (0.9, 0.7)) for r in ratios_show]
     ax4.barh(range(n_show), ratios_show, color=colors_i4, height=0.7,
              edgecolor="white", linewidth=0.3)
     ax4.axvline(x=1.0, color="#333", linestyle="-", linewidth=1.5)
-    ax4.axvspan(0.9, 1.1, alpha=0.08, color="green")
+    ax4.axvspan(0.9, 1.1, alpha=0.08, color=COLORS["good"])
     ax4.set_yticks(range(n_show))
     ax4.set_yticklabels(names_show, fontsize=9, ha="right")
     ax4.set_xlabel("Std Ratio (Gen / Real, clipped at 5\u00d7)", fontsize=10)
@@ -569,6 +570,7 @@ def plot_marker_gene_comparison(
 
     fig = plt.figure(figsize=(11.0, 7.5))
     gs = fig.add_gridspec(2, 2, wspace=0.60, hspace=0.50)
+    set_figure_suptitle(fig, "Marker Gene Comparison", fontsize=11)
 
     # -- N1: Paired bars with error whiskers and category coloring --
     ax1 = fig.add_subplot(gs[0, 0])
@@ -592,7 +594,7 @@ def plot_marker_gene_comparison(
         fc = gen_marker_means[i] / (real_marker_means[i] + 1e-8)
         # Only annotate fc when noticeably different from 1.0
         if abs(fc - 1.0) > 0.02:
-            color_fc = "#2E7D32" if 0.95 <= fc <= 1.05 else "#D32F2F"
+            color_fc = COLORS["good"] if 0.95 <= fc <= 1.05 else COLORS["bad"]
             ax1.text(i, max(real_marker_means[i], gen_marker_means[i]) +
                      max(real_marker_stds[i], gen_marker_stds[i]) * 0.3 + 0.005,
                      f"{fc:.3f}\u00d7", ha="center", fontsize=8, color=color_fc)
@@ -647,7 +649,7 @@ def plot_marker_gene_comparison(
         ax2.text(n_markers + 0.5 + n_markers / 2 - 0.5, -1.2, "Generated",
                  ha="center", fontsize=10, color="#FF7043")
 
-        fig.colorbar(im, ax=ax2, shrink=0.6, label="Expr.", pad=0.05)
+        add_colorbar_safe(im, ax=ax2, label="Expr.", shrink=0.6, pad=0.05)
 
         # N3: Difference heatmap with significance
         ax3 = fig.add_subplot(gs[1, 0])
@@ -662,7 +664,7 @@ def plot_marker_gene_comparison(
         ax3.set_xticks(range(n_markers))
         ax3.set_xticklabels(all_marker_genes, fontsize=10, rotation=90, ha="center")
         ax3.set_title("\u0394 Expression (Gen \u2212 Real)", fontsize=10)
-        fig.colorbar(im3, ax=ax3, shrink=0.6, label="\u0394", pad=0.12)
+        add_colorbar_safe(im3, ax=ax3, label="\u0394", shrink=0.6, pad=0.12)
         # Only annotate cells with large differences
         for i in range(n_sel_types):
             for j in range(n_markers):
@@ -683,7 +685,7 @@ def plot_marker_gene_comparison(
         bars = ax4.barh(range(n_markers), fc_sorted - 1.0, left=1.0,
                         color=fc_colors, height=0.6, edgecolor="white")
         ax4.axvline(x=1.0, color="#333", linewidth=1.5, linestyle="-")
-        ax4.axvspan(0.95, 1.05, alpha=0.1, color="green")
+        ax4.axvspan(0.95, 1.05, alpha=0.1, color=COLORS["good"])
         ax4.set_yticks(range(n_markers))
         ax4.set_yticklabels([f"{n} ({c})" for n, c in zip(names_sorted, cats_sorted)],
                             fontsize=8)
