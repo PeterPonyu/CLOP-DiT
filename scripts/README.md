@@ -26,6 +26,8 @@
 | `06_cell2cell_inference.py` | Cell2Cell inference |
 | `07_marker_gene_analysis.py` | Marker gene visualization |
 | `08_biological_validation.py` | Biological validation metrics |
+| `run_robustness_experiments.py` | Seed/subsample/prompt robustness experiment planner/executor |
+| `run_downstream_for_baselines.py` | Re-run downstream biology for every baseline with expression artifacts |
 
 ### Phase 4: Evaluation & Publication Pipeline (Current)
 
@@ -48,6 +50,15 @@ This orchestrates:
 | 6 | `src.evaluation.model_benchmarking` | Panel S (composite benchmark) |
 | 7 | `src.visualization.results_visualizer` | All panels A–S + 5 merged figures + PDF report |
 
+### Baselines
+
+Learned and external baseline adapters live in `scripts/baselines/`.
+
+| Script | Purpose |
+|--------|---------|
+| `baselines/train_embedding_vae_baseline.py` | Train a lightweight learned baseline in the shared scGPT embedding space |
+| `baselines/train_scvi_baseline.py` | Prepare an scVI latent baseline and write metadata/artifact contract files |
+
 ### Legacy / Archived Scripts
 
 Scripts in `scripts/archive/` are from earlier development phases and are **not** part of the current pipeline:
@@ -57,6 +68,8 @@ Scripts in `scripts/archive/` are from earlier development phases and are **not*
 | `15_final_verified_evaluation.py` | Superseded by `regenerate_report.sh` step 7 |
 | `16_publication_figures.py` | Superseded by `results_visualizer` |
 | `17_baseline_comparison.py` | Superseded by `model_benchmarking` |
+
+**Figure cleanup:** `bash scripts/remove_outdated_figures.sh` removes legacy outputs (fig1_*–fig5_*, visual_conflict_report.json) from `results/figures/` if present. See docs/FIGURE_ORGANIZATION.md.
 
 ### Auxiliary
 | Script | Purpose |

@@ -1,6 +1,7 @@
 # run.py — Main entry for biological validation (figures 1–4 and metrics).
 from __future__ import annotations
 
+import csv
 import json
 import logging
 from pathlib import Path
@@ -11,6 +12,7 @@ import scanpy as sc
 import anndata as ad
 
 from src.utils.logging_config import setup_logging
+from src.utils.helpers import seed_everything
 from src.utils.paths import PROJECT_ROOT
 from src.architecture.decoder import ScGPTDecoder
 
@@ -21,6 +23,48 @@ from .figures import figure1_text2cell_multi, figure2_cell2cell, figure3_celltyp
 logger = logging.getLogger(__name__)
 
 SCRIPTS_DIR = PROJECT_ROOT / "scripts"
+
+
+def _write_dataset_tables(metrics: Dict, output_dir: Path) -> None:
+    """Write per-dataset tables for reviewer-facing inspection."""
+    text2cell = metrics.get("text2cell_multi", {}).get("datasets", {})
+    if text2cell:
+        metric_keys = [
+            "gene_mean_pearson",
+            "gene_mean_R2",
+            "gene_var_pearson",
+            "FD_gene_pca50",
+            "FD_scgpt_embedding",
+            "marker_specificity_real",
+            "marker_specificity_generated",
+        ]
+        rows = []
+        for label, row_metrics in text2cell.items():
+            row = {"dataset": label}
+            for key in metric_keys:
+                row[key] = row_metrics.get(key)
+            rows.append(row)
+
+        with open(output_dir / "text2cell_per_dataset.json", "w") as f:
+            json.dump(rows, f, indent=2)
+
+        with open(output_dir / "text2cell_per_dataset.csv", "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=["dataset", *metric_keys])
+            writer.writeheader()
+            writer.writerows(rows)
+
+    per_ds_match = metrics.get("celltypist", {}).get("per_dataset_match_rate")
+    if per_ds_match:
+        match_rows = [
+            {"dataset": label, "celltypist_match_rate": value}
+            for label, value in per_ds_match.items()
+        ]
+        with open(output_dir / "celltypist_per_dataset.json", "w") as f:
+            json.dump(match_rows, f, indent=2)
+        with open(output_dir / "celltypist_per_dataset.csv", "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=["dataset", "celltypist_match_rate"])
+            writer.writeheader()
+            writer.writerows(match_rows)
 
 
 def main():
@@ -48,6 +92,7 @@ def main():
     parser.add_argument("--text_encoder", default="microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract")
     parser.add_argument("--celltypist_model", default="Human_Lung_Atlas.pkl")
     parser.add_argument("--device", default="cuda")
+    parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--skip_figure1", action="store_true")
     parser.add_argument("--skip_figure2", action="store_true")
     parser.add_argument("--skip_figure3", action="store_true")
@@ -55,6 +100,7 @@ def main():
     args = parser.parse_args()
 
     setup_logging()
+    seed_everything(args.seed)
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -98,6 +144,26 @@ def main():
             "fake_adata": fake,
             "real_adata": real,
         })
+
+    metrics["run_config"] = {
+        "seed": args.seed,
+        "num_cells_per_type": args.num_cells_per_type,
+        "num_steps": args.num_steps,
+        "cfg_scale": args.cfg_scale,
+        "edit_strength": args.edit_strength,
+        "prompt_top_k": args.prompt_top_k,
+        "prompt_min_conf": args.prompt_min_conf,
+        "max_datasets": args.max_datasets,
+    }
+    metrics["dataset_manifest"] = [
+        {
+            "label": ds["label"],
+            "dataset_key": ds["dataset_key"],
+            "reference_h5ad": ds["reference_h5ad"],
+            "n_prompt_types": len(ds["prompts"]),
+        }
+        for ds in dataset_runs
+    ]
 
     if not args.skip_figure1:
         figure1_text2cell_multi(dataset_runs, scgpt, output_dir, metrics)
@@ -147,5 +213,6 @@ def main():
     metrics_path = output_dir / "metrics_summary.json"
     with open(metrics_path, "w") as f:
         json.dump(metrics, f, indent=2, default=str)
+    _write_dataset_tables(metrics, output_dir)
     logger.info(f"Metrics saved -> {metrics_path}")
     logger.info("=== Validation complete ===")

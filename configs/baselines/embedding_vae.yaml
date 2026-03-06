@@ -1,0 +1,11 @@
+embeddings: data/cached_latents_v5.2/cell_embeddings_dedup_preprocessed.npy
+labels: data/cached_latents_v5.2/text_group_ids_dedup.npy
+output_dir: results/baselines/embedding_vae
+epochs: 60
+batch_size: 1024
+hidden_dim: 512
+latent_dim: 64
+beta: 0.01
+lr: 0.001
+num_per_type: 100
+seed: 42

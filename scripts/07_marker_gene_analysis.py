@@ -27,6 +27,7 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.utils.logging_config import setup_logging
+from src.visualization.style import apply_style, save_with_vcd
 
 logger = logging.getLogger(__name__)
 
@@ -240,8 +241,7 @@ def plot_marker_violin_grid(
     )
     plt.tight_layout()
     safe_name = ct_name.replace(" ", "_").replace("/", "_").replace("+", "plus")
-    fig.savefig(output_dir / f"markers_{safe_name}.png", dpi=200, bbox_inches="tight")
-    plt.close()
+    save_with_vcd(fig, output_dir / f"markers_{safe_name}.png", dpi=200, close=True)
     logger.info(f"  Saved: markers_{safe_name}.png ({n_markers} markers, {n_rows}x{n_cols} grid)")
 
 
@@ -324,8 +324,7 @@ def plot_cross_celltype_heatmap(
         cumulative += 1
 
     plt.tight_layout()
-    fig.savefig(output_dir / "marker_heatmap_cross_celltype.png", dpi=200, bbox_inches="tight")
-    plt.close()
+    save_with_vcd(fig, output_dir / "marker_heatmap_cross_celltype.png", dpi=200, close=True)
     logger.info(f"  Saved: marker_heatmap_cross_celltype.png ({len(all_markers_unique)} markers)")
 
 
@@ -378,8 +377,7 @@ def plot_celltype_umap(real_expr, gen_expr_dict, output_dir):
                    c=color, label=label, marker=marker,
                    alpha=alpha, s=size, edgecolors="white", linewidths=0.3)
 
-    ax.legend(bbox_to_anchor=(1.05, 1), loc="upper left", fontsize=9,
-              frameon=True, fancybox=True, shadow=True)
+    ax.legend(bbox_to_anchor=(1.05, 1), loc="upper left", fontsize=9, frameon=False)
     ax.set_xlabel("UMAP-1", fontsize=11)
     ax.set_ylabel("UMAP-2", fontsize=11)
     ax.set_title("Cell Type Discrimination in Decoded Gene Expression Space\n"
@@ -388,8 +386,7 @@ def plot_celltype_umap(real_expr, gen_expr_dict, output_dir):
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     plt.tight_layout()
-    fig.savefig(output_dir / "celltype_discrimination_umap.png", dpi=200, bbox_inches="tight")
-    plt.close()
+    save_with_vcd(fig, output_dir / "celltype_discrimination_umap.png", dpi=200, close=True)
     logger.info(f"  Saved: celltype_discrimination_umap.png")
 
 
@@ -453,8 +450,7 @@ def plot_discriminative_genes_grid(gene_names, gen_expr_dict, output_dir, max_co
                  "(log₂ fold change vs pooled other types)",
                  fontweight="bold", fontsize=13, y=1.02)
     plt.tight_layout()
-    fig.savefig(output_dir / "discriminative_genes.png", dpi=200, bbox_inches="tight")
-    plt.close()
+    save_with_vcd(fig, output_dir / "discriminative_genes.png", dpi=200, close=True)
     logger.info(f"  Saved: discriminative_genes.png ({n_rows}x{n_cols} grid)")
 
 
@@ -521,8 +517,7 @@ def plot_distribution_comparison(
                  "(density histograms overlaid for key markers)",
                  fontweight="bold", fontsize=13, y=1.02)
     plt.tight_layout()
-    fig.savefig(output_dir / "distribution_comparison.png", dpi=200, bbox_inches="tight")
-    plt.close()
+    save_with_vcd(fig, output_dir / "distribution_comparison.png", dpi=200, close=True)
     logger.info(f"  Saved: distribution_comparison.png ({len(key_markers)} markers)")
 
 
@@ -586,8 +581,7 @@ def plot_correlation_scatter(real_expr, gen_expr_dict, gene_names, output_dir, m
                  "(per-gene mean expression across cells)",
                  fontweight="bold", fontsize=13, y=1.02)
     plt.tight_layout()
-    fig.savefig(output_dir / "correlation_scatter.png", dpi=200, bbox_inches="tight")
-    plt.close()
+    save_with_vcd(fig, output_dir / "correlation_scatter.png", dpi=200, close=True)
     logger.info(f"  Saved: correlation_scatter.png")
 
 
@@ -604,6 +598,7 @@ def main():
     args = parser.parse_args()
 
     setup_logging()
+    apply_style()
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 

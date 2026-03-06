@@ -459,7 +459,13 @@ def de_concordance(
 def run_all_downstream(
     type_names: Optional[Dict[int, str]] = None,
     output_dir: str = "results/downstream",
+    output_prefix: str = "",
     contrasts: Optional[List[Tuple[str, str]]] = None,
+    real_expr_path: str = "results/real_expression.npy",
+    gen_expr_path: str = "results/generated_expression.npy",
+    real_labels_path: str = "results/real_expression_labels.npy",
+    gen_labels_path: str = "results/generated_expression_labels.npy",
+    gene_names_path: str = "results/expression_gene_names.json",
 ) -> Dict[str, Dict]:
     """Run full downstream biology pipeline and save JSON summaries.
 
@@ -476,7 +482,12 @@ def run_all_downstream(
 
     # Build AnnData
     adata_real, adata_gen, adata_combined = build_matched_adata(
-        type_names=type_names
+        real_expr_path=real_expr_path,
+        gen_expr_path=gen_expr_path,
+        real_labels_path=real_labels_path,
+        gen_labels_path=gen_labels_path,
+        gene_names_path=gene_names_path,
+        type_names=type_names,
     )
 
     # Shared preprocessing for DE (log-space needed for Wilcoxon)
@@ -489,6 +500,7 @@ def run_all_downstream(
     sc.pp.log1p(adata_gen_de)
 
     all_results = {}
+    prefix = f"{output_prefix}_" if output_prefix and not output_prefix.endswith("_") else output_prefix
 
     # 1. Clustering
     logger.info("\n── Clustering alignment ──")
@@ -496,16 +508,16 @@ def run_all_downstream(
         clust = clustering_alignment(adata_combined)
         # Save serialisable subset
         save_clust = {k: v for k, v in clust.items() if not k.startswith("_")}
-        with open(out / "clustering_alignment.json", "w") as f:
+        with open(out / f"{prefix}clustering_alignment.json", "w") as f:
             json.dump(save_clust, f, indent=2)
         # Save arrays for plotting (UMAP coords, labels)
         if "_umap_coords" in clust:
-            np.save(out / "clustering_umap_coords.npy", clust["_umap_coords"])
-            np.save(out / "clustering_source.npy", clust["_source"])
-            np.save(out / "clustering_cell_type.npy", clust["_cell_type"])
-            np.save(out / "clustering_leiden.npy", clust["_leiden"])
+            np.save(out / f"{prefix}clustering_umap_coords.npy", clust["_umap_coords"])
+            np.save(out / f"{prefix}clustering_source.npy", clust["_source"])
+            np.save(out / f"{prefix}clustering_cell_type.npy", clust["_cell_type"])
+            np.save(out / f"{prefix}clustering_leiden.npy", clust["_leiden"])
         all_results["clustering"] = clust
-        logger.info(f"Saved → {out / 'clustering_alignment.json'}")
+        logger.info(f"Saved → {out / f'{prefix}clustering_alignment.json'}")
     except Exception as e:
         logger.error(f"Clustering failed: {e}")
 
@@ -520,10 +532,10 @@ def run_all_downstream(
         if "_disc_proba" in classif:
             save_classif["disc_proba"] = classif["_disc_proba"]
             save_classif["disc_y"] = classif["_disc_y"]
-        with open(out / "classifier_alignment.json", "w") as f:
+        with open(out / f"{prefix}classifier_alignment.json", "w") as f:
             json.dump(save_classif, f, indent=2)
         all_results["classifier"] = classif
-        logger.info(f"Saved → {out / 'classifier_alignment.json'}")
+        logger.info(f"Saved → {out / f'{prefix}classifier_alignment.json'}")
     except Exception as e:
         logger.error(f"Classifier failed: {e}")
 
@@ -534,10 +546,10 @@ def run_all_downstream(
         save_de = {}
         for k, v in de_results.items():
             save_de[k] = {kk: vv for kk, vv in v.items()}  # keep all keys for JSON
-        with open(out / "de_concordance.json", "w") as f:
+        with open(out / f"{prefix}de_concordance.json", "w") as f:
             json.dump(save_de, f, indent=2)
         all_results["de"] = de_results
-        logger.info(f"Saved → {out / 'de_concordance.json'}")
+        logger.info(f"Saved → {out / f'{prefix}de_concordance.json'}")
     except Exception as e:
         logger.error(f"DE concordance failed: {e}")
 
@@ -558,11 +570,23 @@ def main():
 
     parser = argparse.ArgumentParser(description="Run downstream biological analysis")
     parser.add_argument("--output-dir", default=None)
+    parser.add_argument("--output-prefix", default="")
     parser.add_argument("--caption-json", default=None)
+    parser.add_argument("--real-expr-path", default=None)
+    parser.add_argument("--gen-expr-path", default=None)
+    parser.add_argument("--real-labels-path", default=None)
+    parser.add_argument("--gen-labels-path", default=None)
+    parser.add_argument("--gene-names-path", default=None)
+    parser.add_argument("--contrasts-json", default=None)
     args = parser.parse_args()
 
     args.output_dir = args.output_dir or str(RESULTS_DIR / "downstream")
     args.caption_json = args.caption_json or str(CACHE_DIR / "text_captions_deduplicated.json")
+    args.real_expr_path = args.real_expr_path or str(RESULTS_DIR / "real_expression.npy")
+    args.gen_expr_path = args.gen_expr_path or str(RESULTS_DIR / "generated_expression.npy")
+    args.real_labels_path = args.real_labels_path or str(RESULTS_DIR / "real_expression_labels.npy")
+    args.gen_labels_path = args.gen_labels_path or str(RESULTS_DIR / "generated_expression_labels.npy")
+    args.gene_names_path = args.gene_names_path or str(RESULTS_DIR / "expression_gene_names.json")
 
     # Load type names
     type_names = {}
@@ -574,7 +598,22 @@ def main():
             name = v.split(" are ")[0] if " are " in v else v[:50]
             type_names[int(k)] = name
 
-    run_all_downstream(type_names=type_names, output_dir=args.output_dir)
+    contrasts = None
+    if args.contrasts_json:
+        with open(args.contrasts_json) as f:
+            contrasts = [tuple(item) for item in json.load(f)]
+
+    run_all_downstream(
+        type_names=type_names,
+        output_dir=args.output_dir,
+        output_prefix=args.output_prefix,
+        contrasts=contrasts,
+        real_expr_path=args.real_expr_path,
+        gen_expr_path=args.gen_expr_path,
+        real_labels_path=args.real_labels_path,
+        gen_labels_path=args.gen_labels_path,
+        gene_names_path=args.gene_names_path,
+    )
 
 
 if __name__ == "__main__":

@@ -1,0 +1,7 @@
+expression: results/real_expression.npy
+labels: results/real_expression_labels.npy
+gene_names: results/expression_gene_names.json
+output_dir: results/baselines/scvi_latent
+latent_dim: 32
+epochs: 200
+seed: 42
