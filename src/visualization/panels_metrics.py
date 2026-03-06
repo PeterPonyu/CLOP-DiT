@@ -159,13 +159,13 @@ def plot_diversity_distributions_violin(
     parts["cmedians"].set_color("#222222")
     parts["cmedians"].set_linewidth(1.1)
 
-    ax.scatter(mean_points_x, mean_points_y, s=20, c=mean_points_c, edgecolors="white", linewidths=0.5, zorder=4)
+    ax.scatter(mean_points_x, mean_points_y, s=20, c=mean_points_c, edgecolors="white", linewidths=0.5, zorder=4, clip_on=False)
     ax.set_xticks(xtick_positions)
     ax.set_xticklabels(xtick_labels, rotation=25, ha="right", fontsize=8)
     ax.set_ylabel("Pairwise Cosine Similarity")
     ax.set_title("Diversity Distribution Tails (most shifted cell types)")
     ax.grid(True, axis="y", alpha=0.22)
-    ax.set_ylim(-0.15, 0.25)
+    ax.set_ylim(-0.15, 0.30)
     ax.text(
         0.01,
         0.98,

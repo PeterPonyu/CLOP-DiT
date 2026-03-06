@@ -369,6 +369,7 @@ def plot_per_type_generation(
             alpha=0.78,
             edgecolors="white",
             linewidth=0.6,
+            clip_on=False,
         )
         cbar = fig.colorbar(sc, ax=ax, shrink=0.65, pad=0.03)
         cbar.set_label("Diversity ratio", fontsize=8)
@@ -382,6 +383,7 @@ def plot_per_type_generation(
             alpha=0.78,
             edgecolors="white",
             linewidth=0.6,
+            clip_on=False,
         )
 
     if len(x_vals) > 1:
@@ -389,12 +391,13 @@ def plot_per_type_generation(
         x_line = np.linspace(x_vals.min(), x_vals.max(), 100)
         ax.plot(x_line, slope * x_line + intercept, color="#263238", linestyle="--", linewidth=1.3, label=f"trend={slope:.2f}")
 
-    worst_idx = np.argsort(cos_array)[:4]
+    worst_idx = np.argsort(cos_array)[:3]
     for i in worst_idx:
         if cos_array[i] < 0.9:
+            x_offset = -28 if x_vals[i] > np.median(x_vals) else 5
             ax.annotate(
                 short_names[i][:12], (x_vals[i], cos_array[i]),
-                fontsize=8, xytext=(5, -5), textcoords="offset points",
+                fontsize=8, xytext=(x_offset, -5), textcoords="offset points",
             )
     ax.set_xlabel("log10(Number of Real Cells)")
     ax.set_ylabel("Centroid Cosine Similarity")
@@ -405,6 +408,7 @@ def plot_per_type_generation(
     ax.legend(fontsize=7, loc="lower right")
     from matplotlib.ticker import MaxNLocator
     ax.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
+    ax.set_xlim(x_vals.min() - 0.10, x_vals.max() + 0.10)
 
     fig.subplots_adjust(left=0.22, right=0.92)
 

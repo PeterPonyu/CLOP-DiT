@@ -98,17 +98,19 @@ def plot_de_concordance_panel(
         ax.axvline(0, color="#666", linestyle=":", linewidth=1.0, alpha=0.6)
 
         residuals = np.abs(gen_logfc - real_logfc) * np.maximum(effect_size, 1e-6)
-        top_idx = np.argsort(residuals)[-min(4, len(residuals)):]
-        for i in top_idx:
+        top_idx = np.argsort(residuals)[-min(3, len(residuals)):]
+        offsets = [(8, 8), (-12, 10), (10, -12)]
+        for label_idx, i in enumerate(top_idx):
             if i < len(shared_genes):
+                dx, dy = offsets[label_idx % len(offsets)]
                 ax.annotate(shared_genes[i], (real_logfc[i], gen_logfc[i]),
-                            fontsize=8, xytext=(8, 8), textcoords="offset points",
+                            fontsize=8, xytext=(dx, dy), textcoords="offset points",
                             arrowprops=dict(arrowstyle="->", lw=0.5, color="#555"),
                             color="#333")
 
         r_val = first.get("logfc_pearson_r", 0)
         sign_agreement = first.get("top_k_sign_agreement", 0)
-        ax.legend(fontsize=8, title=f"Pearson r = {r_val:.3f}\nSign = {sign_agreement:.3f}")
+        ax.legend(fontsize=8, title=f"Pearson r = {r_val:.3f}\nSign = {sign_agreement:.3f}", loc="upper left")
         fig.colorbar(sc, ax=ax, shrink=0.5, pad=0.08, label=cbar_label,
                      orientation="horizontal", aspect=20)
 

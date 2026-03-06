@@ -79,22 +79,6 @@ def _plot_classifier_metric_heatmap(
     ax.set_xlabel("Metric")
     ax.set_ylabel("Cell Type (sorted by F1)")
 
-    worst_idx = order[:3]
-    best_idx = order[-3:][::-1]
-    worst_text = ", ".join(f"{class_names[i][:16]}={summary['f1'][i]:.2f}" for i in worst_idx)
-    best_text = ", ".join(f"{class_names[i][:16]}={summary['f1'][i]:.2f}" for i in best_idx)
-    ax.text(
-        1.03,
-        0.02,
-        f"Worst F1: {worst_text}\nBest F1: {best_text}",
-        transform=ax.transAxes,
-        ha="left",
-        va="bottom",
-        fontsize=7,
-        color="#333",
-        bbox=dict(boxstyle="round,pad=0.25", fc="white", ec="#CCCCCC", alpha=0.95),
-    )
-
     cbar = fig.colorbar(im, ax=ax, shrink=0.55, pad=0.04, orientation="horizontal", aspect=24)
     cbar.set_label("Score", fontsize=8)
     cbar.ax.tick_params(labelsize=7)
@@ -185,13 +169,14 @@ def plot_classifier_panel(
         support = summary["support"]
         ax2.text(
             0.0,
-            1.02,
+            0.99,
             f"Median F1 = {np.median(f1):.3f}  |  Support median = {np.median(support):.0f}",
             transform=ax2.transAxes,
             ha="left",
-            va="bottom",
-            fontsize=8,
+            va="top",
+            fontsize=7,
             color="#444",
+            bbox=dict(boxstyle="round,pad=0.18", fc="white", ec="#DDDDDD", alpha=0.92),
         )
     else:
         ax2.text(0.5, 0.5, "No per-type data", ha="center", va="center",
@@ -215,7 +200,7 @@ def plot_classifier_panel(
         ax3.set_xlim(-0.02, 1.02)
         ax3.set_ylim(-0.02, 1.02)
         ax3.set_aspect("equal")
-        ax3.legend(fontsize=8, loc="lower right")
+        ax3.legend(fontsize=8, loc="lower left")
         from matplotlib.ticker import MaxNLocator
         ax3.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
         ax3.yaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))

@@ -18,6 +18,9 @@ import numpy as np
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+from src.utils.paths import CACHE_DIR, CHECKPOINT_DIR, RESULTS_DIR, LOG_DIR
+
 PYTHON = sys.executable
 
 
@@ -54,44 +57,17 @@ def evaluate_fold(fold_idx: int, ckpt_dir: Path, cache_dir: Path,
                   device: str = "cuda") -> dict:
     """Evaluate a single fold using saved checkpoints."""
     import torch
-    sys.path.insert(0, str(PROJECT_ROOT))
 
-    from src.architecture.clop import CLOPAligner
-    from src.architecture.dit import DiT1D
+    from src.evaluation.run_metrics import load_clop, load_dit
     from src.evaluation.metrics import GenerationMetrics
 
-    # Load CLOP
     clop_path = ckpt_dir / "clop_best.pth"
-    clop_ckpt = torch.load(clop_path, map_location=device, weights_only=False)
-    clop_cfg = clop_ckpt.get("config", {})
-    clop = CLOPAligner(
-        text_dim=clop_cfg.get("text_dim", 1024),
-        cell_dim=clop_cfg.get("cell_dim", 512),
-        proj_dim=clop_cfg.get("proj_dim", 256),
-        text_layers=clop_cfg.get("text_layers", 3),
-        cell_layers=clop_cfg.get("cell_layers", 3),
-        dropout=clop_cfg.get("dropout", 0.1),
-        use_batch_norm=clop_cfg.get("use_batch_norm", True),
-        label_smoothing=clop_cfg.get("label_smoothing", 0.1),
-    )
-    clop.load_state_dict(clop_ckpt["model_state_dict"])
-    clop.to(device).eval()
-
-    # Load DiT
     dit_path = ckpt_dir / "dit_best.pth"
+
+    clop, clop_cfg = load_clop(clop_path, device)
+    dit, _ = load_dit(dit_path, clop_config=clop_cfg, device=device)
+    clop_ckpt = torch.load(clop_path, map_location=device, weights_only=False)
     dit_ckpt = torch.load(dit_path, map_location=device, weights_only=False)
-    dit_cfg = dit_ckpt.get("config", {})
-    dit = DiT1D(
-        latent_dim=dit_cfg.get("latent_dim", 512),
-        hidden_dim=dit_cfg.get("hidden_dim", 384),
-        cond_dim=clop_cfg.get("proj_dim", 256),
-        num_tokens=dit_cfg.get("num_tokens", 16),
-    )
-    if "ema_state_dict" in dit_ckpt:
-        dit.load_state_dict(dit_ckpt["ema_state_dict"])
-    else:
-        dit.load_state_dict(dit_ckpt["model_state_dict"])
-    dit.to(device).eval()
 
     # Load real embeddings and encode prompts
     real_emb = np.load(cache_dir / "cell_embeddings.npy")
@@ -163,17 +139,17 @@ def main():
     parser.add_argument("--device", default="cuda")
     args = parser.parse_args()
 
-    cache_dir = PROJECT_ROOT / "data" / "cached_latents_v5.2"
-    results_dir = PROJECT_ROOT / "results" / "5fold_cv"
+    cache_dir = CACHE_DIR
+    results_dir = RESULTS_DIR / "5fold_cv"
     results_dir.mkdir(parents=True, exist_ok=True)
-    log_dir = PROJECT_ROOT / "logs" / "5fold_cv"
+    log_dir = LOG_DIR / "5fold_cv"
     log_dir.mkdir(parents=True, exist_ok=True)
 
     fold_results = {}
     total_start = time.time()
 
     for fold in range(args.n_folds):
-        fold_dir = PROJECT_ROOT / "models" / "checkpoints" / f"fold{fold}"
+        fold_dir = CHECKPOINT_DIR / f"fold{fold}"
         fold_dir.mkdir(parents=True, exist_ok=True)
 
         projected_text_path = fold_dir / "projected_text.npy"
@@ -189,6 +165,7 @@ def main():
             clop_cmd = [
                 PYTHON, "scripts/04a_train_clop.py",
                 "--config", args.clop_config,
+                "--cache_dir", str(cache_dir),
                 "--n_folds", str(args.n_folds),
                 "--fold_idx", str(fold),
                 "--save_dir", str(fold_dir),
@@ -214,6 +191,7 @@ def main():
             dit_cmd = [
                 PYTHON, "scripts/04b_train_dit.py",
                 "--config", args.dit_config,
+                "--cache_dir", str(cache_dir),
                 "--n_folds", str(args.n_folds),
                 "--fold_idx", str(fold),
                 "--save_dir", str(fold_dir),
@@ -256,9 +234,7 @@ def main():
         ]
         agg = {}
         for key in metric_keys:
-            values = [fold_results[f]["get"](key, 0.0) if isinstance(fold_results[f], dict)
-                      else 0.0 for f in fold_results]
-            values = [fold_results[f][key] for f in fold_results if key in fold_results[f]]
+            values = [fold_results[f].get(key, 0.0) for f in fold_results]
             if values:
                 agg[key] = {
                     "mean": float(np.mean(values)),

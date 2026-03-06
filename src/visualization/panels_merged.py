@@ -283,13 +283,14 @@ def plot_fidelity_and_alignment_merged(
         resized.append(im)
 
     total_h = sum(im.height for im in resized)
-    composite = Image.new("RGB", (max_w, total_h), "white")
-    y_off = 0
+    pad = max(24, dpi // 6)
+    composite = Image.new("RGB", (max_w + 2 * pad, total_h + 2 * pad), "white")
+    y_off = pad
     for im in resized:
-        composite.paste(im, (0, y_off))
+        composite.paste(im, (pad, y_off))
         y_off += im.height
 
-    fig_merged = plt.figure(figsize=(max_w / dpi, total_h / dpi), dpi=dpi)
+    fig_merged = plt.figure(figsize=((max_w + 2 * pad) / dpi, (total_h + 2 * pad) / dpi), dpi=dpi)
     ax = fig_merged.add_axes([0, 0, 1, 1])
     ax.imshow(np.array(composite))
     ax.axis("off")

@@ -41,6 +41,7 @@ sys.path.insert(0, str(ROOT))
 
 from src.utils.paths import (
     CACHE_DIR,
+    CHECKPOINT_DIR,
     RESULTS_DIR,
     FIG_DIR,
     ARTICLE_DIR,
@@ -82,9 +83,21 @@ def run_stage(stage: str, extra: list[str] | None = None) -> int:
     if stage == "preprocess":
         return run(["python", "scripts/03b_preprocess_embeddings.py", "--cache_dir", str(CACHE_DIR), *extra])
     if stage == "train_clop":
-        return run(["python", "scripts/04a_train_clop.py", "--config", "configs/clop.yaml", *extra])
+        return run([
+            "python", "scripts/04a_train_clop.py",
+            "--config", "configs/clop.yaml",
+            "--cache_dir", str(CACHE_DIR),
+            "--save_dir", str(CHECKPOINT_DIR),
+            *extra,
+        ])
     if stage == "train_dit":
-        return run(["python", "scripts/04b_train_dit.py", "--config", "configs/dit.yaml", *extra])
+        return run([
+            "python", "scripts/04b_train_dit.py",
+            "--config", "configs/dit.yaml",
+            "--cache_dir", str(CACHE_DIR),
+            "--save_dir", str(CHECKPOINT_DIR),
+            *extra,
+        ])
     if stage == "generate":
         return run([
             "python", "scripts/generate_embeddings.py",

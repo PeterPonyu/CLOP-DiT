@@ -169,13 +169,14 @@ def plot_clustering_and_classifier_merged(
         summary = _plot_classifier_metric_heatmap(fig, ax_q2, np.array(cm), class_names or [f"C{i}" for i in range(np.array(cm).shape[0])])
         ax_q2.text(
             0.0,
-            1.02,
+            0.99,
             f"Overall acc={gen_acc:.3f}  |  Median F1={np.median(summary['f1']):.3f}",
             transform=ax_q2.transAxes,
             ha="left",
-            va="bottom",
-            fontsize=8,
+            va="top",
+            fontsize=7,
             color="#444",
+            bbox=dict(boxstyle="round,pad=0.18", fc="white", ec="#DDDDDD", alpha=0.92),
         )
     else:
         ax_q2.text(0.5, 0.5, "No per-type data", ha="center", va="center",
@@ -197,7 +198,7 @@ def plot_clustering_and_classifier_merged(
         ax_q3.set_xticks([0.0, 0.25, 0.5, 0.75, 1.0])
         ax_q3.set_yticks([0.0, 0.25, 0.5, 0.75, 1.0])
         ax_q3.set_aspect("equal")
-        ax_q3.legend(fontsize=8, loc="lower right")
+        ax_q3.legend(fontsize=8, loc="lower left")
         style_axes(ax_q3, "scatter", title="Discriminator ROC",
                    xlabel="FPR", ylabel="TPR")
     else:
