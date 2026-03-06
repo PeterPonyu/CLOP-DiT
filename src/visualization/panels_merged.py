@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from . import io as viz_io
-from .style import COLORS, TYPE_PALETTE, apply_style, set_dense_tick_labels
+from .style import COLORS, TYPE_PALETTE, apply_style, set_dense_tick_labels, style_axes
 from .panels_heatmaps import plot_per_type_generation, plot_text_cell_heatmap
 
 matplotlib.use("Agg")
@@ -127,6 +127,7 @@ def plot_embedding_space_merged(
                        linewidths=0.6, zorder=5)
         ax.set_title("Text Prototypes (CLOP space)")
         ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
+        style_axes(ax, kind="umap")
 
         ax = fig.add_subplot(gs[row, 1])
         for t in unique_types:
@@ -140,6 +141,7 @@ def plot_embedding_space_merged(
                        linewidths=0.5, zorder=6)
         ax.set_title(f"Cells + \u2605 Proto ({len(s_idx)} cells)")
         ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
+        style_axes(ax, kind="umap")
 
         ax = fig.add_subplot(gs[row, 2])
         so = np.argsort(type_counts)[::-1]
@@ -153,6 +155,7 @@ def plot_embedding_space_merged(
         ax.invert_yaxis()
         ax.set_xlabel("Cells")
         ax.set_title("Cells per Type")
+        style_axes(ax, kind="bar")
         row += 1
 
     if has_e:
@@ -192,6 +195,7 @@ def plot_embedding_space_merged(
                            s=4, alpha=0.4, rasterized=True)
             ax.set_title(f"Real ({len(r_sub)} cells)")
             ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
+            style_axes(ax, kind="umap")
 
             ax = fig.add_subplot(gs[row, 1])
             if g_gids is not None:
@@ -205,6 +209,7 @@ def plot_embedding_space_merged(
                            rasterized=True)
             ax.set_title(f"Generated ({len(g_sub)} cells)")
             ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
+            style_axes(ax, kind="umap")
 
             ax = fig.add_subplot(gs[row, 2])
             all_types = np.unique(np.concatenate([r_gids, g_gids])) if g_gids is not None else np.unique(r_gids)
@@ -235,6 +240,7 @@ def plot_embedding_space_merged(
             )
             ax.set_title("Type-Coloured Overlay")
             ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
+            style_axes(ax, kind="umap")
 
     if save:
         viz_io.save_to_dir(fig, "fig_embedding_space", output_dir, dpi, save_panel_fn)

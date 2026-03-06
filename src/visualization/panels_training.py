@@ -20,6 +20,20 @@ from .style import COLORS, apply_style, save_with_vcd, set_scientific_tickformat
 logger = logging.getLogger(__name__)
 
 
+def _add_training_phase_bands(ax: plt.Axes, max_epoch: int) -> None:
+    """Annotate three coarse training phases for readability."""
+    if max_epoch < 12:
+        return
+    p1_end = max(4, int(max_epoch * 0.06))
+    p2_end = max(p1_end + 2, int(max_epoch * 0.9))
+    ax.axvspan(1, p1_end, color=COLORS["accent"], alpha=0.08, lw=0)
+    ax.axvspan(p1_end, p2_end, color=COLORS["neutral"], alpha=0.05, lw=0)
+    ax.axvspan(p2_end, max_epoch, color=COLORS["baseline_gauss"], alpha=0.07, lw=0)
+    ax.text(0.03, 0.97, "Phase I: rapid\nPhase II: refine\nPhase III: converge",
+            transform=ax.transAxes, va="top", ha="left", fontsize=8,
+            bbox=dict(boxstyle="round,pad=0.2", facecolor="white", edgecolor="none", alpha=0.75))
+
+
 # ──────────────────────────────────────────────────────────────
 # PANEL A: CLOP Training Dynamics
 # ──────────────────────────────────────────────────────────────
@@ -323,7 +337,7 @@ def plot_training_dynamics_combined(
     fig = plt.figure(figsize=(14.4, 8.2))
     gs = fig.add_gridspec(2, 4, wspace=0.55, hspace=0.52,
                           width_ratios=[1.0, 1.0, 1.0, 1.2], height_ratios=[1, 1])
-    fig.suptitle("Training Dynamics", fontsize=12, y=0.98)
+    fig.suptitle("Training Dynamics (CLOP + DiT)", fontsize=12, y=0.98)
 
     # ════════════════════════════════════════════════════════════
     # Top row: CLOP (4 panels spanning columns 0-3)
@@ -343,6 +357,7 @@ def plot_training_dynamics_combined(
         ax.set_xlim(0, max(epochs) * 1.08)
         ax.locator_params(axis='x', nbins=3)
         ax.locator_params(axis='y', nbins=4)
+        _add_training_phase_bands(ax, int(max(epochs)))
 
         # A2: Temperature
         ax = fig.add_subplot(gs[0, 1])
@@ -428,6 +443,7 @@ def plot_training_dynamics_combined(
         _decade_ticks = [10**e for e in range(_lo_exp, _hi_exp + 1)]
         if _decade_ticks:
             ax.yaxis.set_major_locator(FixedLocator(_decade_ticks))
+        _add_training_phase_bands(ax, int(max(epochs)))
 
         # C2: Cosine similarity
         ax = fig.add_subplot(gs[1, 1])

@@ -14,6 +14,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.lines import Line2D
 from sklearn.decomposition import PCA
 from sklearn.metrics import r2_score
 
@@ -26,6 +27,13 @@ from .metrics import (
     select_nonredundant_markers,
     compute_text2cell_metrics,
 )
+from src.visualization.style import (
+    COLORS as VCOLORS,
+    TYPE_PALETTE,
+    apply_style,
+    save_with_vcd,
+    style_axes,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +41,7 @@ logger = logging.getLogger(__name__)
 def figure1_text2cell_multi(dataset_runs, scgpt, output_dir, metrics):
     """Create Figure 1: multi-dataset Text2Cell biological fidelity."""
     logger.info("Creating Figure 1 — Text2Cell Biological Fidelity (multi-dataset)")
+    apply_style()
 
     per_dataset = []
     for ds in dataset_runs:
@@ -73,7 +82,7 @@ def figure1_text2cell_multi(dataset_runs, scgpt, output_dir, metrics):
 
     n_rows = len(per_dataset)
     fig_h = max(4.5, 4.2 * n_rows)
-    fig, axes = plt.subplots(n_rows, 3, figsize=(16, fig_h))
+    fig, axes = plt.subplots(n_rows, 3, figsize=(15.5, fig_h))
     if n_rows == 1:
         axes = np.array([axes])
 
@@ -83,18 +92,18 @@ def figure1_text2cell_multi(dataset_runs, scgpt, output_dir, metrics):
         rm, fm = d["rm"], d["fm"]
         m = d["metrics"]
         _plot_umap_panel(d["real_recon"], dataset_runs[i]["fake_adata"], row_axes[0])
-        row_axes[0].set_title(f"(a) UMAP Integration — {label}")
+        row_axes[0].set_title(f"UMAP Integration — {label}")
         _plot_marker_heatmap(d["real_n"], d["fake_n"], row_axes[1], marker_dict=d["marker_dict"])
-        row_axes[1].set_title(f"(b) Marker Genes — {label}")
+        row_axes[1].set_title(f"Marker Gene Expression — {label}")
         ax = row_axes[2]
-        ax.scatter(rm, fm, s=4, alpha=0.35, c="#1f77b4", edgecolors="none", rasterized=True)
+        ax.scatter(rm, fm, s=4, alpha=0.35, c=VCOLORS["generated"], edgecolors="none", rasterized=True)
         lim = [min(rm.min(), fm.min()) - 0.05, max(rm.max(), fm.max()) + 0.05]
         ax.plot(lim, lim, "--", color="#999999", lw=0.8)
         ax.set_xlim(lim)
         ax.set_ylim(lim)
         ax.set_xlabel("Real (scGPT-reconstructed)")
         ax.set_ylabel("Generated")
-        ax.set_title(f"(c) Gene Mean Expression — {label}")
+        ax.set_title(f"Gene Mean Expression — {label}")
         ax.text(
             0.05, 0.92,
             f"Pearson r = {m['gene_mean_pearson']:.4f}\nR² = {m['gene_mean_R2']:.4f}\n"
@@ -102,10 +111,12 @@ def figure1_text2cell_multi(dataset_runs, scgpt, output_dir, metrics):
             transform=ax.transAxes, fontsize=9, va="top",
             bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8),
         )
+        style_axes(row_axes[0], kind="umap")
+        style_axes(row_axes[1], kind="heatmap")
+        style_axes(row_axes[2], kind="scatter")
 
     fig.tight_layout()
-    fig.savefig(output_dir / "figure1_text2cell_multi.png")
-    fig.savefig(output_dir / "figure1_text2cell_multi.pdf")
+    save_with_vcd(fig, output_dir / "figure1_text2cell_multi.png")
     plt.close(fig)
     logger.info(f"  Saved Figure 1 -> {output_dir / 'figure1_text2cell_multi.png'}")
 
@@ -133,8 +144,7 @@ def _plot_umap_panel(real_recon, fake_adata, ax):
     cell_types = combined.obs["cell_type"].values
 
     ct_list = sorted(set(cell_types))
-    ct_colors = plt.cm.Set2(np.linspace(0, 1, max(len(ct_list), 2)))
-    ct_cmap = {ct: ct_colors[i] for i, ct in enumerate(ct_list)}
+    ct_cmap = {ct: TYPE_PALETTE[i % len(TYPE_PALETTE)] for i, ct in enumerate(ct_list)}
 
     for ct in ct_list:
         for src, marker, alpha, sz in [("Real", "o", 0.5, 12), ("Generated", "^", 0.6, 18)]:
@@ -142,15 +152,16 @@ def _plot_umap_panel(real_recon, fake_adata, ax):
             if mask.sum() == 0:
                 continue
             ax.scatter(umap[mask, 0], umap[mask, 1], s=sz, alpha=alpha,
-                      marker=marker, c=[ct_cmap[ct]], label=f"{ct} ({src})",
+                      marker=marker, c=[ct_cmap[ct]],
                       edgecolors="none", rasterized=True)
 
     ax.set_xlabel("UMAP 1")
     ax.set_ylabel("UMAP 2")
-    ax.set_title("(b) UMAP Integration")
-    handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles, labels, fontsize=6, loc="upper right", frameon=False,
-              ncol=1, markerscale=0.8, handletextpad=0.3, borderaxespad=0.2)
+    source_handles = [
+        Line2D([0], [0], marker="o", color="none", markerfacecolor=VCOLORS["real"], markersize=6, label="Real"),
+        Line2D([0], [0], marker="^", color="none", markerfacecolor=VCOLORS["generated"], markersize=6, label="Generated"),
+    ]
+    ax.legend(handles=source_handles, fontsize=7, loc="upper right", frameon=False)
 
 
 def _select_marker_genes(real_n, fake_n, marker_dict=None, max_per_type=4):
@@ -180,7 +191,7 @@ def _plot_marker_heatmap(real_n, fake_n, ax, marker_dict=None):
     if not all_markers:
         ax.text(0.5, 0.5, "No marker genes found in data",
                 ha="center", va="center", transform=ax.transAxes)
-        ax.set_title("(c) Marker Genes")
+        ax.set_title("Marker Genes")
         return
 
     ct_order = list(dict.fromkeys(marker_ct_labels))
@@ -199,7 +210,7 @@ def _plot_marker_heatmap(real_n, fake_n, ax, marker_dict=None):
 
     if not row_labels:
         ax.text(0.5, 0.5, "Insufficient data", ha="center", va="center", transform=ax.transAxes)
-        ax.set_title("(c) Marker Genes")
+        ax.set_title("Marker Genes")
         return
 
     real_mat = np.array(real_mat)
@@ -227,7 +238,7 @@ def _plot_marker_heatmap(real_n, fake_n, ax, marker_dict=None):
     ax.axvline(n_m - 0.5, color="black", linewidth=1.5)
     ax.text(n_m * 0.5 - 0.5, -0.8, "Real", ha="center", fontsize=8, fontweight="bold", transform=ax.transData)
     ax.text(n_m * 1.5 - 0.5, -0.8, "Generated", ha="center", fontsize=8, fontweight="bold", transform=ax.transData)
-    ax.set_title("(c) Marker Gene Expression (z-scored)")
+    ax.set_title("Marker Gene Expression (z-scored)")
     plt.colorbar(im, ax=ax, fraction=0.03, pad=0.02).set_label("z-score", fontsize=7)
 
 
@@ -236,6 +247,7 @@ def figure2_cell2cell(adata_ref, indices_map, scgpt, output_dir, args, metrics, 
     from .io import load_class_from_script
 
     logger.info("Creating Figure 2 — Cell2Cell Editing Quality")
+    apply_style()
 
     scripts_dir = scripts_dir or Path(__file__).resolve().parent.parent.parent.parent / "scripts"
     Cell2CellInference = load_class_from_script(scripts_dir / "06_cell2cell_inference.py", "Cell2CellInference")
@@ -325,19 +337,20 @@ def figure2_cell2cell(adata_ref, indices_map, scgpt, output_dir, args, metrics, 
     sp, ep, tp = Xp[:n_s], Xp[n_s : n_s + n_e], Xp[n_s + n_e :]
 
     ax = axes[0]
-    ax.scatter(tp[:, 0], tp[:, 1], s=10, alpha=0.4, c=constants.COLORS["target"],
+    ax.scatter(tp[:, 0], tp[:, 1], s=10, alpha=0.4, c=VCOLORS["good"],
                label=f"Real {tgt_type}", edgecolors="none", rasterized=True)
-    ax.scatter(sp[:, 0], sp[:, 1], s=10, alpha=0.4, c=constants.COLORS["source"],
+    ax.scatter(sp[:, 0], sp[:, 1], s=10, alpha=0.4, c=VCOLORS["neutral"],
                label=f"Real {src_type}", edgecolors="none", rasterized=True)
     n_arrows = min(150, n_s)
     arrow_idx = rng.choice(n_s, size=n_arrows, replace=False)
     for i in arrow_idx:
         ax.annotate("", xy=(ep[i, 0], ep[i, 1]), xytext=(sp[i, 0], sp[i, 1]),
-                    arrowprops=dict(arrowstyle="->", color=constants.COLORS["edited"], alpha=0.4, lw=0.6))
+                    arrowprops=dict(arrowstyle="->", color=VCOLORS["generated"], alpha=0.35, lw=0.6))
     ax.set_xlabel(f"PC1 ({pca.explained_variance_ratio_[0]*100:.1f}%)")
     ax.set_ylabel(f"PC2 ({pca.explained_variance_ratio_[1]*100:.1f}%)")
-    ax.set_title(f"(a) Cell Editing Vector Field\n{src_type} → {tgt_type}")
+    ax.set_title(f"Cell Editing Vector Field\n{src_type} → {tgt_type}")
     ax.legend(fontsize=7, frameon=False, loc="upper left")
+    style_axes(ax, kind="scatter")
 
     ax = axes[1]
     ax.scatter(delta_real, delta_pred, s=4, alpha=0.3, c="#ff7f0e", edgecolors="none", rasterized=True)
@@ -345,10 +358,11 @@ def figure2_cell2cell(adata_ref, indices_map, scgpt, output_dir, args, metrics, 
     ax.plot(dlim, dlim, "--", color="#999999", lw=0.8)
     ax.set_xlabel("Real Δ expression")
     ax.set_ylabel("Predicted Δ expression")
-    ax.set_title("(b) Per-Gene Expression Shift")
+    ax.set_title("Per-Gene Expression Shift")
     ax.text(0.05, 0.92, f"R² = {r2_delta:.4f}\n(<0 = worse than zero-shift)",
             transform=ax.transAxes, fontsize=9, va="top",
             bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8))
+    style_axes(ax, kind="scatter")
 
     ax = axes[2]
     ax.boxplot([cos_to_src, cos_to_tgt], labels=["To Source", "To Target"],
@@ -356,11 +370,12 @@ def figure2_cell2cell(adata_ref, indices_map, scgpt, output_dir, args, metrics, 
                boxprops=dict(facecolor="#cccccc", alpha=0.7),
                medianprops=dict(color="#000000"))
     ax.set_ylabel("Cosine similarity (scGPT emb)")
-    ax.set_title(f"(c) Embedding Proximity\nGain={cos_gain:.3f}")
+    ax.set_title(f"Embedding Proximity\nGain={cos_gain:.3f}")
+    ax.set_ylim(0.0, 1.0)
+    style_axes(ax, kind="bar")
 
     fig.tight_layout()
-    fig.savefig(output_dir / "figure2_cell2cell.png")
-    fig.savefig(output_dir / "figure2_cell2cell.pdf")
+    save_with_vcd(fig, output_dir / "figure2_cell2cell.png")
     plt.close(fig)
     logger.info(f"  Saved Figure 2 -> {output_dir / 'figure2_cell2cell.png'}")
 
@@ -368,6 +383,7 @@ def figure2_cell2cell(adata_ref, indices_map, scgpt, output_dir, args, metrics, 
 def figure3_celltypist(fake_adata, output_dir, metrics, model_name=None, real_adata=None):
     """Create Figure 3: external cell identity validation using CellTypist."""
     logger.info("Creating Figure 3 — External Cell Identity Validation (CellTypist)")
+    apply_style()
     model_name = model_name or constants.CELLTYPIST_MODEL
 
     try:
@@ -399,7 +415,7 @@ def figure3_celltypist(fake_adata, output_dir, metrics, model_name=None, real_ad
     if len(all_counts) > top_k:
         top_labels.append("Other")
 
-    prompt_types = list(dict.fromkeys(prompts))
+    prompt_types = sorted(list(dict.fromkeys(prompts)))
     mat = np.zeros((len(prompt_types), len(top_labels)), dtype=float)
     purity = {}
     for i, ct in enumerate(prompt_types):
@@ -483,45 +499,60 @@ def figure3_celltypist(fake_adata, output_dir, metrics, model_name=None, real_ad
         "interpretation": {},
     }
 
+    ranked_prompt_types = sorted(
+        prompt_types,
+        key=lambda ct: (match_rates.get(ct, float("-inf")), purity.get(ct, float("-inf"))),
+        reverse=True,
+    )
+    idx_by_prompt = {ct: i for i, ct in enumerate(prompt_types)}
+    mat_sorted = np.array([mat[idx_by_prompt[ct], :] for ct in ranked_prompt_types])
+
     fig, axes = plt.subplots(1, 2, figsize=(12, 4.5))
     ax = axes[0]
-    im = ax.imshow(mat, aspect="auto", cmap="Blues", vmin=0, vmax=1)
+    im = ax.imshow(mat_sorted, aspect="auto", cmap="viridis", vmin=0, vmax=1)
     ax.set_xticks(range(len(top_labels)))
     ax.set_xticklabels(top_labels, rotation=45, ha="right", fontsize=7)
-    ax.set_yticks(range(len(prompt_types)))
-    ax.set_yticklabels(prompt_types, fontsize=8)
-    ax.set_title(f"(a) CellTypist Confusion (row-normalized)\nModel: {model_name}")
+    ax.set_yticks(range(len(ranked_prompt_types)))
+    ax.set_yticklabels(ranked_prompt_types, fontsize=8)
+    ax.set_title(f"CellTypist Confusion (row-normalized)\nModel: {model_name}")
     plt.colorbar(im, ax=ax, fraction=0.046, pad=0.02).set_label("Fraction", fontsize=7)
+    style_axes(ax, kind="heatmap")
 
     ax = axes[1]
-    y = np.arange(len(prompt_types))
-    purity_vals = [purity.get(ct, float("nan")) for ct in prompt_types]
-    match_vals = [match_rates.get(ct, float("nan")) for ct in prompt_types]
-    ax.barh(y - 0.2, purity_vals, height=0.35, color="#4c72b0", alpha=0.8, label="Purity")
-    ax.barh(y + 0.2, match_vals, height=0.35, color="#55a868", alpha=0.8, label="Match rate")
+    y = np.arange(len(ranked_prompt_types))
+    purity_vals = [purity.get(ct, float("nan")) for ct in ranked_prompt_types]
+    match_vals = [match_rates.get(ct, float("nan")) for ct in ranked_prompt_types]
+    ax.barh(y - 0.2, purity_vals, height=0.35, color=VCOLORS["real"], alpha=0.8, label="Purity")
+    ax.barh(y + 0.2, match_vals, height=0.35, color=VCOLORS["good"], alpha=0.8, label="Match rate")
     ax.set_yticks(y)
-    ax.set_yticklabels(prompt_types, fontsize=7)
+    ax.set_yticklabels(ranked_prompt_types, fontsize=7)
     ax.invert_yaxis()
     ax.set_xlabel("Fraction")
     ax.set_xlim(0, 1.0)
-    ax.set_title("(b) Prompt-wise Purity & Match")
+    ax.axvline(0.8, color=VCOLORS["neutral"], ls="--", lw=0.8, alpha=0.7)
+    ax.set_title("Prompt-wise Purity & Match")
     ax.legend(fontsize=7, frameon=False, loc="lower right")
+    style_axes(ax, kind="bar")
 
     fig.tight_layout()
-    fig.savefig(output_dir / "figure3_celltypist.png")
-    fig.savefig(output_dir / "figure3_celltypist.pdf")
+    save_with_vcd(fig, output_dir / "figure3_celltypist.png")
     plt.close(fig)
     logger.info(f"  Saved Figure 3 -> {output_dir / 'figure3_celltypist.png'}")
 
 
 def figure4_summary(metrics: Dict, output_dir: Path):
     """Create Figure 4: compact multi-dataset summary."""
+    apply_style()
     if "text2cell_multi" not in metrics:
         logger.warning("Figure 4 skipped: missing text2cell_multi metrics")
         return
 
     ds_metrics = metrics["text2cell_multi"]["datasets"]
-    labels = list(ds_metrics.keys())
+    labels = sorted(
+        list(ds_metrics.keys()),
+        key=lambda l: ds_metrics[l].get("gene_mean_pearson", 0.0),
+        reverse=True,
+    )
     gene_mean = [ds_metrics[l]["gene_mean_pearson"] for l in labels]
     msi_gen = [ds_metrics[l]["marker_specificity_generated"] for l in labels]
 
@@ -532,33 +563,52 @@ def figure4_summary(metrics: Dict, output_dir: Path):
 
     fig, axes = plt.subplots(1, 3, figsize=(14, 4))
     ax = axes[0]
-    ax.bar(range(len(labels)), gene_mean, color="#4c72b0", alpha=0.85)
+    ax.bar(range(len(labels)), gene_mean, color=VCOLORS["real"], alpha=0.85)
     ax.set_xticks(range(len(labels)))
     ax.set_xticklabels(labels, rotation=30, ha="right", fontsize=7)
     ax.set_ylim(0, 1.0)
     ax.set_ylabel("Pearson r")
-    ax.set_title("(a) Gene Mean Correlation")
+    ax.axhline(0.9, color=VCOLORS["neutral"], ls="--", lw=0.8, alpha=0.7)
+    ax.set_title("Gene Mean Correlation")
+    style_axes(ax, kind="bar")
 
     ax = axes[1]
-    ax.bar(range(len(labels)), msi_gen, color="#55a868", alpha=0.85)
+    ax.bar(range(len(labels)), msi_gen, color=VCOLORS["good"], alpha=0.85)
     ax.set_xticks(range(len(labels)))
     ax.set_xticklabels(labels, rotation=30, ha="right", fontsize=7)
     ax.set_ylim(0, 1.0)
     ax.set_ylabel("MSI")
-    ax.set_title("(b) Marker Specificity (Gen)")
+    ax.axhline(0.8, color=VCOLORS["neutral"], ls="--", lw=0.8, alpha=0.7)
+    ax.set_title("Marker Specificity (Generated)")
+    style_axes(ax, kind="bar")
 
     ax = axes[2]
     if celltypist_rates is not None:
-        ax.bar(range(len(labels)), celltypist_rates, color="#c44e52", alpha=0.85)
+        ax.bar(range(len(labels)), celltypist_rates, color=VCOLORS["generated"], alpha=0.85)
         ax.set_ylim(0, 1.0)
         ax.set_ylabel("Match rate")
-        ax.set_title("(c) CellTypist Match Rate")
+        ax.axhline(0.8, color=VCOLORS["neutral"], ls="--", lw=0.8, alpha=0.7)
+        ax.set_title("CellTypist Match Rate")
+        ax.set_xticks(range(len(labels)))
+        ax.set_xticklabels(labels, rotation=30, ha="right", fontsize=7)
+        style_axes(ax, kind="bar")
     else:
-        ax.text(0.5, 0.5, "CellTypist match\nnot available", ha="center", va="center", transform=ax.transAxes)
-        ax.set_axis_off()
+        ax.text(
+            0.5,
+            0.5,
+            "CellTypist per-dataset\nmatch rate not available",
+            ha="center",
+            va="center",
+            transform=ax.transAxes,
+            fontsize=9,
+            color=VCOLORS["neutral"],
+            bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor="#CCCCCC"),
+        )
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title("CellTypist Match Rate")
 
     fig.tight_layout()
-    fig.savefig(output_dir / "figure4_summary.png")
-    fig.savefig(output_dir / "figure4_summary.pdf")
+    save_with_vcd(fig, output_dir / "figure4_summary.png")
     plt.close(fig)
     logger.info(f"  Saved Figure 4 -> {output_dir / 'figure4_summary.png'}")

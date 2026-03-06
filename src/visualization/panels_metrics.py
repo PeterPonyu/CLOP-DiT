@@ -192,6 +192,7 @@ def plot_metrics_summary(
     gen_metrics_path: Optional[str] = None,
     expr_metrics_path: Optional[str] = None,
     div_metrics_path: Optional[str] = None,
+    benchmark_report_path: Optional[str] = None,
     output_dir: Optional[str] = None,
     dpi: int = 300,
     save: bool = True,
@@ -209,6 +210,7 @@ def plot_metrics_summary(
     gen_metrics_path = gen_metrics_path or str(RESULTS_DIR / "generation_metrics.json")
     expr_metrics_path = expr_metrics_path or str(RESULTS_DIR / "expression_metrics.json")
     div_metrics_path = div_metrics_path or str(RESULTS_DIR / "diversity_diagnostics.json")
+    benchmark_report_path = benchmark_report_path or str(RESULTS_DIR / "benchmark_report.json")
     output_dir = output_dir or str(FIG_DIR)
 
     # ── Collect all data ──
@@ -277,17 +279,45 @@ def plot_metrics_summary(
         with open(gen_meta_path) as f:
             cfg_meta = json.load(f)
 
+    core_metrics: Dict[str, float] = {}
+    bench_path = Path(benchmark_report_path)
+    if bench_path.exists():
+        try:
+            with open(bench_path) as f:
+                bench = json.load(f)
+            # tolerate schema drift
+            candidates = [
+                bench.get("core_metrics", {}),
+                bench.get("operating_point", {}),
+                bench.get("results", {}).get("core_metrics", {}),
+            ]
+            for c in candidates:
+                if not isinstance(c, dict):
+                    continue
+                if "knn_top1" in c:
+                    core_metrics["KNN-1"] = float(c["knn_top1"])
+                if "steering_accuracy" in c:
+                    core_metrics["Steering"] = float(c["steering_accuracy"])
+                if "diversity_ratio" in c:
+                    core_metrics["Diversity Ratio"] = float(c["diversity_ratio"])
+                if "linear_acc" in c:
+                    core_metrics["Linear Acc"] = float(c["linear_acc"])
+        except Exception:
+            core_metrics = {}
+
     if not train_metrics and not gen_metrics:
         return None
 
     fig = plt.figure(figsize=(12.4, 7.8))
     gs = fig.add_gridspec(2, 2, wspace=0.58, hspace=0.52)
-    fig.suptitle("CLOP-DiT Pipeline — Metrics Dashboard",
+    fig.suptitle("Core Evaluation Metrics Dashboard",
                  fontsize=11, y=0.99)
 
     # ── D1: Training convergence bars ──
     ax1 = fig.add_subplot(gs[0, 0])
     if train_metrics:
+        if core_metrics:
+            train_metrics = {**core_metrics, **train_metrics}
         names = list(train_metrics.keys())
         vals = list(train_metrics.values())
         display_vals = []
@@ -329,17 +359,17 @@ def plot_metrics_summary(
         radar_vals = []
         if gen_metrics:
             fd_score = max(0, 1.0 - gen_metrics.get("FD", 1.0))
-            radar_labels.append("FD (inverted)")
+            radar_labels.append("FD (inv, lower better)")
             radar_vals.append(fd_score)
-            radar_labels.append("Coverage")
+            radar_labels.append("Coverage (↑)")
             radar_vals.append(gen_metrics.get("Coverage", 0))
-            radar_labels.append("Centroid Cos")
+            radar_labels.append("Centroid Cos (↑)")
             radar_vals.append(gen_metrics.get("Centroid Cos", 0))
         if div_metrics:
-            radar_labels.append("Diversity")
+            radar_labels.append("Diversity (↑)")
             radar_vals.append(div_metrics.get("Diversity Ratio", 0))
         if expr_metrics:
-            radar_labels.append("Gene Corr")
+            radar_labels.append("Gene Corr (↑)")
             radar_vals.append(expr_metrics.get("Gene Pearson r", 0))
 
         if radar_vals:

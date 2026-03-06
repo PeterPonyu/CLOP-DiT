@@ -83,6 +83,7 @@ All 15 figures are included in `articles/clop_dit_biology.tex`. Each figure is a
 
 - **`results/figures/`**: All pipeline outputs — `fig_architecture`, 5 merged figures (`fig_training_dynamics`, etc.), 19 standalone panels (`panel_a_*` … `panel_s_*`), and `clop_dit_full_report.pdf`. Legacy panels (A, B, C, E, F, G, K, L, P, Q) are used only in the full report; the article uses the 15 listed in the table above. **Outdated files** (from old scripts): `fig1_training_dynamics.*`, `fig2_embedding_space.*`, `fig3_metrics_dashboard.*`, `fig4_biological_validation.*`, `fig5_dimension_sampling.*`, `visual_conflict_report.json` — remove with `bash scripts/remove_outdated_figures.sh`.
 - **`articles/figures/`**: Only the **15 article figure PDFs** (symlinks to `results/figures/`). No other figures belong here; the LaTeX build includes only these 15.
+- **`results/figures/biological_validation/`** (optional): Figure set from `scripts/08_biological_validation.py` (`figure1_text2cell_multi`, `figure2_cell2cell`, `figure3_celltypist`, `figure4_summary`) used for supplementary biological QA and reviewer support.
 
 ## Naming convention
 
@@ -98,6 +99,7 @@ Each panel is a **standalone full-width figure** in the LaTeX article. LaTeX doe
 
 **Save and presentation policy:**
 - **Single save path:** All figure saves go through `style.save_with_vcd()` (or the caller’s `save_panel_fn` that ultimately uses it). No raw `fig.savefig()` for article figures.
+- **Auxiliary figure policy:** Biological validation figures use the same central style and `save_with_vcd()` path as article/report figures.
 - **Merged figures:** Composited figures (G+F, B+E, L+K, P+Q) either call `save_panel_fn(fig, path, dpi)` when invoked from the visualizer, or `save_with_vcd(fig, path, dpi)` when run standalone. This keeps VCD and PNG+PDF behaviour consistent.
 - **Default output:** Standalone panel and figure helpers resolve `output_dir=None` to `FIG_DIR`, so direct runs and pipeline runs share the same central path configuration.
 
@@ -123,6 +125,8 @@ The **canonical pipeline** is `bash scripts/regenerate_report.sh`. It does **not
 |------------------|--------|--------|
 | `fig1_training_dynamics.png`, `fig2_embedding_space.png`, `fig3_metrics_dashboard.png`, `fig4_biological_validation.png`, `fig5_dimension_sampling.png` | `full_pipeline_figures.py` via `10_full_pipeline.py` | Remove; article uses `fig_training_dynamics`, `fig_embedding_space`, etc. from results_visualizer. |
 | `visual_conflict_report.json` | `10_full_pipeline.py` Stage 5 | Remove; VCD runs per-figure in `save_with_vcd()`. |
+
+`src/visualization/full_pipeline_figures.py` is now a no-op compatibility stub by design. It should not be used to produce any figure artifacts.
 
 Run `bash scripts/remove_outdated_figures.sh` to delete these from `results/figures/` without touching current report figures.
 

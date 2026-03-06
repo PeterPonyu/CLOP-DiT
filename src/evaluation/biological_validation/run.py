@@ -13,7 +13,7 @@ import anndata as ad
 
 from src.utils.logging_config import setup_logging
 from src.utils.helpers import seed_everything
-from src.utils.paths import PROJECT_ROOT
+from src.utils.paths import PROJECT_ROOT, FIG_DIR
 from src.architecture.decoder import ScGPTDecoder
 
 from .io import load_prompt_file, load_subcluster_metadata, load_dataset_specs, load_dataset_indices
@@ -80,7 +80,7 @@ def main():
     parser.add_argument("--prompt_file", default="", help="JSON mapping of cell_type -> prompt to override defaults")
     parser.add_argument("--prompt_top_k", type=int, default=4)
     parser.add_argument("--prompt_min_conf", type=float, default=0.25)
-    parser.add_argument("--output_dir", default="figures/biovalidation")
+    parser.add_argument("--output_dir", default=str(FIG_DIR / "biological_validation"))
     parser.add_argument("--num_cells_per_type", type=int, default=200)
     parser.add_argument("--num_steps", type=int, default=20)
     parser.add_argument("--cfg_scale", type=float, default=3.0)
