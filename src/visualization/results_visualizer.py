@@ -587,27 +587,24 @@ class ResultsVisualizer:
         k_path = self.output / "panel_k_expression_diversity.png"
         l_path = self.output / "panel_l_noise_tradeoff.png"
 
-        images = []
-        for p in [l_path, k_path]:
-            if p.exists():
-                images.append((p.stem, Image.open(p)))
-            else:
-                logger.warning(f"Missing {p.name} for merged L+K figure")
-        if not images:
+        if not l_path.exists() or not k_path.exists():
+            missing = [x for x, p in [("L", l_path), ("K", k_path)] if not p.exists()]
+            logger.info("Both panels L and K required for merged figure; skipping (missing %s)", ", ".join(missing))
             return None
+
+        images = [(l_path.stem, Image.open(l_path)), (k_path.stem, Image.open(k_path))]
 
         fig = plt.figure(figsize=(13.6, 9.3), dpi=self.dpi)
         gs = fig.add_gridspec(2, 2, height_ratios=[1.0, 0.92], wspace=0.05, hspace=0.28)
         set_figure_suptitle(fig, "Diversity Trade-off and Expression Variance", fontsize=12)
 
-        for col, (_, image) in enumerate(images[:2]):
+        for col, (_, image) in enumerate(images):
             ax = fig.add_subplot(gs[0, col])
             ax.imshow(np.array(image))
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.set_frame_on(False)
             ax.axis("off")
-
-        if len(images) == 1:
-            ax_blank = fig.add_subplot(gs[0, 1])
-            ax_blank.axis("off")
 
         ax_bottom = fig.add_subplot(gs[1, :])
         violin_fig = plot_diversity_distributions_violin(
@@ -620,17 +617,10 @@ class ResultsVisualizer:
             top_n=6,
         )
         if violin_fig is None:
-            ax_bottom.axis("off")
-            ax_bottom.text(
-                0.5,
-                0.5,
-                "Diversity-tail violin enhancement unavailable",
-                ha="center",
-                va="center",
-                transform=ax_bottom.transAxes,
-                fontsize=10,
-                color="#555",
-            )
+            plt.close(fig)
+            logger.info("Violin panel required for Fig 11; skipping (missing diversity violin data)")
+            return None
+        ax_bottom.margins(y=0.10)
 
         merged_path = self.output / "fig_diversity_tradeoff.png"
         from .style import save_with_vcd

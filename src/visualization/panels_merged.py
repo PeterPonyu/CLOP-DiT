@@ -277,9 +277,14 @@ def plot_fidelity_and_alignment_merged(
         output_dir=output_dir, dpi=dpi, save=False,
     )
 
-    if fig_g is None and fig_f is None:
-        logger.info("No data for G or F — skipping merged figure")
+    if fig_g is None or fig_f is None:
+        missing = "G" if fig_g is None else "F"
+        logger.info("Both panels G and F required for merged figure; skipping (missing %s)", missing)
         return None
+
+    from .style import run_vcd_check
+    run_vcd_check(fig_g, "panel_g_per_type_generation")
+    run_vcd_check(fig_f, "panel_f_text_cell_heatmap")
 
     from PIL import Image
 
@@ -298,9 +303,13 @@ def plot_fidelity_and_alignment_merged(
     max_w = max(im.width for im in images)
     resized = []
     for im in images:
+        if im.mode == "RGBA":
+            im = im.convert("RGB")
         if im.width != max_w:
-            ratio = max_w / im.width
-            im = im.resize((max_w, int(im.height * ratio)), Image.LANCZOS)
+            padded = Image.new("RGB", (max_w, im.height), "white")
+            x_offset = (max_w - im.width) // 2
+            padded.paste(im, (x_offset, 0))
+            im = padded
         resized.append(im)
 
     total_h = sum(im.height for im in resized)
@@ -313,6 +322,9 @@ def plot_fidelity_and_alignment_merged(
     fig_merged = plt.figure(figsize=(max_w / dpi, total_h / dpi), dpi=dpi)
     ax = fig_merged.add_axes([0, 0, 1, 1])
     ax.imshow(np.array(composite))
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_frame_on(False)
     ax.axis("off")
 
     if save:

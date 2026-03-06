@@ -171,8 +171,7 @@ We present CLOP-DiT, a two-stage pipeline that combines \textbf{C}ontrastive \te
 
 \begin{figure}[H]
 \centering
-% Full width; keep aspect so right side (decoder, gene expr) is not truncated
-\includegraphics[width=\textwidth,height=0.38\textheight,keepaspectratio]{figures/fig_architecture.pdf}
+\includegraphics[width=\textwidth]{figures/fig_architecture.pdf}
 \caption{Overview of the CLOP-DiT pipeline. \textbf{Stage~1 (CLOP)}: A frozen BiomedBERT-large encoder (340M parameters, 1024-d) and a frozen scGPT encoder (51M parameters, 512-d) produce text and cell embeddings, respectively. Dual MLP projectors map both modalities to a shared 256-dimensional $L_2$-normalized space, trained with a PrototypeSigLIP contrastive loss. ZCA whitening is applied to BiomedBERT embeddings prior to projection. \textbf{Stage~2 (DiT)}: A 1D Diffusion Transformer (8 AdaLN-Zero blocks, 22.1M parameters) performs conditional flow matching in the 512-dimensional scGPT latent space, using CLOP-projected text as the conditioning signal. An Euler or Midpoint ODE solver integrates the learned velocity field from Gaussian noise $z_0 \sim \mathcal{N}(0, I)$ to a generated latent $z_1$. Classifier-free guidance (CFG) is applied at inference. \textbf{Stage~3 (Decoding)}: The frozen scGPT decoder maps $z_1$ back to a gene expression profile.\label{fig:architecture}}
 \end{figure}
 
@@ -294,7 +293,7 @@ Figure~\ref{fig:fidelity-alignment} combines per-type generation quality (top ro
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/fig_fidelity_alignment.pdf}
-\caption{Per-type fidelity and text--cell alignment. \textbf{Top row}: Per-type centroid cosine similarity ranked across cell types, a Fr\'{e}chet outlier profile with the global mean marked, and an abundance--fidelity scatter in which bubble size is proportional to Fr\'{e}chet distance and colour encodes the per-type diversity ratio. Specific outlier type names are omitted from the bar panels for readability and are described in the surrounding text rather than directly on the bars. Together these panels expose the heterogeneity of generation quality across cell types instead of collapsing it to one mean score. \textbf{Bottom row}: 69$\times$69 cosine similarity heatmap between text and cell centroids (strong diagonal dominance), per-type alignment bars, and diagonal vs.\ off-diagonal distribution comparison.\label{fig:fidelity-alignment}}
+\caption{Per-type fidelity and text--cell alignment. \textbf{Top row}: Per-type centroid cosine similarity ranked across cell types, a Fr\'{e}chet outlier profile with the global mean marked, and an abundance--fidelity scatter in which bubble size is proportional to Fr\'{e}chet distance and colour encodes the per-type diversity ratio. Specific outlier type names are omitted from the bar panels for readability and are described in the surrounding text rather than directly on the bars. Together these panels expose the heterogeneity of generation quality across cell types instead of collapsing it to one mean score. \textbf{Bottom row}: 69$\times$69 cosine similarity heatmap (69 text-group centroids) between text and cell centroids (strong diagonal dominance), per-type alignment bars, and diagonal vs.\ off-diagonal distribution comparison.\label{fig:fidelity-alignment}}
 \end{figure}
 
 \subsection{Marker Gene Fidelity}

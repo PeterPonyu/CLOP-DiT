@@ -14,7 +14,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import COLORS, apply_style, save_with_vcd
+from .style import COLORS, apply_style, save_with_vcd, set_figure_suptitle
 
 matplotlib.use("Agg")
 logger = logging.getLogger(__name__)
@@ -139,9 +139,9 @@ def plot_diagnostics(
         fig, axes = plt.subplots(1, 2, figsize=(6.5, 4.0))
 
         o = t6["overall"]
-        fig.suptitle(
-            f"Expression-Level Diversity — "
-            f"gene_std_ratio={o['gene_std_ratio']:.4f}",
+        set_figure_suptitle(
+            fig,
+            f"Expression-Level Diversity — gene_std_ratio={o['gene_std_ratio']:.4f}",
             fontsize=11,
         )
 

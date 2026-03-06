@@ -70,7 +70,7 @@ The Fig 11 bottom panel (violin comparison of pairwise cosine distributions) req
 - Dedup cell/group caches (e.g. `data/cache/` or equivalent)
 - Generated embeddings and labels
 
-If any of these are missing, the merged figure shows a fallback message ("Diversity-tail violin enhancement unavailable"). To produce the full Fig 11 with violin, run the full pipeline so Step 3 and embedding generation complete before Step 7.
+**Fig 11 is produced only when all three components are available:** panels L and K (from Steps 4 and 3) and the violin. If any is missing, the merged figure is skipped (no partial figure with blanks or fallback text). Run the full pipeline so Steps 3–4 and embedding generation complete before Step 7.
 
 See [REGENERATION_STATUS.md](REGENERATION_STATUS.md) for prerequisites and [todo/2026-03-06-figure-regeneration-gaps.md](../todo/2026-03-06-figure-regeneration-gaps.md) for known missing artifacts.
 

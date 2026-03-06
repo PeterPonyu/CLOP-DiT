@@ -185,6 +185,28 @@ This section states how figures are produced, where they live, and what is fixed
 | **Symlinks** | Article build assumes `articles/figures/*.pdf` resolve (symlinks or copies). `verify_article_figures.sh` is the single place that creates/updates them. |
 | **Legacy panels** | Standalone panels A, B, C, E, F, G, K, L, P, Q are still generated for the full report PDF but are not used in the LaTeX article. |
 
+### Figure 1 (architecture) policy
+
+- **Dependencies:** None. Fig 1 has no data dependencies; it can be generated without cache, metrics, or embeddings.
+- **Producer:** Step 0 in `regenerate_report.sh`; `scripts/generate_architecture_figure.py` → `create_architecture_figure()`.
+- **Output:** Full vector PDF (and PNG) via `save_with_vcd`. VCD runs on the figure before save.
+- **LaTeX inclusion:** Uses `width=\textwidth` (same as Figs 2–15). Figure aspect is determined by script figsize (7.8×3.8 in).
+
+### Figure 5 (fidelity & alignment) policy
+
+- **Requirement:** Fig 5 is produced only when **both** panels G and F have data. If either is missing, the merged figure is skipped (no one-row fallback).
+- **Top row (G):** Per-type generation fidelity from `generation_metrics.json` — centroid cosine, Fréchet outlier profile, abundance–fidelity scatter. Uses the evaluation set (100 cell types).
+- **Bottom row (F):** Text–cell alignment from CLOP projection cache — 69×69 cosine similarity heatmap (69 deduplicated text-group centroids), per-type alignment bars, diagonal vs off-diagonal distribution.
+- **Implementation:** Current composition uses PIL raster stack (G and F rendered to PNG, then vertically stacked with width padding). VCD runs on G and F before compositing. Target for future refactor: single GridSpec (2 rows) for full vector output, matching Fig 2 (B+E) and Fig 14 (P+Q).
+
+### Figure 11 (diversity trade-off) policy
+
+- **Requirement:** Fig 11 is produced only when **all three** components are available: panels L and K (PNG files), and the diversity-tail violin. If any is missing, the merged figure is skipped.
+- **Top left (L):** Noise-scale vs fidelity/diversity tradeoff from Step 4 (`conditioning_analysis.py` → `plot_panel_l`).
+- **Top right (K):** Gene-expression-level diversity from Step 3 (`diversity_diagnostics.py` → `plot_diagnostics`).
+- **Bottom (violin):** Pairwise cosine distributions (Real–Real, Gen–Gen, Real–Gen) for the six cell types with largest intra-type cosine shift. Requires `diversity_diagnostics.json`, dedup caches, and generated embeddings.
+- **Implementation:** Current composition loads L and K from PNG (raster top row), draws violin directly into GridSpec (vector bottom row). L and K are VCD-checked at generation time. Target for future refactor: single GridSpec with L and K drawn directly for full vector output.
+
 ## How figures support the claims
 
 - **Fig 1**: Pipeline overview (CLOP → DiT → Decoder).

@@ -97,6 +97,9 @@ TYPE_PALETTE = _build_type_palette(69)
 SUPTITLE_Y = 0.98
 # Standard legend font size (matches VIS_STYLE legend.fontsize)
 FONT_LEGEND = 10
+# Architecture diagram (Fig 1) — diagram-specific labels (min 5.5pt per VCD)
+FONT_ARCH_LABEL = 7
+FONT_ARCH_SUBLABEL = 7
 _FONTS_REGISTERED = False
 
 
@@ -308,6 +311,36 @@ def save_with_vcd(
 
 # Backward-compatible alias
 save_panel = save_with_vcd
+
+
+def run_vcd_check(fig: plt.Figure, label: str) -> None:
+    """Run visual conflict detection on a figure without saving. Used before PIL composition."""
+    import logging as _logging
+
+    try:
+        import sys
+        _scripts = Path(__file__).resolve().parent.parent.parent / "scripts"
+        if str(_scripts) not in sys.path:
+            sys.path.insert(0, str(_scripts))
+        from visual_conflict_detector import detect_all_conflicts
+        issues = detect_all_conflicts(fig, label=label, verbose=True)
+        if issues:
+            n_warn = sum(1 for x in issues if x.get("severity") == "warning")
+            if n_warn > 0:
+                try:
+                    from vcd.vcd_actions import diagnose
+                    actions = diagnose(issues)
+                    top_actions = ", ".join(a.action_type for a in actions[:4])
+                except Exception:
+                    top_actions = ""
+                _logging.getLogger(__name__).warning(
+                    "%s: %d visual conflict warning(s)%s",
+                    label,
+                    n_warn,
+                    f" | suggested actions: {top_actions}" if top_actions else "",
+                )
+    except Exception:
+        pass
 
 
 def quality_color(value: float, thresholds: tuple = (0.8, 0.5)) -> str:

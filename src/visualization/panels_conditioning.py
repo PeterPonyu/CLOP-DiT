@@ -13,6 +13,7 @@ from typing import Dict, List, Optional
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.ticker import MaxNLocator
 
 from .style import COLORS, TYPE_PALETTE, apply_style, save_with_vcd, set_figure_suptitle
 
@@ -34,8 +35,8 @@ def plot_panel_l(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     apply_style()
-    fig, ax1 = plt.subplots(figsize=(6.0, 4.5))
-    fig.suptitle("Noise-Scale Trade-off (CFG=1.5)", fontsize=11)
+    fig, ax1 = plt.subplots(figsize=(6.8, 4.8))
+    set_figure_suptitle(fig, "Noise-Scale Trade-off (CFG=1.5)", fontsize=11)
 
     color_fd = COLORS["real"]
     color_cos = COLORS["baseline_gauss"]
@@ -51,38 +52,57 @@ def plot_panel_l(
     ax2.plot(noise_scales, div_ratios, "D-", color=color_div, lw=2, markersize=5, label="Diversity Ratio ↑")
     ax2.set_ylabel("Cosine / Ratio")
     ax2.set_ylim(0, 1.2)
+    ax2.tick_params(axis="x", which="both", bottom=False, top=False, labelbottom=False)
+
+    xticks = sorted(set(noise_scales))
+    ax1.set_xticks(xticks, [f"{x:.2f}" for x in xticks])
+    ax1.set_xlim(min(xticks) - 0.004, max(xticks) + 0.004)
 
     ax1.axvspan(0.02, 0.04, alpha=0.1, color="green", label="Sweet spot")
 
     chosen_eps = 0.03
+    summary_chunks = []
     if chosen_eps in noise_scales:
         idx_chosen = noise_scales.index(chosen_eps)
         ax1.axvline(x=chosen_eps, color=COLORS["baseline_shuffle"], linestyle="-", linewidth=2.5,
                      alpha=0.8, zorder=10, label=f"Production (ε={chosen_eps})")
-        ax1.annotate(
-            f"Production Config\n"
-            f"ε={chosen_eps}, CFG={cfg_scale}\n"
-            f"FD={fds[idx_chosen]:.3f}\n"
-            f"cos={centroids[idx_chosen]:.3f}\n"
-            f"div={div_ratios[idx_chosen]:.3f}",
-            xy=(chosen_eps, fds[idx_chosen]),
-            xytext=(chosen_eps + 0.02, fds[idx_chosen] + 0.05),
-            fontsize=10,
-            bbox=dict(boxstyle="round,pad=0.4", facecolor="#F3E5F5", edgecolor=COLORS["baseline_shuffle"], alpha=0.9),
-            arrowprops=dict(arrowstyle="->", color=COLORS["baseline_shuffle"], lw=2),
-            zorder=11,
+        ax1.scatter(
+            [chosen_eps],
+            [fds[idx_chosen]],
+            color=COLORS["baseline_shuffle"],
+            s=34,
+            zorder=12,
+        )
+        summary_chunks.append(
+            f"Production ε={chosen_eps:.2f}: FD {fds[idx_chosen]:.3f}, cos {centroids[idx_chosen]:.3f}, div {div_ratios[idx_chosen]:.3f}"
         )
 
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
-    ax1.legend(lines1 + lines2, labels1 + labels2, loc="center left", fontsize=9, frameon=False)
+    ax1.legend(
+        lines1 + lines2,
+        labels1 + labels2,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.16),
+        ncol=3,
+        fontsize=8,
+        frameon=False,
+    )
 
     best_idx = np.argmin(fds)
     if noise_scales[best_idx] != chosen_eps:
-        ax1.annotate(f"ε={noise_scales[best_idx]:.2f}\nFD={fds[best_idx]:.3f}",
-                     xy=(noise_scales[best_idx], fds[best_idx]),
-                     xytext=(noise_scales[best_idx] + 0.01, fds[best_idx] + 0.02),
-                     fontsize=10, arrowprops=dict(arrowstyle="->", color="black"))
+        ax1.scatter([noise_scales[best_idx]], [fds[best_idx]], color="black", s=28, zorder=12)
+        summary_chunks.append(f"Best FD ε={noise_scales[best_idx]:.2f}: {fds[best_idx]:.3f}")
+
+    if summary_chunks:
+        fig.text(
+            0.5,
+            0.015,
+            " | ".join(summary_chunks),
+            ha="center",
+            va="bottom",
+            fontsize=8,
+        )
 
     path = output_dir / "panel_l_noise_tradeoff.png"
     save_with_vcd(fig, path, dpi)
@@ -112,7 +132,7 @@ def plot_panel_m(
     apply_style()
     n_modes = 1 + len(mode_diversity)  # real + each mode
     _fw = max(10.0, 2.8 * n_modes)
-    fig, axes = plt.subplots(1, n_modes, figsize=(_fw, 4.5),
+    fig, axes = plt.subplots(1, n_modes, figsize=(_fw, 4.8),
                              gridspec_kw={"wspace": 0.40}, squeeze=False)
     axes = axes[0]
 
@@ -128,7 +148,7 @@ def plot_panel_m(
         for tid in selected_types
     }
 
-    def plot_one(ax, mask, title, alpha=0.4, size=8):
+    def plot_one(ax, mask, title, alpha=0.4, size=8, *, show_ylabel=True):
         for tid in selected_types:
             tmask = mask & (combined_labels == tid)
             ax.scatter(coords[tmask, 0], coords[tmask, 1],
@@ -136,11 +156,17 @@ def plot_panel_m(
                        label=type_to_name[tid])
         ax.set_title(title)
         ax.set_xlabel("PC1")
-        ax.set_ylabel("PC2")
+        if show_ylabel:
+            ax.set_ylabel("PC2")
+        else:
+            ax.set_ylabel("")
+            ax.tick_params(axis="y", labelleft=False)
+        ax.xaxis.set_major_locator(MaxNLocator(nbins=4))
+        ax.yaxis.set_major_locator(MaxNLocator(nbins=4))
 
     real_mask_bool = combined_source == "Real"
     plot_one(axes[0], real_mask_bool,
-             f"Real ({n_real} cells), div={real_diversity:.3f}",
+             f"Real\n{n_real} cells, div={real_diversity:.3f}",
              alpha=0.2, size=4)
 
     mode_counts = mode_counts or {}
@@ -148,8 +174,12 @@ def plot_panel_m(
         mode_mask = combined_source == mode_name
         div_val = mode_diversity.get(mode_name, 0.0)
         count = mode_counts.get(mode_name, mode_mask.sum())
-        plot_one(axes[i + 1], mode_mask,
-                 f"{mode_name} ({count} cells), div={div_val:.3f}")
+        plot_one(
+            axes[i + 1],
+            mode_mask,
+            f"{mode_name}\n{count} cells, div={div_val:.3f}",
+            show_ylabel=False,
+        )
 
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="lower center",
