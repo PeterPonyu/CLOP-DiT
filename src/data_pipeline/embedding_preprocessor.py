@@ -401,6 +401,22 @@ def preprocess_cached_embeddings(
     with open(cache_dir / f"preprocessing_stats{output_suffix}.json", "w") as f:
         json.dump(stats, f, indent=2)
 
+    # --- Dedup variant: if dedup arrays exist, transform with same preprocessors ---
+    cell_dedup_path = cache_dir / "cell_embeddings_dedup.npy"
+    text_dedup_path = cache_dir / "text_embeddings_dedup.npy"
+    if cell_dedup_path.is_file():
+        logger.info("\n--- Cell dedup: applying same preprocessor ---")
+        cell_dedup = np.load(cell_dedup_path)
+        cell_dedup_processed = cell_pre.transform(cell_dedup)
+        np.save(cache_dir / "cell_embeddings_dedup_preprocessed.npy", cell_dedup_processed)
+        logger.info(f"Saved cell_embeddings_dedup_preprocessed.npy {cell_dedup_processed.shape}")
+    if text_dedup_path.is_file():
+        logger.info("\n--- Text dedup: applying same preprocessor ---")
+        text_dedup = np.load(text_dedup_path)
+        text_dedup_processed = text_pre.transform(text_dedup)
+        np.save(cache_dir / "text_embeddings_dedup_preprocessed.npy", text_dedup_processed)
+        logger.info(f"Saved text_embeddings_dedup_preprocessed.npy {text_dedup_processed.shape}")
+
     logger.info("\n" + "=" * 60)
     logger.info("Preprocessing complete!")
     logger.info(f"Text cosine: {stats['text']['raw_cosine_mean']:.4f} → {stats['text']['processed_cosine_mean']:.4f}")

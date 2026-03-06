@@ -10,8 +10,9 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+# Run the delivery script by path so we don't load the rest of src.visualization (e.g. torch)
 if [[ "${1:-}" == "--check" ]]; then
-    exec python -m src.visualization.article_delivery --check-only
+    exec python src/visualization/article_delivery.py --check-only
 else
-    exec python -m src.visualization.article_delivery
+    exec python src/visualization/article_delivery.py
 fi

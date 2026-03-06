@@ -31,6 +31,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.architecture.dit import DiT1D
 from src.utils.helpers import seed_everything, get_device
+from src.utils.paths import CACHE_DIR, RESULTS_DIR, CHECKPOINT_DIR, FIG_DIR
 from src.visualization.panels_diversity import plot_diagnostics
 
 logger = logging.getLogger(__name__)
@@ -544,17 +545,23 @@ def main():
     )
 
     parser = argparse.ArgumentParser(description="CLOP-DiT Diversity Diagnostics")
-    parser.add_argument("--cache-dir", default="data/cached_latents_v5.2")
-    parser.add_argument("--dit-checkpoint", default="models/checkpoints/dit_best.pth")
-    parser.add_argument("--generated", default="results/generated_embeddings.npy")
-    parser.add_argument("--generated-labels", default="results/generated_labels.npy")
+    parser.add_argument("--cache-dir", default=None)
+    parser.add_argument("--dit-checkpoint", default=None)
+    parser.add_argument("--generated", default=None)
+    parser.add_argument("--generated-labels", default=None)
     parser.add_argument("--num-per-type", type=int, default=100)
     parser.add_argument("--num-steps", type=int, default=20)
     parser.add_argument("--cfg-scales", nargs="+", type=float,
                         default=[1.0, 1.5, 2.0, 3.0, 5.0, 7.0])
-    parser.add_argument("--output-dir", default="results")
+    parser.add_argument("--output-dir", default=None)
     parser.add_argument("--dpi", type=int, default=300)
     args = parser.parse_args()
+
+    args.cache_dir = args.cache_dir or str(CACHE_DIR)
+    args.dit_checkpoint = args.dit_checkpoint or str(CHECKPOINT_DIR / "dit_best.pth")
+    args.generated = args.generated or str(RESULTS_DIR / "generated_embeddings.npy")
+    args.generated_labels = args.generated_labels or str(RESULTS_DIR / "generated_labels.npy")
+    args.output_dir = args.output_dir or str(RESULTS_DIR)
 
     device = get_device()
     cache = Path(args.cache_dir)

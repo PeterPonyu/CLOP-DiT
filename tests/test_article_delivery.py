@@ -31,7 +31,7 @@ class TestArticleFigureManifest:
         }
         for name in expected:
             assert name in ARTICLE_FIGURE_BASENAMES, f"Missing basename: {name}"
-        assert set(ARTICLE_FIGURE_BASENAMES) == set(ARTICLE_FIGURE_BASENAMES)  # no dupes
+        assert len(set(ARTICLE_FIGURE_BASENAMES)) == len(ARTICLE_FIGURE_BASENAMES), "Duplicate basenames"
 
 
 class TestDeliverFigures:

@@ -386,19 +386,25 @@ def run_benchmark(
 # ─────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import argparse
+    from src.utils.paths import CACHE_DIR, RESULTS_DIR
+
     logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
 
     parser = argparse.ArgumentParser(description="CLOP-DiT Model Benchmarking")
-    parser.add_argument("--cache-dir", default="data/cached_latents_v5.2")
-    parser.add_argument("--results-dir", default="results")
-    parser.add_argument("--output", default="results/benchmark_report.json")
+    parser.add_argument("--cache-dir", default=None)
+    parser.add_argument("--results-dir", default=None)
+    parser.add_argument("--output", default=None)
     parser.add_argument("--n-sub", type=int, default=5000)
     args = parser.parse_args()
 
+    cache_dir = args.cache_dir or str(CACHE_DIR)
+    results_dir = args.results_dir or str(RESULTS_DIR)
+    output_path = args.output or str(RESULTS_DIR / "benchmark_report.json")
+
     report = run_benchmark(
-        cache_dir=args.cache_dir,
-        results_dir=args.results_dir,
-        output_path=args.output,
+        cache_dir=cache_dir,
+        results_dir=results_dir,
+        output_path=output_path,
         n_sub=args.n_sub,
     )
 

@@ -35,6 +35,7 @@ from scripts.generate_embeddings import (
     load_dit, load_clop, load_variant_conditions, generate_all_types,
 )
 from src.utils.helpers import seed_everything, get_device
+from src.utils.paths import CACHE_DIR, CHECKPOINT_DIR, FIG_DIR
 from src.evaluation.metrics import GenerationMetrics
 from src.visualization.panels_conditioning import plot_panel_l, plot_panel_m
 
@@ -216,10 +217,10 @@ def main():
     )
 
     parser = argparse.ArgumentParser(description="Conditioning analysis panels L+M")
-    parser.add_argument("--dit-checkpoint", default="models/checkpoints/dit_best.pth")
-    parser.add_argument("--clop-checkpoint", default="models/checkpoints/clop_best.pth")
-    parser.add_argument("--cache-dir", default="data/cached_latents_v5.2")
-    parser.add_argument("--output-dir", default="results/figures")
+    parser.add_argument("--dit-checkpoint", default=str(CHECKPOINT_DIR / "dit_best.pth"))
+    parser.add_argument("--clop-checkpoint", default=str(CHECKPOINT_DIR / "clop_best.pth"))
+    parser.add_argument("--cache-dir", default=str(CACHE_DIR))
+    parser.add_argument("--output-dir", default=str(FIG_DIR))
     parser.add_argument("--num-per-type", type=int, default=100)
     parser.add_argument("--num-steps", type=int, default=20)
     parser.add_argument("--cfg-scale", type=float, default=1.5)

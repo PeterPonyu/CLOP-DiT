@@ -19,17 +19,18 @@ import numpy as np
 from . import io as viz_io
 from .style import apply_style
 from ._utils import sample_pairwise_cosines
+from src.utils.paths import CACHE_DIR, RESULTS_DIR, FIG_DIR, CHECKPOINT_DIR
 
 matplotlib.use("Agg")
 logger = logging.getLogger(__name__)
 
 
 def plot_diversity_distributions_violin(
-    cache_dir: str = "data/cache",
-    div_metrics_path: str = "results/diversity_diagnostics.json",
+    cache_dir: Optional[str] = None,
+    div_metrics_path: Optional[str] = None,
     generated_path: Optional[str] = None,
     generated_labels_path: Optional[str] = None,
-    output_dir: str = "results/figures",
+    output_dir: Optional[str] = None,
     dpi: int = 300,
     save: bool = True,
     ax: Optional[plt.Axes] = None,
@@ -37,18 +38,21 @@ def plot_diversity_distributions_violin(
     save_panel_fn: Optional[Callable] = None,
 ) -> Optional[plt.Figure]:
     """Violin comparison of intra-type cosine distributions for the most shifted cell types."""
+    cache_dir = cache_dir or str(CACHE_DIR)
+    div_metrics_path = div_metrics_path or str(RESULTS_DIR / "diversity_diagnostics.json")
+    output_dir = output_dir or str(FIG_DIR)
     div_path = Path(div_metrics_path)
     cache = Path(cache_dir)
     real_path = cache / "cell_embeddings_dedup_preprocessed.npy"
     real_labels_path = cache / "text_group_ids_dedup.npy"
 
     if generated_path is None:
-        for candidate in ["results/generated_embeddings.npy", "models/checkpoints/generated_cells.npy"]:
+        for candidate in [str(RESULTS_DIR / "generated_embeddings.npy"), str(CHECKPOINT_DIR / "generated_cells.npy")]:
             if Path(candidate).exists():
                 generated_path = candidate
                 break
-    if generated_labels_path is None and Path("results/generated_labels.npy").exists():
-        generated_labels_path = "results/generated_labels.npy"
+    if generated_labels_path is None and (RESULTS_DIR / "generated_labels.npy").exists():
+        generated_labels_path = str(RESULTS_DIR / "generated_labels.npy")
 
     needed_paths = [div_path, real_path, real_labels_path]
     if generated_path is not None:
@@ -185,10 +189,10 @@ def plot_diversity_distributions_violin(
 def plot_metrics_summary(
     clop_hist: Optional[Dict] = None,
     dit_hist: Optional[Dict] = None,
-    gen_metrics_path: str = "results/generation_metrics.json",
-    expr_metrics_path: str = "results/expression_metrics.json",
-    div_metrics_path: str = "results/diversity_diagnostics.json",
-    output_dir: str = "results/figures",
+    gen_metrics_path: Optional[str] = None,
+    expr_metrics_path: Optional[str] = None,
+    div_metrics_path: Optional[str] = None,
+    output_dir: Optional[str] = None,
     dpi: int = 300,
     save: bool = True,
     save_panel_fn: Optional[Callable] = None,
@@ -201,6 +205,11 @@ def plot_metrics_summary(
     D4: Configuration + expression summary (compact annotated bars)
     """
     from matplotlib.patches import FancyBboxPatch  # noqa: F401 (kept for parity)
+
+    gen_metrics_path = gen_metrics_path or str(RESULTS_DIR / "generation_metrics.json")
+    expr_metrics_path = expr_metrics_path or str(RESULTS_DIR / "expression_metrics.json")
+    div_metrics_path = div_metrics_path or str(RESULTS_DIR / "diversity_diagnostics.json")
+    output_dir = output_dir or str(FIG_DIR)
 
     # ── Collect all data ──
     train_metrics: Dict[str, float] = {}
@@ -263,7 +272,7 @@ def plot_metrics_summary(
         }
 
     cfg_meta: Dict = {}
-    gen_meta_path = Path("results/generation_metadata.json")
+    gen_meta_path = RESULTS_DIR / "generation_metadata.json"
     if gen_meta_path.exists():
         with open(gen_meta_path) as f:
             cfg_meta = json.load(f)

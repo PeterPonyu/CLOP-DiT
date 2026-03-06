@@ -27,6 +27,7 @@ import torch
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.architecture.decoder import ScGPTDecoder
+from src.utils.paths import CACHE_DIR, RESULTS_DIR, SCPGPT_DIR, PROCESSED_H5AD_DIR
 from src.data_pipeline.embedding_preprocessor import EmbeddingPreprocessor
 from src.utils.helpers import seed_everything, get_device
 
@@ -266,13 +267,13 @@ def main():
     )
 
     parser = argparse.ArgumentParser(description="Decode DiT embeddings to gene expression")
-    parser.add_argument("--generated", default="results/generated_embeddings.npy")
-    parser.add_argument("--gen-labels", default="results/generated_labels.npy")
-    parser.add_argument("--cache-dir", default="data/cached_latents_v5.2")
-    parser.add_argument("--scgpt-dir", default="models/scgpt_pancancer")
+    parser.add_argument("--generated", default=str(RESULTS_DIR / "generated_embeddings.npy"))
+    parser.add_argument("--gen-labels", default=str(RESULTS_DIR / "generated_labels.npy"))
+    parser.add_argument("--cache-dir", default=str(CACHE_DIR))
+    parser.add_argument("--scgpt-dir", default=str(SCGPT_DIR))
     parser.add_argument("--h5ad-ref", default=None,
                         help="Reference h5ad for gene vocabulary (auto-detected if not set)")
-    parser.add_argument("--output-dir", default="results")
+    parser.add_argument("--output-dir", default=str(RESULTS_DIR))
     parser.add_argument("--n-real", type=int, default=2000,
                         help="Number of real cells to decode for comparison")
     parser.add_argument("--n-gen", type=int, default=2000,
@@ -312,7 +313,7 @@ def main():
         ref_h5ad = args.h5ad_ref
     else:
         # Auto-detect: find an h5ad with good gene coverage
-        h5ad_dir = Path("data/processed_h5ad")
+        h5ad_dir = PROCESSED_H5AD_DIR
         h5ad_files = sorted(h5ad_dir.glob("*_processed.h5ad"))
         if not h5ad_files:
             raise FileNotFoundError(f"No h5ad files in {h5ad_dir}")

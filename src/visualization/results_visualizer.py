@@ -47,6 +47,7 @@ from .style import (
     style_axes,
     GRIDSPEC_TIGHT,
 )
+from src.utils.paths import CACHE_DIR, RESULTS_DIR, FIG_DIR, CHECKPOINT_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -68,14 +69,22 @@ class ResultsVisualizer:
 
     def __init__(
         self,
-        clop_history_path: str = "models/checkpoints/clop_history.json",
-        dit_history_path: Optional[str] = "models/checkpoints/dit_history.json",
-        cache_dir: str = "data/cached_latents_v5.2",
-        output_dir: str = "results/figures",
+        clop_history_path: Optional[str] = None,
+        dit_history_path: Optional[str] = None,
+        cache_dir: Optional[str] = None,
+        output_dir: Optional[str] = None,
         dpi: int = 300,
         auto_refine: bool = True,
         max_refine_passes: int = 3,
     ):
+        if clop_history_path is None:
+            clop_history_path = str(CHECKPOINT_DIR / "clop_history.json")
+        if dit_history_path is None:
+            dit_history_path = str(CHECKPOINT_DIR / "dit_history.json")
+        if cache_dir is None:
+            cache_dir = str(CACHE_DIR)
+        if output_dir is None:
+            output_dir = str(FIG_DIR)
         self.cache = Path(cache_dir)
         self.output = Path(output_dir)
         self.output.mkdir(parents=True, exist_ok=True)
@@ -228,9 +237,9 @@ class ResultsVisualizer:
     # ──────────────────────────────────────────────────────────
     # PANEL D: Metrics Summary (grouped, compact, publication-ready)
     # ──────────────────────────────────────────────────────────
-    def plot_metrics_summary(self, gen_metrics_path: str = "results/generation_metrics.json",
-                             expr_metrics_path: str = "results/expression_metrics.json",
-                             div_metrics_path: str = "results/diversity_diagnostics.json",
+    def plot_metrics_summary(self, gen_metrics_path: Optional[str] = None,
+                             expr_metrics_path: Optional[str] = None,
+                             div_metrics_path: Optional[str] = None,
                              save: bool = True) -> Optional[plt.Figure]:
         """Visual metrics dashboard -- replaces table with bar charts + radar.
 
@@ -239,6 +248,12 @@ class ResultsVisualizer:
         D3: Diversity gauges (diversity ratio, collapsed types, cond gain)
         D4: Configuration + expression summary (compact annotated bars)
         """
+        if gen_metrics_path is None:
+            gen_metrics_path = str(RESULTS_DIR / "generation_metrics.json")
+        if expr_metrics_path is None:
+            expr_metrics_path = str(RESULTS_DIR / "expression_metrics.json")
+        if div_metrics_path is None:
+            div_metrics_path = str(RESULTS_DIR / "diversity_diagnostics.json")
         from .panels_quality import plot_metrics_summary as _plot_d
         return _plot_d(
             clop_hist=self.clop_hist,
@@ -305,7 +320,7 @@ class ResultsVisualizer:
     # ──────────────────────────────────────────────────────────
     def plot_per_type_generation(
         self,
-        metrics_path: str = "results/generation_metrics.json",
+        metrics_path: Optional[str] = None,
         save: bool = True,
     ) -> Optional[plt.Figure]:
         """Per-type generation quality: centroid cosine + Frechet distance.
@@ -314,6 +329,8 @@ class ResultsVisualizer:
         G2: Frechet distance per type (sorted, log scale)
         G3: Scatter of centroid cosine vs n_real (type size dependency)
         """
+        if metrics_path is None:
+            metrics_path = str(RESULTS_DIR / "generation_metrics.json")
         from .panels_quality import plot_per_type_generation as _plot_g
         return _plot_g(
             metrics_path=metrics_path,
@@ -328,12 +345,12 @@ class ResultsVisualizer:
     # ──────────────────────────────────────────────────────────
     def plot_expression_correlation(
         self,
-        real_expr_path: str = "results/real_expression.npy",
-        gen_expr_path: str = "results/generated_expression.npy",
-        real_labels_path: str = "results/real_expression_labels.npy",
-        gen_labels_path: str = "results/generated_expression_labels.npy",
-        gene_names_path: str = "results/expression_gene_names.json",
-        metrics_path: str = "results/expression_metrics.json",
+        real_expr_path: Optional[str] = None,
+        gen_expr_path: Optional[str] = None,
+        real_labels_path: Optional[str] = None,
+        gen_labels_path: Optional[str] = None,
+        gene_names_path: Optional[str] = None,
+        metrics_path: Optional[str] = None,
         save: bool = True,
     ) -> Optional[plt.Figure]:
         """Enhanced gene expression fidelity with density-aware scatter and richer bars.
@@ -343,6 +360,12 @@ class ResultsVisualizer:
         H3: Marker gene grouped bars with error bars and fold-change annotation
         H4: Per-gene residual distribution (gen - real)
         """
+        real_expr_path = real_expr_path or str(RESULTS_DIR / "real_expression.npy")
+        gen_expr_path = gen_expr_path or str(RESULTS_DIR / "generated_expression.npy")
+        real_labels_path = real_labels_path or str(RESULTS_DIR / "real_expression_labels.npy")
+        gen_labels_path = gen_labels_path or str(RESULTS_DIR / "generated_expression_labels.npy")
+        gene_names_path = gene_names_path or str(RESULTS_DIR / "expression_gene_names.json")
+        metrics_path = metrics_path or str(RESULTS_DIR / "expression_metrics.json")
         from .panels_expression import plot_expression_correlation as _plot_h
         return _plot_h(
             real_expr_path=real_expr_path,
@@ -362,10 +385,10 @@ class ResultsVisualizer:
     # ──────────────────────────────────────────────────────────
     def plot_expression_analysis(
         self,
-        real_expr_path: str = "results/real_expression.npy",
-        gen_expr_path: str = "results/generated_expression.npy",
-        gene_names_path: str = "results/expression_gene_names.json",
-        metrics_path: str = "results/expression_metrics.json",
+        real_expr_path: Optional[str] = None,
+        gen_expr_path: Optional[str] = None,
+        gene_names_path: Optional[str] = None,
+        metrics_path: Optional[str] = None,
         save: bool = True,
     ) -> Optional[plt.Figure]:
         """Enhanced expression decoder analysis with denser information.
@@ -375,6 +398,10 @@ class ResultsVisualizer:
         I3: Per-cell expression std as overlaid KDE-style histograms
         I4: Top variable genes heatmap (genes with highest CV difference)
         """
+        real_expr_path = real_expr_path or str(RESULTS_DIR / "real_expression.npy")
+        gen_expr_path = gen_expr_path or str(RESULTS_DIR / "generated_expression.npy")
+        gene_names_path = gene_names_path or str(RESULTS_DIR / "expression_gene_names.json")
+        metrics_path = metrics_path or str(RESULTS_DIR / "expression_metrics.json")
         from .panels_expression import plot_expression_analysis as _plot_i
         return _plot_i(
             real_expr_path=real_expr_path,
@@ -393,12 +420,12 @@ class ResultsVisualizer:
 
     def plot_marker_gene_comparison(
         self,
-        real_expr_path: str = "results/real_expression.npy",
-        gen_expr_path: str = "results/generated_expression.npy",
-        real_labels_path: str = "results/real_expression_labels.npy",
-        gen_labels_path: str = "results/generated_expression_labels.npy",
-        gene_names_path: str = "results/expression_gene_names.json",
-        metrics_path: str = "results/expression_metrics.json",
+        real_expr_path: Optional[str] = None,
+        gen_expr_path: Optional[str] = None,
+        real_labels_path: Optional[str] = None,
+        gen_labels_path: Optional[str] = None,
+        gene_names_path: Optional[str] = None,
+        metrics_path: Optional[str] = None,
         save: bool = True,
     ) -> Optional[plt.Figure]:
         """Rich marker-gene comparison with violin plots and annotated heatmaps.
@@ -408,6 +435,12 @@ class ResultsVisualizer:
         N3: Difference heatmap with statistical significance indicators
         N4: Fold-change waterfall for all markers
         """
+        real_expr_path = real_expr_path or str(RESULTS_DIR / "real_expression.npy")
+        gen_expr_path = gen_expr_path or str(RESULTS_DIR / "generated_expression.npy")
+        real_labels_path = real_labels_path or str(RESULTS_DIR / "real_expression_labels.npy")
+        gen_labels_path = gen_labels_path or str(RESULTS_DIR / "generated_expression_labels.npy")
+        gene_names_path = gene_names_path or str(RESULTS_DIR / "expression_gene_names.json")
+        metrics_path = metrics_path or str(RESULTS_DIR / "expression_metrics.json")
         from .panels_expression import plot_marker_gene_comparison as _plot_n
         return _plot_n(
             real_expr_path=real_expr_path,
@@ -428,12 +461,15 @@ class ResultsVisualizer:
     # ──────────────────────────────────────────────────────────
     def plot_baseline_comparison(
         self,
-        gen_metrics_path: str = "results/generation_metrics.json",
-        div_metrics_path: str = "results/diversity_diagnostics.json",
-        baseline_metrics_path: str = "results/baseline_metrics.json",
+        gen_metrics_path: Optional[str] = None,
+        div_metrics_path: Optional[str] = None,
+        baseline_metrics_path: Optional[str] = None,
         save: bool = True,
     ) -> Optional[plt.Figure]:
         """Panel O: CLOP-DiT vs baselines — graphical O3 (no table)."""
+        gen_metrics_path = gen_metrics_path or str(RESULTS_DIR / "generation_metrics.json")
+        div_metrics_path = div_metrics_path or str(RESULTS_DIR / "diversity_diagnostics.json")
+        baseline_metrics_path = baseline_metrics_path or str(RESULTS_DIR / "baseline_metrics.json")
         from .baseline_panels import plot_baseline_comparison as _plot_o
         return _plot_o(
             gen_metrics_path=gen_metrics_path,
@@ -448,12 +484,14 @@ class ResultsVisualizer:
     # ──────────────────────────────────────────────────────────
     # PANELS P/Q/R: Downstream Biology (delegates to downstream_panels)
     # ──────────────────────────────────────────────────────────
-    def plot_downstream_panels(self, downstream_dir: str = "results/downstream") -> List[Path]:
+    def plot_downstream_panels(self, downstream_dir: Optional[str] = None) -> List[Path]:
         """Generate Panels P, Q, R from pre-computed downstream analysis.
 
         Run ``python -m src.evaluation.downstream_biology`` first to produce
         the JSON summaries under results/downstream/.
         """
+        if downstream_dir is None:
+            downstream_dir = str(RESULTS_DIR / "downstream")
         from .downstream_panels import (
             plot_clustering_panel,
             plot_classifier_panel,
@@ -573,7 +611,7 @@ class ResultsVisualizer:
         ax_bottom = fig.add_subplot(gs[1, :])
         violin_fig = plot_diversity_distributions_violin(
             cache_dir=str(self.cache),
-            div_metrics_path="results/diversity_diagnostics.json",
+            div_metrics_path=str(RESULTS_DIR / "diversity_diagnostics.json"),
             output_dir=str(self.output),
             dpi=self.dpi,
             save=False,
@@ -700,7 +738,7 @@ class ResultsVisualizer:
             from .panels_quality import plot_fidelity_and_alignment_merged
             fig_gf = plot_fidelity_and_alignment_merged(
                 cache_dir=str(self.cache),
-                metrics_path="results/generation_metrics.json",
+                metrics_path=str(RESULTS_DIR / "generation_metrics.json"),
                 type_names=self.type_names,
                 output_dir=str(self.output),
                 dpi=self.dpi,
@@ -743,7 +781,7 @@ class ResultsVisualizer:
         try:
             from .benchmark_panels import plot_benchmark_panel as _plot_s
             fig_s = _plot_s(
-                report_path="results/benchmark_report.json",
+                report_path=str(RESULTS_DIR / "benchmark_report.json"),
                 output_dir=self.output,
                 dpi=self.dpi,
             )
@@ -796,10 +834,10 @@ def main():
     )
 
     parser = argparse.ArgumentParser(description="Generate CLOP-DiT results report")
-    parser.add_argument("--clop-history", default="models/checkpoints/clop_history.json")
-    parser.add_argument("--dit-history", default="models/checkpoints/dit_history.json")
-    parser.add_argument("--cache-dir", default="data/cached_latents_v5.2")
-    parser.add_argument("--output-dir", default="results/figures")
+    parser.add_argument("--clop-history", default=str(CHECKPOINT_DIR / "clop_history.json"))
+    parser.add_argument("--dit-history", default=str(CHECKPOINT_DIR / "dit_history.json"))
+    parser.add_argument("--cache-dir", default=str(CACHE_DIR))
+    parser.add_argument("--output-dir", default=str(FIG_DIR))
     parser.add_argument("--no-umap", action="store_true", help="Skip UMAP (faster)")
     parser.add_argument("--no-auto-refine", action="store_true",
                         help="Disable VCD auto-refinement loop")

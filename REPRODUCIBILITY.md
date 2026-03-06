@@ -109,5 +109,4 @@ Training was performed on a single NVIDIA GPU (≥16 GB VRAM recommended for DiT
 
 ## 8. Contact
 
-For access to model weights, pre-processed embeddings, or other materials:
-**Corresponding author:** zeyu.fu@[institution].edu
+For access to model weights, pre-processed embeddings, or other materials, please contact the corresponding author (Zeyu Fu).

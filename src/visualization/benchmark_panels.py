@@ -21,6 +21,7 @@ import numpy as np
 from .style import (
     COLORS, save_panel, set_dense_tick_labels, style_axes
 )
+from src.utils.paths import RESULTS_DIR, FIG_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +35,8 @@ METHOD_COLORS = {
 
 
 def plot_benchmark_panel(
-    report_path: str = "results/benchmark_report.json",
-    output_dir: Path = Path("results/figures"),
+    report_path: Optional[str] = None,
+    output_dir: Optional[Path] = None,
     dpi: int = 300,
     save: bool = True,
 ) -> Optional[plt.Figure]:
@@ -46,6 +47,8 @@ def plot_benchmark_panel(
     S3: Key metrics comparison — grouped bar chart for FD, Cosine, Diversity, Coverage
     S4: Confidence interval comparison — error-bar plot for FD and Centroid Cosine
     """
+    report_path = report_path or str(RESULTS_DIR / "benchmark_report.json")
+    output_dir = output_dir or FIG_DIR
     rpath = Path(report_path)
     if not rpath.exists():
         logger.info("No benchmark report — skipping Panel S")

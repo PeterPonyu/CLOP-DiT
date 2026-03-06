@@ -105,10 +105,14 @@ bash scripts/verify_article_figures.sh
 
 ### 2. Rebuild Article
 ```bash
+# One-command: verify figures + build PDF
+bash scripts/build_article.sh
+
+# Or manually:
 cd articles/
 latexmk -pdf clop_dit_biology.tex
-# Or your preferred LaTeX command
 ```
+Full article workflow: run `regenerate_report.sh` (or `python scripts/run_pipeline.py --from generate`), then `build_article.sh`.
 
 ### 3. Check Output
 ```bash

@@ -29,6 +29,7 @@ from .style import (
     set_dense_tick_labels,
     style_axes,
 )
+from src.utils.paths import RESULTS_DIR, FIG_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -215,12 +216,14 @@ def plot_clustering_and_classifier_merged(
 
 
 def generate_downstream_panels(
-    downstream_dir: str = "results/downstream",
-    output_dir: str = "results/figures",
+    downstream_dir: Optional[str] = None,
+    output_dir: Optional[str] = None,
     type_names: Optional[Dict[int, str]] = None,
     dpi: int = 300,
 ) -> List[Path]:
     """Load pre-computed downstream JSONs + internal arrays and generate P/Q/R."""
+    downstream_dir = downstream_dir or str(RESULTS_DIR / "downstream")
+    output_dir = output_dir or str(FIG_DIR)
     ds_dir = Path(downstream_dir)
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)

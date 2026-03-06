@@ -11,7 +11,7 @@ from .paths import (
     CONFIG_DIR,
     LOG_DIR,
     PROCESSED_H5AD_DIR,
-    SCPGPT_DIR,
+    SCGPT_DIR,
     ARTICLE_DIR,
     ARTICLE_TEX,
 )

@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .style import COLORS, save_panel, style_axes, GRIDSPEC_TIGHT, set_dense_tick_labels
+from src.utils.paths import CACHE_DIR, RESULTS_DIR, FIG_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -24,11 +25,11 @@ METHOD_COLORS = ["#1976D2", "#FF7043", "#4CAF50", "#9C27B0", "#FFC107"]
 
 
 def plot_baseline_comparison(
-    gen_metrics_path: str = "results/generation_metrics.json",
-    div_metrics_path: str = "results/diversity_diagnostics.json",
-    baseline_metrics_path: str = "results/baseline_metrics.json",
-    cache_dir: str = "data/cached_latents_v5.2",
-    output_dir: Path = Path("results/figures"),
+    gen_metrics_path: Optional[str] = None,
+    div_metrics_path: Optional[str] = None,
+    baseline_metrics_path: Optional[str] = None,
+    cache_dir: Optional[str] = None,
+    output_dir: Optional[Path] = None,
     dpi: int = 300,
     save: bool = True,
 ) -> Optional[plt.Figure]:
@@ -38,6 +39,11 @@ def plot_baseline_comparison(
     O2: Polar radar
     O3: Relative improvement strip (horizontal bars showing % improvement)
     """
+    gen_metrics_path = gen_metrics_path or str(RESULTS_DIR / "generation_metrics.json")
+    div_metrics_path = div_metrics_path or str(RESULTS_DIR / "diversity_diagnostics.json")
+    baseline_metrics_path = baseline_metrics_path or str(RESULTS_DIR / "baseline_metrics.json")
+    cache_dir = cache_dir or str(CACHE_DIR)
+    output_dir = output_dir or FIG_DIR
     gen_path = Path(gen_metrics_path)
     if not gen_path.exists():
         logger.info("No generation metrics — skipping Panel O")
@@ -205,8 +211,8 @@ def _compute_baselines(cache_dir: str = "data/cached_latents_v5.2") -> Dict[str,
     cache = Path(cache_dir)
     cell_path = cache / "cell_embeddings_dedup_preprocessed.npy"
     gid_path = cache / "text_group_ids_dedup.npy"
-    gen_path = Path("results/generated_embeddings.npy")
-    gen_lab_path = Path("results/generated_labels.npy")
+    gen_path = RESULTS_DIR / "generated_embeddings.npy"
+    gen_lab_path = RESULTS_DIR / "generated_labels.npy"
 
     if not all(p.exists() for p in [cell_path, gid_path, gen_path, gen_lab_path]):
         return {}
@@ -360,7 +366,7 @@ def _compute_baselines(cache_dir: str = "data/cached_latents_v5.2") -> Dict[str,
         },
     }
 
-    bl_path = Path("results/baseline_metrics.json")
+    bl_path = RESULTS_DIR / "baseline_metrics.json"
     with open(bl_path, "w") as f:
         json.dump(baselines, f, indent=2)
     logger.info(f"Saved baseline metrics → {bl_path}")

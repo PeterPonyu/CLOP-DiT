@@ -34,6 +34,7 @@ import torch.nn.functional as F
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.architecture.dit import DiT1D
+from src.utils.paths import CACHE_DIR, RESULTS_DIR, CHECKPOINT_DIR
 from src.architecture.clop import CLOPAligner
 from src.utils.helpers import seed_everything, get_device
 
@@ -373,9 +374,9 @@ def main():
     )
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dit-checkpoint", default="models/checkpoints/dit_best.pth")
-    parser.add_argument("--cache-dir", default="data/cached_latents_v5.2")
-    parser.add_argument("--output-dir", default="results")
+    parser.add_argument("--dit-checkpoint", default=str(CHECKPOINT_DIR / "dit_best.pth"))
+    parser.add_argument("--cache-dir", default=str(CACHE_DIR))
+    parser.add_argument("--output-dir", default=str(RESULTS_DIR))
     parser.add_argument("--num-per-type", type=int, default=100)
     parser.add_argument("--num-steps", type=int, default=20)
     parser.add_argument("--cfg-scale", type=float, default=1.5,
@@ -386,7 +387,7 @@ def main():
                         help="Condition mode (default: condition_noise)")
     parser.add_argument("--noise-scale", type=float, default=0.03,
                         help="Noise std for condition_noise mode (default 0.03)")
-    parser.add_argument("--clop-checkpoint", default="models/checkpoints/clop_best.pth",
+    parser.add_argument("--clop-checkpoint", default=str(CHECKPOINT_DIR / "clop_best.pth"),
                         help="CLOP checkpoint for variant mode")
     parser.add_argument("--variant-blend", type=float, default=0.7,
                         help="Blend weight for variant mode (0.7=70%% canonical, 30%% variant)")

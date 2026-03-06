@@ -11,6 +11,19 @@ bash scripts/regenerate_report.sh
 bash scripts/regenerate_report.sh --skip-gen
 ```
 
+To build the article PDF after figures are ready:
+```bash
+bash scripts/build_article.sh
+```
+
+For a single entry point that can run from data through to article (or from a given stage), use:
+```bash
+python scripts/run_pipeline.py --from generate   # report only (like regenerate_report.sh)
+python scripts/run_pipeline.py --stage all --build-article   # full pipeline + PDF
+```
+
+Paths are controlled by `configs/pipeline.yaml` and env vars (`CLOPDIT_CACHE_DIR`, etc.).
+
 The pipeline automatically verifies all 15 article figures and creates symlinks in `articles/figures/`. To verify without regenerating:
 
 ```bash

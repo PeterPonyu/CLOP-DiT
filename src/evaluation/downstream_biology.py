@@ -551,13 +551,18 @@ def run_all_downstream(
 
 def main():
     import argparse
+    from src.utils.paths import CACHE_DIR, RESULTS_DIR
+
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
     parser = argparse.ArgumentParser(description="Run downstream biological analysis")
-    parser.add_argument("--output-dir", default="results/downstream")
-    parser.add_argument("--caption-json", default="data/cached_latents_v5.2/text_captions_deduplicated.json")
+    parser.add_argument("--output-dir", default=None)
+    parser.add_argument("--caption-json", default=None)
     args = parser.parse_args()
+
+    args.output_dir = args.output_dir or str(RESULTS_DIR / "downstream")
+    args.caption_json = args.caption_json or str(CACHE_DIR / "text_captions_deduplicated.json")
 
     # Load type names
     type_names = {}

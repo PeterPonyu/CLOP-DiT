@@ -91,9 +91,17 @@ def deliver_figures(
     return True
 
 
-def main() -> int:
-    from src.utils.paths import FIG_DIR, ARTICLE_FIGURES_DIR
+def _default_dirs():
+    """Default source/target dirs without importing src.utils (avoids pulling in torch)."""
+    import os
+    root = Path(__file__).resolve().parent.parent.parent
+    source = Path(os.environ.get("CLOPDIT_FIG_DIR", str(root / "results" / "figures")))
+    target = Path(os.environ.get("CLOPDIT_ARTICLE_FIGURES_DIR", str(root / "articles" / "figures")))
+    return source, target
 
+
+def main() -> int:
+    default_source, default_target = _default_dirs()
     parser = argparse.ArgumentParser(
         description="Verify article figure PDFs and create symlinks (or copies) in the article figures directory."
     )
@@ -111,18 +119,18 @@ def main() -> int:
         "--source-dir",
         type=Path,
         default=None,
-        help=f"Source directory with generated PDFs (default: {FIG_DIR})",
+        help=f"Source directory with generated PDFs (default: {default_source})",
     )
     parser.add_argument(
         "--target-dir",
         type=Path,
         default=None,
-        help=f"Target directory for article figures (default: {ARTICLE_FIGURES_DIR})",
+        help=f"Target directory for article figures (default: {default_target})",
     )
     args = parser.parse_args()
 
-    source = args.source_dir if args.source_dir is not None else FIG_DIR
-    target = args.target_dir if args.target_dir is not None else ARTICLE_FIGURES_DIR
+    source = args.source_dir if args.source_dir is not None else default_source
+    target = args.target_dir if args.target_dir is not None else default_target
 
     if args.check_only:
         print(f"Checking {len(ARTICLE_FIGURE_BASENAMES)} article figures in {source}...")
