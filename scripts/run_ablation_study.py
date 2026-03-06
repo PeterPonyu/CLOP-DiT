@@ -53,51 +53,96 @@ PYTHON = sys.executable
 ABLATION_REGISTRY: Dict[str, Dict[str, Any]] = {
     "baseline": {
         "description": "Full v8.2 config (all improvements enabled)",
+        "category": "reference",
         "overrides": {},
     },
     "no_variants": {
         "description": "Disable caption variant augmentation",
+        "category": "regularization",
         "overrides": {"variant_prob": 0.0},
     },
     "no_mixup": {
         "description": "Disable embedding MixUp regularization",
+        "category": "regularization",
         "overrides": {"mixup_alpha": 0.0},
     },
     "no_rdrop": {
         "description": "Disable R-Drop consistency regularization",
+        "category": "regularization",
         "overrides": {"rdrop_weight": 0.0},
     },
     "no_cell_noise": {
         "description": "Disable cell embedding noise augmentation",
+        "category": "regularization",
         "overrides": {"cell_noise_std": 0.0},
     },
     "low_temperature_cap": {
         "description": "Temperature cap at 20 (v8.1 level) vs 50",
+        "category": "optimization",
         "overrides": {"max_temperature": 20.0},
     },
     "high_variant_prob": {
         "description": "Higher variant probability (0.5 vs 0.3)",
+        "category": "regularization",
         "overrides": {"variant_prob": 0.5},
     },
     "no_label_smoothing": {
         "description": "Disable label smoothing",
+        "category": "optimization",
         "overrides": {"label_smoothing": 0.0},
     },
     "wider_proj": {
         "description": "Wider projection head (768-dim vs 512-dim)",
+        "category": "architecture",
         "overrides": {"proj_dim": 768},
     },
     "lighter_dropout": {
         "description": "Lower dropout (0.15 vs 0.30)",
+        "category": "regularization",
         "overrides": {"dropout": 0.15},
     },
     "no_regularization": {
         "description": "Remove all new regularization (variants, MixUp, R-Drop)",
+        "category": "regularization",
         "overrides": {
             "variant_prob": 0.0,
             "mixup_alpha": 0.0,
             "rdrop_weight": 0.0,
         },
+    },
+    "no_duplicate_mask": {
+        "description": "Disable automatic duplicate-text masking",
+        "category": "conditioning",
+        "overrides": {"auto_duplicate_mask": False},
+    },
+    "no_cohesion": {
+        "description": "Disable prototype cohesion regularization",
+        "category": "regularization",
+        "overrides": {"cohesion_weight": 0.0},
+    },
+    "smaller_proj": {
+        "description": "Reduce projection head to 256 dimensions",
+        "category": "architecture",
+        "overrides": {"proj_dim": 256},
+    },
+    "fixed_temperature": {
+        "description": "Freeze temperature instead of learning it",
+        "category": "optimization",
+        "overrides": {"temperature_learnable": False},
+    },
+    "no_whitening": {
+        "description": "Disable whitened/preprocessed embeddings",
+        "category": "preprocessing",
+        "overrides": {
+            "use_preprocessed": False,
+            "preprocess_text_method": "none",
+            "preprocess_cell_method": "none",
+        },
+    },
+    "small_batch": {
+        "description": "Reduce batch size to 256 to weaken prototype collisions",
+        "category": "optimization",
+        "overrides": {"batch_size": 256},
     },
 }
 
@@ -187,6 +232,7 @@ def run_single_ablation(
     meta = {
         "ablation_name": ablation_name,
         "description": description,
+        "category": next((info.get("category", "uncategorized") for name, info in ABLATION_REGISTRY.items() if name == ablation_name), "uncategorized"),
         "overrides": overrides,
         "base_config_diff": {k: {"base": base_config.get(k), "ablation": v}
                             for k, v in overrides.items()},
@@ -227,6 +273,7 @@ def run_single_ablation(
     summary = {
         "ablation_name": ablation_name,
         "description": description,
+        "category": next((info.get("category", "uncategorized") for name, info in ABLATION_REGISTRY.items() if name == ablation_name), "uncategorized"),
         "overrides": overrides,
         "seed": seed,
         "elapsed_seconds": elapsed,
@@ -345,6 +392,7 @@ def generate_report(include_historical: bool = True) -> str:
                 if m.get("best_val_proto_acc"):
                     results.append({
                         "name": f"[hist] {name}",
+                        "category": exp.get("category", "historical"),
                         "val_proto_acc": m["best_val_proto_acc"],
                         "val_proto_top5": m.get("best_val_proto_top5", 0),
                         "val_proto_top10": m.get("best_val_proto_top10", 0),
@@ -366,6 +414,7 @@ def generate_report(include_historical: bool = True) -> str:
             if not m or "error" in m:
                 results.append({
                     "name": summary["ablation_name"],
+                    "category": summary.get("category", "uncategorized"),
                     "val_proto_acc": 0,
                     "val_proto_top5": 0,
                     "val_proto_top10": 0,
@@ -378,6 +427,7 @@ def generate_report(include_historical: bool = True) -> str:
 
             results.append({
                 "name": summary["ablation_name"],
+                "category": summary.get("category", "uncategorized"),
                 "val_proto_acc": m["best_val_proto_acc"],
                 "val_proto_top5": m.get("best_val_proto_top5", 0),
                 "val_proto_top10": m.get("best_val_proto_top10", 0),
@@ -397,14 +447,15 @@ def generate_report(include_historical: bool = True) -> str:
 
     # Table
     lines.append("## Results Table\n")
-    lines.append("| Rank | Experiment | Val Proto Acc | Top-5 | Top-10 | Best Epoch | Gap | Description |")
-    lines.append("|------|-----------|--------------|-------|--------|------------|-----|-------------|")
+    lines.append("| Rank | Experiment | Category | Val Proto Acc | Top-5 | Top-10 | Best Epoch | Gap | Description |")
+    lines.append("|------|-----------|----------|--------------|-------|--------|------------|-----|-------------|")
 
     for i, r in enumerate(results, 1):
         marker = " **" if r["val_proto_acc"] == max(x["val_proto_acc"] for x in results) else ""
         end_marker = "**" if marker else ""
         lines.append(
             f"| {i} | {marker}{r['name']}{end_marker} | "
+            f"{r.get('category', 'uncategorized')} | "
             f"{r['val_proto_acc']*100:.2f}% | "
             f"{r['val_proto_top5']*100:.1f}% | "
             f"{r['val_proto_top10']*100:.1f}% | "
@@ -419,8 +470,8 @@ def generate_report(include_historical: bool = True) -> str:
 
     if baseline_result and len(ablation_results) > 1:
         lines.append("\n## Ablation Impact Analysis\n")
-        lines.append("| Ablation | Δ Val Proto Acc | Δ Top-10 | Impact |")
-        lines.append("|----------|----------------|----------|--------|")
+        lines.append("| Ablation | Category | Δ Val Proto Acc | Δ Top-10 | Impact |")
+        lines.append("|----------|----------|----------------|----------|--------|")
 
         for r in ablation_results:
             if r["name"] == "baseline":
@@ -429,7 +480,7 @@ def generate_report(include_historical: bool = True) -> str:
             delta_top10 = (r["val_proto_top10"] - baseline_result["val_proto_top10"]) * 100
             impact = "positive" if delta_acc > 0.5 else "negative" if delta_acc < -0.5 else "neutral"
             lines.append(
-                f"| {r['name']} | {delta_acc:+.2f}pp | {delta_top10:+.1f}pp | {impact} |"
+                f"| {r['name']} | {r.get('category', 'uncategorized')} | {delta_acc:+.2f}pp | {delta_top10:+.1f}pp | {impact} |"
             )
 
     # Key findings
@@ -441,6 +492,15 @@ def generate_report(include_historical: bool = True) -> str:
         lines.append(f"- **Worst configuration**: {worst['name']} ({worst['val_proto_acc']*100:.2f}%)")
         if baseline_result:
             lines.append(f"- **Baseline (v8.2 full)**: {baseline_result['val_proto_acc']*100:.2f}%")
+        by_category = {}
+        for row in ablation_results:
+            by_category.setdefault(row.get("category", "uncategorized"), []).append(row)
+        lines.append("- **Ablation families**:")
+        for category, rows in sorted(by_category.items()):
+            best_row = max(rows, key=lambda x: x["val_proto_acc"])
+            lines.append(
+                f"  - {category}: best = {best_row['name']} ({best_row['val_proto_acc']*100:.2f}%)"
+            )
 
     report = "\n".join(lines)
     return report
@@ -493,7 +553,7 @@ Examples:
         print(f"{'='*60}")
         for name, info in ABLATION_REGISTRY.items():
             done = "✓" if is_experiment_complete(name) else " "
-            print(f"  [{done}] {name:25s} — {info['description']}")
+            print(f"  [{done}] {name:25s} — {info['description']} [{info.get('category', 'uncategorized')}]")
             if info["overrides"]:
                 for k, v in info["overrides"].items():
                     print(f"        {k}: {v}")

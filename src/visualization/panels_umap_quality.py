@@ -10,13 +10,14 @@ from pathlib import Path
 from typing import Callable, Optional
 
 import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
 from . import io as viz_io
-from .style import TYPE_PALETTE
+from .style import TYPE_PALETTE, set_figure_suptitle
+from src.utils.paths import FIG_DIR
 
-matplotlib.use("Agg")
 logger = logging.getLogger(__name__)
 
 
@@ -25,7 +26,7 @@ def plot_real_vs_generated(
     generated_path: Optional[str] = None,
     generated_labels_path: Optional[str] = None,
     n_cells: int = 5000,
-    output_dir: str = "results/figures",
+    output_dir: Optional[str] = None,
     dpi: int = 300,
     save: bool = True,
     save_panel_fn: Optional[Callable] = None,
@@ -36,6 +37,8 @@ def plot_real_vs_generated(
     E2: Generated cells (UMAP, coloured by type)
     E3: Overlay (real=circles, generated=triangles)
     """
+    if output_dir is None:
+        output_dir = str(FIG_DIR)
     cache = Path(cache_dir)
 
     # Auto-detect generated cells
@@ -110,10 +113,7 @@ def plot_real_vs_generated(
 
     fig = plt.figure(figsize=(9.0, 5.2))
     gs_e = fig.add_gridspec(1, 3, wspace=0.40)
-    fig.suptitle(
-        "Real vs Generated Cell Embeddings (DiT v1)",
-        fontsize=11,
-    )
+    set_figure_suptitle(fig, "Real vs Generated Cell Embeddings (DiT v1)", fontsize=11)
 
     # E1: Real — type-coloured
     ax = fig.add_subplot(gs_e[0])
@@ -186,7 +186,7 @@ def plot_real_vs_generated(
             c="#FF5722", s=3, alpha=0.25, marker="^",
             label="Generated", rasterized=True,
         )
-    ax.legend(markerscale=4, fontsize=10, loc="upper right")
+    ax.legend(markerscale=3, fontsize=9, frameon=False, loc="upper right")
     ax.set_title("Type-Coloured Overlay", fontsize=11)
     ax.set_xlabel("UMAP 1", fontsize=10)
     ax.set_ylabel("UMAP 2", fontsize=10)
@@ -194,7 +194,7 @@ def plot_real_vs_generated(
     # Reduce tick density on all UMAP axes
     from matplotlib.ticker import MaxNLocator
     for _ax in fig.get_axes():
-        _ax.tick_params(labelsize=9)
+        _ax.tick_params(labelsize=10)
         _ax.xaxis.set_major_locator(MaxNLocator(nbins=2, symmetric=True, prune="both"))
         _ax.yaxis.set_major_locator(MaxNLocator(nbins=2, symmetric=True, prune="both"))
         # Widen axis limits slightly to give tick labels breathing room

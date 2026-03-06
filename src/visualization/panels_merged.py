@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from . import io as viz_io
-from .style import TYPE_PALETTE, apply_style, set_dense_tick_labels
+from .style import COLORS, TYPE_PALETTE, apply_style, set_dense_tick_labels
 from .panels_heatmaps import plot_per_type_generation, plot_text_cell_heatmap
 
 matplotlib.use("Agg")
@@ -84,8 +84,8 @@ def plot_embedding_space_merged(
 
     apply_style()
     n_rows = (1 if has_b else 0) + (1 if has_e else 0)
-    fig = plt.figure(figsize=(13.0, 5.0 * n_rows))
-    gs = fig.add_gridspec(n_rows, 3, wspace=0.42, hspace=0.45,
+    fig = plt.figure(figsize=(14.2, 5.4 * n_rows))
+    gs = fig.add_gridspec(n_rows, 3, wspace=0.46, hspace=0.48,
                           width_ratios=[1.2, 1.2, 1.0])
     fig.suptitle("Embedding Space Analysis", fontsize=12, y=0.98)
     row = 0
@@ -201,7 +201,7 @@ def plot_embedding_space_merged(
                                c=[TYPE_PALETTE[int(t) % len(TYPE_PALETTE)]],
                                s=4, alpha=0.4, rasterized=True)
             else:
-                ax.scatter(gc[:, 0], gc[:, 1], c="#FF5722", s=4, alpha=0.4,
+                ax.scatter(gc[:, 0], gc[:, 1], c=COLORS["generated"], s=4, alpha=0.4,
                            rasterized=True)
             ax.set_title(f"Generated ({len(g_sub)} cells)")
             ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
@@ -212,16 +212,27 @@ def plot_embedding_space_merged(
                 color = TYPE_PALETTE[int(t) % len(TYPE_PALETTE)]
                 rm = r_gids == t
                 if rm.any():
-                    ax.scatter(rc[rm, 0], rc[rm, 1], c=[color], s=3, alpha=0.2,
-                               marker="o", rasterized=True)
+                    ax.scatter(
+                        rc[rm, 0], rc[rm, 1], c=[color], s=5, alpha=0.25,
+                        marker="o", edgecolors="white", linewidths=0.2, rasterized=True
+                    )
                 if g_gids is not None:
                     gm = g_gids == t
                     if gm.any():
-                        ax.scatter(gc[gm, 0], gc[gm, 1], c=[color], s=6, alpha=0.35,
-                                   marker="^", rasterized=True)
-            ax.scatter([], [], c="gray", s=20, marker="o", label="Real")
-            ax.scatter([], [], c="gray", s=20, marker="^", label="Generated")
-            ax.legend(markerscale=4, fontsize=9, loc="upper right")
+                        ax.scatter(
+                            gc[gm, 0], gc[gm, 1], c=[color], s=10, alpha=0.40,
+                            marker="^", edgecolors="black", linewidths=0.2, rasterized=True
+                        )
+            ax.scatter([], [], c=COLORS["real"], s=26, marker="o", label="Real")
+            ax.scatter([], [], c=COLORS["generated"], s=30, marker="^", label="Generated")
+            ax.legend(
+                markerscale=2.0,
+                fontsize=9,
+                loc="upper left",
+                bbox_to_anchor=(1.02, 1.0),
+                borderaxespad=0.0,
+                frameon=False,
+            )
             ax.set_title("Type-Coloured Overlay")
             ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
 
@@ -283,14 +294,13 @@ def plot_fidelity_and_alignment_merged(
         resized.append(im)
 
     total_h = sum(im.height for im in resized)
-    pad = max(24, dpi // 6)
-    composite = Image.new("RGB", (max_w + 2 * pad, total_h + 2 * pad), "white")
-    y_off = pad
+    composite = Image.new("RGB", (max_w, total_h), "white")
+    y_off = 0
     for im in resized:
-        composite.paste(im, (pad, y_off))
+        composite.paste(im, (0, y_off))
         y_off += im.height
 
-    fig_merged = plt.figure(figsize=((max_w + 2 * pad) / dpi, (total_h + 2 * pad) / dpi), dpi=dpi)
+    fig_merged = plt.figure(figsize=(max_w / dpi, total_h / dpi), dpi=dpi)
     ax = fig_merged.add_axes([0, 0, 1, 1])
     ax.imshow(np.array(composite))
     ax.axis("off")

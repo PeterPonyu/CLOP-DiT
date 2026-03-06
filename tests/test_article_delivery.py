@@ -1,5 +1,6 @@
 """Tests for article figure manifest and delivery (src.visualization.article_delivery)."""
 
+import re
 import pytest
 import sys
 from pathlib import Path
@@ -9,6 +10,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 class TestArticleFigureManifest:
     """Canonical list of 15 article figures."""
+
+    @staticmethod
+    def _article_tex_basenames() -> set[str]:
+        tex_path = Path(__file__).parent.parent / "articles" / "clop_dit_biology.tex"
+        tex = tex_path.read_text()
+        matches = re.findall(r"\\includegraphics\[[^\]]*\]\{figures/([^}]+)\.pdf\}", tex)
+        return set(matches)
 
     def test_manifest_length(self):
         from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
@@ -32,6 +40,17 @@ class TestArticleFigureManifest:
         for name in expected:
             assert name in ARTICLE_FIGURE_BASENAMES, f"Missing basename: {name}"
         assert len(set(ARTICLE_FIGURE_BASENAMES)) == len(ARTICLE_FIGURE_BASENAMES), "Duplicate basenames"
+
+    def test_manifest_matches_article_tex(self):
+        from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
+
+        manifest = set(ARTICLE_FIGURE_BASENAMES)
+        tex_basenames = self._article_tex_basenames()
+        assert manifest == tex_basenames, (
+            "Article manifest and LaTeX includes diverged. "
+            f"Manifest-only: {sorted(manifest - tex_basenames)}; "
+            f"TeX-only: {sorted(tex_basenames - manifest)}"
+        )
 
 
 class TestDeliverFigures:
@@ -91,3 +110,57 @@ class TestDeliverFigures:
             assert f.is_file(), f"Missing file: {f}"
             assert not f.is_symlink(), f"Expected copy, got symlink: {f}"
             assert f.read_bytes() == b"%PDF-1.0 dummy\n"
+
+
+class TestArticlePresentationPolicy:
+    """Presentation policy: article-facing panels must not put statistics in legend titles."""
+
+    # Patterns that indicate a statistic value (policy: put these in caption or add_stat_box, not legend title)
+    # Descriptive phrases like "95% Bootstrap CI Comparison" are allowed; "CI = [0.1, 0.2]" or "r = 0.95" are not.
+    STAT_IN_LEGEND_TITLE = re.compile(
+        r"\b(r|p|R)\s*=\s*|"
+        r"Sign\s*=\s*|"
+        r"CV\s*corr\s*=|"
+        r"CI\s*[=:]|"
+        r"confidence\s*[=:]|"
+        r"Pearson\s*r?\s*=\s*|"
+        r"Spearman\s*=\s*|"
+        r"AUC\s*=\s*|"
+        r"p\s*[-<]\s*0\.|"
+        r"n\s*=\s*\d",
+        re.IGNORECASE,
+    )
+
+    def test_article_panels_no_statistics_in_legend_title(self):
+        """Article figure producer source must not use legend(title=...) with statistical content."""
+        from src.visualization.article_delivery import ARTICLE_FIGURE_PRODUCERS
+
+        repo_root = Path(__file__).parent.parent
+        violations = []
+        chunk = 1200  # chars after .legend( to look for title=
+        for basename, rel_path in ARTICLE_FIGURE_PRODUCERS:
+            path = repo_root / rel_path
+            if not path.exists():
+                violations.append((basename, rel_path, f"Producer file not found: {path}"))
+                continue
+            text = path.read_text()
+            pos = 0
+            while True:
+                idx = text.find(".legend(", pos)
+                if idx < 0:
+                    break
+                snippet = text[idx : idx + chunk]
+                for m in re.finditer(
+                    r"title\s*=\s*([\"'])([^\"']*)\1",
+                    snippet,
+                ):
+                    title_content = m.group(2)
+                    if self.STAT_IN_LEGEND_TITLE.search(title_content):
+                        violations.append(
+                            (basename, rel_path, f"Legend title contains statistic: {title_content[:60]!r}")
+                        )
+                pos = idx + 1
+        assert not violations, (
+            "Article panels must not put statistics in legend titles (use caption or add_stat_box). "
+            "Violations: " + "; ".join(f"{b} ({p}): {msg}" for b, p, msg in violations)
+        )

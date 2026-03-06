@@ -234,6 +234,8 @@ We evaluate CLOP-DiT along four axes using in-distribution conditions (the actua
 
 All metrics are reported as point estimates over the fixed evaluation set described above. Two configurations are designated as \emph{primary operating points}: CFG\,=\,2.0 with 10-step Euler integration (high-fidelity regime) and CFG\,=\,1.0 with 10-step Midpoint integration (high-diversity regime). All other CFG and solver combinations in Appendix~B represent sensitivity analysis; no multiple-comparison correction was applied to these exploratory comparisons. Bootstrap 95\% confidence intervals for the composite benchmark scores are shown in Figure~\ref{fig:benchmark}d; variability across single-measurement metrics (KNN, steering, diversity ratio) is characterized by the CFG sweep (Appendix~B, Table~\ref{tab:cfg-sweep}).
 
+The biological evidence is organized by module and figure family. Figures~\ref{fig:markers}--\ref{fig:expr-analysis} are produced by the biological-validation stack (\texttt{scripts/08\_biological\_validation.py} and \texttt{src.evaluation.biological\_validation}) and establish marker-level and gene-level fidelity. Figures~\ref{fig:diversity}--\ref{fig:diversity-tradeoff} are produced by \texttt{scripts/diversity\_diagnostics.py} and \texttt{scripts/conditioning\_analysis.py} and provide the main robustness readout for guidance and diversity. Figures~\ref{fig:baselines}--\ref{fig:benchmark} are produced by \texttt{src.evaluation.model\_benchmarking}, while Figures~\ref{fig:downstream-pq} and~\ref{fig:downstream-r} come from \texttt{src.evaluation.downstream\_biology} and test whether generated cells remain useful in downstream single-cell workflows.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results}
 
@@ -244,7 +246,7 @@ Figure~\ref{fig:training} shows the training curves for both stages of the pipel
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/fig_training_dynamics.pdf}
-\caption{Training dynamics of the CLOP-DiT pipeline. \textbf{Top row (CLOP)}: Contrastive loss, learned temperature ($\tau = 14.0$, fixed), batch classification accuracy, and embedding quality metrics over 200 epochs. Despite modest validation accuracy ($\sim$2.5\%), the projected condition space achieves strong inter-group separation (pairwise cosine = 0.222). \textbf{Bottom row (DiT)}: Train and validation MSE loss (log scale), velocity cosine similarity, and learning rate schedule over 200 epochs. The EMA model (decay = 0.9999) reaches val\_cosine = 0.976, confirming accurate velocity field learning.\label{fig:training}}
+\caption{Training dynamics of the CLOP-DiT pipeline. \textbf{Top row (CLOP)}: Contrastive loss, learned temperature ($\tau = 14.0$, fixed), batch classification accuracy, and embedding quality metrics over 200 epochs. Despite modest validation accuracy ($\sim$2.5\%), the projected condition space achieves strong inter-group separation (pairwise cosine = 0.222). \textbf{Bottom row (DiT)}: Train and validation MSE loss (log scale), velocity cosine similarity, learning rate schedule, and a compact final snapshot of endpoint metrics for both stages. The EMA model (decay = 0.9999) reaches val\_cosine = 0.976, confirming accurate velocity field learning.\label{fig:training}}
 \end{figure}
 
 \subsection{CLOP Embedding Space}
@@ -254,7 +256,7 @@ Figure~\ref{fig:embedding-space} visualizes the embedding space at two levels. T
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/fig_embedding_space.pdf}
-\caption{Embedding space analysis. \textbf{Top row (CLOP alignment)}: UMAP of the shared projection space showing text prototypes, cell-type clusters, and cells-per-type histogram. Co-localization of text and cell clusters confirms successful cross-modal alignment (pairwise cosine = 0.222). \textbf{Bottom row (Real vs.\ Generated)}: UMAP comparison of real and generated cell embeddings, type-coloured, with shape-split overlay (circles = real, triangles = generated). Generated norm (20.97) closely matches real (20.89).\label{fig:embedding-space}}
+\caption{Embedding space analysis. \textbf{Top row (CLOP alignment)}: UMAP of the shared projection space showing text prototypes, cell-type clusters, and a cells-per-type histogram with abbreviated type labels for readability. Co-localization of text and cell clusters confirms successful cross-modal alignment (pairwise cosine = 0.222). \textbf{Bottom row (Real vs.\ Generated)}: UMAP comparison of real and generated cell embeddings, type-coloured, with shape-split overlay (circles = real, triangles = generated). Generated norm (20.97) closely matches real (20.89).\label{fig:embedding-space}}
 \end{figure}
 
 \subsection{Core Evaluation Metrics}
@@ -282,7 +284,7 @@ Random chance    & 0.010 & ---   & 0.500 & ---   & ---   & ---  \\
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{figures/panel_d_metrics_summary.pdf}
-\caption{Metrics dashboard summarizing conditional generation quality. KNN accuracy ($37\times$ random), steering accuracy (81\%), diversity ratio, linear classifier accuracy, and Fr\'{e}chet distance are shown across generation configurations. The collapse of unconditional generation to random baselines validates that text conditioning drives all cell-type specificity.\label{fig:metrics}}
+\caption{Metrics dashboard summarizing conditional generation quality. The training snapshot panel uses normalized endpoint scores so loss reduction and accuracy/correlation endpoints can be compared in one view; exact final values are printed beside each row. KNN accuracy ($37\times$ random), steering accuracy (81\%), diversity ratio, linear classifier accuracy, and Fr\'{e}chet distance are shown across generation configurations. The collapse of unconditional generation to random baselines validates that text conditioning drives all cell-type specificity.\label{fig:metrics}}
 \end{figure}
 
 \subsection{Per-Type Generation Quality and Text--Cell Alignment}
@@ -292,43 +294,43 @@ Figure~\ref{fig:fidelity-alignment} combines per-type generation quality (top ro
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/fig_fidelity_alignment.pdf}
-\caption{Per-type fidelity and text--cell alignment. \textbf{Top row}: Per-type centroid cosine similarity ranked across cell types with the hardest types annotated; Fr\'{e}chet outlier profile with the global mean marked; and abundance--fidelity scatter in which bubble size reflects Fr\'{e}chet distance and colour encodes the per-type diversity ratio. Together these panels expose the heterogeneity of generation quality across cell types instead of collapsing it to one mean score. \textbf{Bottom row}: 69$\times$69 cosine similarity heatmap between text and cell centroids (strong diagonal dominance), per-type alignment bars, and diagonal vs.\ off-diagonal distribution comparison.\label{fig:fidelity-alignment}}
+\caption{Per-type fidelity and text--cell alignment. \textbf{Top row}: Per-type centroid cosine similarity ranked across cell types, a Fr\'{e}chet outlier profile with the global mean marked, and an abundance--fidelity scatter in which bubble size is proportional to Fr\'{e}chet distance and colour encodes the per-type diversity ratio. Specific outlier type names are omitted from the bar panels for readability and are described in the surrounding text rather than directly on the bars. Together these panels expose the heterogeneity of generation quality across cell types instead of collapsing it to one mean score. \textbf{Bottom row}: 69$\times$69 cosine similarity heatmap between text and cell centroids (strong diagonal dominance), per-type alignment bars, and diagonal vs.\ off-diagonal distribution comparison.\label{fig:fidelity-alignment}}
 \end{figure}
 
 \subsection{Marker Gene Fidelity}
 
-Figure~\ref{fig:markers} compares the expression of canonical marker genes between real and generated cells, demonstrating that CLOP-DiT preserves cell-type-specific expression signatures.
+Figure~\ref{fig:markers} compares the expression of canonical marker genes between real and generated cells, demonstrating that CLOP-DiT preserves cell-type-specific expression signatures. This directly shows that the biological signal resides in the intended marker genes rather than only in latent-space summary statistics.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/panel_n_marker_gene_comparison.pdf}
-\caption{Marker gene comparison. Expression of canonical marker genes in real vs.\ generated cells across selected cell types. Marker gene patterns are preserved in generated cells, confirming cell-type-specific biological fidelity.\label{fig:markers}}
+\caption{Marker gene comparison. Expression of canonical marker genes in real vs.\ generated cells across selected cell types. In the first panel, solid vs.\ hatched fills distinguish real vs.\ generated profiles, while bar colours group markers by lineage family (CD8 T, myeloid, epithelial, stromal); the lineage colour mapping is described in the caption rather than repeated as an in-panel legend. Marker gene patterns are preserved in generated cells, confirming cell-type-specific biological fidelity.\label{fig:markers}}
 \end{figure}
 
 \subsection{Expression Correlation and Dimension Analysis}
 
-Figures~\ref{fig:expr-corr} and~\ref{fig:expr-analysis} examine the fidelity of generated expression profiles at the gene level. The expression correlation analysis (Figure~\ref{fig:expr-corr}) quantifies the per-gene Pearson correlation between real and generated mean expression across cell types. The expression analysis (Figure~\ref{fig:expr-analysis}) provides a broader view of expression distribution properties, including norm matching (generated mean norm 20.97 vs.\ real 20.89) and per-dimension statistics.
+Figures~\ref{fig:expr-corr} and~\ref{fig:expr-analysis} examine the fidelity of generated expression profiles at the gene level. The expression correlation analysis (Figure~\ref{fig:expr-corr}) quantifies the per-gene Pearson correlation between real and generated mean expression across cell types. The expression analysis (Figure~\ref{fig:expr-analysis}) provides a broader view of expression distribution properties, including norm matching (generated mean norm 20.97 vs.\ real 20.89) and per-dimension statistics. Together they localize biological meaning in gene-wise means, variances, and marker-level residuals rather than only in embedding geometry.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/panel_h_expression_correlation.pdf}
-\caption{Expression correlation analysis. Per-gene Pearson correlation between real and generated mean expression profiles, stratified by cell type. High correlation confirms that the scGPT decoder faithfully reconstructs gene-level signatures from DiT-generated latent vectors.\label{fig:expr-corr}}
+\caption{Expression correlation analysis. Per-gene Pearson correlation between real and generated mean expression profiles, stratified by cell type. In the first panel, point colour encodes absolute residual magnitude, while the remaining panels summarize per-type fidelity, marker-level agreement, and the residual distribution without boxed legend frames. High correlation confirms that the scGPT decoder faithfully reconstructs gene-level signatures from DiT-generated latent vectors.\label{fig:expr-corr}}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/panel_i_expression_analysis.pdf}
-\caption{Expression distribution analysis. Coefficient of variation scatter, expression range with percentile bands, per-cell variability distribution, and top variable gene std ratios. Norm comparison: generated 20.97 vs.\ real 20.89.\label{fig:expr-analysis}}
+\caption{Expression distribution analysis. Coefficient of variation scatter, expression range with percentile bands, per-cell variability distribution, and the most shifted gene-level standard-deviation ratios. Norm comparison: generated 20.97 vs.\ real 20.89.\label{fig:expr-analysis}}
 \end{figure}
 
 \subsection{Conditioning Landscape and Diversity Trade-Offs}
 
-Figure~\ref{fig:cond-umap} visualizes how text conditions distribute in the CLOP projection space and how the resulting generated cell clouds cluster accordingly. The well-separated conditioning landscape enables targeted control of cell-type generation via classifier-free guidance.
+Figure~\ref{fig:cond-umap} visualizes how text conditions distribute in the CLOP projection space and how the resulting generated cell clouds cluster accordingly. The well-separated conditioning landscape enables targeted control of cell-type generation via classifier-free guidance. Together with Figures~\ref{fig:diversity} and~\ref{fig:diversity-tradeoff}, this section is the main robustness analysis for whether control can be increased without erasing biologically meaningful heterogeneity.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/panel_m_conditioning_umap.pdf}
-\caption{Conditioning landscape. UMAP of the CLOP condition space showing how text conditions and their corresponding generated cell clouds distribute, visualizing the text-to-cell steering mechanism.\label{fig:cond-umap}}
+\caption{Conditioning landscape. Two-row PCA layout of the CLOP condition space showing the real reference cloud together with centroid, noisy, and variant-conditioned generations. Panel titles report the number of displayed cells and the mean within-type diversity for each conditioning mode, making the text-to-cell steering trade-offs easier to compare across modes.\label{fig:cond-umap}}
 \end{figure}
 
 Building on this conditioning structure, a sweep across CFG $\in \{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0\}$ with Euler and Midpoint ODE solvers reveals a clear accuracy--diversity trade-off (Figure~\ref{fig:diversity}). KNN accuracy saturates near CFG = 2.0--3.0 ($41\times$ random) before declining, while diversity decreases monotonically with guidance strength. The Midpoint solver at CFG = 1.0 achieves near-ideal diversity (0.93) while maintaining 80.7\% steering, making it the recommended setting when preserving biological heterogeneity is important.
@@ -336,7 +338,7 @@ Building on this conditioning structure, a sweep across CFG $\in \{0.5, 1.0, 1.5
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/panel_j_diversity_diagnostics.pdf}
-\caption{Diversity diagnostics. Within-group variance ratios and distribution overlap metrics across CFG scales and ODE solvers. KNN accuracy saturates at CFG $\approx$ 2.0--3.0 while diversity decreases monotonically.\label{fig:diversity}}
+\caption{Diversity diagnostics. Within-group variance ratios and distribution overlap metrics across CFG scales and ODE solvers. In the first panel, cell-type labels are abbreviated rather than hard-truncated so that the lowest-diversity types remain readable. KNN accuracy saturates at CFG $\approx$ 2.0--3.0 while diversity decreases monotonically.\label{fig:diversity}}
 \end{figure}
 
 Figure~\ref{fig:diversity-tradeoff} further quantifies the two operating regimes: high-fidelity (CFG $\geq$ 2.0, DivR $\approx$ 0.5) vs.\ high-diversity (CFG = 1.0 Midpoint, DivR = 0.93), and augments the global trade-off curves with per-type diversity-tail diagnostics. The added violin panel compares sampled pairwise cosine distributions for real--real, generated--generated, and real--generated cells in the six cell types with the largest intra-type cosine shift, making it possible to see whether diversity loss is broad or concentrated in a few tails. Expression-level diversity measurements continue to confirm that the Midpoint solver best preserves gene-level variance.
@@ -349,12 +351,12 @@ Figure~\ref{fig:diversity-tradeoff} further quantifies the two operating regimes
 
 \subsection{Baseline Comparison and Composite Benchmark}
 
-CLOP-DiT is compared against baseline methods including unconditional generation (CFG = 0), Gaussian sampling from per-type statistics, and decoder-only ablations. Figure~\ref{fig:baselines} presents a head-to-head comparison across four evaluation metrics, showing that CLOP-DiT outperforms all baselines on every metric except FD (see Discussion for the Fr\'{e}chet distance caveat).
+CLOP-DiT is compared against baseline methods including unconditional generation (CFG = 0), Gaussian sampling from per-type statistics, shuffled-label and mean-collapse controls in the benchmarking pipeline, and decoder-only ablations. Figure~\ref{fig:baselines} presents a head-to-head comparison across four evaluation metrics, showing that CLOP-DiT outperforms all baselines on every metric except FD (see Discussion for the Fr\'{e}chet distance caveat).
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/panel_o_baseline_comparison.pdf}
-\caption{Baseline comparison. Head-to-head analysis of CLOP-DiT vs.\ baselines (unconditional CFG\,=\,0, Gaussian per-type sampling, decoder-only) across four evaluation metrics (Fr\'{e}chet distance, centroid cosine similarity, diversity ratio, coverage), rendered as grouped bars, normalized radar chart, and relative improvement strip. CLOP-DiT outperforms all baselines on every metric except FD, which is dominated by mean-matching effects (see Discussion).\label{fig:baselines}}
+\caption{Baseline comparison. Head-to-head analysis of CLOP-DiT vs.\ baselines (unconditional CFG\,=\,0, Gaussian per-type sampling, decoder-only) across four evaluation metrics (Fr\'{e}chet distance, centroid cosine similarity, diversity ratio, coverage), rendered as grouped bars, a normalized radar chart, and a compact relative-improvement heatmap. CLOP-DiT outperforms all baselines on every metric except FD, which is dominated by mean-matching effects (see Discussion).\label{fig:baselines}}
 \end{figure}
 
 Figure~\ref{fig:benchmark} aggregates these metrics into a composite benchmark score. CLOP-DiT achieves a composite score of 0.668 across normalized KNN accuracy, steering, diversity ratio, and linear separability, substantially outperforming all baselines. Bootstrap 95\% confidence intervals confirm the stability of this ranking.
@@ -362,12 +364,12 @@ Figure~\ref{fig:benchmark} aggregates these metrics into a composite benchmark s
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/panel_s_benchmark.pdf}
-\caption{Composite benchmark. (\textbf{a})~Normalized metrics heatmap (methods $\times$ eleven metrics; green = high performance). (\textbf{b})~Composite score aggregating KNN accuracy, steering, diversity ratio, and linear separability (higher = better). (\textbf{c})~Grouped bar chart of key metrics across methods. (\textbf{d})~Bootstrap 95\% confidence intervals for composite scores. CLOP-DiT achieves a composite score of 0.668, confirming its advantage as an integrated text-conditioned generation system.\label{fig:benchmark}}
+\caption{Composite benchmark. (\textbf{a})~Normalized metrics heatmap (methods $\times$ eleven metrics; green = high performance). (\textbf{b})~Composite score aggregating KNN accuracy, steering, diversity ratio, and linear separability (higher = better). (\textbf{c})~Grouped comparison of the four most interpretable benchmark metrics across methods. (\textbf{d})~Small-multiple 95\% confidence intervals for FD, centroid cosine, and diversity ratio. CLOP-DiT achieves a composite score of 0.668, confirming its advantage as an integrated text-conditioned generation system.\label{fig:benchmark}}
 \end{figure}
 
 \subsection{Downstream Biological Validation}
 
-Beyond distributional metrics, we evaluate whether generated cells are usable in standard single-cell analysis workflows. Three downstream tasks are assessed on real and generated cells jointly:
+Beyond distributional metrics, we evaluate whether generated cells are usable in standard single-cell analysis workflows. These analyses are implemented from matched real/generated AnnData objects with shared preprocessing in \texttt{src.evaluation.downstream\_biology}, ensuring that any downstream advantage is not caused by mismatched feature engineering. Three downstream tasks are assessed on real and generated cells jointly:
 
 \textbf{Clustering, mixing, and classifier alignment} (Figure~\ref{fig:downstream-pq}): We construct matched AnnData objects from real and generated expression matrices, select 2,000 shared highly variable genes, perform PCA and Leiden clustering on the combined dataset, and compute the Adjusted Rand Index (ARI), Normalized Mutual Information (NMI), cluster purity, and per-type $k$-NN mixing scores. High mixing scores indicate that generated cells integrate seamlessly with real cells of the same type. A logistic regression classifier is trained on real PCA embeddings to predict cell type, then evaluated on generated embeddings to measure transfer accuracy and macro-F1. The enhanced classifier panel now reports a per-type precision/recall/F1 heatmap in addition to the confusion matrix and discriminator ROC, making it clear that downstream performance is highly heterogeneous across cell types rather than uniformly poor. A separate real-vs.-generated discriminator (5-fold CV) reports AUC, with values near 0.5 indicating that generated data is difficult to distinguish from real data.
 
@@ -376,13 +378,13 @@ Beyond distributional metrics, we evaluate whether generated cells are usable in
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/fig_downstream_pq.pdf}
-\caption{Downstream validation: clustering and classifier alignment. \textbf{Top row}: Leiden clustering on combined real + generated data with UMAP overlay, per-type $k$-NN mixing scores, and cluster alignment metrics (ARI, NMI, purity). \textbf{Bottom row}: Cell-type classification confusion matrix (real-trained on generated), per-type precision/recall/F1 heatmap sorted by the hardest classes, and real-vs.-generated discriminator ROC curve. This layout exposes which cell types are genuine downstream failures versus near-perfect transfers.\label{fig:downstream-pq}}
+\caption{Downstream validation: clustering and classifier alignment. \textbf{Top row}: Leiden clustering on combined real + generated data with UMAP overlay, the lowest-mixing cell types, and compact cluster-alignment gauges (ARI, NMI, cluster purity, mean $k$-NN mixing). \textbf{Bottom row}: Cell-type classification confusion matrix (real-trained on generated), a precision/recall/F1 heatmap restricted to the hardest 15 cell types, and the real-vs.-generated discriminator ROC curve. This layout exposes which cell types are genuine downstream failures versus near-perfect transfers.\label{fig:downstream-pq}}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/panel_r_de_concordance.pdf}
-\caption{DE concordance. Effect-size-weighted real-vs.-generated log-fold-change scatter for the leading contrast, with point size proportional to average absolute effect size and colour indicating adjusted significance; sign-disagreement genes are outlined. The remaining panels summarize Pearson/Spearman correlation, Jaccard overlap of top DE genes, and sign agreement across the three biologically meaningful contrasts (CD8 vs.\ CD4 T, TAM vs.\ monocyte, tumor epithelial vs.\ fibroblast).\label{fig:downstream-r}}
+\caption{DE concordance. Effect-size-weighted real-vs.-generated log-fold-change scatter for the leading contrast, with point size proportional to average absolute effect size and colour indicating adjusted significance; sign-disagreement genes are outlined. A compact summary heatmap reports Pearson/Spearman correlation, Jaccard overlap of top DE genes, and sign agreement across the three biologically meaningful contrasts (CD8 vs.\ CD4 T, resident macrophage vs.\ monocyte, epithelial vs.\ fibroblast), replacing the previous redundant grouped-bar summary.\label{fig:downstream-r}}
 \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -395,6 +397,10 @@ CLOP-DiT addresses a previously unmet challenge: generating single-cell gene exp
 \textbf{Two operating regimes.} The CFG sweep reveals two complementary regimes. A high-fidelity regime (CFG = 2.0--3.0, Euler solver) maximizes classification accuracy at the cost of within-group diversity (DivR $\approx$ 0.5). A high-diversity regime (CFG = 1.0, Midpoint solver) achieves near-ideal variance preservation (DivR = 0.93) while maintaining 80.7\% steering accuracy. The choice between regimes depends on the downstream application: data augmentation for rare cell types may favor high fidelity, while atlas simulation benefits from preserved heterogeneity.
 
 \textbf{Fr\'{e}chet distance is misleading.} We note that FD rewards unconditional generation (FD = 0.58) over conditioned generation (FD = 3.17) because it is dominated by mean matching. Conditioned generation intentionally shifts cluster means toward specific cell types. The field should adopt biologically grounded metrics---KNN accuracy, steering, diversity ratio, and downstream concordance---as the standard for evaluating conditional single-cell generators.
+
+\textbf{Why the biological evidence is credible.} The manuscript does not rely on a single aggregate metric. Biological meaning is localized across marker-gene preservation (Figure~\ref{fig:markers}), gene-level correlation and variance structure (Figures~\ref{fig:expr-corr} and~\ref{fig:expr-analysis}), per-type heterogeneity and diversity tails (Figures~\ref{fig:fidelity-alignment} and~\ref{fig:diversity-tradeoff}), and downstream reuse in clustering, classification, and DE workflows (Figures~\ref{fig:downstream-pq} and~\ref{fig:downstream-r}). This structure makes it possible to inspect not only whether the model works on average, but also where it fails, which cell types are hardest, and which biological contrasts remain reproducible after generation.
+
+\textbf{Broader biological applications.} Although the present study focuses on text-conditioned generation, the same evaluation stack naturally extends to adjacent tasks already supported by the codebase, including rare-cell augmentation, cell-state editing, perturbation-style contrasts, and matched source-to-target translation with the Cell2Cell model. In practical terms, the most promising next applications are low-coverage atlas completion, simulation of treatment-response hypotheses, and condition-specific DE analysis in which generated cells are judged by downstream concordance rather than by distributional similarity alone.
 
 \textbf{Limitations.} CLOP-DiT currently generates accurately only for cell types seen during training; novel text prompts that are far from the training distribution produce unpredictable results due to CLOP projector extrapolation. We did not quantitatively evaluate out-of-distribution or free-form text prompts; all reported metrics apply to in-distribution conditions drawn from the training vocabulary of 1,088 text groups. The absolute accuracy gap from real data suggests opportunities for improvement via larger DiT architectures, hard-negative mining in CLOP training, or multi-resolution conditioning schemes. Finally, validation on additional tissues and organisms beyond the current 80-dataset corpus would strengthen generalization claims.
 

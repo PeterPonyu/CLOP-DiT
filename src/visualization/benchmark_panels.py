@@ -19,18 +19,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .style import (
-    COLORS, save_panel, set_dense_tick_labels, style_axes
+    COLORS, save_panel, style_axes
 )
 from src.utils.paths import RESULTS_DIR, FIG_DIR
 
 logger = logging.getLogger(__name__)
 
 METHOD_COLORS = {
-    "CLOP-DiT": "#1976D2",
-    "Gaussian N(μ,σ²I)": "#FF7043",
-    "Shuffled Labels": "#4CAF50",
-    "Random N(0,I)": "#9C27B0",
-    "Mean-only (collapse)": "#FFC107",
+    "CLOP-DiT": COLORS["real"],
+    "Gaussian N(μ,σ²I)": COLORS["generated"],
+    "Shuffled Labels": COLORS["baseline_gauss"],
+    "Random N(0,I)": COLORS["baseline_shuffle"],
+    "Mean-only (collapse)": COLORS["accent"],
 }
 
 
@@ -138,7 +138,7 @@ def plot_benchmark_panel(
     for j in range(len(metric_keys)):
         best_i = norm[:, j].argmax()
         ax1.add_patch(plt.Rectangle((j - 0.5, best_i - 0.5), 1, 1,
-                                    fill=False, edgecolor="#1B5E20", linewidth=2.5))
+                                    fill=False, edgecolor=COLORS["good"], linewidth=2.5))
 
     plt.colorbar(im, ax=ax1, shrink=0.6, pad=0.02, label="Normalised Score (1=best)")
     style_axes(ax1, "heatmap", title="Metrics Comparison Heatmap")
@@ -147,7 +147,7 @@ def plot_benchmark_panel(
     ax2 = fig.add_subplot(gs[0, 1])
     sorted_methods = sorted(composite.keys(), key=lambda k: composite[k], reverse=True)
     scores = [composite[m] for m in sorted_methods]
-    bar_colors = [METHOD_COLORS.get(m, "#999") for m in sorted_methods]
+    bar_colors = [METHOD_COLORS.get(m, COLORS["neutral"]) for m in sorted_methods]
     short_sorted = [m[:20] for m in sorted_methods]
 
     # Merge rank badges directly into ytick labels to avoid overlap
@@ -166,7 +166,7 @@ def plot_benchmark_panel(
     for i, (bar, score) in enumerate(zip(bars, scores)):
         ax2.text(bar.get_width() + 0.01, bar.get_y() + bar.get_height() / 2,
                  f"{score:.4f}", va="center", fontsize=8,
-                 color="#333333")
+                 color=COLORS["neutral"])
 
     ax2.set_xlim(0, max(scores) * 1.25)
     style_axes(ax2, "bar", title="Composite Score (higher = better)",
@@ -215,7 +215,7 @@ def plot_benchmark_panel(
         for mname in method_names:
             val = methods_data[mname].get(metric_key, 0)
             ci = methods_data[mname].get(ci_key, [val, val])
-            color = METHOD_COLORS.get(mname, "#999")
+            color = METHOD_COLORS.get(mname, COLORS["neutral"])
 
             lo_err = max(0, val - ci[0])
             hi_err = max(0, ci[1] - val)

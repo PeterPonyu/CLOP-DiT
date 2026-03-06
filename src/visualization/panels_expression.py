@@ -21,7 +21,7 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import save_with_vcd, style_axes
+from .style import COLORS, save_with_vcd, style_axes
 
 logger = logging.getLogger(__name__)
 
@@ -102,8 +102,8 @@ def plot_expression_correlation(
     pearson_r = metrics["gene_correlation"]["pearson_r"]
     spearman_rho = metrics["gene_correlation"]["spearman_rho"]
 
-    fig = plt.figure(figsize=(10.0, 7.2))
-    gs = fig.add_gridspec(2, 2, wspace=0.55, hspace=0.50)
+    fig = plt.figure(figsize=(11.2, 7.8))
+    gs = fig.add_gridspec(2, 2, wspace=0.62, hspace=0.56)
     fig.suptitle(
         f"Gene Expression Recovery \u2014 r={pearson_r:.6f}, "
         f"\u03c1={spearman_rho:.6f}, n={len(gene_names)}",
@@ -118,7 +118,7 @@ def plot_expression_correlation(
                      vmin=0, vmax=np.percentile(abs_res, 95))
     lo = min(real_means.min(), gen_means.min()) - 0.2
     hi = max(real_means.max(), gen_means.max()) + 0.2
-    ax1.plot([lo, hi], [lo, hi], color="#E53935", linestyle="--", lw=1.5,
+    ax1.plot([lo, hi], [lo, hi], color=COLORS["bad"], linestyle="--", lw=1.5,
              alpha=0.7, label="y = x", zorder=1)
     ax1.fill_between([lo, hi], [lo - 0.1, hi - 0.1], [lo + 0.1, hi + 0.1],
                      alpha=0.06, color="#4CAF50", zorder=0)
@@ -129,8 +129,7 @@ def plot_expression_correlation(
     from matplotlib.ticker import MaxNLocator as _MaxNLoc
     ax1.xaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
     ax1.yaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
-    cbar = plt.colorbar(sc, ax=ax1, orientation='horizontal',
-                         shrink=0.5, pad=0.16, aspect=20)
+    cbar = plt.colorbar(sc, ax=ax1, orientation="vertical", shrink=0.78, pad=0.03, aspect=24)
     cbar.set_label("|Resid|", fontsize=10)
     cbar.ax.tick_params(labelsize=8)
     cbar.ax.xaxis.set_major_locator(_MaxNLoc(nbins=2, prune="both"))
@@ -165,23 +164,28 @@ def plot_expression_correlation(
         y_pos = np.arange(len(type_rs))
 
         # Threshold shading
-        ax2.axvspan(0.9999, 1.00005, alpha=0.08, color="#4CAF50")
-        ax2.axvspan(0.999, 0.9999, alpha=0.08, color="#FF9800")
-        ax2.axvspan(min_r - 0.001, 0.999, alpha=0.08, color="#F44336")
+        ax2.axvspan(0.9999, 1.00005, alpha=0.08, color=COLORS["good"])
+        ax2.axvspan(0.999, 0.9999, alpha=0.08, color=COLORS["warn"])
+        ax2.axvspan(min_r - 0.001, 0.999, alpha=0.08, color=COLORS["bad"])
 
-        colors_h2 = ["#2E7D32" if r > 0.9999 else "#FF9800" if r > 0.999 else "#D32F2F"
+        colors_h2 = [COLORS["good"] if r > 0.9999 else COLORS["warn"] if r > 0.999 else COLORS["bad"]
                      for r in type_rs]
         ax2.hlines(y_pos, min_r - 0.0005, type_rs, color="#DDD", linewidth=0.8, zorder=1)
         ax2.scatter(type_rs, y_pos, c=colors_h2, s=30, zorder=3, edgecolors="white",
                     linewidths=0.5)
         ax2.set_yticks(y_pos)
         ax2.set_yticklabels(short_names, fontsize=8, ha="right")
-        ax2.axvline(x=mean_r, color="#D32F2F", linestyle="--", alpha=0.6, linewidth=1.5,
+        ax2.axvline(x=mean_r, color=COLORS["bad"], linestyle="--", alpha=0.6, linewidth=1.5,
                     label=f"mean={mean_r:.6f}")
         ax2.set_xlim(min_r - 0.0005, 1.00005)
         ax2.set_xlabel("Pearson r", fontsize=10)
-        ax2.legend(fontsize=8, loc="lower right", frameon=False,
-                   bbox_to_anchor=(1.0, -0.02))
+        ax2.legend(
+            fontsize=8,
+            loc="lower left",
+            frameon=False,
+            bbox_to_anchor=(1.02, 0.0),
+            borderaxespad=0.0,
+        )
     else:
         ax2.text(0.5, 0.5, "No per-type data", ha="center", va="center",
                  transform=ax2.transAxes)
@@ -219,17 +223,17 @@ def plot_expression_correlation(
         x = np.arange(len(all_marker_genes))
         width = 0.35
         ax3.bar(x - width / 2, r_means, width, yerr=r_stds * 0.5,
-                label="Real", color="#1976D2", alpha=0.85, edgecolor="white",
+                label="Real", color=COLORS["real"], alpha=0.85, edgecolor="white",
                 capsize=3, error_kw=dict(lw=0.8))
         ax3.bar(x + width / 2, g_means, width, yerr=g_stds * 0.5,
-                label="Generated", color="#FF7043", alpha=0.85, edgecolor="white",
+                label="Generated", color=COLORS["generated"], alpha=0.85, edgecolor="white",
                 capsize=3, error_kw=dict(lw=0.8))
 
         # Fold-change annotations -- only annotate outliers (fc > 1.05 or < 0.95)
         for i, (rm, gm) in enumerate(zip(r_means, g_means)):
             fc = gm / (rm + 1e-8)
             if abs(fc - 1.0) > 0.10:
-                color = "#2E7D32" if 0.95 <= fc <= 1.05 else "#D32F2F"
+                color = COLORS["good"] if 0.95 <= fc <= 1.05 else COLORS["bad"]
                 ax3.text(i, max(rm, gm) + max(r_stds[i], g_stds[i]) * 0.5 + 0.01,
                          f"{fc:.2f}\u00d7", ha="center", fontsize=8, color=color)
 
@@ -239,7 +243,7 @@ def plot_expression_correlation(
             fontsize=9, rotation=90, ha="center",
         )
         ax3.set_ylabel("Expression (mean \u00b1 0.5\u00d7std)", fontsize=10)
-        ax3.legend(fontsize=9, loc="upper right", ncol=2, frameon=False)
+        ax3.legend(fontsize=8, loc="upper left", ncol=1, frameon=False, bbox_to_anchor=(1.02, 1.0))
     else:
         ax3.text(0.5, 0.5, "No marker genes found", ha="center", va="center",
                  transform=ax3.transAxes)
@@ -249,11 +253,11 @@ def plot_expression_correlation(
 
     # -- H4: Residual distribution --
     ax4 = fig.add_subplot(gs[1, 1])
-    ax4.hist(residuals, bins=60, color="#1976D2", alpha=0.7, edgecolor="white",
+    ax4.hist(residuals, bins=60, color=COLORS["real"], alpha=0.7, edgecolor="white",
              density=True)
     ax4.tick_params(axis='x', labelsize=9, rotation=30)
-    ax4.axvline(x=0, color="#E53935", linestyle="--", linewidth=1.5, label="Zero")
-    ax4.axvline(x=residuals.mean(), color="#FF9800", linestyle="-", linewidth=1.5,
+    ax4.axvline(x=0, color=COLORS["bad"], linestyle="--", linewidth=1.5, label="Zero")
+    ax4.axvline(x=residuals.mean(), color=COLORS["warn"], linestyle="-", linewidth=1.5,
                 label=f"Mean={residuals.mean():.4f}")
     ax4.set_xlabel("Residual (Gen \u2212 Real)", fontsize=10)
     ax4.set_ylabel("Density", fontsize=10)
@@ -324,8 +328,8 @@ def plot_expression_analysis(
 
     overall = metrics.get("overall", {})
 
-    fig = plt.figure(figsize=(9.0, 7.0))
-    gs = fig.add_gridspec(2, 2, wspace=0.50, hspace=0.50)
+    fig = plt.figure(figsize=(9.8, 7.4))
+    gs = fig.add_gridspec(2, 2, wspace=0.58, hspace=0.56)
     fig.suptitle(
         f"Expression Decoder \u2014 "
         f"{real.shape[0]} real, {gen.shape[0]} gen, "
@@ -345,7 +349,7 @@ def plot_expression_analysis(
                      vmin=0, vmax=np.percentile(cv_diff, 95))
     lo = 0
     hi = max(real_cv.max(), gen_cv.max()) * 1.05
-    ax1.plot([lo, hi], [lo, hi], color="#E53935", linestyle="--", lw=1.5,
+    ax1.plot([lo, hi], [lo, hi], color=COLORS["bad"], linestyle="--", lw=1.5,
              alpha=0.6, label="y = x")
     ax1.set_xlabel("Real CV (std/|mean|)", fontsize=10)
     ax1.set_ylabel("Generated CV", fontsize=10)
@@ -363,7 +367,7 @@ def plot_expression_analysis(
                          color="#333")
 
     cv_corr = np.corrcoef(real_cv, gen_cv)[0, 1]
-    ax1.legend(fontsize=8, title=f"CV corr = {cv_corr:.4f}", title_fontsize=8)
+    ax1.legend(fontsize=8, title=f"CV corr = {cv_corr:.4f}", title_fontsize=8, frameon=False)
     from matplotlib.ticker import MaxNLocator
     ax1.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
     ax1.yaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
@@ -382,15 +386,15 @@ def plot_expression_analysis(
 
     x_range = np.arange(len(sort_idx))
     ax2.fill_between(x_range, rp10[sort_idx], rp90[sort_idx],
-                     alpha=0.08, color="#1976D2", label="Real 10\u201390%")
+                     alpha=0.08, color=COLORS["real"], label="Real 10\u201390%")
     ax2.fill_between(x_range, rp25[sort_idx], rp75[sort_idx],
-                     alpha=0.15, color="#1976D2")
+                     alpha=0.15, color=COLORS["real"])
     ax2.fill_between(x_range, gp10[sort_idx], gp90[sort_idx],
-                     alpha=0.08, color="#FF7043", label="Gen 10\u201390%")
+                     alpha=0.08, color=COLORS["generated"], label="Gen 10\u201390%")
     ax2.fill_between(x_range, gp25[sort_idx], gp75[sort_idx],
-                     alpha=0.15, color="#FF7043")
-    ax2.plot(real_means[sort_idx], color="#1565C0", lw=1.2, label="Real mean", zorder=3)
-    ax2.plot(gen_means[sort_idx], color="#E64A19", lw=1.2, ls="--",
+                     alpha=0.15, color=COLORS["generated"])
+    ax2.plot(real_means[sort_idx], color=COLORS["real"], lw=1.2, label="Real mean", zorder=3)
+    ax2.plot(gen_means[sort_idx], color=COLORS["generated"], lw=1.2, ls="--",
              label="Gen mean", zorder=3)
     ax2.set_xlabel("Gene index (sorted by real mean)", fontsize=10)
     ax2.set_ylabel("Expression", fontsize=10)
@@ -409,14 +413,14 @@ def plot_expression_analysis(
         max(real_cell_std.max(), gen_cell_std.max()) + 0.005,
         80,
     )
-    ax3.hist(real_cell_std, bins=bins3, alpha=0.5, color="#1976D2",
+    ax3.hist(real_cell_std, bins=bins3, alpha=0.5, color=COLORS["real"],
              label=f"Real (\u03bc={real_cell_std.mean():.4f})",
              edgecolor="white", linewidth=0.3, density=True)
-    ax3.hist(gen_cell_std, bins=bins3, alpha=0.5, color="#FF7043",
+    ax3.hist(gen_cell_std, bins=bins3, alpha=0.5, color=COLORS["generated"],
              label=f"Gen (\u03bc={gen_cell_std.mean():.4f})",
              edgecolor="white", linewidth=0.3, density=True)
-    ax3.axvline(x=real_cell_std.mean(), color="#1565C0", linestyle="--", lw=1.5)
-    ax3.axvline(x=gen_cell_std.mean(), color="#E64A19", linestyle="--", lw=1.5)
+    ax3.axvline(x=real_cell_std.mean(), color=COLORS["real"], linestyle="--", lw=1.5)
+    ax3.axvline(x=gen_cell_std.mean(), color=COLORS["generated"], linestyle="--", lw=1.5)
     ax3.set_xlabel("Per-Cell Std Dev", fontsize=10)
     ax3.set_ylabel("Density", fontsize=10)
     ax3.set_title("Per-Cell Variability Distribution", fontsize=11)
@@ -446,8 +450,8 @@ def plot_expression_analysis(
     ratios_show = clipped_ratio[top_diff_idx]
     names_show = [gene_names[i] if i < len(gene_names) else f"G{i}"
                   for i in top_diff_idx]
-    colors_i4 = ["#D32F2F" if r < 0.7 else "#FF9800" if r < 0.9 else
-                  "#4CAF50" if r <= 1.1 else "#FF9800" if r <= 1.3 else "#D32F2F"
+    colors_i4 = [COLORS["bad"] if r < 0.7 else COLORS["warn"] if r < 0.9 else
+                  COLORS["good"] if r <= 1.1 else COLORS["warn"] if r <= 1.3 else COLORS["bad"]
                   for r in ratios_show]
     ax4.barh(range(n_show), ratios_show, color=colors_i4, height=0.7,
              edgecolor="white", linewidth=0.3)
@@ -637,7 +641,7 @@ def plot_marker_gene_comparison(
         xtick_labels = all_marker_genes + ["|"] + all_marker_genes
         ax2.set_xticks(xtick_pos)
         ax2.set_xticklabels(xtick_labels, fontsize=8, rotation=90, ha="center")
-        ax2.set_title("Per-Type \u00d7 Marker (Real | Gen)", fontsize=10, pad=14)
+        ax2.set_title("Per-Type \u00d7 Marker (Real | Gen)", fontsize=10, pad=8)
         ax2.text(n_markers / 2 - 0.5, -1.2, "Real", ha="center",
                  fontsize=10, color="#1976D2")
         ax2.text(n_markers + 0.5 + n_markers / 2 - 0.5, -1.2, "Generated",

@@ -8,6 +8,9 @@ Provides:
   - apply_style(): activate rcParams globally
   - style_axes(ax, kind): per-subplot typography & spine cleanup
   - save_panel(fig, path, dpi): save PNG + PDF in one call
+  - FONT_LEGEND: standard legend font size
+  - add_colorbar_safe(): colorbar helper with consistent defaults
+  - set_figure_suptitle(): suptitle helper using SUPTITLE_Y
 """
 
 from __future__ import annotations
@@ -16,8 +19,10 @@ from pathlib import Path
 from typing import Optional
 
 import matplotlib
+import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.ticker import ScalarFormatter
 
 # ──────────────────────────────────────────────────────────────
 # Publication rcParams — Nature/Cell conventions
@@ -32,6 +37,7 @@ VIS_STYLE: dict = {
     "font.size": 10,
     "axes.titlesize": 11,
     "axes.titleweight": "normal",
+    "axes.titlepad": 8,
     "axes.labelsize": 10,
     "xtick.labelsize": 10,
     "ytick.labelsize": 10,
@@ -60,15 +66,15 @@ VIS_STYLE: dict = {
 # Semantic colour palette
 # ──────────────────────────────────────────────────────────────
 COLORS = {
-    "real": "#1976D2",
-    "generated": "#FF7043",
-    "baseline_gauss": "#4CAF50",
-    "baseline_shuffle": "#9C27B0",
-    "good": "#4CAF50",
-    "warn": "#FF9800",
-    "bad": "#F44336",
-    "neutral": "#78909C",
-    "accent": "#FFC107",
+    "real": "#0D47A1",
+    "generated": "#BF360C",
+    "baseline_gauss": "#1B5E20",
+    "baseline_shuffle": "#4A148C",
+    "good": "#1B5E20",
+    "warn": "#E65100",
+    "bad": "#B71C1C",
+    "neutral": "#455A64",
+    "accent": "#FF8F00",
     "bg_light": "#F5F5F5",
 }
 
@@ -89,6 +95,9 @@ TYPE_PALETTE = _build_type_palette(69)
 
 # Consistent suptitle vertical position — keeps title close to axes
 SUPTITLE_Y = 0.98
+# Standard legend font size (matches VIS_STYLE legend.fontsize)
+FONT_LEGEND = 10
+_FONTS_REGISTERED = False
 
 
 # ──────────────────────────────────────────────────────────────
@@ -97,7 +106,38 @@ SUPTITLE_Y = 0.98
 
 def apply_style() -> None:
     """Activate VIS_STYLE globally via ``matplotlib.rcParams``."""
+    global _FONTS_REGISTERED
+    if not _FONTS_REGISTERED:
+        register_project_fonts()
+        _FONTS_REGISTERED = True
     matplotlib.rcParams.update(VIS_STYLE)
+
+
+def register_project_fonts(font_dir: Optional[Path | str] = None) -> list[str]:
+    """Register local font files so Arial can resolve on clean systems."""
+    candidates = []
+    if font_dir is not None:
+        candidates.append(Path(font_dir))
+    else:
+        root = Path(__file__).resolve().parents[2]
+        candidates.extend([
+            root / "fonts",
+            root / "assets" / "fonts",
+            root / "articles" / "fonts",
+        ])
+
+    registered: list[str] = []
+    for base in candidates:
+        if not base.exists() or not base.is_dir():
+            continue
+        for ext in ("*.ttf", "*.otf", "*.ttc"):
+            for fpath in sorted(base.glob(ext)):
+                try:
+                    fm.fontManager.addfont(str(fpath))
+                    registered.append(str(fpath))
+                except Exception:
+                    continue
+    return registered
 
 
 def style_axes(
@@ -143,7 +183,41 @@ def style_axes(
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
 
+    ax._clop_styled = True
     return ax
+
+
+def set_figure_suptitle(
+    fig: plt.Figure,
+    title: str,
+    fontsize: int = 11,
+    **kwargs,
+) -> None:
+    """Set a figure suptitle at the canonical vertical position."""
+    fig.suptitle(title, fontsize=fontsize, y=SUPTITLE_Y, **kwargs)
+
+
+def add_colorbar_safe(
+    mappable,
+    *,
+    ax: plt.Axes,
+    label: Optional[str] = None,
+    shrink: float = 0.6,
+    pad: float = 0.08,
+    orientation: str = "vertical",
+    aspect: int = 20,
+    **kwargs,
+):
+    """Add a colorbar with sensible defaults and guard against missing mappable."""
+    fig = ax.get_figure()
+    cbar = fig.colorbar(
+        mappable, ax=ax, shrink=shrink, pad=pad,
+        orientation=orientation, aspect=aspect, **kwargs,
+    )
+    if label:
+        cbar.set_label(label, fontsize=VIS_STYLE.get("axes.labelsize", 10))
+    cbar.ax.tick_params(labelsize=VIS_STYLE.get("xtick.labelsize", 10))
+    return cbar
 
 
 def save_with_vcd(
@@ -174,8 +248,12 @@ def save_with_vcd(
     path.parent.mkdir(parents=True, exist_ok=True)
     basename = path.stem
 
-    # 1) Apply style_axes to all axes (if not already styled)
+    # 1) Apply style_axes to all axes (if not already styled by caller)
     for ax in fig.get_axes():
+        if not ax.axison:
+            continue
+        if getattr(ax, "_clop_styled", False):
+            continue
         if hasattr(ax, "name") and ax.name == "polar":
             style_axes(ax, kind="polar")
         elif ax.images:
@@ -191,7 +269,7 @@ def save_with_vcd(
     except Exception:
         pass  # fall back gracefully
 
-    # 4) Run VCD (strict mode)
+    # 3) Run VCD (strict mode)
     if run_vcd:
         try:
             import sys
@@ -203,13 +281,22 @@ def save_with_vcd(
             if issues:
                 n_warn = sum(1 for x in issues if x.get("severity") == "warning")
                 if n_warn > 0:
+                    try:
+                        from vcd.vcd_actions import diagnose
+                        actions = diagnose(issues)
+                        top_actions = ", ".join(a.action_type for a in actions[:4])
+                    except Exception:
+                        top_actions = ""
                     _logging.getLogger(__name__).warning(
-                        "%s: %d visual conflict warning(s)", basename, n_warn
+                        "%s: %d visual conflict warning(s)%s",
+                        basename,
+                        n_warn,
+                        f" | suggested actions: {top_actions}" if top_actions else "",
                     )
         except Exception:
             pass
 
-    # 3) Save PNG + PDF with consistent settings
+    # 4) Save PNG + PDF with consistent settings
     save_kw = dict(dpi=dpi, bbox_inches="tight", pad_inches=0.08)
     fig.savefig(path, **save_kw)
     fig.savefig(path.with_suffix(".pdf"), **save_kw)
@@ -275,3 +362,22 @@ def set_dense_tick_labels(
                 else:
                     t.set_rotation(0)
                     t.set_ha("right")
+
+
+def set_scientific_tickformat(
+    ax: plt.Axes,
+    axis: str = "y",
+    *,
+    scilimits: tuple[int, int] = (-2, 3),
+) -> None:
+    """Apply scientific notation formatting for large/small magnitudes."""
+    formatter = ScalarFormatter(useMathText=True)
+    formatter.set_scientific(True)
+    formatter.set_powerlimits(scilimits)
+    if axis in ("x", "both"):
+        ax.xaxis.set_major_formatter(formatter)
+    if axis in ("y", "both"):
+        fmt_y = ScalarFormatter(useMathText=True)
+        fmt_y.set_scientific(True)
+        fmt_y.set_powerlimits(scilimits)
+        ax.yaxis.set_major_formatter(fmt_y)

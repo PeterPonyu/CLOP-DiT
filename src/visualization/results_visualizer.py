@@ -595,8 +595,8 @@ class ResultsVisualizer:
         if not images:
             return None
 
-        fig = plt.figure(figsize=(13.2, 8.8), dpi=self.dpi)
-        gs = fig.add_gridspec(2, 2, height_ratios=[1.0, 0.78], wspace=0.03, hspace=0.22)
+        fig = plt.figure(figsize=(13.6, 9.3), dpi=self.dpi)
+        gs = fig.add_gridspec(2, 2, height_ratios=[1.0, 0.92], wspace=0.05, hspace=0.28)
         fig.suptitle("Diversity Trade-off and Expression Variance", fontsize=12, y=0.985)
 
         for col, (_, image) in enumerate(images[:2]):

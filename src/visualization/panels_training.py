@@ -15,7 +15,7 @@ from typing import Callable, Dict, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import apply_style, style_axes, save_with_vcd
+from .style import COLORS, apply_style, save_with_vcd, set_scientific_tickformat
 
 logger = logging.getLogger(__name__)
 
@@ -69,14 +69,14 @@ def plot_clop_training(
     h = hist
     epochs = np.arange(1, len(h["train_loss"]) + 1)
 
-    fig = plt.figure(figsize=(7.0, 5.8))
+    fig = plt.figure(figsize=(7.4, 6.0))
     gs = fig.add_gridspec(2, 2, wspace=0.45, hspace=0.50)
     fig.suptitle("CLOP Contrastive Pre-training (v9.3)", fontsize=11, y=0.99)
 
     # ── A1: Loss curves ──
     ax = fig.add_subplot(gs[0, 0])
-    ax.plot(epochs, h["train_loss"], label="Train", color="#2196F3")
-    ax.plot(epochs, h["val_loss"], label="Val", color="#FF5722", linestyle="--")
+    ax.plot(epochs, h["train_loss"], label="Train", color=COLORS["real"])
+    ax.plot(epochs, h["val_loss"], label="Val", color=COLORS["generated"], linestyle="--")
     ax.set_xlabel("Epoch", fontsize=10)
     ax.set_ylabel("Contrastive Loss", fontsize=10)
     ax.set_title("Loss Convergence", fontsize=11)
@@ -87,7 +87,7 @@ def plot_clop_training(
 
     # ── A2: Temperature stability ──
     ax = fig.add_subplot(gs[0, 1])
-    ax.plot(epochs, h["temperature"], color="#4CAF50", linewidth=2)
+    ax.plot(epochs, h["temperature"], color=COLORS["baseline_gauss"], linewidth=2)
     ax.set_xlabel("Epoch", fontsize=10)
     ax.set_ylabel("Temperature (\u03c4)", fontsize=10)
     ax.set_title("Temperature Stability", fontsize=11)
@@ -102,21 +102,21 @@ def plot_clop_training(
     ax = fig.add_subplot(gs[1, 0])
     ax.plot(
         epochs, np.array(h["val_proto_acc"]) * 100,
-        label="Val Acc", color="#9C27B0", linewidth=2,
+        label="Val Acc", color=COLORS["baseline_shuffle"], linewidth=2,
     )
     ax.plot(
         epochs, np.array(h["train_proto_acc"]) * 100,
-        label="Train Acc", color="#9C27B0", linestyle=":", alpha=0.6,
+        label="Train Acc", color=COLORS["baseline_shuffle"], linestyle=":", alpha=0.6,
     )
     if "val_proto_top5" in h:
         ax.plot(
             epochs, np.array(h["val_proto_top5"]) * 100,
-            label="Top-5", color="#00BCD4", linestyle="--",
+            label="Top-5", color=COLORS["neutral"], linestyle="--",
         )
     if "val_proto_top10" in h:
         ax.plot(
             epochs, np.array(h["val_proto_top10"]) * 100,
-            label="Top-10", color="#8BC34A", linestyle="--",
+            label="Top-10", color=COLORS["baseline_gauss"], linestyle="--",
         )
     ax.set_xlabel("Epoch", fontsize=10)
     ax.set_ylabel("Accuracy (%)", fontsize=10)
@@ -130,9 +130,9 @@ def plot_clop_training(
     # ── A4: Embedding quality metrics ──
     ax = fig.add_subplot(gs[1, 1])
     quality_metrics = [
-        ("val_text_cell_align", "Text\u2194Cell", "#E91E63"),
-        ("val_inter_sep", "Inter-sep", "#FF9800"),
-        ("val_mean_cosine_sim", "Mean Cos", "#3F51B5"),
+        ("val_text_cell_align", "Text\u2194Cell", COLORS["accent"]),
+        ("val_inter_sep", "Inter-sep", COLORS["warn"]),
+        ("val_mean_cosine_sim", "Mean Cos", COLORS["real"]),
     ]
     for key, label, color in quality_metrics:
         if key in h:
@@ -202,15 +202,15 @@ def plot_dit_training(
     h = hist
     epochs = np.arange(1, len(h["train_loss"]) + 1)
 
-    fig = plt.figure(figsize=(9.0, 6.5))
+    fig = plt.figure(figsize=(9.8, 6.9))
     gs_c = fig.add_gridspec(2, 2, wspace=0.45, hspace=0.50)
     fig.subplots_adjust(top=0.92, bottom=0.10, left=0.11, right=0.95)
     fig.suptitle("DiT Flow-Matching Training", fontsize=11, y=0.98)
 
     # ── C1: Loss ──
     ax = fig.add_subplot(gs_c[0, 0])
-    ax.plot(epochs, h["train_loss"], label="Train MSE", color="#2196F3")
-    ax.plot(epochs, h["val_loss"], label="Val MSE", color="#FF5722", linestyle="--")
+    ax.plot(epochs, h["train_loss"], label="Train MSE", color=COLORS["real"])
+    ax.plot(epochs, h["val_loss"], label="Val MSE", color=COLORS["generated"], linestyle="--")
     ax.set_xlabel("Epoch", fontsize=10)
     ax.set_ylabel("Flow-Matching Loss", fontsize=10)
     ax.set_title("Loss Convergence", fontsize=11)
@@ -234,7 +234,7 @@ def plot_dit_training(
 
     # ── C2: Cosine similarity ──
     ax = fig.add_subplot(gs_c[0, 1])
-    ax.plot(epochs, h["val_cosine_sim"], color="#4CAF50", linewidth=2)
+    ax.plot(epochs, h["val_cosine_sim"], color=COLORS["baseline_gauss"], linewidth=2)
     ax.set_xlabel("Epoch", fontsize=10)
     ax.set_ylabel("Cosine Similarity", fontsize=10)
     ax.set_title("Fidelity (Cosine)", fontsize=11)
@@ -246,11 +246,11 @@ def plot_dit_training(
 
     # ── C3: Learning rate ──
     ax = fig.add_subplot(gs_c[1, 0])
-    ax.plot(epochs, h["lr"], color="#9C27B0", linewidth=1.5)
+    ax.plot(epochs, h["lr"], color=COLORS["baseline_shuffle"], linewidth=1.5)
     ax.set_xlabel("Epoch", fontsize=10)
     ax.set_ylabel("Learning Rate", fontsize=10)
     ax.set_title("LR Schedule", fontsize=11)
-    ax.ticklabel_format(axis="y", style="scientific", scilimits=(-4, -4))
+    set_scientific_tickformat(ax, axis="y", scilimits=(-4, -4))
     ax.set_xlim(0, max(epochs) * 1.05)
     ax.xaxis.set_major_locator(MaxNLocator(nbins=2, integer=True, prune="both"))
 
@@ -269,7 +269,7 @@ def plot_dit_training(
         0.5, 0.5, summary,
         ha="center", va="center", fontsize=10,
         transform=ax.transAxes, family="sans-serif",
-        bbox=dict(boxstyle="round,pad=0.3", facecolor="#F5F5F5", edgecolor="#9E9E9E"),
+        bbox=dict(boxstyle="round,pad=0.35", facecolor=COLORS["bg_light"], edgecolor=COLORS["neutral"]),
     )
 
     # ── Save ──
@@ -320,9 +320,9 @@ def plot_training_dynamics_combined(
         return None
 
     apply_style()
-    fig = plt.figure(figsize=(14.0, 8.0))
-    gs = fig.add_gridspec(2, 4, wspace=0.50, hspace=0.50,
-                          height_ratios=[1, 1])
+    fig = plt.figure(figsize=(14.4, 8.2))
+    gs = fig.add_gridspec(2, 4, wspace=0.55, hspace=0.52,
+                          width_ratios=[1.0, 1.0, 1.0, 1.2], height_ratios=[1, 1])
     fig.suptitle("Training Dynamics", fontsize=12, y=0.98)
 
     # ════════════════════════════════════════════════════════════
@@ -334,8 +334,8 @@ def plot_training_dynamics_combined(
 
         # A1: Loss
         ax = fig.add_subplot(gs[0, 0])
-        ax.plot(epochs, h["train_loss"], label="Train", color="#2196F3")
-        ax.plot(epochs, h["val_loss"], label="Val", color="#FF5722", linestyle="--")
+        ax.plot(epochs, h["train_loss"], label="Train", color=COLORS["real"])
+        ax.plot(epochs, h["val_loss"], label="Val", color=COLORS["generated"], linestyle="--")
         ax.set_xlabel("Epoch", fontsize=10)
         ax.set_ylabel("Contrastive Loss", fontsize=10)
         ax.set_title("CLOP Loss", fontsize=11)
@@ -346,7 +346,7 @@ def plot_training_dynamics_combined(
 
         # A2: Temperature
         ax = fig.add_subplot(gs[0, 1])
-        ax.plot(epochs, h["temperature"], color="#4CAF50", linewidth=2)
+        ax.plot(epochs, h["temperature"], color=COLORS["baseline_gauss"], linewidth=2)
         ax.set_xlabel("Epoch", fontsize=10)
         ax.set_ylabel("Temperature (\u03c4)", fontsize=10)
         ax.set_title("Temperature Stability", fontsize=11)
@@ -360,15 +360,15 @@ def plot_training_dynamics_combined(
         # A3: Accuracy
         ax = fig.add_subplot(gs[0, 2])
         ax.plot(epochs, np.array(h["val_proto_acc"]) * 100,
-                label="Val Acc", color="#9C27B0", linewidth=2)
+                label="Val Acc", color=COLORS["baseline_shuffle"], linewidth=2)
         ax.plot(epochs, np.array(h["train_proto_acc"]) * 100,
-                label="Train Acc", color="#9C27B0", linestyle=":", alpha=0.6)
+                label="Train Acc", color=COLORS["baseline_shuffle"], linestyle=":", alpha=0.6)
         if "val_proto_top5" in h:
             ax.plot(epochs, np.array(h["val_proto_top5"]) * 100,
-                    label="Top-5", color="#00BCD4", linestyle="--")
+                    label="Top-5", color=COLORS["neutral"], linestyle="--")
         if "val_proto_top10" in h:
             ax.plot(epochs, np.array(h["val_proto_top10"]) * 100,
-                    label="Top-10", color="#8BC34A", linestyle="--")
+                    label="Top-10", color=COLORS["baseline_gauss"], linestyle="--")
         ax.set_xlabel("Epoch", fontsize=10)
         ax.set_ylabel("Accuracy (%)", fontsize=10)
         ax.set_title("Classification Accuracy", fontsize=11)
@@ -381,9 +381,9 @@ def plot_training_dynamics_combined(
         # A4: Embedding quality
         ax = fig.add_subplot(gs[0, 3])
         quality_metrics = [
-            ("val_text_cell_align", "Text\u2194Cell", "#E91E63"),
-            ("val_inter_sep", "Inter-sep", "#FF9800"),
-            ("val_mean_cosine_sim", "Mean Cos", "#3F51B5"),
+            ("val_text_cell_align", "Text\u2194Cell", COLORS["accent"]),
+            ("val_inter_sep", "Inter-sep", COLORS["warn"]),
+            ("val_mean_cosine_sim", "Mean Cos", COLORS["real"]),
         ]
         for key, label, color in quality_metrics:
             if key in h:
@@ -409,8 +409,8 @@ def plot_training_dynamics_combined(
 
         # C1: Loss
         ax = fig.add_subplot(gs[1, 0])
-        ax.plot(epochs, h["train_loss"], label="Train MSE", color="#2196F3")
-        ax.plot(epochs, h["val_loss"], label="Val MSE", color="#FF5722", linestyle="--")
+        ax.plot(epochs, h["train_loss"], label="Train MSE", color=COLORS["real"])
+        ax.plot(epochs, h["val_loss"], label="Val MSE", color=COLORS["generated"], linestyle="--")
         ax.set_xlabel("Epoch", fontsize=10)
         ax.set_ylabel("Flow-Matching Loss", fontsize=10)
         ax.set_title("DiT Loss", fontsize=11)
@@ -431,7 +431,7 @@ def plot_training_dynamics_combined(
 
         # C2: Cosine similarity
         ax = fig.add_subplot(gs[1, 1])
-        ax.plot(epochs, h["val_cosine_sim"], color="#4CAF50", linewidth=2)
+        ax.plot(epochs, h["val_cosine_sim"], color=COLORS["baseline_gauss"], linewidth=2)
         ax.set_xlabel("Epoch", fontsize=10)
         ax.set_ylabel("Cosine Similarity", fontsize=10)
         ax.set_title("Fidelity (Cosine)", fontsize=11)
@@ -443,11 +443,11 @@ def plot_training_dynamics_combined(
 
         # C3: Learning rate
         ax = fig.add_subplot(gs[1, 2])
-        ax.plot(epochs, h["lr"], color="#9C27B0", linewidth=1.5)
+        ax.plot(epochs, h["lr"], color=COLORS["baseline_shuffle"], linewidth=1.5)
         ax.set_xlabel("Epoch", fontsize=10)
         ax.set_ylabel("Learning Rate", fontsize=10)
         ax.set_title("LR Schedule", fontsize=11)
-        ax.ticklabel_format(axis="y", style="scientific", scilimits=(-4, -4))
+        set_scientific_tickformat(ax, axis="y", scilimits=(-4, -4))
         ax.set_xlim(0, max(epochs) * 1.05)
         ax.xaxis.set_major_locator(MaxNLocator(nbins=2, integer=True, prune="both"))
 

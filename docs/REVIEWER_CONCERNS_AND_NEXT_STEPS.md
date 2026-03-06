@@ -110,6 +110,22 @@ Based on real-time MDPI Biology requirements, computational biology/single-cell 
 
 ---
 
+## 9. Expanded Baseline and Robustness Framework
+
+**Concern:** The current benchmark is strong on synthetic controls, but a professional reviewer may ask for stronger learned baselines and explicit robustness harnesses.
+
+**Status update:**
+- Baseline registry and artifact contract are now centralized in `src/evaluation/baseline_registry.py`.
+- Learned baseline entry points now exist under `scripts/baselines/` (`train_embedding_vae_baseline.py`, `train_scvi_baseline.py`).
+- Robustness planning/execution is centralized in `scripts/run_robustness_experiments.py`, with design guidance in `docs/ROBUSTNESS_EXPERIMENTS.md`.
+
+**Next steps (Claude/author):**
+19. **Run at least one learned baseline** and write its artifacts into `results/baselines/{method}/` so `src.evaluation.model_benchmarking` and Panel S can score it automatically.
+20. **Use `scripts/run_downstream_for_baselines.py`** to generate per-method downstream biological validation for any baseline that exports expression.
+21. **Add a supplement-ready robustness summary** covering seed stability, subsampling robustness, and prompt sensitivity.
+
+---
+
 ## Summary: Task List for Claude/Author
 
 | # | Priority | Task |

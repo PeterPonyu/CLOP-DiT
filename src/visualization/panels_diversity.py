@@ -14,7 +14,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import apply_style, save_with_vcd
+from .style import COLORS, apply_style, save_with_vcd
 
 matplotlib.use("Agg")
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ def plot_diagnostics(
         sorted_names = [names[i][:25] for i in sorted_idx]
         sorted_divs = [div_ratios[i] for i in sorted_idx]
 
-        colors = ["#F44336" if d < 0.5 else "#FF9800" if d < 0.8 else "#4CAF50" if d < 1.2 else "#2196F3"
+        colors = [COLORS["bad"] if d < 0.5 else COLORS["warn"] if d < 0.8 else COLORS["good"] if d < 1.2 else COLORS["real"]
                   for d in sorted_divs]
         ax.barh(range(len(sorted_divs)), sorted_divs, color=colors, height=0.8)
         ax.set_yticks(range(len(sorted_divs)))
@@ -55,7 +55,7 @@ def plot_diagnostics(
         ax.axvline(x=1.0, color="black", ls="--", lw=1, alpha=0.5, label="ratio=1 (equal)")
         ax.axvline(x=0.5, color="red", ls=":", lw=1, alpha=0.5, label="ratio=0.5 (collapse)")
         ax.set_xlabel("Diversity Ratio (gen / real)")
-        ax.legend(fontsize=8, loc="lower right")
+        ax.legend(fontsize=8, loc="lower right", frameon=False)
         summary = all_results["test1_intratype_diversity"]["summary"]
         ax.set_title(
             f"Intra-Type Diversity Ratio\n"
@@ -72,11 +72,11 @@ def plot_diagnostics(
         nn = t2["nn_cosine_distance"]
         labels = ["p5", "p25", "median", "mean", "p75", "p95"]
         vals = [nn["p5"], nn["p25"], nn["median"], nn["mean"], nn["p75"], nn["p95"]]
-        ax.bar(labels, vals, color=["#F44336", "#FF9800", "#4CAF50", "#2196F3", "#FF9800", "#F44336"],
+        ax.bar(labels, vals, color=[COLORS["bad"], COLORS["warn"], COLORS["good"], COLORS["real"], COLORS["warn"], COLORS["bad"]],
                alpha=0.8, edgecolor="white")
         ax.set_ylabel("Cosine Distance to Nearest Real Cell")
         ax.axhline(y=0.01, color="red", ls=":", alpha=0.5, label="memorization threshold")
-        ax.legend(fontsize=8)
+        ax.legend(fontsize=8, frameon=False)
         ax.set_title(
             f"Nearest-Neighbour Distance\n"
             f"n_near_copy(d<0.001)={t2['n_very_close']}, "
@@ -93,14 +93,14 @@ def plot_diagnostics(
         divs = [t3[k]["mean_intra_diversity"] for k in cfg_vals]
         norms = [t3[k]["mean_norm"] for k in cfg_vals]
 
-        color = "#1976D2"
+        color = COLORS["real"]
         ax.plot(scales, divs, "o-", color=color, lw=2, markersize=8, label="Diversity")
         ax.set_xlabel("CFG Scale")
         ax.set_ylabel("Mean Intra-Type Diversity", color=color)
         ax.tick_params(axis="y", labelcolor=color)
 
         ax2 = ax.twinx()
-        color2 = "#FF7043"
+        color2 = COLORS["generated"]
         ax2.plot(scales, norms, "s--", color=color2, lw=2, markersize=8, label="Norm")
         ax2.set_ylabel("Mean Embedding Norm", color=color2)
         ax2.tick_params(axis="y", labelcolor=color2)
@@ -108,7 +108,7 @@ def plot_diagnostics(
         ax.set_title("CFG Scale vs Diversity & Norm")
         lines1, labels1 = ax.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
-        ax.legend(lines1 + lines2, labels1 + labels2, fontsize=8, loc="upper right")
+        ax.legend(lines1 + lines2, labels1 + labels2, fontsize=8, loc="upper right", frameon=False)
     else:
         ax.set_title("CFG Scale vs Diversity")
 
@@ -122,8 +122,8 @@ def plot_diagnostics(
 
         x = np.arange(len(type_ids))
         w = 0.35
-        ax.bar(x - w / 2, cent_divs, w, label="Centroid Cond", color="#1976D2", alpha=0.8)
-        ax.bar(x + w / 2, noise_divs, w, label="Centroid + Noise", color="#FF7043", alpha=0.8)
+        ax.bar(x - w / 2, cent_divs, w, label="Centroid Cond", color=COLORS["real"], alpha=0.8)
+        ax.bar(x + w / 2, noise_divs, w, label="Centroid + Noise", color=COLORS["generated"], alpha=0.8)
         ax.set_xticks(x)
         ax.set_xticklabels([str(k) for k in type_ids], fontsize=8)
         ax.set_xlabel("Type ID")
@@ -131,7 +131,7 @@ def plot_diagnostics(
         gain = t5["summary"]["mean_diversity_gain"]
         eps = t5["summary"].get("noise_scale", "?")
         ax.set_title(f"Centroid vs Noisy Conditioning\ngain={gain:.2f}x, \u03b5={eps}")
-        ax.legend(fontsize=8)
+        ax.legend(fontsize=8, frameon=False)
     else:
         ax.set_title("Centroid vs Noisy Conditioning")
 
@@ -159,26 +159,26 @@ def plot_diagnostics(
         gen_vals = [o["gen_mean_cell_std"], o["gen_mean_gene_std"]]
         x = np.arange(2)
         w = 0.35
-        ax.bar(x - w / 2, real_vals, w, label="Real", color="#1976D2", alpha=0.8)
-        ax.bar(x + w / 2, gen_vals, w, label="Generated", color="#FF7043", alpha=0.8)
+        ax.bar(x - w / 2, real_vals, w, label="Real", color=COLORS["real"], alpha=0.8)
+        ax.bar(x + w / 2, gen_vals, w, label="Generated", color=COLORS["generated"], alpha=0.8)
         ax.set_xticks(x)
         ax.set_xticklabels(labels)
         ax.set_ylabel("Standard Deviation")
         ax.set_title("Expression Variability Summary")
-        ax.legend()
+        ax.legend(frameon=False)
 
         ax = axes[1]
         pt_ratio = t6.get("per_type_gene_std_ratio", {})
         if pt_ratio:
             vals = [pt_ratio["min"], pt_ratio["mean"], pt_ratio["max"]]
             lbls = ["Min", "Mean", "Max"]
-            colors = ["#F44336" if v < 0.5 else "#4CAF50" for v in vals]
+            colors = [COLORS["bad"] if v < 0.5 else COLORS["good"] for v in vals]
             ax.bar(lbls, vals, color=colors, alpha=0.8, edgecolor="white")
             ax.axhline(y=1.0, color="black", ls="--", lw=1, alpha=0.5,
                        label="ratio=1 (equal diversity)")
             ax.set_ylabel("Gene Std Ratio (gen / real)")
             ax.set_title("Per-Type Gene Std Ratio")
-            ax.legend(fontsize=8)
+            ax.legend(fontsize=8, frameon=False)
 
         path = out / "panel_k_expression_diversity.png"
         save_with_vcd(fig, path, dpi)

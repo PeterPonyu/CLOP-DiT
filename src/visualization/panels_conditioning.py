@@ -14,7 +14,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import TYPE_PALETTE, apply_style, save_with_vcd
+from .style import COLORS, TYPE_PALETTE, apply_style, save_with_vcd
 
 matplotlib.use("Agg")
 logger = logging.getLogger(__name__)
@@ -37,9 +37,9 @@ def plot_panel_l(
     fig, ax1 = plt.subplots(figsize=(6.0, 4.5))
     fig.suptitle("Noise-Scale Trade-off (CFG=1.5)", fontsize=11)
 
-    color_fd = "#1976D2"
-    color_cos = "#4CAF50"
-    color_div = "#FF7043"
+    color_fd = COLORS["real"]
+    color_cos = COLORS["baseline_gauss"]
+    color_div = COLORS["generated"]
 
     ax1.plot(noise_scales, fds, "o-", color=color_fd, lw=2, markersize=5, label="Fréchet Distance ↓", zorder=3)
     ax1.set_xlabel("Noise Scale (ε)")
@@ -57,7 +57,7 @@ def plot_panel_l(
     chosen_eps = 0.03
     if chosen_eps in noise_scales:
         idx_chosen = noise_scales.index(chosen_eps)
-        ax1.axvline(x=chosen_eps, color="#9C27B0", linestyle="-", linewidth=2.5,
+        ax1.axvline(x=chosen_eps, color=COLORS["baseline_shuffle"], linestyle="-", linewidth=2.5,
                      alpha=0.8, zorder=10, label=f"Production (ε={chosen_eps})")
         ax1.annotate(
             f"Production Config\n"
@@ -68,14 +68,14 @@ def plot_panel_l(
             xy=(chosen_eps, fds[idx_chosen]),
             xytext=(chosen_eps + 0.02, fds[idx_chosen] + 0.05),
             fontsize=10,
-            bbox=dict(boxstyle="round,pad=0.4", facecolor="#F3E5F5", edgecolor="#9C27B0", alpha=0.9),
-            arrowprops=dict(arrowstyle="->", color="#9C27B0", lw=2),
+            bbox=dict(boxstyle="round,pad=0.4", facecolor="#F3E5F5", edgecolor=COLORS["baseline_shuffle"], alpha=0.9),
+            arrowprops=dict(arrowstyle="->", color=COLORS["baseline_shuffle"], lw=2),
             zorder=11,
         )
 
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
-    ax1.legend(lines1 + lines2, labels1 + labels2, loc="center left", fontsize=10)
+    ax1.legend(lines1 + lines2, labels1 + labels2, loc="center left", fontsize=9, frameon=False)
 
     best_idx = np.argmin(fds)
     if noise_scales[best_idx] != chosen_eps:

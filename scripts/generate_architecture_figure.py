@@ -26,9 +26,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
-import matplotlib.patheffects as path_effects
 
-from src.visualization.style import apply_style, save_panel
+from src.visualization.style import COLORS, apply_style, save_panel
 
 # ---------------------------------------------------------------------------
 # Apply global publication style
@@ -42,30 +41,30 @@ matplotlib.rcParams.update({
 # ---------------------------------------------------------------------------
 # Colour palette
 # ---------------------------------------------------------------------------
-C_TEXT_DARK = "#1565C0"
-C_TEXT_MID = "#42A5F5"
-C_TEXT_LIGHT = "#BBDEFB"
+C_TEXT_DARK = COLORS["real"]
+C_TEXT_MID = "#1E88E5"
+C_TEXT_LIGHT = "#90CAF9"
 C_TEXT_BOX = "#E3F2FD"
 
-C_CELL_DARK = "#2E7D32"
-C_CELL_MID = "#66BB6A"
-C_CELL_LIGHT = "#C8E6C9"
+C_CELL_DARK = COLORS["baseline_gauss"]
+C_CELL_MID = "#43A047"
+C_CELL_LIGHT = "#A5D6A7"
 C_CELL_BOX = "#E8F5E9"
 
-C_GEN_DARK = "#E65100"
-C_GEN_MID = "#FF9800"
-C_GEN_LIGHT = "#FFE0B2"
+C_GEN_DARK = COLORS["generated"]
+C_GEN_MID = "#E65100"
+C_GEN_LIGHT = "#FFCCBC"
 C_GEN_BOX = "#FFF3E0"
 
-C_SHARED = "#7B1FA2"
-C_SHARED_LIGHT = "#E1BEE7"
+C_SHARED = COLORS["baseline_shuffle"]
+C_SHARED_LIGHT = "#CE93D8"
 C_SHARED_BOX = "#F3E5F5"
 
 C_GREY = "#455A64"
 C_WHITE = "#FFFFFF"
 
-C_DECODE_DARK = "#00695C"
-C_DECODE_MID = "#26A69A"
+C_DECODE_DARK = "#004D40"
+C_DECODE_MID = "#00796B"
 C_DECODE_BOX = "#E0F2F1"
 
 
@@ -105,7 +104,6 @@ def draw_box(ax, xy, w, h, label, sublabel=None, facecolor=C_WHITE,
             ha="center", va="center",
             fontsize=sublabel_size, color=C_GREY,
             zorder=zorder + 1,
-            style="italic",
         )
     return box
 
@@ -151,9 +149,6 @@ def draw_stage_bg(ax, xy, w, h, label, color, alpha=0.10, label_color=None):
         color=lc,
         zorder=1,
     )
-    txt.set_path_effects([
-        path_effects.withStroke(linewidth=2, foreground="white"),
-    ])
 
 
 # ---------------------------------------------------------------------------
@@ -170,6 +165,8 @@ def create_architecture_figure(output_dir=None):
     ax.set_xlim(-0.1, 7.35)
     ax.set_ylim(-0.3, 3.4)
     ax.axis("off")
+    ax.set_xticks([])
+    ax.set_yticks([])
     fig.patch.set_facecolor(C_WHITE)
     fig.subplots_adjust(left=0.02, right=0.98, top=0.91, bottom=0.04)
 
@@ -203,7 +200,7 @@ def create_architecture_figure(output_dir=None):
 
     # Text Description input
     draw_box(ax, (tx0, ty), SBW, SBH, "Text\nDescription",
-             facecolor=C_TEXT_BOX, edgecolor=C_TEXT_DARK, fontsize=6.5,
+             facecolor=C_TEXT_BOX, edgecolor=C_TEXT_DARK, fontsize=6.0,
              textcolor=C_TEXT_DARK, bold=True)
 
     # BiomedBERT-large
@@ -239,7 +236,7 @@ def create_architecture_figure(output_dir=None):
 
     # Cell Profile input
     draw_box(ax, (cx0, cy), SBW, SBH, "Cell\nProfile",
-             facecolor=C_CELL_BOX, edgecolor=C_CELL_DARK, fontsize=6.5,
+             facecolor=C_CELL_BOX, edgecolor=C_CELL_DARK, fontsize=6.0,
              textcolor=C_CELL_DARK, bold=True)
 
     # scGPT Encoder
@@ -307,7 +304,7 @@ def create_architecture_figure(output_dir=None):
     ax.text(cx1 + BW / 2, cy + BH + 0.22,
             "scGPT latent =\nDiT training target",
             ha="center", va="bottom", fontsize=5, color=C_GREY,
-            style="italic", zorder=5)
+            zorder=5)
 
     # ===================================================================
     #  DiT Stage (centre)
@@ -341,7 +338,7 @@ def create_architecture_figure(output_dir=None):
             color=C_GEN_DARK, zorder=5)
     ax.text(cx_dit, dit_by + dit_bh - 0.32, "8 AdaLN-Zero",
             ha="center", va="center", fontsize=5.5,
-            color=C_GEN_DARK, style="italic", zorder=5)
+            color=C_GEN_DARK, zorder=5)
     ax.text(cx_dit, dit_by + dit_bh - 0.46, "22.1M params",
             ha="center", va="center", fontsize=5,
             color=C_GREY, zorder=5)
@@ -388,7 +385,7 @@ def create_architecture_figure(output_dir=None):
                color=C_SHARED, linewidth=1.0)
     ax.text(dit_bx + dit_bw * 0.35 + 0.35, dit_by - 0.12,
             "AdaLN", ha="center", va="center", fontsize=5,
-            color=C_SHARED, style="italic", zorder=5)
+            color=C_SHARED, zorder=5)
 
     # Timestep embedding
     time_bx = cond_bx + cond_bw + 0.10

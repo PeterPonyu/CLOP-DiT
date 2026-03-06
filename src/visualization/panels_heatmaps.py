@@ -10,20 +10,22 @@ from pathlib import Path
 from typing import Callable, Dict, Optional
 
 import matplotlib
+matplotlib.use("Agg")
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 
 from . import io as viz_io
+from .style import FONT_LEGEND, add_colorbar_safe, set_dense_tick_labels, set_figure_suptitle
+from src.utils.paths import FIG_DIR
 
-matplotlib.use("Agg")
 logger = logging.getLogger(__name__)
 
 
 def plot_text_cell_heatmap(
     cache_dir: str = "data/cache",
     type_names: Optional[Dict[int, str]] = None,
-    output_dir: str = "results/figures",
+    output_dir: Optional[str] = None,
     dpi: int = 300,
     save: bool = True,
     save_panel_fn: Optional[Callable] = None,
@@ -36,6 +38,8 @@ def plot_text_cell_heatmap(
     """
     from matplotlib.patches import Rectangle  # noqa: F401 (kept for parity)
 
+    if output_dir is None:
+        output_dir = str(FIG_DIR)
     cache = Path(cache_dir)
     if type_names is None:
         type_names = {}
@@ -82,11 +86,7 @@ def plot_text_cell_heatmap(
 
     fig = plt.figure(figsize=(14.0, 9.0))
     gs = fig.add_gridspec(1, 3, width_ratios=[1.4, 0.7, 0.5], wspace=0.55)
-    fig.suptitle(
-        f"Text\u2013Cell Alignment \u2014 Diag: {mean_diag:.3f}, "
-        f"Off: {mean_off:.3f}, Gap: {mean_diag - mean_off:.3f}",
-        fontsize=11,
-    )
+    set_figure_suptitle(fig, "Text–Cell Alignment", fontsize=11)
 
     # ── F1: Clustered heatmap with annotations ──
     ax1 = fig.add_subplot(gs[0])
@@ -110,7 +110,7 @@ def plot_text_cell_heatmap(
     ax1.set_xticklabels(_xtl, rotation=90, fontsize=8, ha="center")
     ax1.set_yticklabels(_ytl, fontsize=8, ha="right")
     ax1.set_ylabel("Cell Type (text prototypes)", fontsize=10)
-    ax1.set_title("Cosine Similarity (sorted)", fontsize=10)
+    ax1.set_title("Cosine Similarity (sorted)", fontsize=11)
 
     off_diag_matrix = sim_sorted.copy()
     np.fill_diagonal(off_diag_matrix, -1)
@@ -125,8 +125,7 @@ def plot_text_cell_heatmap(
         )
         off_diag_matrix[idx] = -1
 
-    cbar = fig.colorbar(im, ax=ax1, shrink=0.5, pad=0.06)
-    cbar.set_label("Cos Sim", fontsize=10)
+    cbar = add_colorbar_safe(im, ax=ax1, label="Cosine similarity", shrink=0.52, pad=0.12)
     cbar.ax.tick_params(labelsize=8)
     cbar.ax.axhline(y=mean_diag, color="white", linewidth=1.5, linestyle="--")
     cbar.ax.axhline(y=mean_off, color="black", linewidth=1, linestyle=":")
@@ -153,20 +152,22 @@ def plot_text_cell_heatmap(
     _step2 = 7
     _ytl2 = [labels_asc[i] if i % _step2 == 0 else "" for i in range(n_types)]
     ax2.set_yticklabels(_ytl2, fontsize=8, ha="right")
-    ax2.set_title("Per-Type Alignment", fontsize=10)
+    set_dense_tick_labels(ax2, axis="y", max_labels=10, fontsize=8, rotation=0)
+    ax2.set_title("Per-Type Alignment", fontsize=11)
     ax2.axvline(x=mean_diag, color="#D32F2F", linestyle="--", alpha=0.7, linewidth=1.5)
     ax2.set_xlim(0, 1.05)
 
     # ── F3: Distribution comparison ──
     ax3 = fig.add_subplot(gs[2])
+    # Legend keys kept short; μ values are in suptitle/caption
     ax3.hist(
         diag, bins=10, alpha=0.7, color="#1976D2", edgecolor="white",
-        label=f"Diagonal (\u03bc={mean_diag:.3f})", density=True,
+        label="Diag", density=True,
         orientation="horizontal",
     )
     ax3.hist(
         off_diag, bins=20, alpha=0.5, color="#FF7043", edgecolor="white",
-        label=f"Off-diag (\u03bc={mean_off:.3f})", density=True,
+        label="Off-diag", density=True,
         orientation="horizontal",
     )
     ax3.axhline(y=mean_diag, color="#1565C0", linestyle="--", linewidth=1.5)
@@ -174,7 +175,7 @@ def plot_text_cell_heatmap(
     ax3.set_ylabel("Cosine Similarity", fontsize=10)
     ax3.set_xlabel("Density", fontsize=10)
     ax3.set_title("Distribution", fontsize=11)
-    ax3.legend(fontsize=8, loc="lower right")
+    ax3.legend(fontsize=FONT_LEGEND, frameon=False, loc="upper left")
     ax3.set_ylim(min(off_diag.min() * 1.05, -0.1), 1.05)
     from matplotlib.ticker import MaxNLocator
     ax3.yaxis.set_major_locator(MaxNLocator(nbins=5, prune="both"))
@@ -189,7 +190,7 @@ def plot_text_cell_heatmap(
 def plot_per_type_generation(
     metrics_path: str = "results/generation_metrics.json",
     div_metrics_path: str = "results/diversity_diagnostics.json",
-    output_dir: str = "results/figures",
+    output_dir: Optional[str] = None,
     dpi: int = 300,
     save: bool = True,
     save_panel_fn: Optional[Callable] = None,
@@ -200,6 +201,8 @@ def plot_per_type_generation(
     G2: Frechet outlier profile (sorted, mean-anchored)
     G3: Fidelity vs abundance with FD bubble size and diversity-ratio colour
     """
+    if output_dir is None:
+        output_dir = str(FIG_DIR)
     if not Path(metrics_path).exists():
         logger.info(f"No generation metrics found at {metrics_path} — skipping Panel G")
         return None
@@ -267,13 +270,7 @@ def plot_per_type_generation(
     gs_g = fig.add_gridspec(1, 3, wspace=0.55)
     summary = data.get("summary", {})
     overall = data.get("overall", {})
-    fig.suptitle(
-        f"Per-Type Generation Fidelity \u2014 "
-        f"mean cos={summary.get('mean_centroid_cosine', 0):.3f}, "
-        f"overall FD={overall.get('frechet_distance', 0):.3f}"
-        f"{collapsed_summary_text}",
-        fontsize=11,
-    )
+    set_figure_suptitle(fig, "Per-Type Generation Fidelity", fontsize=11)
 
     # G1: Centroid cosine (sorted)
     ax = fig.add_subplot(gs_g[0])
@@ -299,24 +296,16 @@ def plot_per_type_generation(
         for i in range(len(sorted_cos))
     ]
     ax.set_yticklabels(_ytlg, fontsize=8, ha="right")
+    set_dense_tick_labels(ax, axis="y", max_labels=10, fontsize=8, rotation=0)
     ax.set_xlabel("Centroid Cosine Similarity")
     ax.set_title("Real\u2194Gen Centroid Cosine")
     ax.axvline(
         x=summary.get("mean_centroid_cosine", 0), color="red",
         linestyle="--", alpha=0.5,
-        label=f"mean={summary.get('mean_centroid_cosine', 0):.3f}",
+        label="mean (see caption)",
     )
     ax.set_xlim(0, 1.05)
-    ax.legend(fontsize=10, bbox_to_anchor=(0.0, -0.08), loc="upper left")
-    for rank, i in enumerate(sorted_idx[:4]):
-        ax.text(
-            min(sorted_cos[rank] + 0.02, 1.01),
-            rank,
-            short_names[i][:16],
-            va="center",
-            fontsize=7,
-            color="#444",
-        )
+    ax.legend(fontsize=FONT_LEGEND, frameon=False, loc="lower right")
 
     # G2: Fréchet outlier profile
     ax = fig.add_subplot(gs_g[1])
@@ -332,15 +321,13 @@ def plot_per_type_generation(
         ax.hlines(y_pos, 0, fd_vals, color=colors_fd, linewidth=2.8, alpha=0.85)
         ax.scatter(fd_vals, y_pos, s=28 + 70 * fd_norm, color=colors_fd, edgecolors="white", linewidths=0.4, zorder=3)
         if np.isfinite(fd_mean):
-            ax.axvline(fd_mean, color="#D32F2F", linestyle="--", alpha=0.7, linewidth=1.5, label=f"mean={fd_mean:.3f}")
+            ax.axvline(fd_mean, color="#D32F2F", linestyle="--", alpha=0.7, linewidth=1.5, label="mean (see caption)")
         ax.set_yticks(y_pos)
         ax.set_yticklabels([fd_names[i] if i % 7 == 0 else "" for i in range(len(fd_vals))], fontsize=8, ha="right")
+        set_dense_tick_labels(ax, axis="y", max_labels=10, fontsize=8, rotation=0)
         ax.set_xlabel("Fr\u00e9chet Distance (lower = better)")
         ax.set_title("Fr\u00e9chet Outlier Profile")
-        ax.legend(fontsize=8, loc="lower right")
-        for rank, i in enumerate(fd_idx[-4:]):
-            y = np.where(fd_idx == i)[0][0]
-            ax.text(fd_array[i] + 0.004, y, short_names[i][:16], va="center", fontsize=7, color="#444")
+        ax.legend(fontsize=FONT_LEGEND, frameon=False, loc="lower right")
     else:
         ax.text(
             0.5, 0.5, "No valid FD values",
@@ -371,9 +358,8 @@ def plot_per_type_generation(
             linewidth=0.6,
             clip_on=False,
         )
-        cbar = fig.colorbar(sc, ax=ax, shrink=0.65, pad=0.03)
-        cbar.set_label("Diversity ratio", fontsize=8)
-        cbar.ax.tick_params(labelsize=7)
+        cbar = add_colorbar_safe(sc, ax=ax, label="Diversity ratio", shrink=0.65, pad=0.10)
+        cbar.ax.tick_params(labelsize=8)
     else:
         ax.scatter(
             x_vals,
@@ -389,9 +375,9 @@ def plot_per_type_generation(
     if len(x_vals) > 1:
         slope, intercept = np.polyfit(x_vals, cos_array, deg=1)
         x_line = np.linspace(x_vals.min(), x_vals.max(), 100)
-        ax.plot(x_line, slope * x_line + intercept, color="#263238", linestyle="--", linewidth=1.3, label=f"trend={slope:.2f}")
+        ax.plot(x_line, slope * x_line + intercept, color="#263238", linestyle="--", linewidth=1.3, label="Trend")
 
-    worst_idx = np.argsort(cos_array)[:3]
+    worst_idx = np.argsort(cos_array)[:2]
     for i in worst_idx:
         if cos_array[i] < 0.9:
             x_offset = -28 if x_vals[i] > np.median(x_vals) else 5
@@ -402,15 +388,13 @@ def plot_per_type_generation(
     ax.set_xlabel("log10(Number of Real Cells)")
     ax.set_ylabel("Centroid Cosine Similarity")
     ax.set_title("Fidelity vs Abundance")
-    ax.axhline(y=0.9, color="green", linestyle=":", alpha=0.4, label="cos=0.9")
-    ax.scatter([], [], s=70, facecolors="none", edgecolors="#555", label="smaller bubble = lower FD")
-    ax.scatter([], [], s=220, facecolors="none", edgecolors="#555", label="larger bubble = higher FD")
-    ax.legend(fontsize=7, loc="lower right")
+    ax.axhline(y=0.9, color="green", linestyle=":", alpha=0.4, label="Target (0.9)")
+    ax.legend(fontsize=FONT_LEGEND, frameon=False, loc="upper left")
     from matplotlib.ticker import MaxNLocator
     ax.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
     ax.set_xlim(x_vals.min() - 0.10, x_vals.max() + 0.10)
 
-    fig.subplots_adjust(left=0.22, right=0.92)
+    fig.subplots_adjust(left=0.18, right=0.95)
 
     if save:
         viz_io.save_to_dir(fig, "panel_g_per_type_generation", output_dir, dpi, save_panel_fn)

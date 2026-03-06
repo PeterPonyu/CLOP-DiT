@@ -16,12 +16,18 @@ from typing import Dict, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import COLORS, save_panel, style_axes, GRIDSPEC_TIGHT, set_dense_tick_labels
+from .style import COLORS, save_panel, style_axes, set_dense_tick_labels
 from src.utils.paths import CACHE_DIR, RESULTS_DIR, FIG_DIR
 
 logger = logging.getLogger(__name__)
 
-METHOD_COLORS = ["#1976D2", "#FF7043", "#4CAF50", "#9C27B0", "#FFC107"]
+METHOD_COLORS = [
+    COLORS["real"],
+    COLORS["generated"],
+    COLORS["baseline_gauss"],
+    COLORS["baseline_shuffle"],
+    COLORS["accent"],
+]
 
 
 def plot_baseline_comparison(
@@ -98,8 +104,8 @@ def plot_baseline_comparison(
     metric_labels = ["FD", "Cos", "Div", "Cov"]
     metric_keys = ["FD", "Centroid Cosine", "Diversity Ratio", "Coverage"]
 
-    fig = plt.figure(figsize=(13.5, 5.5))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.3, 1.1, 1.0], wspace=0.55)
+    fig = plt.figure(figsize=(13.8, 5.8))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.3, 1.1, 1.0], wspace=0.58)
     fig.suptitle("CLOP-DiT vs Baselines",
                  fontsize=11)
 
@@ -148,7 +154,7 @@ def plot_baseline_comparison(
                       color=METHOD_COLORS[i % len(METHOD_COLORS)])
     ax_radar.legend(loc="lower center", bbox_to_anchor=(0.5, -0.22), fontsize=8,
                     frameon=False, ncol=3)
-    ax_radar.set_title("Normalized Radar", pad=20)
+    ax_radar.set_title("Normalized Radar", pad=8)
 
     # ── O3: Relative improvement strip (graphical — replaces table) ──
     ax3 = fig.add_subplot(gs[2])
@@ -183,7 +189,7 @@ def plot_baseline_comparison(
         for mk in metric_keys:
             y_labels.append(f"{mk[:3]}-{bl_name[:10]}"[:15])
             y_vals.append(imps.get(mk, 0) * 100)  # as percentage
-            y_colors.append(bl_color_map.get(bl_name, "#999"))
+            y_colors.append(bl_color_map.get(bl_name, COLORS["neutral"]))
 
     y_pos = np.arange(len(y_labels))
     bar_colors_final = [COLORS["good"] if v > 0 else COLORS["bad"] for v in y_vals]
@@ -192,7 +198,7 @@ def plot_baseline_comparison(
     ax3.set_yticks(y_pos)
     ax3.set_yticklabels(y_labels, fontsize=8, ha="right")
     set_dense_tick_labels(ax3, axis="y", max_labels=12, fontsize=8, rotation=0)
-    ax3.axvline(x=0, color="#333", linewidth=1.2)
+    ax3.axvline(x=0, color=COLORS["neutral"], linewidth=1.2)
     ax3.invert_yaxis()
 
     style_axes(ax3, "bar", title="CLOP-DiT Relative Improvement",

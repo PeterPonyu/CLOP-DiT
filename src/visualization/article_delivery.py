@@ -16,7 +16,7 @@ import argparse
 import shutil
 import sys
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 # Single source of truth: 15 article figure basenames (no .pdf).
 # Order: 6 merged figures, then 9 standalone panels (matches LaTeX and FIGURE_ORGANIZATION.md).
@@ -36,6 +36,26 @@ ARTICLE_FIGURE_BASENAMES: List[str] = [
     "panel_o_baseline_comparison",
     "panel_s_benchmark",
     "panel_r_de_concordance",
+]
+
+# Basename -> producer file path (relative to repo root). Used for presentation-policy tests.
+# Must match FIGURE_ORGANIZATION.md "Canonical producers" table.
+ARTICLE_FIGURE_PRODUCERS: List[Tuple[str, str]] = [
+    ("fig_architecture", "scripts/generate_architecture_figure.py"),
+    ("fig_training_dynamics", "src/visualization/panels_training.py"),
+    ("fig_embedding_space", "src/visualization/panels_merged.py"),
+    ("fig_fidelity_alignment", "src/visualization/panels_merged.py"),
+    ("fig_diversity_tradeoff", "src/visualization/results_visualizer.py"),
+    ("fig_downstream_pq", "src/visualization/downstream_panels.py"),
+    ("panel_d_metrics_summary", "src/visualization/panels_metrics.py"),
+    ("panel_n_marker_gene_comparison", "src/visualization/panels_expression.py"),
+    ("panel_h_expression_correlation", "src/visualization/panels_expression.py"),
+    ("panel_i_expression_analysis", "src/visualization/panels_expression.py"),
+    ("panel_m_conditioning_umap", "scripts/conditioning_analysis.py"),
+    ("panel_j_diversity_diagnostics", "scripts/diversity_diagnostics.py"),
+    ("panel_o_baseline_comparison", "src/visualization/baseline_panels.py"),
+    ("panel_s_benchmark", "src/visualization/benchmark_panels.py"),
+    ("panel_r_de_concordance", "src/visualization/panels_de_concordance.py"),
 ]
 
 

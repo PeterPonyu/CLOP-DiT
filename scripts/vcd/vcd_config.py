@@ -36,15 +36,15 @@ LEGEND_SPILLOVER_TOL_PX: float = 5.0
 LEGEND_SPILLOVER_NEIGHBOR_AREA: float = 100.0
 
 # ── Legend-vs-other-panel (Pass 11) ────────────────────────────────────────
-LEGEND_PANEL_OVERLAP_MIN_PX2: float = 30.0
+LEGEND_PANEL_OVERLAP_MIN_PX2: float = 20.0
 
 # ── Legend-vs-own-content (Pass 12) ────────────────────────────────────────
-LEGEND_OWN_CONTENT_MIN_PX2: float = 200.0
-LEGEND_OWN_CONTENT_FRAC: float = 0.05   # 5% of artist area
+LEGEND_OWN_CONTENT_MIN_PX2: float = 140.0
+LEGEND_OWN_CONTENT_FRAC: float = 0.03   # 3% of artist area
 
 # ── Fig-legend-vs-subplot (Pass 13) ───────────────────────────────────────
-FIG_LEGEND_SUBPLOT_MIN_PX2: float = 30.0
-FIG_LEGEND_SUBPLOT_FRAC: float = 0.03   # 3%
+FIG_LEGEND_SUBPLOT_MIN_PX2: float = 20.0
+FIG_LEGEND_SUBPLOT_FRAC: float = 0.02   # 2%
 
 # ── Colorbar internal (Pass 14) ───────────────────────────────────────────
 CBAR_INTERNAL_TOL_PX: float = 1.0
@@ -57,7 +57,7 @@ BRACKET_BORDER_TOL_PX: float = 5.0
 BRACKET_TEXT_OVERLAP_AREA: float = 10.0
 
 # ── Colorbar-data overlap (Pass 17) ───────────────────────────────────────
-CBAR_DATA_FRAC: float = 0.05   # 5%
+CBAR_DATA_FRAC: float = 0.03   # 3%
 
 # ── Legend crowding auto-fix (Pass 18) ─────────────────────────────────────
 LEGEND_CROWDING_ENTRY_COUNT: int = 6
@@ -79,7 +79,7 @@ PER_AXES_SUMMARY_FRAC: float = 0.03
 SKIP_TAGS = ("Spine", "Wedge", "FancyBbox")
 
 # ── Font policy (new) ────────────────────────────────────────────────────
-ALLOWED_FONT_FAMILIES = {"Arial", "Helvetica", "DejaVu Sans", "sans-serif"}
+ALLOWED_FONT_FAMILIES = {"Arial", "Helvetica", "DejaVu Sans", "Liberation Sans", "sans-serif"}
 MAX_TITLE_LABEL_SIZE_DIFF: float = 2.0   # max pt difference title vs label
 BOLD_WHITELIST = set()  # elements allowed to use bold (empty = none)
 

@@ -45,10 +45,10 @@ def plot_clustering_and_classifier_merged(
     """Merged figure: clustering + classifier alignment (former P + Q)."""
     apply_style()
 
-    fig = plt.figure(figsize=(14.0, 10.0))
-    gs = fig.add_gridspec(2, 3, wspace=0.45, hspace=0.40,
+    fig = plt.figure(figsize=(15.0, 10.4))
+    gs = fig.add_gridspec(2, 3, wspace=0.56, hspace=0.44,
                           height_ratios=[1, 1.1],
-                          width_ratios=[1.3, 1.0, 0.9])
+                          width_ratios=[1.65, 1.15, 0.95])
     fig.suptitle("Downstream Validation: Clustering & Classifier Alignment",
                  fontsize=12, y=0.98)
 
@@ -77,10 +77,17 @@ def plot_clustering_and_classifier_merged(
                 ax_p1.scatter(umap_coords[m, 0], umap_coords[m, 1],
                               c=[ct_colors[ct]], s=12, alpha=0.6, marker="^",
                               edgecolors="black", linewidths=0.3, rasterized=True)
-        ax_p1.scatter([], [], c="gray", s=15, marker="o", label="Real")
-        ax_p1.scatter([], [], c="gray", s=15, marker="^", edgecolors="black",
+        ax_p1.scatter([], [], c=COLORS["real"], s=15, marker="o", label="Real")
+        ax_p1.scatter([], [], c=COLORS["generated"], s=15, marker="^", edgecolors="black",
                       linewidths=0.3, label="Generated")
-        ax_p1.legend(fontsize=9, loc="upper left", markerscale=2)
+        ax_p1.legend(
+            fontsize=8,
+            loc="upper left",
+            bbox_to_anchor=(1.02, 1.0),
+            borderaxespad=0.0,
+            markerscale=2,
+            frameon=False,
+        )
         style_axes(ax_p1, "umap", title="UMAP Overlay",
                    xlabel="UMAP 1", ylabel="UMAP 2")
     else:
@@ -92,19 +99,19 @@ def plot_clustering_and_classifier_merged(
     if mixing:
         sorted_types = sorted(mixing.keys(), key=lambda k: mixing[k])
         vals = [mixing[t] for t in sorted_types]
-        short_names = [t[:25] for t in sorted_types]
+        short_names = [t[:20] for t in sorted_types]
         bar_colors = [quality_color(v, (0.3, 0.15)) for v in vals]
         y_pos = np.arange(len(sorted_types))
         ax_p2.barh(y_pos, vals, color=bar_colors, height=0.7,
                    edgecolor="white", linewidth=0.5)
         ax_p2.set_yticks(y_pos)
         ax_p2.set_yticklabels(short_names, fontsize=7)
-        set_dense_tick_labels(ax_p2, axis="y", max_labels=14, fontsize=7, rotation=0)
+        set_dense_tick_labels(ax_p2, axis="y", max_labels=10, fontsize=7, rotation=0)
         ax_p2.axvline(x=clustering_data.get("mean_mixing_score", 0),
-                       color="#D32F2F", linestyle="--", alpha=0.7, linewidth=1.5,
+                       color=COLORS["bad"], linestyle="--", alpha=0.7, linewidth=1.5,
                        label=f"mean={clustering_data.get('mean_mixing_score', 0):.3f}")
         ax_p2.set_xlim(0, max(max(vals) * 1.1, 0.5))
-        ax_p2.legend(fontsize=8)
+        ax_p2.legend(fontsize=8, frameon=False, loc="lower right")
         style_axes(ax_p2, "bar", title="kNN Mixing",
                    xlabel="Fraction Real Neighbours")
     else:
@@ -124,8 +131,8 @@ def plot_clustering_and_classifier_merged(
     summary_text += f"\nLeiden clusters: {n_cl}"
     ax_ps.text(0.5, 0.5, summary_text, ha="center", va="center",
                fontsize=10, transform=ax_ps.transAxes, family="sans-serif",
-               bbox=dict(boxstyle="round,pad=0.4", facecolor="#F5F5F5",
-                         edgecolor="#9E9E9E"))
+               bbox=dict(boxstyle="round,pad=0.4", facecolor=COLORS["bg_light"],
+                         edgecolor=COLORS["neutral"]))
     ax_ps.set_title("Cluster Metrics", fontsize=10)
 
     cm = classifier_data.get("_confusion_matrix")
@@ -169,14 +176,13 @@ def plot_clustering_and_classifier_merged(
         summary = _plot_classifier_metric_heatmap(fig, ax_q2, np.array(cm), class_names or [f"C{i}" for i in range(np.array(cm).shape[0])])
         ax_q2.text(
             0.0,
-            0.99,
+            1.02,
             f"Overall acc={gen_acc:.3f}  |  Median F1={np.median(summary['f1']):.3f}",
             transform=ax_q2.transAxes,
             ha="left",
-            va="top",
-            fontsize=7,
-            color="#444",
-            bbox=dict(boxstyle="round,pad=0.18", fc="white", ec="#DDDDDD", alpha=0.92),
+            va="bottom",
+            fontsize=8,
+            color=COLORS["neutral"],
         )
     else:
         ax_q2.text(0.5, 0.5, "No per-type data", ha="center", va="center",
@@ -198,7 +204,7 @@ def plot_clustering_and_classifier_merged(
         ax_q3.set_xticks([0.0, 0.25, 0.5, 0.75, 1.0])
         ax_q3.set_yticks([0.0, 0.25, 0.5, 0.75, 1.0])
         ax_q3.set_aspect("equal")
-        ax_q3.legend(fontsize=8, loc="lower left")
+        ax_q3.legend(fontsize=8, loc="lower right")
         style_axes(ax_q3, "scatter", title="Discriminator ROC",
                    xlabel="FPR", ylabel="TPR")
     else:
@@ -208,7 +214,7 @@ def plot_clustering_and_classifier_merged(
     fig.text(0.5, 0.94,
              f"Gen Acc={gen_acc:.3f}  |  F1={gen_f1:.3f}  |  Disc AUC={disc_auc:.3f}",
              ha="center", va="top", fontsize=9,
-             bbox=dict(boxstyle="round,pad=0.25", fc="#F5F5F5", ec="0.8", alpha=0.9))
+             bbox=dict(boxstyle="round,pad=0.25", fc=COLORS["bg_light"], ec="0.8", alpha=0.9))
 
     if save:
         path = save_panel(fig, output_dir / "fig_downstream_pq.png", dpi)

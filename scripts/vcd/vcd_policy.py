@@ -29,6 +29,7 @@ class FigurePolicy:
             "Helvetica",
             "DejaVu Sans",
             "Liberation Sans",
+            "sans-serif",
         }
     )
     min_body_pt: float = 10.0

@@ -5,16 +5,23 @@ panels_classifier.py — Panel Q: Classifier alignment (confusion matrix, per-ty
 from __future__ import annotations
 
 import logging
+import textwrap
 from pathlib import Path
 from typing import Dict, List, Optional
 
 import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import COLORS, save_panel, set_dense_tick_labels, style_axes
-
-matplotlib.use("Agg")
+from .style import (
+    COLORS,
+    add_colorbar_safe,
+    save_panel,
+    set_dense_tick_labels,
+    set_figure_suptitle,
+    style_axes,
+)
 logger = logging.getLogger(__name__)
 
 
@@ -53,6 +60,8 @@ def _plot_classifier_metric_heatmap(
     ax: plt.Axes,
     cm: np.ndarray,
     class_names: List[str],
+    max_rows: Optional[int] = 35,
+    title: Optional[str] = None,
 ) -> Dict[str, np.ndarray]:
     """Render a per-type precision/recall/F1 heatmap sorted by hardest classes."""
     summary = _compute_classifier_summary(cm, class_names)
@@ -65,23 +74,35 @@ def _plot_classifier_metric_heatmap(
             summary["f1"][order],
         ]
     )
+    display_names = ordered_names
+    display_matrix = metric_matrix
+    rows_truncated = False
+    if max_rows is not None and max_rows > 0 and len(display_names) > max_rows:
+        display_names = ordered_names[:max_rows]
+        display_matrix = metric_matrix[:max_rows]
+        rows_truncated = True
 
-    im = ax.imshow(metric_matrix, cmap="viridis", aspect="auto", vmin=0, vmax=1)
+    im = ax.imshow(display_matrix, cmap="viridis", aspect="auto", vmin=0, vmax=1)
     ax.set_xticks(range(3))
     ax.set_xticklabels(["Precision", "Recall", "F1"], fontsize=9)
-    ax.set_yticks(range(len(ordered_names)))
-    label_step = max(1, len(ordered_names) // 14)
+    ax.set_yticks(range(len(display_names)))
     ax.set_yticklabels(
-        [name[:26] if i % label_step == 0 else "" for i, name in enumerate(ordered_names)],
-        fontsize=7,
+        [
+            textwrap.shorten(str(name).replace("_", " "), width=22, placeholder="…")
+            for name in display_names
+        ],
+        fontsize=8,
     )
-    ax.set_title("Per-Type Precision / Recall / F1", fontsize=10)
-    ax.set_xlabel("Metric")
+    default_title = "Per-Type Precision / Recall / F1"
+    if rows_truncated:
+        default_title += f" (top {len(display_names)} of {len(ordered_names)})"
+    ax.set_title(title or default_title, fontsize=11)
     ax.set_ylabel("Cell Type (sorted by F1)")
+    # ax.set_xlabel("Metric")  # Removed to reduce label density
 
-    cbar = fig.colorbar(im, ax=ax, shrink=0.55, pad=0.04, orientation="horizontal", aspect=24)
+    cbar = add_colorbar_safe(im, ax=ax, orientation="horizontal", shrink=0.55, pad=0.12, aspect=24)
     cbar.set_label("Score", fontsize=8)
-    cbar.ax.tick_params(labelsize=7)
+    cbar.ax.tick_params(labelsize=8)
     return summary
 
 
@@ -112,7 +133,7 @@ def plot_classifier_panel(
     gen_acc = classifier_data.get("gen_accuracy", 0)
     gen_f1 = classifier_data.get("gen_f1", 0)
     disc_auc = classifier_data.get("discriminator_auc", 0)
-    fig.suptitle("Downstream: Classifier Alignment", fontsize=11, y=0.98)
+    set_figure_suptitle(fig, "Downstream: Classifier Alignment", fontsize=11)
     fig.text(
         0.5, 0.94,
         f"Gen Acc = {gen_acc:.3f}   |   Gen F1 = {gen_f1:.3f}   |   Disc AUC = {disc_auc:.3f}",
@@ -157,8 +178,8 @@ def plot_classifier_panel(
             ax.text(i, i, f"{val:.1f}", ha="center", va="center",
                     fontsize=7, color=color)
 
-    fig.colorbar(im, ax=ax, shrink=0.4, pad=0.08, label="Recall",
-                 orientation="horizontal", aspect=20)
+    add_colorbar_safe(im, ax=ax, shrink=0.5, pad=0.10, label="Recall",
+                      orientation="horizontal", aspect=20)
     style_axes(ax, "heatmap", title="Confusion Matrix (on Generated Cells)",
                xlabel="Predicted", ylabel="True Type")
 
@@ -174,7 +195,7 @@ def plot_classifier_panel(
             transform=ax2.transAxes,
             ha="left",
             va="top",
-            fontsize=7,
+            fontsize=8,
             color="#444",
             bbox=dict(boxstyle="round,pad=0.18", fc="white", ec="#DDDDDD", alpha=0.92),
         )
@@ -200,7 +221,7 @@ def plot_classifier_panel(
         ax3.set_xlim(-0.02, 1.02)
         ax3.set_ylim(-0.02, 1.02)
         ax3.set_aspect("equal")
-        ax3.legend(fontsize=8, loc="lower left")
+        ax3.legend(fontsize=9, loc="lower left", frameon=False)
         from matplotlib.ticker import MaxNLocator
         ax3.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
         ax3.yaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))

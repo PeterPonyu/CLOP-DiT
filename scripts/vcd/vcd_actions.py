@@ -226,9 +226,18 @@ def _actions_legend_data_occlusion(issue: dict) -> list[Action]:
         Action(
             action_type="move_legend",
             target="legend",
-            params={"preferred_locs": ["upper left", "upper right",
-                                        "lower left", "lower right",
-                                        "center left", "center right"]},
+            params={
+                "preferred_locs": [
+                    "center left",
+                    "center right",
+                    "upper left",
+                    "upper right",
+                    "lower left",
+                    "lower right",
+                ],
+                "allow_outside_axes": True,
+                "frameon": False,
+            },
             priority=1,
             description=(
                 "Move the legend to a location that does not occlude data "
@@ -255,7 +264,7 @@ def _actions_legend_spillover(issue: dict) -> list[Action]:
         Action(
             action_type="move_legend_inside",
             target="legend",
-            params={"loc": "best"},
+            params={"loc": "best", "frameon": False},
             priority=1,
             description=(
                 "Move the legend inside the axes bounds to prevent it from "
@@ -281,7 +290,7 @@ def _actions_legend_truncation(issue: dict) -> list[Action]:
         Action(
             action_type="move_legend_inside",
             target="legend",
-            params={"loc": "best"},
+            params={"loc": "best", "frameon": False},
             priority=1,
             description=(
                 "Move the legend fully inside the figure/axes bounds to "

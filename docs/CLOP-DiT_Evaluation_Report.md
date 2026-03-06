@@ -14,6 +14,22 @@
   This uses the config in **`configs/clop_v9.3.yaml`** and produces **19 panels (A–S)** as PNG and PDF (e.g. `panel_a_clop_training.png`, …, `panel_s_benchmark.png`), plus the full PDF report.
 - **Panel mapping and usage:** See **`docs/FIGURE_ORGANIZATION.md`** for the list of panels, short descriptions, and how they map to the MDPI article and JBHI markdown.
 
+### Baseline benchmark contract
+
+The multi-method benchmark reads baseline outputs from:
+
+```text
+results/baselines/{method}/
+  embeddings.npy
+  labels.npy
+  expression.npy            # optional
+  expression_labels.npy     # optional
+  expression_metrics.json   # optional
+  metadata.json
+```
+
+The registry and metadata contract are defined in `src/evaluation/baseline_registry.py`. Method-level downstream outputs are written separately to `results/downstream/{method}_*.json` so the same biological validation code can be reused across CLOP-DiT and learned baselines.
+
 ---
 
 ## 1. Executive Summary

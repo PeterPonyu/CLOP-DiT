@@ -9,18 +9,18 @@ from pathlib import Path
 from typing import Dict, Optional
 
 import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
 from .style import (
+    set_figure_suptitle,
     TYPE_PALETTE,
     quality_color,
     save_panel,
     set_dense_tick_labels,
     style_axes,
 )
-
-matplotlib.use("Agg")
 logger = logging.getLogger(__name__)
 
 
@@ -52,8 +52,7 @@ def plot_clustering_panel(
     fig = plt.figure(figsize=(13.0, 5.5))
     gs = fig.add_gridspec(1, 3, width_ratios=[1.3, 1.0, 0.8],
                           wspace=0.45)
-    fig.suptitle("Downstream: Clustering & Real–Generated Mixing",
-                 fontsize=11)
+    set_figure_suptitle(fig, "Downstream: Clustering & Real–Generated Mixing", fontsize=11)
 
     ax = fig.add_subplot(gs[0])
     unique_types = np.unique(cell_type)
@@ -99,7 +98,7 @@ def plot_clustering_panel(
                      color="#D32F2F", linestyle="--", alpha=0.7, linewidth=1.5,
                      label=f"mean={clustering_data.get('mean_mixing_score', 0):.3f}")
         ax2.set_xlim(0, max(max(vals) * 1.1, 0.5))
-        ax2.legend(fontsize=9, loc="upper left")
+        ax2.legend(fontsize=9, loc="upper left", frameon=False)
         style_axes(ax2, "bar", title="kNN Mixing",
                    xlabel="Fraction Real Neighbours")
     else:
@@ -123,14 +122,13 @@ def plot_clustering_panel(
         color = quality_color(val, thresh)
         ax3.text(0.55, y, f"{val:.3f}", fontsize=9,
                  color="#222222", ha="center", va="center",
-                 fontweight="bold",
                  bbox=dict(boxstyle="round,pad=0.20", fc="white", ec=color,
                            alpha=1.0, linewidth=2.0),
                  transform=ax3.transAxes)
         ax3.text(0.1, y, label, fontsize=9, ha="left", va="center",
                  transform=ax3.transAxes, color="#333")
 
-    ax3.set_title("Alignment Gauges", fontsize=10, pad=8)
+    ax3.set_title("Alignment Gauges", fontsize=11, pad=8)
     n_clusters = clustering_data.get("n_leiden_clusters", "?")
     ax3.text(0.5, 0.02, f"Leiden clusters: {n_clusters}",
              transform=ax3.transAxes, ha="center", fontsize=8, color="#666")

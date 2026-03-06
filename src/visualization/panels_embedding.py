@@ -10,20 +10,22 @@ from pathlib import Path
 from typing import Callable, Dict, Optional
 
 import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.ticker import MaxNLocator
 
 from . import io as viz_io
-from .style import TYPE_PALETTE, set_dense_tick_labels
+from .style import TYPE_PALETTE, set_dense_tick_labels, set_figure_suptitle
+from src.utils.paths import FIG_DIR
 
-matplotlib.use("Agg")
 logger = logging.getLogger(__name__)
 
 
 def plot_clop_embedding_space(
     cache_dir: str | Path,
     type_names: Optional[Dict[int, str]] = None,
-    output_dir: str | Path = "results/figures",
+    output_dir: Optional[str | Path] = None,
     dpi: int = 300,
     save: bool = True,
     save_panel_fn: Optional[Callable] = None,
@@ -36,6 +38,8 @@ def plot_clop_embedding_space(
     B1: 69 text prototypes (centroids of projected text per type), labelled
     B2: Subsampled CLOP-projected cells coloured by type + text proto overlay
     """
+    if output_dir is None:
+        output_dir = FIG_DIR
     cache = Path(cache_dir)
     if type_names is None:
         type_names = {}
@@ -64,12 +68,12 @@ def plot_clop_embedding_space(
 
     proj_text = np.load(proj_text_path)
     group_ids = np.load(gid_path)
+    unique_types = np.unique(group_ids)
     logger.info(
         f"Panel B: {cell_proj.shape[0]} cells ({space_label}), "
         f"{proj_text.shape[0]} text conditions"
     )
 
-    unique_types = np.unique(group_ids)
     n_types = len(unique_types)
     proto_dim = proj_text.shape[1]
     text_proto = np.zeros((n_types, proto_dim), dtype=np.float32)
@@ -96,6 +100,7 @@ def plot_clop_embedding_space(
     logger.info(f"UMAP: {len(sampled_idx)} cells + {n_types} prototypes (all in CLOP space)")
 
     import umap as umap_lib
+
     combined = np.vstack([cell_sub, text_proto])
     reducer = umap_lib.UMAP(
         n_components=2, n_neighbors=30, min_dist=0.3,
@@ -108,9 +113,10 @@ def plot_clop_embedding_space(
     cell_coords = coords[: len(sampled_idx)]
     proto_coords = coords[len(sampled_idx) :]
 
-    fig = plt.figure(figsize=(9.5, 5.0))
+    fig = plt.figure(figsize=(11.2, 5.4))
     gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.2, 1.2], wspace=0.42)
-    fig.suptitle(
+    set_figure_suptitle(
+        fig,
         "CLOP Alignment Space (UMAP — all embeddings in shared CLOP projection)",
         fontsize=11,
     )
@@ -118,12 +124,12 @@ def plot_clop_embedding_space(
     ax = fig.add_subplot(gs[0])
     sorted_order = np.argsort(type_counts)[::-1]
     bar_colors = [TYPE_PALETTE[t % len(TYPE_PALETTE)] for t in unique_types[sorted_order]]
-    bar_labels = [type_names.get(int(t), f"Type {t}")[:20] for t in unique_types[sorted_order]]
+    bar_labels = [type_names.get(int(t), f"Type {t}")[:16] for t in unique_types[sorted_order]]
     y_pos = np.arange(n_types)
     ax.barh(y_pos, type_counts[sorted_order], color=bar_colors, height=0.8)
     ax.set_yticks(y_pos)
     ax.set_yticklabels(bar_labels, fontsize=8)
-    set_dense_tick_labels(ax, axis="y", max_labels=18, fontsize=8, rotation=0)
+    set_dense_tick_labels(ax, axis="y", max_labels=10, fontsize=8, rotation=0)
     ax.invert_yaxis()
     ax.set_xlabel("Cells")
     ax.set_title("Cells per Type")
@@ -134,23 +140,32 @@ def plot_clop_embedding_space(
         alpha=0.5,
         label=f"median={int(np.median(type_counts))}",
     )
-    ax.legend(fontsize=10)
+    ax.legend(fontsize=9, loc="lower right", frameon=False)
+    ax.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
 
     ax = fig.add_subplot(gs[1])
-    top12_idx = set(np.argsort(type_counts)[-12:].tolist())
+    top_label_candidates = np.argsort(type_counts)[::-1].tolist()
+    label_offsets = [(0, 4), (0, -10), (8, 4), (-8, 4), (10, -8), (-10, -8)]
+    labeled_points: list[np.ndarray] = []
     for i, (x, y) in enumerate(proto_coords):
         color = TYPE_PALETTE[i % len(TYPE_PALETTE)]
         ax.scatter(
             x, y, c=[color], s=120, marker="D", edgecolors="black",
             linewidths=0.6, zorder=5,
         )
-        if i in top12_idx:
+        if i in top_label_candidates[:6] and len(labeled_points) < 4:
+            point = np.array([x, y])
+            min_dist = 0.32
+            if any(np.linalg.norm(point - prev) < min_dist for prev in labeled_points):
+                continue
             name = type_names.get(int(unique_types[i]), f"Type {i}")
-            short = name[:22] + "…" if len(name) > 22 else name
+            short = name[:16] + "…" if len(name) > 16 else name
+            dx, dy = label_offsets[len(labeled_points) % len(label_offsets)]
             ax.annotate(
-                short, (x, y), fontsize=7, ha="center", va="bottom",
-                xytext=(0, 4), textcoords="offset points",
+                short, (x, y), fontsize=8, ha="center", va="bottom",
+                xytext=(dx, dy), textcoords="offset points",
             )
+            labeled_points.append(point)
     ax.set_title("69 Text Prototypes (CLOP space)")
     ax.set_xlabel("UMAP 1")
     ax.set_ylabel("UMAP 2")
@@ -169,9 +184,13 @@ def plot_clop_embedding_space(
             x, y, c=[color], s=80, marker="*", edgecolors="black",
             linewidths=0.5, zorder=6,
         )
-    ax.set_title(f"{len(sampled_idx)} Cells + ★ Text Proto (CLOP space)")
+    ax.set_title("Cells + ★ Proto Overlay")
     ax.set_xlabel("UMAP 1")
     ax.set_ylabel("UMAP 2")
+    ax.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
+
+    fig.subplots_adjust(left=0.20, right=0.98, bottom=0.12, top=0.84)
 
     if save:
         viz_io.save_to_dir(

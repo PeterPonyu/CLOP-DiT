@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from . import io as viz_io
-from .style import apply_style
+from .style import COLORS, apply_style
 from ._utils import sample_pairwise_cosines
 from src.utils.paths import CACHE_DIR, RESULTS_DIR, FIG_DIR, CHECKPOINT_DIR
 
@@ -102,9 +102,9 @@ def plot_diversity_distributions_violin(
     mean_points_c = []
 
     colors = {
-        "Real–Real": "#1976D2",
-        "Gen–Gen": "#FF7043",
-        "Real–Gen": "#546E7A",
+        "Real–Real": COLORS["real"],
+        "Gen–Gen": COLORS["generated"],
+        "Real–Gen": COLORS["neutral"],
     }
 
     for idx, (_, name, entry) in enumerate(selected):
@@ -156,16 +156,16 @@ def plot_diversity_distributions_violin(
         body.set_facecolor(color)
         body.set_edgecolor("white")
         body.set_alpha(0.65)
-    parts["cmedians"].set_color("#222222")
+    parts["cmedians"].set_color("#1E1E1E")
     parts["cmedians"].set_linewidth(1.1)
 
-    ax.scatter(mean_points_x, mean_points_y, s=20, c=mean_points_c, edgecolors="white", linewidths=0.5, zorder=4, clip_on=False)
+    ax.scatter(mean_points_x, mean_points_y, s=20, c=mean_points_c, edgecolors="white", linewidths=0.5, zorder=4)
     ax.set_xticks(xtick_positions)
     ax.set_xticklabels(xtick_labels, rotation=25, ha="right", fontsize=8)
     ax.set_ylabel("Pairwise Cosine Similarity")
     ax.set_title("Diversity Distribution Tails (most shifted cell types)")
     ax.grid(True, axis="y", alpha=0.22)
-    ax.set_ylim(-0.15, 0.30)
+    ax.set_ylim(-0.15, 0.25)
     ax.text(
         0.01,
         0.98,
@@ -174,7 +174,7 @@ def plot_diversity_distributions_violin(
         ha="left",
         va="top",
         fontsize=8,
-        color="#444",
+        color=COLORS["neutral"],
         bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#CCCCCC", alpha=0.9),
     )
     for label, color in colors.items():
@@ -280,8 +280,8 @@ def plot_metrics_summary(
     if not train_metrics and not gen_metrics:
         return None
 
-    fig = plt.figure(figsize=(12.0, 7.5))
-    gs = fig.add_gridspec(2, 2, wspace=0.55, hspace=0.50)
+    fig = plt.figure(figsize=(12.4, 7.8))
+    gs = fig.add_gridspec(2, 2, wspace=0.58, hspace=0.52)
     fig.suptitle("CLOP-DiT Pipeline — Metrics Dashboard",
                  fontsize=11, y=0.99)
 
@@ -299,9 +299,9 @@ def plot_metrics_summary(
         colors_d1 = []
         for n, v in zip(names, vals):
             if "Loss" in n:
-                colors_d1.append("#F44336" if v > 1.0 else "#FF9800" if v > 0.1 else "#4CAF50")
+                colors_d1.append(COLORS["bad"] if v > 1.0 else COLORS["warn"] if v > 0.1 else COLORS["good"])
             else:
-                colors_d1.append("#4CAF50" if v > 0.8 else "#FF9800" if v > 0.5 else "#F44336")
+                colors_d1.append(COLORS["good"] if v > 0.8 else COLORS["warn"] if v > 0.5 else COLORS["bad"])
 
         y_pos = np.arange(len(names))
         bars = ax1.barh(y_pos, display_vals, color=colors_d1, height=0.6,
@@ -351,10 +351,10 @@ def plot_metrics_summary(
             ax2.set_theta_direction(-1)
             ax2.set_thetagrids(np.degrees(angles), radar_labels, fontsize=10)
             ax2.plot(angles_plot, radar_vals_plot, "o-", linewidth=2.5,
-                     color="#1976D2", markersize=8, zorder=5)
-            ax2.fill(angles_plot, radar_vals_plot, alpha=0.15, color="#1976D2")
+                     color=COLORS["real"], markersize=8, zorder=5)
+            ax2.fill(angles_plot, radar_vals_plot, alpha=0.15, color=COLORS["real"])
             ax2.set_ylim(0, 1.05)
-            ax2.set_title("Quality Profile", pad=25,
+            ax2.set_title("Quality Profile", pad=10,
                           fontsize=11)
     else:
         ax2_placeholder.text(0.5, 0.5, "No generation data", ha="center",
@@ -366,14 +366,14 @@ def plot_metrics_summary(
     if div_metrics:
         gauge_items = [
             ("Diversity\nRatio", div_metrics.get("Diversity Ratio", 0), 1.0,
-             "#4CAF50" if div_metrics.get("Diversity Ratio", 0) >= 0.8 else
-             "#FF9800" if div_metrics.get("Diversity Ratio", 0) >= 0.5 else "#F44336"),
+             COLORS["good"] if div_metrics.get("Diversity Ratio", 0) >= 0.8 else
+             COLORS["warn"] if div_metrics.get("Diversity Ratio", 0) >= 0.5 else COLORS["bad"]),
             ("Cond\nGain", div_metrics.get("Cond Gain", 0), 3.0,
-             "#4CAF50" if div_metrics.get("Cond Gain", 0) >= 1.5 else
-             "#FF9800" if div_metrics.get("Cond Gain", 0) >= 1.0 else "#F44336"),
+             COLORS["good"] if div_metrics.get("Cond Gain", 0) >= 1.5 else
+             COLORS["warn"] if div_metrics.get("Cond Gain", 0) >= 1.0 else COLORS["bad"]),
             ("NN\nDistance", div_metrics.get("NN Distance", 0), 1.0,
-             "#4CAF50" if div_metrics.get("NN Distance", 0) >= 0.3 else
-             "#FF9800" if div_metrics.get("NN Distance", 0) >= 0.1 else "#F44336"),
+             COLORS["good"] if div_metrics.get("NN Distance", 0) >= 0.3 else
+             COLORS["warn"] if div_metrics.get("NN Distance", 0) >= 0.1 else COLORS["bad"]),
         ]
         for i, (label, val, max_val, color) in enumerate(gauge_items):
             ax3.barh(i, max_val, height=0.5, color="#E0E0E0",
@@ -394,7 +394,7 @@ def plot_metrics_summary(
                  f"Collapsed: {collapsed}/{total} | Near-copies: {copies}",
                  transform=ax3.transAxes, ha="right", va="bottom",
                  fontsize=8,
-                 bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#999", alpha=0.9))
+                 bbox=dict(boxstyle="round,pad=0.2", fc="white", ec=COLORS["neutral"], alpha=0.9))
         ax3.set_title("Diversity Health", fontsize=11)
         ax3.set_xlabel("Score")
     else:
@@ -413,7 +413,7 @@ def plot_metrics_summary(
         ]
         y_pos = np.arange(len(expr_items))
         vals = [v for _, v in expr_items]
-        colors_d4 = ["#4CAF50" if v > 0.999 else "#FF9800" if v > 0.99 else "#F44336"
+        colors_d4 = [COLORS["good"] if v > 0.999 else COLORS["warn"] if v > 0.99 else COLORS["bad"]
                      for v in vals]
         bars = ax4.barh(y_pos, vals, color=colors_d4, height=0.5,
                         edgecolor="white", linewidth=0.8)
@@ -443,7 +443,7 @@ def plot_metrics_summary(
         if cfg_text_parts:
             ax4.text(0.95, 0.0, " | ".join(cfg_text_parts),
                      transform=ax4.transAxes, ha="right", va="bottom",
-                     fontsize=8, color="#555",
+                     fontsize=8, color=COLORS["neutral"],
                      bbox=dict(boxstyle="round,pad=0.2", fc="#F5F5F5", ec="#CCC"))
     else:
         ax4.text(0.5, 0.5, "No expression data", ha="center", va="center",

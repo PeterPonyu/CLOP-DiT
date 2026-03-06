@@ -12,7 +12,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import save_panel, style_axes
+from .style import COLORS, save_panel, style_axes
 
 matplotlib.use("Agg")
 logger = logging.getLogger(__name__)
@@ -37,9 +37,8 @@ def plot_de_concordance_panel(
     contrasts = list(de_data.keys())
     n_contrasts = len(contrasts)
 
-    fig = plt.figure(figsize=(13.0, 6.5))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.2, 0.8, 1.0],
-                          wspace=0.52)
+    fig = plt.figure(figsize=(14.4, 6.9))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.35, 1.05, 1.0], wspace=0.62)
     fig.suptitle("DE Concordance — Real vs Generated",
                  fontsize=11)
 
@@ -83,34 +82,37 @@ def plot_de_concordance_panel(
                 gen_logfc[strong_discordant],
                 s=marker_sizes[strong_discordant] * 1.2,
                 facecolors="none",
-                edgecolors="#C62828",
+                edgecolors=COLORS["bad"],
                 linewidths=0.8,
                 label="sign disagreement",
             )
 
         lo = min(real_logfc.min(), gen_logfc.min()) * 1.1
         hi = max(real_logfc.max(), gen_logfc.max()) * 1.1
-        ax.plot([lo, hi], [lo, hi], color="#E53935", linestyle="--", lw=1.5,
+        ax.plot([lo, hi], [lo, hi], color=COLORS["bad"], linestyle="--", lw=1.5,
                 alpha=0.7, label="y = x")
         ax.fill_between([lo, hi], [lo - 0.4, hi - 0.4], [lo + 0.4, hi + 0.4],
-                        alpha=0.05, color="#4CAF50")
+                        alpha=0.05, color=COLORS["good"])
         ax.axhline(0, color="#666", linestyle=":", linewidth=1.0, alpha=0.6)
         ax.axvline(0, color="#666", linestyle=":", linewidth=1.0, alpha=0.6)
 
         residuals = np.abs(gen_logfc - real_logfc) * np.maximum(effect_size, 1e-6)
-        top_idx = np.argsort(residuals)[-min(3, len(residuals)):]
-        offsets = [(8, 8), (-12, 10), (10, -12)]
-        for label_idx, i in enumerate(top_idx):
+        top_idx = np.argsort(residuals)[-min(4, len(residuals)):]
+        for i in top_idx:
             if i < len(shared_genes):
-                dx, dy = offsets[label_idx % len(offsets)]
                 ax.annotate(shared_genes[i], (real_logfc[i], gen_logfc[i]),
-                            fontsize=8, xytext=(dx, dy), textcoords="offset points",
+                            fontsize=8, xytext=(8, 8), textcoords="offset points",
                             arrowprops=dict(arrowstyle="->", lw=0.5, color="#555"),
                             color="#333")
 
         r_val = first.get("logfc_pearson_r", 0)
         sign_agreement = first.get("top_k_sign_agreement", 0)
-        ax.legend(fontsize=8, title=f"Pearson r = {r_val:.3f}\nSign = {sign_agreement:.3f}", loc="upper left")
+        ax.legend(
+            fontsize=8,
+            title=f"Pearson r = {r_val:.3f}\nSign = {sign_agreement:.3f}",
+            frameon=False,
+            loc="lower right",
+        )
         fig.colorbar(sc, ax=ax, shrink=0.5, pad=0.08, label=cbar_label,
                      orientation="horizontal", aspect=20)
 
@@ -142,14 +144,14 @@ def plot_de_concordance_panel(
         for j, mk in enumerate(metric_keys):
             heatmap_data[i, j] = cd.get(mk, 0)
         parts = cname.split("_vs_")
-        short = f"{parts[0][:10]} v {parts[1][:10]}" if len(parts) == 2 else cname[:22]
+        short = f"{parts[0][:8]} v {parts[1][:8]}" if len(parts) == 2 else cname[:18]
         contrast_labels.append(short)
 
     im = ax2.imshow(heatmap_data, cmap="RdYlGn", aspect="auto", vmin=0, vmax=1)
     ax2.set_xticks(range(len(metric_names)))
     ax2.set_xticklabels(metric_names, fontsize=10, rotation=45, ha="right")
     ax2.set_yticks(range(n_contrasts))
-    ax2.set_yticklabels(contrast_labels, fontsize=8)
+    ax2.set_yticklabels(contrast_labels, fontsize=7)
 
     for i in range(n_contrasts):
         for j in range(len(metric_names)):
@@ -168,7 +170,7 @@ def plot_de_concordance_panel(
     x = np.arange(n_contrasts)
     n_metrics = len(metric_names)
     w = 0.8 / n_metrics
-    bar_colors = ["#1976D2", "#4CAF50", "#FF9800", "#9C27B0"]
+    bar_colors = [COLORS["real"], COLORS["baseline_gauss"], COLORS["warn"], COLORS["baseline_shuffle"]]
 
     for j, (mname, mk) in enumerate(zip(metric_names, metric_keys)):
         vals = [de_data[c].get(mk, 0) for c in contrasts]

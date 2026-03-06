@@ -23,9 +23,12 @@ fi
 
 echo ""
 echo "▶ Building article PDF..."
-cd articles
-latexmk -pdf clop_dit_biology.tex
-cd ..
+mapfile -t _article_paths < <(python scripts/get_article_paths.py)
+ARTICLE_DIR="${_article_paths[0]}"
+ARTICLE_TEX="${_article_paths[1]}"
+cd "$ARTICLE_DIR"
+latexmk -pdf "$ARTICLE_TEX"
+cd - > /dev/null
 
 echo ""
-echo "  → articles/clop_dit_biology.pdf"
+echo "  → $ARTICLE_DIR/${ARTICLE_TEX%.tex}.pdf"

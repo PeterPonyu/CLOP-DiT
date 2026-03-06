@@ -66,7 +66,42 @@ This script orchestrates 7 steps:
 
 ---
 
-## 4. Core Evaluation (Panels C, D, Table 1)
+## 4. Baseline Artifact Contract
+
+Multi-method benchmarking expects baseline artifacts under:
+
+```text
+results/baselines/{method}/
+  embeddings.npy
+  labels.npy
+  expression.npy            # optional
+  expression_labels.npy     # optional
+  expression_metrics.json   # optional
+  metadata.json
+```
+
+Method-level downstream outputs are written to:
+
+```text
+results/downstream/{method}_clustering_alignment.json
+results/downstream/{method}_classifier_alignment.json
+results/downstream/{method}_de_concordance.json
+```
+
+The registry for benchmarked methods lives in `src/evaluation/baseline_registry.py`.
+
+Learned baseline entry points currently include:
+
+```bash
+python scripts/baselines/train_embedding_vae_baseline.py --config configs/baselines/embedding_vae.yaml
+python scripts/baselines/train_scvi_baseline.py --config configs/baselines/scvi.yaml --dry-run
+```
+
+The scVI baseline introduces an extra optional dependency (`scvi-tools`) that is not required for the core CLOP-DiT pipeline.
+
+---
+
+## 5. Core Evaluation (Panels C, D, Table 1)
 
 To reproduce Table 1 and Figure D (metrics dashboard) from pre-existing embeddings:
 
@@ -78,7 +113,7 @@ This requires `results/generated_embeddings.npy` and associated files (generated
 
 ---
 
-## 5. Key Numeric Results
+## 6. Key Numeric Results
 
 | Metric | Primary Config (CFG=2.0, Euler-10) | High-Diversity (CFG=1.0, Midpoint-10) |
 |--------|-----------------------------------|-----------------------------------------|
@@ -91,7 +126,7 @@ Downstream: classifier transfer 51.1%, DE logFC Pearson r = 0.17.
 
 ---
 
-## 6. Text Caption Construction
+## 7. Text Caption Construction
 
 Text descriptions were generated per cell type using the template:
 ```
@@ -101,12 +136,12 @@ The exact script is `scripts/build_text_captions.py`. Marker genes were identifi
 
 ---
 
-## 7. Hardware
+## 8. Hardware
 
 Training was performed on a single NVIDIA GPU (≥16 GB VRAM recommended for DiT training). Inference and figure generation require ≥8 GB VRAM. CPU-only inference is supported but significantly slower (set `--device cpu` in generation scripts).
 
 ---
 
-## 8. Contact
+## 9. Contact
 
 For access to model weights, pre-processed embeddings, or other materials, please contact the corresponding author (Zeyu Fu).

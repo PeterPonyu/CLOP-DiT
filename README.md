@@ -14,6 +14,26 @@
 
 **Training data:** 220,304 cells from 80 datasets, ~2,342 unique whitened text groups
 
+## Baselines and Benchmarking
+
+The benchmark is registry-driven. Method metadata and artifact locations live in `src/evaluation/baseline_registry.py`, and each learned baseline should export artifacts to:
+
+```text
+results/baselines/{method}/
+  embeddings.npy
+  labels.npy
+  metadata.json
+```
+
+Optional expression-side artifacts may also be written there for downstream biology comparisons.
+
+Current baseline entry points:
+
+- `python scripts/baselines/train_embedding_vae_baseline.py --config configs/baselines/embedding_vae.yaml`
+- `python scripts/baselines/train_scvi_baseline.py --config configs/baselines/scvi.yaml --dry-run`
+
+The consolidated benchmark report is written to `results/benchmark_report.json` and visualized by `src/visualization/benchmark_panels.py`.
+
 ### v6.1 Root Cause Fix: Text-Cell Granularity Mismatch
 
 v6.0 fixed the embedding collapse but revealed a deeper issue:
