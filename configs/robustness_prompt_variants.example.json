@@ -1,0 +1,5 @@
+{
+  "default_prompts": "configs/prompts/default_prompts.json",
+  "marker_dropped": "configs/prompts/marker_dropped_prompts.json",
+  "context_shuffled": "configs/prompts/context_shuffled_prompts.json"
+}
