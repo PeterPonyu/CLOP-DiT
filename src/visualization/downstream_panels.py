@@ -47,10 +47,10 @@ def plot_clustering_and_classifier_merged(
     """Merged figure: clustering + classifier alignment (former P + Q)."""
     apply_style()
 
-    fig = plt.figure(figsize=(15.0, 10.4))
-    gs = fig.add_gridspec(2, 3, wspace=0.56, hspace=0.44,
-                          height_ratios=[1, 1.1],
-                          width_ratios=[1.65, 1.15, 0.95])
+    fig = plt.figure(figsize=(15.2, 10.6))
+    gs = fig.add_gridspec(2, 3, wspace=0.50, hspace=0.50,
+                          height_ratios=[1, 1.05],
+                          width_ratios=[1.5, 1.2, 1.0])
     set_figure_suptitle(fig, "Downstream Validation: Clustering & Classifier Alignment", fontsize=11)
 
     umap_coords = clustering_data.get("_umap_coords")
@@ -84,7 +84,7 @@ def plot_clustering_and_classifier_merged(
         ax_p1.legend(
             fontsize=8,
             loc="lower left",
-            borderaxespad=0.3,
+            borderaxespad=0.4,
             markerscale=2,
             frameon=False,
         )
@@ -106,7 +106,7 @@ def plot_clustering_and_classifier_merged(
                    edgecolor="white", linewidth=0.5)
         ax_p2.set_yticks(y_pos)
         ax_p2.set_yticklabels(short_names, fontsize=7)
-        set_dense_tick_labels(ax_p2, axis="y", max_labels=10, fontsize=7, rotation=0)
+        set_dense_tick_labels(ax_p2, axis="y", max_labels=12, fontsize=7, rotation=0)
         ax_p2.axvline(x=clustering_data.get("mean_mixing_score", 0),
                        color=COLORS["bad"], linestyle="--", alpha=0.7, linewidth=1.5,
                        label=f"mean={clustering_data.get('mean_mixing_score', 0):.3f}")
@@ -131,7 +131,7 @@ def plot_clustering_and_classifier_merged(
     summary_text += f"\nLeiden clusters: {n_cl}"
     ax_ps.text(0.5, 0.5, summary_text, ha="center", va="center",
                fontsize=10, transform=ax_ps.transAxes, family="sans-serif",
-               bbox=dict(boxstyle="round,pad=0.4", facecolor=COLORS["bg_light"],
+               bbox=dict(boxstyle="round,pad=0.5", facecolor=COLORS["bg_light"],
                          edgecolor=COLORS["neutral"]))
     ax_ps.set_title("Cluster Metrics", fontsize=10)
 
@@ -164,7 +164,7 @@ def plot_clustering_and_classifier_merged(
             ax_q1.set_xticklabels(short, rotation=90, fontsize=8, ha="center")
             ax_q1.set_yticklabels(short, fontsize=8, ha="right")
         add_colorbar_safe(im, ax=ax_q1, label="Recall",
-                         shrink=0.4, pad=0.08, orientation="horizontal", aspect=20)
+                         shrink=0.50, pad=0.10, orientation="horizontal", aspect=20)
         style_axes(ax_q1, "heatmap", title="Confusion Matrix",
                    xlabel="Predicted", ylabel="True Type")
     else:
@@ -181,15 +181,15 @@ def plot_clustering_and_classifier_merged(
             max_rows=20,
         )
         ax_q2.text(
-            0.98,
-            0.98,
-            f"Overall acc={gen_acc:.3f}  |  Median F1={np.median(summary['f1']):.3f}",
+            0.96,
+            0.96,
+            f"Acc {gen_acc:.3f}  |  Med F1 {np.median(summary['f1']):.3f}",
             transform=ax_q2.transAxes,
             ha="right",
             va="top",
             fontsize=8,
             color=COLORS["neutral"],
-            bbox=dict(boxstyle="round,pad=0.18", fc="white", ec="#DDDDDD", alpha=0.92),
+            bbox=dict(boxstyle="round,pad=0.22", fc="white", ec="#DDDDDD", alpha=0.92),
         )
     else:
         ax_q2.text(0.5, 0.5, "No per-type data", ha="center", va="center",
@@ -218,13 +218,13 @@ def plot_clustering_and_classifier_merged(
         ax_q3.text(0.5, 0.5, "No discriminator data", ha="center", va="center",
                    transform=ax_q3.transAxes)
 
-    fig.text(0.5, 0.94,
-             f"Gen Acc={gen_acc:.3f}  |  F1={gen_f1:.3f}  |  Disc AUC={disc_auc:.3f}",
-             ha="center", va="top", fontsize=9,
-             bbox=dict(boxstyle="round,pad=0.25", fc=COLORS["bg_light"], ec="0.8", alpha=0.9))
-
     if save:
-        path = save_panel(fig, output_dir / "fig_downstream_pq.png", dpi)
+        path = save_panel(
+            fig,
+            output_dir / "fig_downstream_pq.png",
+            dpi,
+            layout_rect=(0.02, 0.04, 0.98, 0.96),
+        )
         logger.info(f"Saved merged P+Q → {path}")
     return fig
 

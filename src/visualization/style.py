@@ -232,6 +232,7 @@ def save_with_vcd(
     *,
     close: bool = False,
     run_vcd: bool = True,
+    layout_rect: tuple[float, float, float, float] | None = None,
 ) -> Path:
     """Canonical save: tight_layout, margins, VCD check, PNG + PDF.
 
@@ -246,6 +247,8 @@ def save_with_vcd(
     dpi : resolution
     close : whether to ``plt.close(fig)`` after saving
     run_vcd : whether to run visual conflict detection before save
+    layout_rect : optional (left, bottom, right, top) in figure coords; if given,
+        passed to tight_layout(rect=layout_rect) instead of default
     """
     import logging as _logging
 
@@ -270,7 +273,8 @@ def save_with_vcd(
     #    and avoid labels being clipped.  Do NOT follow this with subplots_adjust,
     #    which would fight the layout engine and produce inconsistent spacing.
     try:
-        fig.tight_layout(rect=[0.02, 0.03, 0.98, 0.94], pad=0.8)
+        rect = list(layout_rect) if layout_rect is not None else [0.02, 0.03, 0.98, 0.94]
+        fig.tight_layout(rect=rect, pad=0.8)
     except Exception:
         pass  # fall back gracefully
 

@@ -381,7 +381,7 @@ Beyond distributional metrics, we evaluate whether generated cells are usable in
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/fig_downstream_pq.pdf}
-\caption{Downstream validation: clustering and classifier alignment. \textbf{Top row}: Leiden clustering on combined real + generated data with UMAP overlay, the lowest-mixing cell types, and compact cluster-alignment gauges (ARI, NMI, cluster purity, mean $k$-NN mixing). \textbf{Bottom row}: Cell-type classification confusion matrix (real-trained on generated), a precision/recall/F1 heatmap restricted to the hardest 15 cell types, and the real-vs.-generated discriminator ROC curve. This layout exposes which cell types are genuine downstream failures versus near-perfect transfers.\label{fig:downstream-pq}}
+\caption{Downstream validation: clustering and classifier alignment. \textbf{Top row}: Leiden clustering on combined real + generated data with UMAP overlay, the lowest-mixing cell types, and compact cluster-alignment gauges (ARI, NMI, cluster purity, mean $k$-NN mixing). \textbf{Bottom row}: Cell-type classification confusion matrix (real-trained on generated), a precision/recall/F1 heatmap restricted to the hardest 15 cell types, and the real-vs.-generated discriminator ROC curve. This layout exposes which cell types are genuine downstream failures versus near-perfect transfers. Overall classifier accuracy on generated cells, macro F1, and discriminator AUC are reported in the main text (values from pipeline run).\label{fig:downstream-pq}}
 \end{figure}
 
 \begin{figure}[H]
