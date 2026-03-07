@@ -193,7 +193,7 @@ def plot_de_concordance_panel(
     short_xlabels = []
     for cname in contrasts:
         parts = cname.split("_vs_")
-        short_xlabels.append(f"{parts[0][:8]}…" if len(parts) == 2 else cname[:8])
+        short_xlabels.append(f"{parts[0][:15]}…" if len(parts) == 2 else cname[:15])
 
     ax3.set_xticks(x)
     ax3.set_xticklabels(short_xlabels, fontsize=7, rotation=45, ha="right")

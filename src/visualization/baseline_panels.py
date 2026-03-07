@@ -127,7 +127,7 @@ def plot_baseline_comparison(
 
     # ── O2: Radar chart ──
     ax_placeholder = fig.add_subplot(gs[1])
-    add_panel_label(ax_placeholder, 'b')
+    # Panel label deferred to ax_radar below (ax_placeholder is removed for polar projection)
     # Normalize metrics for radar [0,1]; FD inverted
     all_vals = {k: [methods[m][k] for m in method_names] for k in metric_keys}
     normalized = {}
@@ -143,6 +143,7 @@ def plot_baseline_comparison(
     angles += angles[:1]
     ax_placeholder.remove()
     ax_radar = fig.add_subplot(gs[1], polar=True)
+    add_panel_label(ax_radar, 'b')
     ax_radar.set_theta_offset(np.pi / 2)
     ax_radar.set_theta_direction(-1)
     ax_radar.set_thetagrids(np.degrees(angles[:-1]), metric_labels, fontsize=10)
@@ -195,9 +196,16 @@ def plot_baseline_comparison(
             y_colors.append(bl_color_map.get(bl_name, COLORS["neutral"]))
 
     y_pos = np.arange(len(y_labels))
+    y_vals_raw = list(y_vals)  # keep original values before capping
+    y_vals = list(np.clip(y_vals, -100, 300))
     bar_colors_final = [COLORS["good"] if v > 0 else COLORS["bad"] for v in y_vals]
     ax3.barh(y_pos, y_vals, color=bar_colors_final, height=0.6,
              edgecolor="white", linewidth=0.5, alpha=0.85)
+    # Annotate clipped bars with real (uncapped) value
+    for i, (raw, clipped) in enumerate(zip(y_vals_raw, y_vals)):
+        if raw > 300 or raw < -100:
+            ax3.text(clipped, i, f"({raw:.0f}%)", va="center", ha="left",
+                     fontsize=7, color="#333", fontweight="bold")
     ax3.set_yticks(y_pos)
     ax3.set_yticklabels(y_labels, fontsize=8, ha="right")
     set_dense_tick_labels(ax3, axis="y", max_labels=12, fontsize=8, rotation=0)

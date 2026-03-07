@@ -188,7 +188,7 @@ def plot_diversity_distributions_violin(
         va="top",
         fontsize=8,
         color=COLORS["neutral"],
-        bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#CCCCCC", alpha=0.9),
+        bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.9),
     )
     for label, color in colors.items():
         ax.plot([], [], color=color, linewidth=6, alpha=0.8, label=label)

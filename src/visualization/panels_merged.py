@@ -128,6 +128,7 @@ def plot_embedding_space_merged(
         proto_coords = coords_b[len(s_idx):]
 
         ax = fig.add_subplot(gs[row, 0])
+        add_panel_label(ax, 'a')
         for i, (x, y) in enumerate(proto_coords):
             color = TYPE_PALETTE[i % len(TYPE_PALETTE)]
             ax.scatter(x, y, c=[color], s=120, marker="D", edgecolors="black",
@@ -137,6 +138,7 @@ def plot_embedding_space_merged(
         style_axes(ax, kind="umap")
 
         ax = fig.add_subplot(gs[row, 1])
+        add_panel_label(ax, 'b')
         for t in unique_types:
             mask = gids_sub == t
             color = TYPE_PALETTE[int(t) % len(TYPE_PALETTE)]
@@ -151,6 +153,7 @@ def plot_embedding_space_merged(
         style_axes(ax, kind="umap")
 
         ax = fig.add_subplot(gs[row, 2])
+        add_panel_label(ax, 'c')
         so = np.argsort(type_counts)[::-1]
         bar_c = [TYPE_PALETTE[t % len(TYPE_PALETTE)] for t in unique_types[so]]
         y_pos = np.arange(n_types)
@@ -195,6 +198,7 @@ def plot_embedding_space_merged(
             gc = coords_e[len(r_sub):]
 
             ax = fig.add_subplot(gs[row, 0])
+            add_panel_label(ax, 'd')
             for t in np.unique(r_gids):
                 m = r_gids == t
                 ax.scatter(rc[m, 0], rc[m, 1],
@@ -205,6 +209,7 @@ def plot_embedding_space_merged(
             style_axes(ax, kind="umap")
 
             ax = fig.add_subplot(gs[row, 1])
+            add_panel_label(ax, 'e')
             if g_gids is not None:
                 for t in np.unique(g_gids):
                     m = g_gids == t
@@ -219,6 +224,7 @@ def plot_embedding_space_merged(
             style_axes(ax, kind="umap")
 
             ax = fig.add_subplot(gs[row, 2])
+            add_panel_label(ax, 'f')
             all_types = np.unique(np.concatenate([r_gids, g_gids])) if g_gids is not None else np.unique(r_gids)
             for t in all_types:
                 color = TYPE_PALETTE[int(t) % len(TYPE_PALETTE)]
@@ -282,6 +288,7 @@ def plot_fidelity_and_alignment_merged(
         cache_dir=cache_dir,
         type_names=type_names,
         output_dir=output_dir, dpi=dpi, save=False,
+        label_offset=3,
     )
 
     if fig_g is None or fig_f is None:

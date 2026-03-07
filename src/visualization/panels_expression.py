@@ -244,7 +244,8 @@ def plot_expression_correlation(
         ax3.text(0.5, 0.5, "No marker genes found", ha="center", va="center",
                  transform=ax3.transAxes)
     ax3.set_title("Marker Gene Expression", fontsize=11)
-    ax3.xaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
+    # Note: do NOT set xaxis MaxNLocator here -- it would override the explicit
+    # gene-name tick labels set above (set_xticks / set_xticklabels).
     ax3.yaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
     add_panel_label(ax3, 'c', x=0.02, y=0.98)
 
@@ -394,7 +395,7 @@ def plot_expression_analysis(
     ax2.set_xlabel("Gene index (sorted by real mean)", fontsize=10)
     ax2.set_ylabel("Expression", fontsize=10)
     ax2.set_title("Expression Range", fontsize=11)
-    ax2.legend(fontsize=7, loc="upper left", ncol=2, frameon=False)
+    ax2.legend(fontsize=8, loc="upper left", ncol=2, frameon=False)
     add_panel_label(ax2, 'b', x=0.02, y=0.98)
 
     # -- I3: Per-cell std as overlaid smooth histograms --

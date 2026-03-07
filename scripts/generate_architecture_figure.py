@@ -198,13 +198,13 @@ def create_architecture_figure(output_dir=None):
     # ===================================================================
     draw_stage_bg(ax, (-0.05, -0.05), 3.25, 3.00,
                   "Stage 1: CLOP Alignment",
-                  C_TEXT_DARK, alpha=0.08, label_color=C_TEXT_DARK)
+                  C_TEXT_DARK, alpha=0.08, label_color="black")
     draw_stage_bg(ax, (3.30, -0.05), 2.30, 3.00,
                   "Stage 2: DiT Generation",
-                  C_GEN_DARK, alpha=0.08, label_color=C_GEN_DARK)
+                  C_GEN_DARK, alpha=0.08, label_color="black")
     draw_stage_bg(ax, (5.70, -0.05), 1.25, 3.00,
                   "Stage 3: Decoding",
-                  C_DECODE_DARK, alpha=0.08, label_color=C_DECODE_DARK)
+                  C_DECODE_DARK, alpha=0.08, label_color="black")
 
     # ===================================================================
     #  Panel labels (a, b, c) for each stage
@@ -226,11 +226,11 @@ def create_architecture_figure(output_dir=None):
                      edgecolor="none", alpha=0.9), zorder=10)
 
     ax.text(1.58, 2.73, "train: align text and cell latents",
-            ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color=C_TEXT_DARK, zorder=2)
+            ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=2)
     ax.text(4.45, 2.73, "ODE latent sampling",
-            ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color=C_GEN_DARK, zorder=2)
+            ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=2)
     ax.text(6.32, 2.73, "decode to genes",
-            ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color=C_DECODE_DARK, zorder=2)
+            ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=2)
 
     # ===================================================================
     #  CLOP Stage -- Text path (top) & Cell path (bottom)
@@ -243,14 +243,14 @@ def create_architecture_figure(output_dir=None):
     # Text Description input
     draw_box(ax, (tx0, ty), SBW, SBH, "Text\nDescription",
             facecolor=C_TEXT_BOX, edgecolor=C_TEXT_DARK, fontsize=FONT_ARCH_LABEL,
-            textcolor=C_TEXT_DARK, bold=True)
+            textcolor="black", bold=True)
 
     # BiomedBERT-large
     tx1 = tx0 + SBW + gap
     draw_box(ax, (tx1, ty - 0.05), BW, BH + 0.10, "BiomedBERT",
              sublabel="frozen | 340M | 1024-d",
              facecolor=C_TEXT_LIGHT, edgecolor=C_TEXT_DARK, fontsize=7,
-             textcolor=C_TEXT_DARK, bold=True, linewidth=1.3)
+             textcolor="black", bold=True, linewidth=1.3)
     draw_arrow(ax, (tx0 + SBW, ty + SBH / 2),
                (tx1, ty + SBH / 2 - 0.02), color=C_TEXT_MID, linewidth=1.2)
 
@@ -259,7 +259,7 @@ def create_architecture_figure(output_dir=None):
     zca_w = 0.45
     draw_box(ax, (tx2, ty + 0.02), zca_w, SBH - 0.04, "ZCA",
             facecolor=C_TEXT_BOX, edgecolor=C_TEXT_DARK, fontsize=FONT_ARCH_LABEL,
-            textcolor=C_TEXT_DARK, bold=True)
+            textcolor="black", bold=True)
     draw_arrow(ax, (tx1 + BW, ty + SBH / 2 - 0.02),
                (tx2, ty + SBH / 2), color=C_TEXT_MID, linewidth=1.2)
 
@@ -268,7 +268,7 @@ def create_architecture_figure(output_dir=None):
     draw_box(ax, (tx3, ty - 0.05), BW, BH + 0.10, "Text Proj.",
              sublabel="MLP 1024\u2192256",
             facecolor=C_TEXT_LIGHT, edgecolor=C_TEXT_DARK, fontsize=7.0,
-             textcolor=C_TEXT_DARK, bold=True)
+             textcolor="black", bold=True)
     draw_arrow(ax, (tx2 + zca_w, ty + SBH / 2),
                (tx3, ty + SBH / 2 - 0.02), color=C_TEXT_MID, linewidth=1.2)
 
@@ -279,14 +279,14 @@ def create_architecture_figure(output_dir=None):
     # Cell Profile input
     draw_box(ax, (cx0, cy), SBW, SBH, "Cell\nProfile",
             facecolor=C_CELL_BOX, edgecolor=C_CELL_DARK, fontsize=FONT_ARCH_LABEL,
-            textcolor=C_CELL_DARK, bold=True)
+            textcolor="black", bold=True)
 
     # scGPT Encoder
     cx1 = cx0 + SBW + gap
     draw_box(ax, (cx1, cy - 0.05), BW, BH + 0.10, "scGPT Enc.",
              sublabel="frozen | 51M | 512-d",
              facecolor=C_CELL_LIGHT, edgecolor=C_CELL_DARK, fontsize=7,
-             textcolor=C_CELL_DARK, bold=True, linewidth=1.3)
+             textcolor="black", bold=True, linewidth=1.3)
     draw_arrow(ax, (cx0 + SBW, cy + SBH / 2),
                (cx1, cy + SBH / 2 - 0.02), color=C_CELL_MID, linewidth=1.2)
 
@@ -295,7 +295,7 @@ def create_architecture_figure(output_dir=None):
     draw_box(ax, (cx2, cy - 0.05), BW, BH + 0.10, "Cell Proj.",
              sublabel="MLP 512\u2192256",
             facecolor=C_CELL_LIGHT, edgecolor=C_CELL_DARK, fontsize=7.0,
-             textcolor=C_CELL_DARK, bold=True)
+             textcolor="black", bold=True)
     draw_arrow(ax, (cx1 + BW, cy + SBH / 2 - 0.02),
                (cx2, cy + SBH / 2 - 0.02), color=C_CELL_MID, linewidth=1.2)
 
@@ -318,7 +318,7 @@ def create_architecture_figure(output_dir=None):
     ax.text(shared_x + shared_w / 2, shared_y + shared_h / 2,
             "Shared\nSpace\n(256-d)",
             ha="center", va="center", fontsize=FONT_ARCH_LABEL,
-            color=C_SHARED, zorder=3)
+            color="black", zorder=3)
 
     # Arrows: Text Proj -> Shared (from top)
     draw_arrow(ax, (tx3 + BW, ty + SBH / 2 - 0.02),
@@ -337,10 +337,10 @@ def create_architecture_figure(output_dir=None):
     loss_w = 1.10
     draw_box(ax, (loss_x, loss_y), loss_w, SBH, "PrototypeSigLIP",
             facecolor="#FFF9C4", edgecolor="#F9A825", fontsize=FONT_ARCH_LABEL,
-            textcolor="#E65100", bold=True, linewidth=0.8)
+            textcolor="black", bold=True, linewidth=0.8)
     ax.text(loss_x + loss_w / 2, loss_y + SBH + 0.08, "training only",
             ha="center", va="bottom", fontsize=FONT_ARCH_SUBLABEL,
-            color="#E65100", zorder=6)
+            color="black", zorder=6)
     draw_arrow(ax, (loss_x + loss_w, loss_y + SBH / 2),
                (shared_x, shared_y + shared_h / 2),
                color="#F9A825", linewidth=0.8, style="<->")
@@ -362,10 +362,10 @@ def create_architecture_figure(output_dir=None):
     draw_box(ax, (dit_x0, dit_y_mid), z0_w, SBH,
              r"$z_0$", sublabel="512-d",
              facecolor=C_GEN_BOX, edgecolor=C_GEN_DARK, fontsize=7,
-             textcolor=C_GEN_DARK, bold=True)
+             textcolor="black", bold=True)
     ax.text(dit_x0 + z0_w / 2, dit_y_mid + SBH + 0.03,
             r"$\sim\mathcal{N}(0,I)$",
-            ha="center", va="bottom", fontsize=FONT_ARCH_SUBLABEL, color=C_GEN_DARK, zorder=5)
+            ha="center", va="bottom", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=5)
 
     # DiT1D main block
     dit_bx = dit_x0 + z0_w + 0.12
@@ -380,17 +380,17 @@ def create_architecture_figure(output_dir=None):
     cx_dit = dit_bx + dit_bw / 2
     ax.text(cx_dit, dit_by + dit_bh - 0.14, "DiT1D",
             ha="center", va="center", fontsize=9,
-            color=C_GEN_DARK, zorder=5)
+            color="black", zorder=5)
     ax.text(cx_dit, dit_by + dit_bh - 0.32, "8 AdaLN-Zero",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL,
-            color=C_GEN_DARK, zorder=5)
+            color="black", zorder=5)
     ax.text(cx_dit, dit_by + dit_bh - 0.46, "22.1M params",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL,
             color=C_GREY, zorder=5)
     ax.text(cx_dit, dit_by + dit_bh - 0.66,
             r"$v(z_t, t, c)$",
             ha="center", va="center", fontsize=7,
-            color=C_GEN_DARK, zorder=5)
+            color="black", zorder=5)
 
     # Arrow: z0 -> DiT
     draw_arrow(ax, (dit_x0 + z0_w, dit_y_mid + SBH / 2),
@@ -403,7 +403,7 @@ def create_architecture_figure(output_dir=None):
     draw_box(ax, (ode_x, dit_y_mid - 0.02), ode_w, SBH + 0.06, "ODE",
             sublabel="Euler/Mid",
             facecolor=C_GEN_BOX, edgecolor=C_GEN_DARK, fontsize=FONT_ARCH_LABEL,
-            textcolor=C_GEN_DARK, bold=True)
+            textcolor="black", bold=True)
     draw_arrow(ax, (dit_bx + dit_bw, dit_y_mid + SBH / 2),
                (ode_x, dit_y_mid + SBH / 2),
                color=C_GEN_MID, linewidth=1.3)
@@ -417,7 +417,7 @@ def create_architecture_figure(output_dir=None):
             "Cond. Embed",
             sublabel="256\u2192384",
             facecolor=C_SHARED_BOX, edgecolor=C_SHARED, fontsize=FONT_ARCH_SUBLABEL,
-            textcolor=C_SHARED, bold=True)
+            textcolor="black", bold=True)
 
     # Shared Space -> Condition Embedder
     draw_arrow(ax, (shared_x + shared_w, shared_y + shared_h * 0.3),
@@ -426,14 +426,14 @@ def create_architecture_figure(output_dir=None):
                connectionstyle="arc3,rad=-0.08")
     ax.text((shared_x + cond_bx) / 2 - 0.02, shared_y - 0.02, "condition c",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL,
-            color=C_SHARED, zorder=5)
+            color="black", zorder=5)
     # Condition Embedder -> DiT
     draw_arrow(ax, (cond_bx + cond_bw / 2, cond_by + cond_bh),
                (dit_bx + dit_bw * 0.35, dit_by),
                color=C_SHARED, linewidth=1.0)
     ax.text(dit_bx + dit_bw * 0.35 + 0.35, dit_by - 0.12,
             "AdaLN", ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL,
-            color=C_SHARED, zorder=5)
+            color="black", zorder=5)
 
     # Timestep embedding
     time_bx = cond_bx + cond_bw + 0.10
@@ -441,7 +441,7 @@ def create_architecture_figure(output_dir=None):
     draw_box(ax, (time_bx, time_by), 0.50, cond_bh,
             r"$t$", sublabel="sin emb",
             facecolor=C_GEN_BOX, edgecolor=C_GEN_DARK, fontsize=FONT_ARCH_LABEL,
-            textcolor=C_GEN_DARK)
+            textcolor="black")
     draw_arrow(ax, (time_bx + 0.25, time_by + cond_bh),
                (dit_bx + dit_bw * 0.65, dit_by),
                color=C_GEN_MID, linewidth=0.8,
@@ -452,12 +452,12 @@ def create_architecture_figure(output_dir=None):
     ax.text(cx_dit, cfg_y,
             r"$\mathbf{v} = v_{\rm unc} + s(v_{\rm cond} - v_{\rm unc})$",
             ha="center", va="center", fontsize=FONT_ARCH_LABEL,
-            color=C_GEN_DARK, zorder=5,
+            color="black", zorder=5,
             bbox=dict(boxstyle="round,pad=0.15", facecolor=C_GEN_BOX,
                       edgecolor=C_GEN_DARK, linewidth=0.6, alpha=0.9))
     ax.text(cx_dit, cfg_y + 0.18, "CFG guidance",
             ha="center", va="center", fontsize=FONT_ARCH_LABEL,
-            color=C_GEN_DARK, zorder=5)
+            color="black", zorder=5)
 
     # ===================================================================
     #  Decoder Stage (right)
@@ -470,7 +470,7 @@ def create_architecture_figure(output_dir=None):
     draw_box(ax, (dec_x0, dec_y_mid), z1_w, SBH,
              r"$z_1$",
              facecolor=C_GEN_BOX, edgecolor=C_GEN_DARK, fontsize=7,
-             textcolor=C_GEN_DARK, bold=True)
+             textcolor="black", bold=True)
     ax.text(dec_x0 + z1_w / 2, dec_y_mid - 0.10, "512-d",
             ha="center", va="top", fontsize=FONT_ARCH_SUBLABEL, color=C_GREY, zorder=5)
 
@@ -479,7 +479,7 @@ def create_architecture_figure(output_dir=None):
                (dec_x0, dec_y_mid + SBH / 2),
                color=C_GEN_MID, linewidth=1.3)
     ax.text((ode_x + ode_w + dec_x0) / 2, dec_y_mid + SBH / 2 + 0.13, "sampled latent",
-            ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color=C_GEN_DARK, zorder=5)
+            ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=5)
 
     # scGPT Decoder
     dec_bx = dec_x0 + z1_w + 0.10
@@ -489,7 +489,7 @@ def create_architecture_figure(output_dir=None):
             "scGPT\nDecoder",
             sublabel="frozen",
             facecolor=C_DECODE_BOX, edgecolor=C_DECODE_DARK, fontsize=FONT_ARCH_LABEL,
-            textcolor=C_DECODE_DARK, bold=True, linewidth=1.3)
+            textcolor="black", bold=True, linewidth=1.3)
     draw_arrow(ax, (dec_x0 + z1_w, dec_y_mid + SBH / 2),
                (dec_bx, dec_y_mid + SBH / 2),
                color=C_DECODE_MID, linewidth=1.3)
@@ -500,7 +500,7 @@ def create_architecture_figure(output_dir=None):
     out_w = 0.90
     draw_box(ax, (out_x, out_y), out_w, SBH + 0.04, "Gene Expr.\nProfile",
             facecolor="#E8EAF6", edgecolor="#283593", fontsize=FONT_ARCH_LABEL,
-            textcolor="#283593", bold=True)
+            textcolor="black", bold=True)
     draw_arrow(ax, (dec_bx + dec_w / 2, dec_y_mid - 0.08 + dec_h),
                (out_x + out_w / 2, out_y),
                color=C_DECODE_MID, linewidth=1.3)

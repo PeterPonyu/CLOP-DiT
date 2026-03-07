@@ -59,7 +59,7 @@ def plot_diagnostics(
         ax.axvline(x=1.0, color="black", ls="--", lw=1, alpha=0.5, label="ratio=1 (equal)")
         ax.axvline(x=0.5, color="red", ls=":", lw=1, alpha=0.5, label="ratio=0.5 (collapse)")
         ax.set_xlabel("Diversity Ratio (gen / real)")
-        ax.legend(fontsize=8, loc="lower right", frameon=False)
+        ax.legend(fontsize=8, loc="upper right", frameon=False)
         summary = all_results["test1_intratype_diversity"]["summary"]
         ax.set_title("Intra-Type Diversity Ratio")
     else:

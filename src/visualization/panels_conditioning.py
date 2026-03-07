@@ -377,7 +377,7 @@ def plot_panel_m(
                 val = div_matrix[i, j]
                 if not np.isnan(val):
                     ax_c2.text(j, i, f"{val:.2f}", ha="center", va="center",
-                               fontsize=6, color="white" if val > np.nanmedian(div_matrix) else "black")
+                               fontsize=7, color="white" if val > np.nanmedian(div_matrix) else "black")
         fig.colorbar(im, ax=ax_c2, shrink=0.7, pad=0.02)
 
         # ── C3: Pairwise cosine violin per source ──

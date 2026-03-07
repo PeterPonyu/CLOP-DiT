@@ -162,11 +162,11 @@ $^{1}$ \quad State Key Laboratory of Trauma and Chemical Poisoning, Institute of
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 
-Single-cell RNA sequencing (scRNA-seq) has enabled the characterization of cellular heterogeneity at unprecedented resolution~\cite{ref-scrnaseq-review}. However, generating realistic synthetic single-cell expression profiles conditioned on natural-language descriptions of cell identity remains an open challenge. Such a capability would enable data augmentation for rare cell types, and could potentially support hypothesis testing via \textit{in silico} perturbation and atlas completion without additional sequencing, though these applications remain to be validated.
+Single-cell RNA sequencing (scRNA-seq) has enabled the characterization of cellular heterogeneity at unprecedented resolution~\cite{ref-scrnaseq-review,ref-10x}. However, generating realistic synthetic single-cell expression profiles conditioned on natural-language descriptions of cell identity remains an open challenge. Such a capability would enable data augmentation for rare cell types, and could potentially support hypothesis testing via \textit{in silico} perturbation and atlas completion without additional sequencing, though these applications remain to be validated.
 
-The clinical motivation for text-conditioned generation is threefold. First, rare cell populations---circulating tumor cells, therapy-resistant subclones, and transitional progenitor states---are chronically undersampled in standard scRNA-seq experiments, yet their accurate representation is critical for biomarker discovery and treatment-response prediction. Synthetic augmentation of these populations could improve classifier balance and statistical power without additional sequencing cost. Second, large-scale atlas efforts such as the Human Cell Atlas require imputation of missing cell states across tissue contexts; a generative model conditioned on descriptive text could fill gaps where donor material is unavailable. Third, \textit{in silico} hypothesis generation---predicting the transcriptomic consequences of a cell-state transition described in natural language---could accelerate experimental design in perturbation biology, although this application remains speculative and unvalidated.
+The clinical motivation for text-conditioned generation is threefold. First, rare cell populations---circulating tumor cells, therapy-resistant subclones, and transitional progenitor states---are chronically undersampled in standard scRNA-seq experiments, yet their accurate representation is critical for biomarker discovery and treatment-response prediction. Synthetic augmentation of these populations could improve classifier balance and statistical power without additional sequencing cost. Second, large-scale atlas efforts such as the Human Cell Atlas~\cite{ref-hca} require imputation of missing cell states across tissue contexts; a generative model conditioned on descriptive text could fill gaps where donor material is unavailable. Third, \textit{in silico} hypothesis generation---predicting the transcriptomic consequences of a cell-state transition described in natural language---could accelerate experimental design in perturbation biology, although this application remains speculative and unvalidated.
 
-A fundamental technical gap separates current generative methods from this vision. Variational autoencoders such as scVI~\cite{ref-scvi} and scGen~\cite{ref-scgen}, geometric deep generative models~\cite{ref-scdiff}, and foundation models such as Geneformer~\cite{ref-geneformer} and scBERT~\cite{ref-scbert} all condition on categorical cell-type labels or perturbation metadata. To our knowledge, no existing method accepts structured natural-language biological descriptions as conditioning input for single-cell generation. In parallel, contrastive vision--language models such as CLIP~\cite{ref-clip} have demonstrated that aligning two modalities into a shared embedding space enables powerful zero-shot transfer, with SimCLR~\cite{ref-simclr} and MoCo~\cite{ref-moco} establishing the self-supervised contrastive paradigm and domain-specific variants such as BiomedCLIP~\cite{ref-biomedclip} and SigLIP~\cite{ref-siglip} extending it to biomedical data. Meanwhile, Diffusion Transformers (DiTs)~\cite{ref-dit} have emerged as state-of-the-art conditional generators, building on latent diffusion models~\cite{ref-latent-diffusion}, and flow matching~\cite{ref-flow-matching} provides a simulation-free training objective that simplifies the diffusion framework. The Transformer architecture~\cite{ref-transformer} underpins both the DiT generator and the frozen encoders. Bridging these two lines of work---contrastive language--omics alignment and conditional diffusion generation---is the central contribution of this paper.
+A fundamental technical gap separates current generative methods from this vision. Variational autoencoders~\cite{ref-vae} such as scVI~\cite{ref-scvi,ref-scvi-tools} and scGen~\cite{ref-scgen}, geometric deep generative models~\cite{ref-scdiff}, and foundation models such as Geneformer~\cite{ref-geneformer} and scBERT~\cite{ref-scbert,ref-scfoundation,ref-cellplm,ref-uce} all condition on categorical cell-type labels or perturbation metadata. To our knowledge, no existing method accepts structured natural-language biological descriptions as conditioning input for single-cell generation. In parallel, contrastive vision--language models such as CLIP~\cite{ref-clip} have demonstrated that aligning two modalities into a shared embedding space enables powerful zero-shot transfer, with SimCLR~\cite{ref-simclr} and MoCo~\cite{ref-moco} establishing the self-supervised contrastive paradigm and domain-specific variants such as BiomedCLIP~\cite{ref-biomedclip} and SigLIP~\cite{ref-siglip} extending it to biomedical data. Meanwhile, Diffusion Transformers (DiTs)~\cite{ref-dit} have emerged as state-of-the-art conditional generators, building on denoising diffusion probabilistic models~\cite{ref-ddpm,ref-score-sde} and latent diffusion models~\cite{ref-latent-diffusion,ref-dalle2,ref-imagen}, and flow matching~\cite{ref-flow-matching} provides a simulation-free training objective that simplifies the diffusion framework. The Transformer architecture~\cite{ref-transformer} underpins both the DiT generator and the frozen encoders. Bridging these two lines of work---contrastive language--omics alignment and conditional diffusion generation---is the central contribution of this paper.
 
 We present CLOP-DiT, a two-stage pipeline that combines \textbf{C}ontrastive \textbf{L}anguage--\textbf{O}mics \textbf{P}retraining (CLOP) with a conditional \textbf{Di}ffusion \textbf{T}ransformer (DiT) to generate single-cell gene expression profiles from text descriptions. The pipeline (Figure~\ref{fig:architecture}) first aligns text and cell embeddings into a shared contrastive space, then generates latents via flow matching, and finally decodes to gene expression. Building on BiomedBERT~\cite{ref-biomedbert} and scGPT~\cite{ref-scgpt}, CLOP-DiT is, to our knowledge, the first method to accept structured natural-language biological descriptions as conditioning input for single-cell generation. Across 100 evaluated cell types, CLOP-DiT achieves a KNN classification accuracy of 36.9\% (37$\times$ random chance, but 52 points below the 89\% real-data ceiling), a steering accuracy of 81.0\%, and a diversity ratio of 0.93, indicating that text conditioning drives detectable type-specific generation, albeit with a substantial fidelity gap from real data.
 
@@ -197,18 +197,18 @@ Together, these components form a reproducible pipeline for text-conditioned sin
 
 \subsection{Dataset}\label{sec:dataset}
 
-This subsection describes the curated dataset, text-group organization, and train/validation splits. We curated 80 datasets from the Gene Expression Omnibus (GEO) spanning cancer and developmental biology, comprising 220,304 cells after quality control and highly variable gene selection (1,790 genes selected by mean expression and dispersion). Each cell was encoded into a 512-dimensional embedding by a pre-trained scGPT model. Cell-type annotations were organized into 1,088 unique text groups, each described by a structured natural-language caption (not free-form text) incorporating cell type, marker genes, tissue of origin, organism, and disease context. Text descriptions were generated for each cell type using a structured template: \texttt{``\{cell type\}, tissue: \{tissue\}, organism: \{organism\}, markers: \{top 5 DE marker genes\}, context: \{disease/condition\}''}, where marker genes were identified per cell type by one-vs.-rest Wilcoxon rank-sum test on the training set. The exact template and marker gene sources are available in \texttt{src/data\_pipeline/subcluster\_annotation.py} (caption generation) and \texttt{scripts/02b\_enrich\_descriptions.py} (evidence enrichment).
+This subsection describes the curated dataset, text-group organization, and train/validation splits. We curated 80 datasets from the Gene Expression Omnibus (GEO) spanning cancer and developmental biology, comprising 220,304 cells after quality control and highly variable gene selection~\cite{ref-seurat} (1,790 genes selected by mean expression and dispersion). Each cell was encoded into a 512-dimensional embedding by a pre-trained scGPT model. Cell-type annotations were organized into 1,088 unique text groups, each described by a structured natural-language caption (not free-form text) incorporating cell type, marker genes, tissue of origin, organism, and disease context. Text descriptions were generated for each cell type using a structured template: \texttt{``\{cell type\}, tissue: \{tissue\}, organism: \{organism\}, markers: \{top 5 DE marker genes\}, context: \{disease/condition\}''}, where marker genes were identified per cell type by one-vs.-rest Wilcoxon rank-sum test on the training set. The exact template and marker gene sources are available in \texttt{src/data\_pipeline/subcluster\_annotation.py} (caption generation) and \texttt{scripts/02b\_enrich\_descriptions.py} (evidence enrichment).
 
 The corpus was split into 72 training datasets (199,670 cells) and 8 held-out validation datasets (20,634 cells). The 8 validation datasets were selected by study (not by cell) to ensure no sample overlap between training and validation splits, and were chosen to span the major tissue and cancer categories in the corpus (lung, gastric, skin, liver, blood); the full list of GEO accession identifiers for all 80 datasets is provided in Supplementary Table~S1, and the validation study identifiers are in Supplementary Table~S2. Within the 72 training datasets, a cell-type-stratified split reserves $\sim$10\% of cells per type for training-time validation, ensuring that all 69 deduplicated cell types are represented in both partitions. This held-out design tests interpolation within the training distribution; the 8 held-out datasets share tissue types and cell populations with the training corpus and do not represent a stringent out-of-distribution generalization test.
 
 The relationship between the 1,088 text groups and the 100 evaluated cell types is as follows. The 1,088 text groups correspond to sub-cluster-level descriptions: each Leiden~\cite{ref-leiden} cluster within each dataset receives a unique text caption. Many sub-clusters share the same canonical cell type (e.g., ``CD8+ T cells'' in lung and liver datasets produce separate text groups). For evaluation, text groups are consolidated by core cell-type identity, retaining only groups with at least 20 cells (to ensure stable centroid estimation), yielding 100 evaluable cell types. KNN accuracy is therefore computed over these 100 consolidated types (random chance = 1/100 = 1.0\%). The text--cell alignment heatmap (Figure~\ref{fig:per-type-gen} and~\ref{fig:text-cell-alignment}) uses 69 centroids because it operates on the deduplicated condition space, which merges cross-dataset sub-clusters into canonical types.
 
-The 80 datasets comprise both \textit{Homo sapiens} ($\sim$59 datasets) and \textit{Mus musculus} ($\sim$21 datasets), predominantly from tumor microenvironment and developmental contexts. Consequently, all generation and evaluation results should be interpreted as applying to human and mouse cancer and developmental single-cell biology; generalization to other organisms, non-cancer tissues, or perturbation conditions has not been tested.
+The 80 datasets comprise both \textit{Homo sapiens} ($\sim$59 datasets) and \textit{Mus musculus} ($\sim$21 datasets)~\cite{ref-tabula-muris}, predominantly from tumor microenvironment and developmental contexts. Consequently, all generation and evaluation results should be interpreted as applying to human and mouse cancer and developmental single-cell biology; generalization to other organisms, non-cancer tissues, or perturbation conditions has not been tested.
 
-Training and evaluation were implemented in Python~3.10 using PyTorch~2.1 (CUDA~12), scGPT~v0.2.1, and Hugging Face Transformers~4.36 for BiomedBERT; the complete environment specification is provided in \texttt{requirements.txt} and \texttt{configs/clop\_v9.3.yaml}.
+Training and evaluation were implemented in Python~3.10 using PyTorch~2.1 (CUDA~13.0), scGPT~v0.2.1, and Hugging Face Transformers~4.36 for BiomedBERT; the complete environment specification is provided in \texttt{requirements.txt} and \texttt{configs/clop\_v9.3.yaml}.
 
 \paragraph{Hardware and compute budget.}
-All training and evaluation were conducted on a single NVIDIA GeForce RTX~5090 Laptop GPU (24\,GB VRAM) using PyTorch~2.1 with CUDA~12 and automatic mixed precision (AMP/FP16). CLOP alignment training (60 epochs, batch size 1024) completes in approximately 10~minutes ($\sim$10\,s/epoch). DiT flow-matching training (200 epochs, batch size 1024) completes in approximately 75~minutes ($\sim$23\,s/epoch). End-to-end figure reproduction from cached embeddings (\texttt{regenerate\_report.sh}) takes under 30~minutes. Total compute for a single full training run (CLOP + DiT + evaluation + visualization) is under 2~GPU-hours; no multi-GPU or distributed training was used. Inference for 100 cell types ($\sim$6,900 generated cells) takes approximately 2~minutes with 10-step Euler integration.
+All training and evaluation were conducted on a single NVIDIA GeForce RTX~5090 Laptop GPU (24\,GB VRAM) using PyTorch~2.1 with CUDA~13.0 and automatic mixed precision (AMP/FP16). CLOP alignment training (60 epochs, batch size 1024) completes in approximately 10~minutes ($\sim$10\,s/epoch). DiT flow-matching training (200 epochs, batch size 1024) completes in approximately 75~minutes ($\sim$23\,s/epoch). End-to-end figure reproduction from cached embeddings (\texttt{regenerate\_report.sh}) takes under 30~minutes. Total compute for a single full training run (CLOP + DiT + evaluation + visualization) is under 2~GPU-hours; no multi-GPU or distributed training was used. Inference for 100 cell types ($\sim$6,900 generated cells) takes approximately 2~minutes with 10-step Euler integration.
 
 \subsection{CLOP: Contrastive Language--Omics Pretraining}\label{sec:clop}
 
@@ -227,7 +227,7 @@ The critical output of CLOP is the projected condition space. Raw scGPT cell-typ
 
 This subsection describes the DiT architecture and flow matching training. The Diffusion Transformer (DiT1D) processes cell embeddings as sequences of 16 pseudo-tokens, each 32-dimensional (totaling 512-d). The architecture comprises 8 AdaLN-Zero transformer blocks with 8-head self-attention (head dimension 64) and feed-forward layers ($512 \to 2048 \to 512$). Timestep information is encoded via sinusoidal embeddings projected to 512 dimensions, and CLOP condition vectors are projected from 512 to 512 dimensions. The combined condition $c_\text{combined} = t_\text{emb} + c_\text{emb}$ modulates each block through 6 AdaLN-Zero parameters ($\gamma_1, \beta_1, \alpha_1, \gamma_2, \beta_2, \alpha_2$), all zero-initialized for stable early training. The model has 22.10M parameters.
 
-Training uses a flow matching objective~\cite{ref-flow-matching}:
+Training uses a flow matching objective~\cite{ref-flow-matching,ref-ot-cfm}:
 
 \begin{equation}
 \mathcal{L}_\text{FM} = \| v_\theta(z_t, t, c) - (z_1 - z_0) \|^2
@@ -328,7 +328,7 @@ This subsection visualizes the shared CLOP embedding space and compares real vs.
 This subsection reports the primary quantitative metrics across generation configurations. Table~\ref{tab:core-results} and Figure~\ref{fig:metrics} summarize the core results across generation configurations. At CFG = 2.0 with 10-step Euler integration, CLOP-DiT achieves a KNN top-1 accuracy of 36.9\% (37$\times$ random chance; 52 points below the 89\% real-data baseline), KNN top-5 of 55.3\%, steering accuracy of 81.0\%, and linear classifier accuracy of 51.1\%. Unconditional generation ($s{=}0$) collapses to random chance (KNN = 1.0\%, steering = 47.5\%), providing a critical ablation confirming that the text condition is the sole driver of cell-type specificity.
 
 \begin{table}[H]
-\caption{Core evaluation results. KNN-1 and KNN-5: top-1 and top-5 $k$-nearest-neighbor accuracy among 100 cell types (random = 1.0\%). Steering: pairwise directional accuracy (random = 50\%). DivR: diversity ratio with ideal = 1.0. LinAcc: logistic regression accuracy in embedding space (trained on real, evaluated on generated; distinct from the expression-space downstream classifier in Figure~\ref{fig:downstream-pq}). FD: Fr\'{e}chet distance (lower is better, but misleading for conditional generation; see text).\label{tab:core-results}}
+\caption{Core evaluation results. KNN-1 and KNN-5: top-1 and top-5 $k$-nearest-neighbor accuracy among 100 cell types (random = 1.0\%). Steering: pairwise directional accuracy (random = 50\%). DivR: diversity ratio with ideal = 1.0. LinAcc: logistic regression accuracy in embedding space (trained on real, evaluated on generated; distinct from the expression-space downstream classifier in Figure~\ref{fig:downstream-pq}). FD: Fr\'{e}chet distance~\cite{ref-fid} (lower is better, but misleading for conditional generation; see text).\label{tab:core-results}}
 \begin{tabularx}{\textwidth}{lCCCCCC}
 \toprule
 \textbf{Method} & \textbf{KNN-1} & \textbf{KNN-5} & \textbf{Steering} & \textbf{DivR} & \textbf{LinAcc} & \textbf{FD} \\
@@ -347,8 +347,9 @@ Random chance    & 0.010 & ---   & 0.500 & ---   & ---   & ---  \\
 \end{table}
 
 \begin{figure}[H]
+\centering
 \includegraphics[width=\textwidth]{figures/panel_d_metrics_summary.pdf}
-\caption{Metrics dashboard summarizing conditional generation quality. The training snapshot panel uses normalized endpoint scores so loss reduction and accuracy/correlation endpoints can be compared in one view; exact final values are printed beside each row. KNN accuracy ($37\times$ random), steering accuracy (81\%), diversity ratio, linear classifier accuracy, and Fr\'{e}chet distance are shown across generation configurations. The collapse of unconditional generation to random baselines validates that text conditioning drives all cell-type specificity.\label{fig:metrics}}
+\caption{Metrics dashboard summarizing conditional generation quality. (\textbf{a})~Training convergence: normalized endpoint scores for loss reduction and accuracy/correlation with exact final values beside each row. (\textbf{b})~Quality profile radar chart showing multi-metric comparison across generation configurations. (\textbf{c})~Diversity health gauges. (\textbf{d})~Expression fidelity bar chart. KNN accuracy ($37\times$ random), steering accuracy (81\%), diversity ratio, linear classifier accuracy, and Fr\'{e}chet distance are shown across configurations. The collapse of unconditional generation to random baselines validates that text conditioning drives all cell-type specificity.\label{fig:metrics}}
 \end{figure}
 
 \textbf{Bootstrap confidence intervals.} To quantify evaluation sampling uncertainty, we computed bootstrap 95\% CIs by resampling the 69 evaluated cell types with replacement ($B{=}1{,}000$, percentile method). At the production operating point (CFG = 1.5, Midpoint, 20 steps): KNN top-1 = 0.509 [0.421, 0.586], KNN top-5 = 0.728 [0.658, 0.794], steering = 1.000 [1.000, 1.000], diversity ratio = 0.969 [0.963, 0.975], linear accuracy = 0.583 [0.518, 0.646], and centroid cosine = 0.898 [0.875, 0.913]. The narrow diversity ratio and centroid cosine CIs reflect uniformly high performance across types; the wider KNN CIs reflect type-dependent classification difficulty. These CIs capture evaluation sampling variability only, not training-run variance (single seed; see Section~\ref{sec:limitations}).
@@ -434,7 +435,7 @@ CLOP-DiT is compared against baseline methods including unconditional generation
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/panel_o_baseline_comparison.pdf}
-\caption{Baseline comparison. Head-to-head analysis of CLOP-DiT vs.\ baselines (unconditional CFG\,=\,0, Gaussian per-type sampling, decoder-only) across four evaluation metrics (Fr\'{e}chet distance, centroid cosine similarity, diversity ratio, coverage), rendered as grouped bars, a normalized radar chart, and a compact relative-improvement heatmap. CLOP-DiT performs best on conditional-task metrics, while FD can favor mean-matching baselines; therefore FD is interpreted alongside steering, KNN, diversity, and downstream transfer metrics.\label{fig:baselines}}
+\caption{Baseline comparison. (\textbf{a})~Head-to-head grouped-bar analysis of CLOP-DiT vs.\ baselines (unconditional CFG\,=\,0, Gaussian per-type sampling, decoder-only) across four evaluation metrics (Fr\'{e}chet distance, centroid cosine similarity, diversity ratio, coverage). (\textbf{b})~Normalized radar chart showing multi-metric profiles for each method. (\textbf{c})~Relative improvement bar chart of CLOP-DiT over each baseline (values exceeding 300\% are capped for readability). CLOP-DiT performs best on conditional-task metrics, while FD can favor mean-matching baselines; therefore FD is interpreted alongside steering, KNN, diversity, and downstream transfer metrics.\label{fig:baselines}}
 \end{figure}
 
 Figure~\ref{fig:benchmark} aggregates these metrics into a composite benchmark score. CLOP-DiT achieves a composite score of 0.844 across normalized KNN accuracy, steering, diversity ratio, and linear separability, ranking first among the methods evaluated in our benchmark suite (see Methods, Equations~\ref{eq:norm}--\ref{eq:composite}, for the composite formula and sensitivity analysis). Because CLOP-DiT is the only method with downstream biology metrics, it receives the maximum normalized score on those axes while all other methods receive zero; the ranking is therefore descriptive rather than inferential. Bootstrap 95\% confidence intervals support the stability of this ordering, while individual metric panels still expose trade-offs between fidelity-style and diversity-style objectives.
@@ -449,7 +450,7 @@ Figure~\ref{fig:benchmark} aggregates these metrics into a composite benchmark s
 
 Beyond distributional metrics, we evaluate whether generated cells are usable in standard single-cell analysis workflows. These analyses are implemented from matched real/generated AnnData objects with shared preprocessing in \texttt{src.evaluation.downstream\_biology}, using Scanpy~\cite{ref-scanpy} for single-cell analysis, ensuring that any downstream advantage is not caused by mismatched feature engineering. Three downstream tasks are assessed on real and generated cells jointly:
 
-\textbf{Clustering, mixing, and classifier alignment} (Figure~\ref{fig:downstream-pq}): We construct matched AnnData objects from real and generated expression matrices, select 2,000 shared highly variable genes, perform PCA and Leiden~\cite{ref-leiden} clustering on the combined dataset, and compute the Adjusted Rand Index (ARI), Normalized Mutual Information (NMI), cluster purity, and per-type $k$-NN mixing scores. High mixing scores indicate that generated cells partially co-localize with real cells of the same type in the joint embedding, though the discriminator AUC of 0.656 confirms that real and generated populations remain distinguishable. A logistic regression classifier is trained on real PCA embeddings to predict cell type, then evaluated on generated embeddings to measure transfer accuracy and macro-F1. The enhanced classifier panel reports a per-type precision/recall/F1 heatmap in addition to the confusion matrix and discriminator ROC, making clear that downstream performance is strongly heterogeneous by cell type. The real-vs.-generated discriminator AUC (0.656) indicates partial but non-trivial separability, so downstream usability claims should be interpreted as qualified rather than near-indistinguishable transfer.
+\textbf{Clustering, mixing, and classifier alignment} (Figure~\ref{fig:downstream-pq}): We construct matched AnnData objects from real and generated expression matrices, select 2,000 shared highly variable genes, perform PCA and Leiden~\cite{ref-leiden} clustering on the combined dataset, and compute the Adjusted Rand Index (ARI), Normalized Mutual Information (NMI), cluster purity, and per-type $k$-NN mixing scores~\cite{ref-integration-benchmark}. High mixing scores indicate that generated cells partially co-localize with real cells of the same type in the joint embedding, though the discriminator AUC of 0.656 confirms that real and generated populations remain distinguishable. A logistic regression classifier is trained on real PCA embeddings to predict cell type, then evaluated on generated embeddings to measure transfer accuracy and macro-F1. The enhanced classifier panel reports a per-type precision/recall/F1 heatmap in addition to the confusion matrix and discriminator ROC, making clear that downstream performance is strongly heterogeneous by cell type. The real-vs.-generated discriminator AUC (0.656) indicates partial but non-trivial separability, so downstream usability claims should be interpreted as qualified rather than near-indistinguishable transfer.
 
 \textbf{DE concordance} (Figure~\ref{fig:downstream-r}): Wilcoxon rank-sum differential expression analysis~\cite{ref-desSeq2} is performed on three biologically meaningful contrasts (CD8 vs.\ CD4 T cells, resident macrophage vs.\ monocyte, epithelial tumor vs.\ fibroblast). We compare log-fold changes between real and generated data via Pearson and Spearman correlations, Jaccard overlap of the top-50 DE genes, and sign-agreement fractions. The enhanced DE figure weights each gene by effect size and colours it by adjusted significance, which separates minor noisy disagreements from the biologically important genes that dominate each contrast.
 
@@ -462,7 +463,7 @@ Beyond distributional metrics, we evaluate whether generated cells are usable in
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figures/panel_r_de_concordance.pdf}
-\caption{DE concordance. Effect-size-weighted real-vs.-generated log-fold-change scatter for the leading contrast, with point size proportional to average absolute effect size and colour indicating adjusted significance; sign-disagreement genes are outlined. A compact summary heatmap reports four metrics---Pearson~$r$, Spearman~$\rho$, Jaccard overlap of the top-50 DE genes (Jaccard@50), and sign agreement---across the three biologically meaningful contrasts (CD8 vs.\ CD4 T, resident macrophage vs.\ monocyte, epithelial vs.\ fibroblast). A grouped-bar panel visualises the same per-contrast scores to aid comparison.\label{fig:downstream-r}}
+\caption{DE concordance. (\textbf{a})~Effect-size-weighted real-vs.-generated log-fold-change scatter for the leading contrast, with point size proportional to average absolute effect size and colour indicating adjusted significance; sign-disagreement genes are outlined. (\textbf{b})~Compact summary heatmap reporting four metrics---Pearson~$r$, Spearman~$\rho$, Jaccard overlap of the top-50 DE genes (Jaccard@50), and sign agreement---across the three biologically meaningful contrasts (CD8 vs.\ CD4 T, resident macrophage vs.\ monocyte, epithelial vs.\ fibroblast). (\textbf{c})~Grouped-bar panel visualising the same per-contrast scores to aid comparison.\label{fig:downstream-r}}
 \end{figure}
 Together, these results establish that CLOP-DiT generates text-conditioned single-cell profiles with measurable type specificity, though with performance trade-offs between fidelity and diversity that depend on the operating regime.
 
@@ -532,7 +533,7 @@ CLOP-DiT addresses what is, to our knowledge, a previously unmet challenge: gene
 
 \textbf{Fr\'{e}chet distance can be misleading for conditional generation.} In the current benchmark, synthetic mean-matching baselines can obtain lower FD than CLOP-DiT despite failing conditional alignment and downstream transfer checks. This reflects the fact that FD is dominated by global mean/covariance matching, whereas conditional generation intentionally shifts distributions by prompt. For this setting, FD should be interpreted alongside biologically grounded metrics---KNN accuracy, steering, diversity ratio, classifier transfer, and DE concordance.
 
-\textbf{Frozen encoder design choice.} Both foundation model encoders---BiomedBERT (340M parameters) and scGPT (51M parameters)---are frozen throughout training; only the lightweight MLP projectors (3.02M parameters combined) are updated. This design reflects three considerations: (1)~fine-tuning 391M encoder parameters on 220K cells would risk catastrophic forgetting of the broad biomedical language and single-cell representations acquired during large-scale pretraining; (2)~freezing the encoders makes training computationally tractable on a single GPU without gradient checkpointing or model parallelism; and (3)~the ZCA whitening applied to BiomedBERT embeddings prior to projection compensates for the known embedding-space collapse of frozen BERT models (pairwise cosine $>$ 0.88) without modifying encoder weights. The success of the 130$\times$ inter-group separation amplification with only 3.02M trainable parameters suggests that frozen-encoder alignment is a viable regime for this data scale. Nonetheless, adapter-based fine-tuning (e.g., LoRA) of the text encoder could improve alignment for challenging cell types and is a natural next step.
+\textbf{Frozen encoder design choice.} Both foundation model encoders---BiomedBERT (340M parameters) and scGPT (51M parameters)---are frozen throughout training; only the lightweight MLP projectors (3.02M parameters combined) are updated. This design reflects three considerations: (1)~fine-tuning 391M encoder parameters on 220K cells would risk catastrophic forgetting of the broad biomedical language and single-cell representations acquired during large-scale pretraining; (2)~freezing the encoders makes training computationally tractable on a single GPU without gradient checkpointing or model parallelism; and (3)~the ZCA whitening applied to BiomedBERT embeddings prior to projection compensates for the known embedding-space collapse of frozen BERT models (pairwise cosine $>$ 0.88) without modifying encoder weights. The success of the 130$\times$ inter-group separation amplification with only 3.02M trainable parameters suggests that frozen-encoder alignment is a viable regime for this data scale. Nonetheless, adapter-based fine-tuning (e.g., LoRA~\cite{ref-lora}) of the text encoder could improve alignment for challenging cell types and is a natural next step.
 
 \textbf{Why the biological evidence is credible.} The manuscript does not rely on a single aggregate metric. Biological meaning is localized across marker-gene preservation (Figure~\ref{fig:markers}), gene-level correlation and variance structure (Figures~\ref{fig:expr-corr} and~\ref{fig:expr-analysis}), per-type heterogeneity and diversity tails (Figures~\ref{fig:per-type-gen} and~\ref{fig:text-cell-alignment} and~\ref{fig:noise-tradeoff} and~\ref{fig:expr-diversity}), and downstream reuse in clustering, classification, and DE workflows (Figures~\ref{fig:downstream-pq} and~\ref{fig:downstream-r}). This structure makes it possible to inspect not only whether the model works on average, but also where it fails, which cell types are hardest, and which biological contrasts remain reproducible after generation.
 
@@ -540,11 +541,11 @@ CLOP-DiT addresses what is, to our knowledge, a previously unmet challenge: gene
 
 \textbf{Limitations.}\label{sec:limitations} CLOP-DiT currently generates most reliably for cell states represented in training; novel prompts far from the training distribution remain sensitive to CLOP projector extrapolation. A pilot OOD/free-form prompt run was executed in this workstream, but robust quantitative OOD scoring is still incomplete because matched references are unavailable for many prompts; therefore the main reported metrics remain in-distribution. The absolute accuracy gap from real data and discriminator AUC above 0.5 suggest opportunities for improvement via larger DiT architectures, hard-negative mining in CLOP training, or multi-resolution conditioning schemes. All results derive from a single training run (seed 42); inter-run variance from stochastic initialization and data shuffling is uncharacterized.
 
-\textbf{Baseline scope.} The benchmarking suite compares CLOP-DiT primarily against synthetic controls (Gaussian, shuffled, random, mean-collapse) and a single minimally-competitive learned baseline (EmbeddingVAE). An scVI baseline was attempted but could not be executed due to a dependency conflict between \texttt{scvi-tools} and the project's \texttt{anndata} version; resolving this and including scVI would provide a stronger external reference point. More broadly, the current baselines do not include a conditional VAE, a conditional GAN, or another diffusion-based model trained with label conditioning on the same data. Future work should resolve the scVI dependency, add at least one additional expression-space generative model (e.g., scGen or CellOT), and verify that CLOP-DiT's advantage persists under fair multi-pipeline comparison.
+\textbf{Baseline scope.} The benchmarking suite compares CLOP-DiT primarily against synthetic controls (Gaussian, shuffled, random, mean-collapse) and a single minimally-competitive learned baseline (EmbeddingVAE). An scVI baseline was attempted but could not be executed due to a dependency conflict between \texttt{scvi-tools} and the project's \texttt{anndata} version; resolving this and including scVI would provide a stronger external reference point. More broadly, the current baselines do not include a conditional VAE, a conditional GAN, or another diffusion-based model trained with label conditioning on the same data. Future work should resolve the scVI dependency, add at least one additional expression-space generative model (e.g., scGen, scArches~\cite{ref-scarches}, or CellOT~\cite{ref-cellot}), and verify that CLOP-DiT's advantage persists under fair multi-pipeline comparison.
 
 \textbf{Marker gene and template caveats.} The top-5 DE markers included in each text caption were identified by Wilcoxon rank-sum test on the training set (Section~\ref{sec:dataset}), raising the possibility that the model memorizes training-set DE genes rather than learning generalizable regulatory programs. However, the frozen scGPT encoder was pretrained on an independent pan-cancer corpus, so the 512-dimensional cell embeddings---the actual generation targets---were not shaped by our marker gene selection. The markers appear only in the text conditioning signal. A formal held-out marker validation using an independent reference atlas (e.g., PanglaoDB or the Human Protein Atlas) would provide stronger evidence. Additionally, the text descriptions follow a rigid template rather than free-form natural language; the model may be mapping concatenated categorical tags to latent representations rather than understanding language semantics. This sets a foundation for future free-form generalization but does not demonstrate it.
 
-\textbf{Loss function ablation.} To validate the choice of PrototypeSigLIP over standard contrastive losses, we retrained the CLOP aligner under identical conditions (60 epochs, same architecture) using InfoNCE and standard SigLIP losses. InfoNCE achieved only 3.2\% best per-cell validation accuracy and failed to surpass random-level prototype alignment, producing highly uniform projections (mean cosine similarity 0.96) that preserve little inter-type variation. SigLIP improved moderately to 7.1\% per-cell accuracy with better inter-group separation (1.00 vs.\ 0.91 for InfoNCE) but still lacked explicit text-to-group alignment. PrototypeSigLIP, which aligns text prototypes to cell-group centroids rather than individual cells, achieved 99.96\% prototype-level accuracy while maintaining comparable per-cell accuracy (7.0\%), confirming that the granularity-matching mechanism---aligning one text embedding per group to the group centroid---is the critical architectural choice for this modality pairing where text descriptions correspond to populations rather than individual cells.
+\textbf{Loss function ablation.} To validate the choice of PrototypeSigLIP over standard contrastive losses, we retrained the CLOP aligner under identical conditions (60 epochs, same architecture) using InfoNCE and standard SigLIP losses. InfoNCE~\cite{ref-infonce} achieved only 3.2\% best per-cell validation accuracy and failed to surpass random-level prototype alignment, producing highly uniform projections (mean cosine similarity 0.96) that preserve little inter-type variation. SigLIP improved moderately to 7.1\% per-cell accuracy with better inter-group separation (1.00 vs.\ 0.91 for InfoNCE) but still lacked explicit text-to-group alignment. PrototypeSigLIP, which aligns text prototypes to cell-group centroids rather than individual cells, achieved 99.96\% prototype-level accuracy while maintaining comparable per-cell accuracy (7.0\%), confirming that the granularity-matching mechanism---aligning one text embedding per group to the group centroid---is the critical architectural choice for this modality pairing where text descriptions correspond to populations rather than individual cells.
 
 The training corpus is restricted to 80 human and mouse datasets from cancer and developmental biology contexts. The pipeline has not been validated on other organisms (e.g., zebrafish), on healthy adult tissue atlases, or on perturbation experiments (e.g., drug treatments, CRISPR screens). Extending the corpus to multi-organism and multi-condition data would establish broader utility.
 
@@ -558,7 +559,7 @@ We introduced CLOP-DiT, a two-stage pipeline for text-conditioned single-cell ge
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% optional
-\supplementary{The following supporting information can be downloaded at: \linksupplementary{s1}. Table~S1: GEO accession identifiers for all 80 training datasets; Table~S2: held-out validation dataset identifiers; Table~S3: full CFG sweep results (8 guidance scales $\times$ 2 solvers $\times$ 3 metrics); Figure~S1: per-type KNN accuracy ranked by training-set cell count. Reproduction instructions (environment setup, \texttt{regenerate\_report.sh}, expected outputs) are provided in \texttt{docs/QUICK\_START.md} and \texttt{scripts/regenerate\_report.sh}. All figures use colormaps designed for accessibility under common forms of color vision deficiency (deuteranopia, protanopia); critical distinctions additionally use shape or pattern encoding.}
+\supplementary{The following supporting information can be downloaded at: \linksupplementary{s1}. Table~S1: GEO accession identifiers for all 80 training datasets; Table~S2: held-out validation dataset identifiers; Table~S3: full CFG sweep results (8 guidance scales $\times$ 2 solvers $\times$ 3 metrics). Reproduction instructions (environment setup, \texttt{regenerate\_report.sh}, expected outputs) are provided in \texttt{docs/QUICK\_START.md} and \texttt{scripts/regenerate\_report.sh}. All figures use colormaps designed for accessibility under common forms of color vision deficiency (deuteranopia, protanopia); critical distinctions additionally use shape or pattern encoding.}
 
 % Only for journal Methods and Protocols:
 % If you wish to submit a video article, please do so with any other supplementary material.
@@ -592,7 +593,7 @@ We introduced CLOP-DiT, a two-stage pipeline for text-conditioned single-cell ge
 
 \informedconsent{Not applicable.}
 
-\dataavailability{The training and validation data were curated from publicly available GEO datasets; a full list of GEO accession identifiers is provided in Supplementary Table~S1, and the held-out validation study identifiers are in Supplementary Table~S2. The train/validation split configuration is defined in \texttt{configs/clop\_v9.3.yaml} and is deterministic given the dataset identifiers. Source code, trained model checkpoints (CLOP aligner and DiT generator), configuration files, and the figure-reproduction script (\texttt{scripts/regenerate\_report.sh}) are publicly available on GitHub~\cite{ref-clop-dit} and will be archived on Zenodo upon acceptance of this manuscript. The complete software environment is specified in \texttt{requirements.txt} (Python~3.10, PyTorch~2.1, CUDA~12, scGPT~v0.2.1, Transformers~4.36). One-command figure reproduction from cached embeddings is documented in \texttt{docs/QUICK\_START.md}.}
+\dataavailability{The training and validation data were curated from publicly available GEO datasets; a full list of GEO accession identifiers is provided in Supplementary Table~S1, and the held-out validation study identifiers are in Supplementary Table~S2. The train/validation split configuration is defined in \texttt{configs/clop\_v9.3.yaml} and is deterministic given the dataset identifiers. Source code, trained model checkpoints (CLOP aligner and DiT generator), configuration files, and the figure-reproduction script (\texttt{scripts/regenerate\_report.sh}) are publicly available on GitHub~\cite{ref-clop-dit} and will be archived on Zenodo upon acceptance of this manuscript. The complete software environment is specified in \texttt{requirements.txt} (Python~3.10, PyTorch~2.1, CUDA~13.0, scGPT~v0.2.1, Transformers~4.36). One-command figure reproduction from cached embeddings is documented in \texttt{docs/QUICK\_START.md}.}
 
 %\durcstatement{Current research is limited to the [please insert a specific academic field, e.g., XXX], which is beneficial [share benefits and/or primary use] and does not pose a threat to public health or national security. Authors acknowledge the dual-use potential of the research involving xxx and confirm that all necessary precautions have been taken to prevent potential misuse. As an ethical responsibility, authors strictly adhere to relevant national and international laws about DURC. Authors advocate for responsible deployment, ethical considerations, regulatory compliance, and transparent reporting to mitigate misuse risks and foster beneficial outcomes.}
 
@@ -621,42 +622,61 @@ The following abbreviations are used in this manuscript:
 
 \noindent
 \begin{tabular}{@{}ll}
-CLOP & Contrastive Language-Omics Pretraining\\
-DiT & Diffusion Transformer\\
-scRNA-seq & Single-cell RNA sequencing\\
-CFG & Classifier-free guidance\\
-KNN & K-nearest neighbor\\
-DE & Differential expression\\
-scGPT & Single-cell Generative Pre-trained Transformer\\
-UMAP & Uniform Manifold Approximation and Projection\\
-PCA & Principal Component Analysis\\
-ARI & Adjusted Rand Index\\
-NMI & Normalized Mutual Information\\
-FD & Fr\'{e}chet Distance\\
-DivR & Diversity Ratio\\
-LinAcc & Linear Classifier Accuracy\\
-ODE & Ordinary Differential Equation\\
-EMA & Exponential Moving Average\\
-MLP & Multi-Layer Perceptron\\
 AdaLN & Adaptive Layer Normalization\\
-GELU & Gaussian Error Linear Unit\\
-ZCA & Zero-phase Component Analysis\\
-MSE & Mean Squared Error\\
-CI & Confidence Interval\\
-AUC & Area Under Curve\\
-ROC & Receiver Operating Characteristic\\
-logFC & Log Fold Change\\
-ReLU & Rectified Linear Unit\\
+ALL & Acute Lymphoblastic Leukemia\\
+ALS & Amyotrophic Lateral Sclerosis\\
+AML & Acute Myeloid Leukemia\\
 AMP & Automatic Mixed Precision\\
-LR & Learning Rate\\
+ARI & Adjusted Rand Index\\
+ASD & Autism Spectrum Disorder\\
+AUC & Area Under Curve\\
+BCC & Basal Cell Carcinoma\\
+BERT & Bidirectional Encoder Representations from Transformers\\
+CE & Cross-Entropy\\
+CFG & Classifier-free guidance\\
+CI & Confidence Interval\\
+CLIP & Contrastive Language-Image Pre-training\\
+CLOP & Contrastive Language-Omics Pretraining\\
+CRISPR & Clustered Regularly Interspaced Short Palindromic Repeats\\
+CUDA & Compute Unified Device Architecture\\
+DE & Differential expression\\
+DiT & Diffusion Transformer\\
+DivR & Diversity Ratio\\
+EMA & Exponential Moving Average\\
+ESC & Embryonic Stem Cell\\
+FD & Fr\'{e}chet Distance\\
+FP16 & Half-Precision Floating Point\\
+GAN & Generative Adversarial Network\\
+GELU & Gaussian Error Linear Unit\\
 GEO & Gene Expression Omnibus\\
 GPU & Graphics Processing Unit\\
-CUDA & Compute Unified Device Architecture\\
-VRAM & Video Random Access Memory\\
+HBV & Hepatitis B Virus\\
+IFN & Interferon\\
+InfoNCE & Info Noise-Contrastive Estimation\\
+KNN & K-nearest neighbor\\
+LinAcc & Linear Classifier Accuracy\\
+logFC & Log Fold Change\\
+LoRA & Low-Rank Adaptation\\
+LPS & Lipopolysaccharide\\
+LR & Learning Rate\\
+MLP & Multi-Layer Perceptron\\
+MSE & Mean Squared Error\\
+MSI & Marker Specificity Index\\
+NK & Natural Killer\\
+NMI & Normalized Mutual Information\\
+ODE & Ordinary Differential Equation\\
 OOD & Out-of-Distribution\\
+PBMC & Peripheral Blood Mononuclear Cell\\
+PCA & Principal Component Analysis\\
+ReLU & Rectified Linear Unit\\
+ROC & Receiver Operating Characteristic\\
+scGPT & Single-cell Generative Pre-trained Transformer\\
+scRNA-seq & Single-cell RNA sequencing\\
+SigLIP & Sigmoid Loss for Language-Image Pre-training\\
+UMAP & Uniform Manifold Approximation and Projection\\
 VAE & Variational Autoencoder\\
-GAN & Generative Adversarial Network\\
-FP16 & Half-Precision Floating Point
+VRAM & Video Random Access Memory\\
+ZCA & Zero-phase Component Analysis
 \end{tabular}
 }
 
@@ -938,87 +958,194 @@ CFG & Solver & Steps & KNN-1 & KNN-5 & Steer. & DivR & LinAcc & FD \\
 % References, variant B: internal bibliography
 %=====================================
 
-% ACS format
+% ACS format — ordered by first citation appearance in the text
 \begin{thebibliography}{999}
 
+% 1. ref-scrnaseq-review — first cited line 165
 \bibitem{ref-scrnaseq-review}
 Svensson,~V.; Vento-Tormo,~R.; Teichmann,~S.A. Exponential scaling of single-cell RNA-seq in the past decade. {\em Nat.\ Protoc.} {\bf 2018}, {\em 13}, 599--604.
 
+% 2. ref-10x — first cited line 165
+\bibitem{ref-10x}
+Zheng,~G.X.Y.; Terry,~J.M.; Belgrader,~P.; Ryvkin,~P.; Bent,~Z.W.; Wilson,~R.; Ziraldo,~S.B.; Wheeler,~T.D.; McDermott,~G.P.; Zhu,~J.; et~al. Massively parallel digital transcriptional profiling of single cells. {\em Nat.\ Commun.} {\bf 2017}, {\em 8}, 14049.
+
+% 3. ref-hca — first cited line 167
+\bibitem{ref-hca}
+Regev,~A.; Teichmann,~S.A.; Lander,~E.S.; Amit,~I.; Benoist,~C.; Birney,~E.; Bodenmiller,~B.; Campbell,~P.; Carninci,~P.; Clatworthy,~M.; et~al. The Human Cell Atlas. {\em eLife} {\bf 2017}, {\em 6}, e27041.
+
+% 4. ref-vae — first cited line 169
+\bibitem{ref-vae}
+Kingma,~D.P.; Welling,~M. Auto-encoding variational Bayes. In Proceedings of the 2nd International Conference on Learning Representations (ICLR), Banff, AB, Canada, 14--16 April 2014.
+
+% 5. ref-scvi — first cited line 169
 \bibitem{ref-scvi}
 Lopez,~R.; Regier,~J.; Cole,~M.B.; Jordan,~M.I.; Yosef,~N. Deep generative modeling for single-cell transcriptomics. {\em Nat.\ Methods} {\bf 2018}, {\em 15}, 1053--1058.
 
+% 6. ref-scvi-tools — first cited line 169
+\bibitem{ref-scvi-tools}
+Gayoso,~A.; Lopez,~R.; Xing,~G.; Boyeau,~P.; Valiber Wu,~K.; Jayasuriya,~M.; Mehlman,~E.; Lanber,~M.; Regier,~J.; et~al. A Python library for probabilistic analysis of single-cell omics data. {\em Nat.\ Biotechnol.} {\bf 2022}, {\em 40}, 163--166.
+
+% 7. ref-scgen — first cited line 169
 \bibitem{ref-scgen}
 Lotfollahi,~M.; Wolf,~F.A.; Theis,~F.J. scGen predicts single-cell perturbation responses. {\em Nat.\ Methods} {\bf 2019}, {\em 16}, 715--721.
 
+% 8. ref-scdiff — first cited line 169
 \bibitem{ref-scdiff}
 Ding,~J.; Regev,~A. Deep generative model embedding of single-cell RNA-Seq profiles on hyperspheres and hyperbolic spaces. {\em Nat.\ Commun.} {\bf 2021}, {\em 12}, 2554.
 
-\bibitem{ref-clip}
-Radford,~A.; Kim,~J.W.; Hallacy,~C.; Ramesh,~A.; Goh,~G.; Agarwal,~S.; Sastry,~G.; Askell,~A.; Mishkin,~P.; Clark,~J.; et~al. Learning transferable visual models from natural language supervision. In Proceedings of the 38th International Conference on Machine Learning (ICML), Virtual, 18--24 July 2021; pp.\ 8748--8763.
-
-\bibitem{ref-biomedclip}
-Zhang,~S.; Xu,~Y.; Usuyama,~N.; Bagber,~J.; Poon,~H. BiomedCLIP: A multimodal biomedical foundation model pretrained from fifteen million scientific image-text pairs. {\em arXiv} {\bf 2023}, 2303.00915.
-
-\bibitem{ref-dit}
-Peebles,~W.; Xie,~S. Scalable diffusion models with transformers. In Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV), Paris, France, 2--6 October 2023; pp.\ 4195--4205.
-
-\bibitem{ref-flow-matching}
-Lipman,~Y.; Chen,~R.T.Q.; Ben-Hamu,~H.; Nickel,~M. Flow matching for generative modeling. In Proceedings of the 11th International Conference on Learning Representations (ICLR), Kigali, Rwanda, 1--5 May 2023.
-
-\bibitem{ref-biomedbert}
-Gu,~Y.; Tinn,~R.; Cheng,~H.; Lucas,~M.; Usuyama,~N.; Liu,~X.; Naumann,~T.; Gao,~J.; Poon,~H. Domain-specific language model pretraining for biomedical natural language processing. {\em ACM Trans.\ Comput.\ Healthc.} {\bf 2022}, {\em 3}, 1--23.
-
-\bibitem{ref-scgpt}
-Cui,~H.; Wang,~C.; Maan,~H.; Pang,~K.; Luo,~F.; Duan,~N.; Wang,~B. scGPT: Toward building a foundation model for single-cell multi-omics using generative AI. {\em Nat.\ Methods} {\bf 2024}, {\em 21}, 1470--1480.
-
+% 9. ref-geneformer — first cited line 169
 \bibitem{ref-geneformer}
 Theodoris,~C.V.; Xiao,~L.; Chopra,~A.; Chaffin,~M.D.; Al Sayed,~Z.R.; Hill,~M.C.; Mantineo,~H.; Brydon,~E.M.; Zeng,~Z.; Liu,~X.S.; et~al. Transfer learning enables predictions in network biology. {\em Nature} {\bf 2023}, {\em 618}, 616--624.
 
-\bibitem{ref-scanpy}
-Wolf,~F.A.; Angerer,~P.; Theis,~F.J. SCANPY: Large-scale single-cell gene expression data analysis. {\em Genome Biol.} {\bf 2018}, {\em 19}, 15.
-
-\bibitem{ref-leiden}
-Traag,~V.A.; Waltman,~L.; van~Eck,~N.J. From Louvain to Leiden: Guaranteeing well-connected communities. {\em Sci. Rep.} {\bf 2019}, {\em 9}, 5233.
-
-\bibitem{ref-simclr}
-Chen,~T.; Kornblith,~S.; Norouzi,~M.; Hinton,~G. A simple framework for contrastive learning of visual representations. In Proceedings of the 37th International Conference on Machine Learning (ICML), Virtual, 13--18 July 2020; pp.\ 1597--1607.
-
-\bibitem{ref-moco}
-He,~K.; Fan,~H.; Wu,~Y.; Xie,~S.; Girshick,~R. Momentum contrast for unsupervised visual representation learning. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), Virtual, 14--19 June 2020; pp.\ 9729--9738.
-
-\bibitem{ref-siglip}
-Zhai,~X.; Mustafa,~B.; Kolesnikov,~A.; Beyer,~L. Sigmoid loss for language image pre-training. In Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV), Paris, France, 2--6 October 2023; pp.\ 11975--11986.
-
-\bibitem{ref-latent-diffusion}
-Rombach,~R.; Blattmann,~A.; Lorenz,~D.; Esser,~P.; Ommer,~B. High-resolution image synthesis with latent diffusion models. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), New Orleans, LA, USA, 18--24 June 2022; pp.\ 10684--10695.
-
+% 10. ref-scbert — first cited line 169
 \bibitem{ref-scbert}
 Yang,~F.; Wang,~W.; Wang,~F.; Fang,~Y.; Tang,~D.; Huang,~J.; Lu,~H.; Yao,~J. scBERT as a large-scale pretrained deep language model for cell type annotation of single-cell RNA-seq data. {\em Nat.\ Mach.\ Intell.} {\bf 2022}, {\em 4}, 852--861.
 
-\bibitem{ref-desSeq2}
-Love,~M.I.; Huber,~W.; Anders,~S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. {\em Genome Biol.} {\bf 2014}, {\em 15}, 550.
+% 11. ref-scfoundation — first cited line 169
+\bibitem{ref-scfoundation}
+Hao,~M.; Gong,~J.; Zeng,~X.; Liu,~C.; Guo,~Y.; Cheng,~X.; Wang,~T.; Ma,~J.; Zhang,~X.; Song,~L. Large-scale foundation model on single-cell transcriptomics. {\em Nat.\ Methods} {\bf 2024}, {\em 21}, 1481--1491.
 
-\bibitem{ref-cfg}
-Ho,~J.; Salimans,~T. Classifier-free diffusion guidance. In Proceedings of the NeurIPS 2021 Workshop on Deep Generative Models and Downstream Applications, Virtual, 13 December 2021.
+% 12. ref-cellplm — first cited line 169
+\bibitem{ref-cellplm}
+Wen,~H.; Tang,~W.; Dai,~X.; Ding,~J.; Jin,~W.; Xie,~Y.; Tang,~J. CellPLM: Pre-training of cell language model beyond single cells. In Proceedings of the 12th International Conference on Learning Representations (ICLR), Vienna, Austria, 7--11 May 2024.
 
-\bibitem{ref-ema}
-Polyak,~B.T.; Juditsky,~A.B. Acceleration of stochastic approximation by averaging. {\em SIAM J.\ Control Optim.} {\bf 1992}, {\em 30}, 838--855.
+% 13. ref-uce — first cited line 169
+\bibitem{ref-uce}
+Rosen,~Y.; Brbic,~M.; Rozenblatt-Rosen,~O.; Leskovec,~J. Universal cell embeddings. In NeurIPS Workshop on New Frontiers in Learning, Control, and Dynamical Systems, New Orleans, LA, USA, 15 December 2023.
 
-\bibitem{ref-adamw}
-Loshchilov,~I.; Hutter,~F. Decoupled weight decay regularization. In Proceedings of the 7th International Conference on Learning Representations (ICLR), New Orleans, LA, USA, 6--9 May 2019.
+% 14. ref-clip — first cited line 169
+\bibitem{ref-clip}
+Radford,~A.; Kim,~J.W.; Hallacy,~C.; Ramesh,~A.; Goh,~G.; Agarwal,~S.; Sastry,~G.; Askell,~A.; Mishkin,~P.; Clark,~J.; et~al. Learning transferable visual models from natural language supervision. In Proceedings of the 38th International Conference on Machine Learning (ICML), Virtual, 18--24 July 2021; pp.\ 8748--8763.
 
+% 15. ref-simclr — first cited line 169
+\bibitem{ref-simclr}
+Chen,~T.; Kornblith,~S.; Norouzi,~M.; Hinton,~G. A simple framework for contrastive learning of visual representations. In Proceedings of the 37th International Conference on Machine Learning (ICML), Virtual, 13--18 July 2020; pp.\ 1597--1607.
+
+% 16. ref-moco — first cited line 169
+\bibitem{ref-moco}
+He,~K.; Fan,~H.; Wu,~Y.; Xie,~S.; Girshick,~R. Momentum contrast for unsupervised visual representation learning. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), Virtual, 14--19 June 2020; pp.\ 9729--9738.
+
+% 17. ref-biomedclip — first cited line 169
+\bibitem{ref-biomedclip}
+Zhang,~S.; Xu,~Y.; Usuyama,~N.; Bagber,~J.; Poon,~H. BiomedCLIP: A multimodal biomedical foundation model pretrained from fifteen million scientific image-text pairs. {\em arXiv} {\bf 2023}, 2303.00915.
+
+% 18. ref-siglip — first cited line 169
+\bibitem{ref-siglip}
+Zhai,~X.; Mustafa,~B.; Kolesnikov,~A.; Beyer,~L. Sigmoid loss for language image pre-training. In Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV), Paris, France, 2--6 October 2023; pp.\ 11975--11986.
+
+% 19. ref-dit — first cited line 169
+\bibitem{ref-dit}
+Peebles,~W.; Xie,~S. Scalable diffusion models with transformers. In Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV), Paris, France, 2--6 October 2023; pp.\ 4195--4205.
+
+% 20. ref-ddpm — first cited line 169
+\bibitem{ref-ddpm}
+Ho,~J.; Jain,~A.; Abbeel,~P. Denoising diffusion probabilistic models. {\em Adv.\ Neural Inf.\ Process.\ Syst.} {\bf 2020}, {\em 33}, 6840--6851.
+
+% 21. ref-score-sde — first cited line 169
+\bibitem{ref-score-sde}
+Song,~Y.; Sohl-Dickstein,~J.; Kingma,~D.P.; Kumar,~A.; Ermon,~S.; Poole,~B. Score-based generative modeling through stochastic differential equations. In Proceedings of the 9th International Conference on Learning Representations (ICLR), Virtual, 3--7 May 2021.
+
+% 22. ref-latent-diffusion — first cited line 169
+\bibitem{ref-latent-diffusion}
+Rombach,~R.; Blattmann,~A.; Lorenz,~D.; Esser,~P.; Ommer,~B. High-resolution image synthesis with latent diffusion models. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), New Orleans, LA, USA, 18--24 June 2022; pp.\ 10684--10695.
+
+% 23. ref-dalle2 — first cited line 169
+\bibitem{ref-dalle2}
+Ramesh,~A.; Dhariwal,~P.; Nichol,~A.; Chu,~C.; Chen,~M. Hierarchical text-conditional image generation with CLIP latents. {\em arXiv} {\bf 2022}, 2204.06125.
+
+% 24. ref-imagen — first cited line 169
+\bibitem{ref-imagen}
+Saharia,~C.; Chan,~W.; Saxena,~S.; Li,~L.; Whang,~J.; Denton,~E.L.; Ghasemipour,~K.; Gontijo Lopes,~R.; Karagol Ayan,~B.; Salimans,~T.; et~al. Photorealistic text-to-image diffusion models with deep language understanding. {\em Adv.\ Neural Inf.\ Process.\ Syst.} {\bf 2022}, {\em 35}, 36479--36494.
+
+% 25. ref-flow-matching — first cited line 169
+\bibitem{ref-flow-matching}
+Lipman,~Y.; Chen,~R.T.Q.; Ben-Hamu,~H.; Nickel,~M. Flow matching for generative modeling. In Proceedings of the 11th International Conference on Learning Representations (ICLR), Kigali, Rwanda, 1--5 May 2023.
+
+% 26. ref-transformer — first cited line 169
 \bibitem{ref-transformer}
 Vaswani,~A.; Shazeer,~N.; Parmar,~N.; Uszkoreit,~J.; Jones,~L.; Gomez,~A.N.; Kaiser,~{\L}.; Polosukhin,~I. Attention is all you need. In Proceedings of the 31st International Conference on Neural Information Processing Systems (NeurIPS), Long Beach, CA, USA, 4--9 December 2017; pp.\ 5998--6008.
 
+% 27. ref-biomedbert — first cited line 171
+\bibitem{ref-biomedbert}
+Gu,~Y.; Tinn,~R.; Cheng,~H.; Lucas,~M.; Usuyama,~N.; Liu,~X.; Naumann,~T.; Gao,~J.; Poon,~H. Domain-specific language model pretraining for biomedical natural language processing. {\em ACM Trans.\ Comput.\ Healthc.} {\bf 2022}, {\em 3}, 1--23.
+
+% 28. ref-scgpt — first cited line 171
+\bibitem{ref-scgpt}
+Cui,~H.; Wang,~C.; Maan,~H.; Pang,~K.; Luo,~F.; Duan,~N.; Wang,~B. scGPT: Toward building a foundation model for single-cell multi-omics using generative AI. {\em Nat.\ Methods} {\bf 2024}, {\em 21}, 1470--1480.
+
+% 29. ref-seurat — first cited line 200
+\bibitem{ref-seurat}
+Stuart,~T.; Butler,~A.; Hoffman,~P.; Hafemeister,~C.; Papalexi,~E.; Mauck,~W.M.; Hao,~Y.; Stoeckius,~M.; Smibert,~P.; Satija,~R. Comprehensive integration of single-cell data. {\em Cell} {\bf 2019}, {\em 177}, 1888--1902.
+
+% 30. ref-leiden — first cited line 204
+\bibitem{ref-leiden}
+Traag,~V.A.; Waltman,~L.; van~Eck,~N.J. From Louvain to Leiden: Guaranteeing well-connected communities. {\em Sci. Rep.} {\bf 2019}, {\em 9}, 5233.
+
+% 31. ref-tabula-muris — first cited line 206
+\bibitem{ref-tabula-muris}
+Tabula Muris Consortium. Single-cell transcriptomics of 20 mouse organs creates a Tabula Muris. {\em Nature} {\bf 2018}, {\em 562}, 367--372.
+
+% 32. ref-batchnorm — first cited line 215
 \bibitem{ref-batchnorm}
 Ioffe,~S.; Szegedy,~C. Batch normalization: Accelerating deep network training by reducing internal covariate shift. In Proceedings of the 32nd International Conference on Machine Learning (ICML), Lille, France, 6--11 July 2015; pp.\ 448--456.
 
+% 33. ref-gelu — first cited line 215
 \bibitem{ref-gelu}
 Hendrycks,~D.; Gimpel,~K. Gaussian error linear units (GELUs). {\em arXiv} {\bf 2016}, 1606.08415.
 
+% 34. ref-adamw — first cited line 222
+\bibitem{ref-adamw}
+Loshchilov,~I.; Hutter,~F. Decoupled weight decay regularization. In Proceedings of the 7th International Conference on Learning Representations (ICLR), New Orleans, LA, USA, 6--9 May 2019.
+
+% 35. ref-ot-cfm — first cited line 230
+\bibitem{ref-ot-cfm}
+Tong,~A.; Malkin,~N.; Huguet,~G.; Zhang,~Y.; Rector-Brooks,~J.; Fatras,~K.; Wolf,~G.; Bengio,~Y. Improving and generalizing flow-based generative models with minibatch optimal transport. {\em Trans.\ Mach.\ Learn.\ Res.} {\bf 2024}.
+
+% 36. ref-cfg — first cited line 237
+\bibitem{ref-cfg}
+Ho,~J.; Salimans,~T. Classifier-free diffusion guidance. In Proceedings of the NeurIPS 2021 Workshop on Deep Generative Models and Downstream Applications, Virtual, 13 December 2021.
+
+% 37. ref-ema — first cited line 244
+\bibitem{ref-ema}
+Polyak,~B.T.; Juditsky,~A.B. Acceleration of stochastic approximation by averaging. {\em SIAM J.\ Control Optim.} {\bf 1992}, {\em 30}, 838--855.
+
+% 38. ref-umap — first cited line 318
 \bibitem{ref-umap}
 McInnes,~L.; Healy,~J.; Melville,~J. UMAP: Uniform manifold approximation and projection for dimension reduction. {\em arXiv} {\bf 2018}, 1802.03426.
 
+% 39. ref-fid — first cited line 331
+\bibitem{ref-fid}
+Heusel,~M.; Ramsauer,~H.; Unterthiner,~T.; Nessler,~B.; Hochreiter,~S. GANs trained by a two time-scale update rule converge to a local Nash equilibrium. {\em Adv.\ Neural Inf.\ Process.\ Syst.} {\bf 2017}, {\em 30}, 6626--6637.
+
+% 40. ref-scanpy — first cited line 450
+\bibitem{ref-scanpy}
+Wolf,~F.A.; Angerer,~P.; Theis,~F.J. SCANPY: Large-scale single-cell gene expression data analysis. {\em Genome Biol.} {\bf 2018}, {\em 19}, 15.
+
+% 41. ref-integration-benchmark — first cited line 452
+\bibitem{ref-integration-benchmark}
+Luecken,~M.D.; Buttner,~M.; Chaichoompu,~K.; Danese,~A.; Interlandi,~M.; Mueller,~M.F.; Strobl,~D.C.; Zappia,~L.; Dugas,~M.; Colome-Tatche,~M.; Theis,~F.J. Benchmarking atlas-level data integration in single-cell genomics. {\em Nat.\ Methods} {\bf 2022}, {\em 19}, 41--50.
+
+% 42. ref-desSeq2 — first cited line 454
+\bibitem{ref-desSeq2}
+Love,~M.I.; Huber,~W.; Anders,~S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. {\em Genome Biol.} {\bf 2014}, {\em 15}, 550.
+
+% 43. ref-lora — first cited line 535
+\bibitem{ref-lora}
+Hu,~E.J.; Shen,~Y.; Wallis,~P.; Allen-Zhu,~Z.; Li,~Y.; Wang,~S.; Wang,~L.; Chen,~W. LoRA: Low-rank adaptation of large language models. In Proceedings of the 10th International Conference on Learning Representations (ICLR), Virtual, 25--29 April 2022.
+
+% 44. ref-scarches — first cited line 543
+\bibitem{ref-scarches}
+Lotfollahi,~M.; Naghipourfar,~M.; Luecken,~M.D.; Khajavi,~M.; Buttner,~M.; Wagenstetter,~M.; Avsec,~Z.; Gayoso,~A.; Yosef,~N.; et~al. Mapping single-cell data to reference atlases by transfer learning. {\em Nat.\ Biotechnol.} {\bf 2022}, {\em 40}, 121--130.
+
+% 45. ref-cellot — first cited line 543
+\bibitem{ref-cellot}
+Bunne,~C.; Stark,~S.G.; Gut,~G.; del Castillo,~J.S.; Lehmann,~K.V.; Pelkmans,~L.; Krause,~A.; Ratsch,~G. Learning single-cell perturbation responses using neural optimal transport. {\em Nat.\ Methods} {\bf 2023}, {\em 20}, 1459--1469.
+
+% 46. ref-infonce — first cited line 547
+\bibitem{ref-infonce}
+Oord,~A.v.d.; Li,~Y.; Vinyals,~O. Representation learning with contrastive predictive coding. {\em arXiv} {\bf 2018}, 1807.03748.
+
+% 47. ref-clop-dit — first cited line 595
 \bibitem{ref-clop-dit}
 Fu,~Z. CLOP-DiT: Text-Guided Single-Cell Gene Expression Generation via Contrastive Language-Omics Pretraining and Diffusion Transformers. {\em GitHub repository} {\bf 2025}. Available online: https://github.com/zeyufu/CLOP-DiT (accessed on 7 March 2026).
 
