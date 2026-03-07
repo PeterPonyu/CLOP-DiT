@@ -28,6 +28,9 @@ ARTICLE_DIR="${_article_paths[0]}"
 ARTICLE_TEX="${_article_paths[1]}"
 cd "$ARTICLE_DIR"
 latexmk -pdf "$ARTICLE_TEX"
+# Keep PDF outputs, but clean transient LaTeX build artifacts
+# (.aux, .log, .fdb_latexmk, .fls, etc.) to avoid noisy commits.
+latexmk -c "$ARTICLE_TEX"
 cd - > /dev/null
 
 echo ""

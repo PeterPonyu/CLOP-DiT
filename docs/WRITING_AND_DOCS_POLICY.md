@@ -37,3 +37,11 @@ Before submission, use the task list in [REVIEWER_CONCERNS_AND_NEXT_STEPS.md](RE
 ## Versioning (optional)
 
 Key docs (e.g. FIGURE_ORGANIZATION, REGENERATION_STATUS, REVIEWER_CONCERNS_AND_NEXT_STEPS) may include a "Last revised: YYYY-MM-DD" or "Doc version" line at the top so it is clear when the plan was last updated.
+
+---
+
+## Commit hygiene for article builds
+
+- **Do commit:** manuscript sources (`.tex`), figure sources, regenerated final figures (`results/figures/*.pdf`), and final article PDF when needed for review/release.
+- **Do not commit:** transient LaTeX build artifacts (`*.aux`, `*.log`, `*.fdb_latexmk`, `*.fls`, `*.out`, `*.toc`, `*.synctex.gz`).
+- **Build script behavior:** `scripts/build_article.sh` runs `latexmk -c` after PDF build so ephemeral files are cleaned automatically.

@@ -205,6 +205,12 @@ def create_architecture_figure(output_dir=None):
     draw_stage_bg(ax, (5.70, -0.15), 1.25, 3.30,
                   "Stage 3: Decoding",
                   C_DECODE_DARK, alpha=0.08, label_color=C_DECODE_DARK)
+    ax.text(1.58, 2.93, "train: align text and cell latents",
+            ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color=C_TEXT_DARK, zorder=2)
+    ax.text(4.45, 2.93, "inference: ODE latent sampling",
+            ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color=C_GEN_DARK, zorder=2)
+    ax.text(6.32, 2.93, "inference: decode to genes",
+            ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color=C_DECODE_DARK, zorder=2)
 
     # ===================================================================
     #  CLOP Stage -- Text path (top) & Cell path (bottom)
@@ -312,6 +318,9 @@ def create_architecture_figure(output_dir=None):
     draw_box(ax, (loss_x, loss_y), loss_w, SBH, "PrototypeSigLIP",
             facecolor="#FFF9C4", edgecolor="#F9A825", fontsize=FONT_ARCH_LABEL,
             textcolor="#E65100", bold=True, linewidth=0.8)
+    ax.text(loss_x + loss_w / 2, loss_y + SBH + 0.08, "training only",
+            ha="center", va="bottom", fontsize=FONT_ARCH_SUBLABEL,
+            color="#E65100", zorder=6)
     draw_arrow(ax, (loss_x + loss_w, loss_y + SBH / 2),
                (shared_x, shared_y + shared_h / 2),
                color="#F9A825", linewidth=0.8, style="<->")
@@ -395,6 +404,9 @@ def create_architecture_figure(output_dir=None):
                (cond_bx, cond_by + cond_bh / 2),
                color=C_SHARED, linewidth=1.0,
                connectionstyle="arc3,rad=-0.08")
+    ax.text((shared_x + cond_bx) / 2 - 0.02, shared_y - 0.02, "condition c",
+            ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL,
+            color=C_SHARED, zorder=5)
     # Condition Embedder -> DiT
     draw_arrow(ax, (cond_bx + cond_bw / 2, cond_by + cond_bh),
                (dit_bx + dit_bw * 0.35, dit_by),
@@ -446,6 +458,8 @@ def create_architecture_figure(output_dir=None):
     draw_arrow(ax, (ode_x + ode_w, dit_y_mid + SBH / 2),
                (dec_x0, dec_y_mid + SBH / 2),
                color=C_GEN_MID, linewidth=1.3)
+    ax.text((ode_x + ode_w + dec_x0) / 2, dec_y_mid + SBH / 2 + 0.13, "sampled latent",
+            ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color=C_GEN_DARK, zorder=5)
 
     # scGPT Decoder
     dec_bx = dec_x0 + z1_w + 0.10

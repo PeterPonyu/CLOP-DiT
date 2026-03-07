@@ -167,14 +167,18 @@ def plot_diversity_distributions_violin(
         edgecolors="white",
         linewidths=0.5,
         zorder=4,
-        clip_on=False,
+        clip_on=True,
     )
     ax.set_xticks(xtick_positions)
     ax.set_xticklabels(xtick_labels, rotation=25, ha="right", fontsize=8)
     ax.set_ylabel("Pairwise Cosine Similarity")
     ax.set_title("Diversity Distribution Tails (most shifted cell types)")
     ax.grid(True, axis="y", alpha=0.22)
-    ax.set_ylim(-0.15, 0.28)
+    all_min = min(float(np.min(v)) for v in violin_data)
+    all_max = max(float(np.max(v)) for v in violin_data)
+    y_lo = min(-0.15, all_min - 0.02)
+    y_hi = max(0.28, all_max + 0.02)
+    ax.set_ylim(y_lo, y_hi)
     ax.text(
         0.01,
         0.98,
@@ -188,7 +192,16 @@ def plot_diversity_distributions_violin(
     )
     for label, color in colors.items():
         ax.plot([], [], color=color, linewidth=6, alpha=0.8, label=label)
-    ax.legend(loc="upper right", fontsize=FONT_LEGEND_DENSE, ncol=3, frameon=False)
+    ax.legend(
+        loc="upper right",
+        bbox_to_anchor=(0.995, 0.995),
+        fontsize=FONT_LEGEND_DENSE,
+        ncol=3,
+        frameon=False,
+        borderaxespad=0.2,
+        handlelength=1.6,
+        columnspacing=1.0,
+    )
 
     if created_fig and save:
         viz_io.save_to_dir(fig, "panel_k_diversity_distributions_violin", output_dir, dpi, save_panel_fn)

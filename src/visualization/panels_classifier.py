@@ -78,10 +78,15 @@ def _plot_classifier_metric_heatmap(
     display_names = ordered_names
     display_matrix = metric_matrix
     rows_truncated = False
+    display_mode = "all"
     if max_rows is not None and max_rows > 0 and len(display_names) > max_rows:
-        display_names = ordered_names[:max_rows]
-        display_matrix = metric_matrix[:max_rows]
+        n_worst = max_rows // 2
+        n_best = max_rows - n_worst
+        idx = list(range(n_worst)) + list(range(len(ordered_names) - n_best, len(ordered_names)))
+        display_names = ordered_names[idx]
+        display_matrix = metric_matrix[idx]
         rows_truncated = True
+        display_mode = "worst+best"
 
     im = ax.imshow(display_matrix, cmap="viridis", aspect="auto", vmin=0, vmax=1)
     ax.set_xticks(range(3))
@@ -96,7 +101,10 @@ def _plot_classifier_metric_heatmap(
     )
     default_title = "Per-Type Precision / Recall / F1"
     if rows_truncated:
-        default_title += f" (top {len(display_names)} of {len(ordered_names)})"
+        if display_mode == "worst+best":
+            default_title += f" (worst+best {len(display_names)} of {len(ordered_names)})"
+        else:
+            default_title += f" (top {len(display_names)} of {len(ordered_names)})"
     ax.set_title(title or default_title, fontsize=11)
     ax.set_ylabel("Cell Type (sorted by F1)")
     # ax.set_xlabel("Metric")  # Removed to reduce label density

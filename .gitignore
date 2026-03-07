@@ -32,6 +32,12 @@ generated_*.h5ad
 # Logs
 logs/
 *.log
+*.aux
+*.fdb_latexmk
+*.fls
+*.out
+*.toc
+*.synctex.gz
 
 # Config archives
 configs/archive/

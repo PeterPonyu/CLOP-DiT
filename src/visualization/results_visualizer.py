@@ -592,15 +592,33 @@ class ResultsVisualizer:
             logger.info("Both panels L and K required for merged figure; skipping (missing %s)", ", ".join(missing))
             return None
 
+        def _trim_whitespace(image: Image.Image, threshold: int = 245, pad: int = 6) -> np.ndarray:
+            """Crop near-white borders from raster panels before tiling."""
+            arr = np.array(image.convert("RGB"))
+            mask = np.any(arr < threshold, axis=2)
+            if not np.any(mask):
+                return arr
+            ys, xs = np.where(mask)
+            y0 = max(int(ys.min()) - pad, 0)
+            y1 = min(int(ys.max()) + pad + 1, arr.shape[0])
+            x0 = max(int(xs.min()) - pad, 0)
+            x1 = min(int(xs.max()) + pad + 1, arr.shape[1])
+            return arr[y0:y1, x0:x1]
+
         images = [(l_path.stem, Image.open(l_path)), (k_path.stem, Image.open(k_path))]
 
-        fig = plt.figure(figsize=(13.6, 9.3), dpi=self.dpi)
-        gs = fig.add_gridspec(2, 2, height_ratios=[1.0, 0.92], wspace=0.05, hspace=0.28)
-        set_figure_suptitle(fig, "Diversity Trade-off and Expression Variance", fontsize=11)
+        fig = plt.figure(figsize=(13.6, 8.6), dpi=self.dpi)
+        gs = fig.add_gridspec(2, 2, height_ratios=[1.0, 1.0], wspace=0.04, hspace=0.14)
+        set_figure_suptitle(
+            fig,
+            "Diversity Trade-off and Expression Variance",
+            fontsize=11,
+            y=0.97,
+        )
 
         for col, (_, image) in enumerate(images):
             ax = fig.add_subplot(gs[0, col])
-            ax.imshow(np.array(image))
+            ax.imshow(_trim_whitespace(image), aspect="auto")
             ax.set_xticks([])
             ax.set_yticks([])
             ax.set_frame_on(False)
@@ -620,11 +638,17 @@ class ResultsVisualizer:
             plt.close(fig)
             logger.info("Violin panel required for Fig 11; skipping (missing diversity violin data)")
             return None
-        ax_bottom.margins(y=0.10)
+        ax_bottom.margins(y=0.05)
 
         merged_path = self.output / "fig_diversity_tradeoff.png"
         from .style import save_with_vcd
-        save_with_vcd(fig, merged_path, self.dpi, close=True)
+        save_with_vcd(
+            fig,
+            merged_path,
+            self.dpi,
+            close=True,
+            layout_rect=(0.02, 0.04, 0.98, 0.95),
+        )
         logger.info(f"Saved merged L+K → {merged_path}")
         return merged_path
 

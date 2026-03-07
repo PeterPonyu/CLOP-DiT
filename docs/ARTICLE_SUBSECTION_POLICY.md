@@ -1,6 +1,6 @@
 # Article Subsection Writing Policy
 
-*Last revised: 2026-03-06*
+*Last revised: 2026-03-07*
 
 This document defines the subsection-level writing improvement policy for the MDPI Biology article, [articles/clop_dit_biology.tex](../articles/clop_dit_biology.tex). Extends [WRITING_AND_DOCS_POLICY.md](WRITING_AND_DOCS_POLICY.md). Human and agent edits to the article should follow these rules.
 
@@ -52,6 +52,32 @@ When editing or auditing a subsection, verify:
 - [ ] Numbers and metrics use consistent precision
 - [ ] Narrative matches figure/caption content
 - [ ] No unsupported metrics or results in text
+
+**Section-level signposting (for major sections only)**:
+- [ ] Methods has organization paragraph with \ref targets
+- [ ] Results has figure-family organization paragraph
+- [ ] Section transitions present at Introduction→Methods, Methods→Results, Results→Discussion
+
+---
+
+## 6. Section-level transitions and signposting
+
+### 6.1 Required transitions
+Major sections must include explicit bridges:
+- **Introduction ending**: Transition sentence mapping paper organization (\ref{sec:dataset}--\ref{sec:conclusions})
+- **Methods ending**: Bridge sentence connecting evaluation framework to results
+- **Results ending**: Mini-conclusion summarizing main findings before Discussion
+- **Discussion opening**: Brief sentence linking results to interpretation
+
+### 6.2 Signposting paragraphs
+- **Methods opening**: Must include organization paragraph listing subsections with \ref targets
+- **Results opening**: Must include figure-family organization paragraph mapping evidence types to figure ranges
+- Format: "We organize X in N parts: (1) ... (N) ..."
+
+### 6.3 Figure-family transitions
+Between thematic figure groups in Results, add explicit transition sentences:
+- Format: "Having established [prior finding], we next examine [new focus]."
+- Purpose: Guide reader through evidence chain without assuming implicit connections
 
 ---
 
