@@ -49,7 +49,7 @@ def plot_diagnostics(
                   for d in sorted_divs]
         ax.barh(range(len(sorted_divs)), sorted_divs, color=colors, height=0.8)
         ax.set_yticks(range(len(sorted_divs)))
-        _step_j1 = max(1, len(sorted_divs) // 12)
+        _step_j1 = max(1, len(sorted_divs) // 18)
         _ytl_j1 = [n if i % _step_j1 == 0 else "" for i, n in enumerate(sorted_names)]
         ax.set_yticklabels(_ytl_j1, fontsize=7)
         ax.axvline(x=1.0, color="black", ls="--", lw=1, alpha=0.5, label="ratio=1 (equal)")

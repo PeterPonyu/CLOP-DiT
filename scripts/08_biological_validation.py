@@ -537,9 +537,18 @@ def _plot_umap_panel(real_recon, fake_adata, ax):
         sc.pp.log1p(combined)
     n_genes = combined.shape[1]
     if n_genes > 2000:
-        sc.pp.highly_variable_genes(combined, n_top_genes=min(2000, n_genes),
-                                    flavor="seurat_v3", subset=True)
+        try:
+            sc.pp.highly_variable_genes(combined, n_top_genes=min(2000, n_genes),
+                                        flavor="seurat_v3", subset=True)
+        except Exception:
+            # seurat_v3 requires raw counts; fall back to seurat flavor on log-normed data
+            sc.pp.highly_variable_genes(combined, n_top_genes=min(2000, n_genes),
+                                        flavor="seurat", subset=True)
     sc.pp.scale(combined, max_value=10)
+    # scale() can produce NaN for zero-variance genes; PCA requires finite values
+    if hasattr(combined.X, "toarray"):
+        combined.X = combined.X.toarray()
+    combined.X = np.nan_to_num(combined.X, nan=0.0)
     sc.tl.pca(combined, n_comps=min(50, combined.shape[1] - 1))
     sc.pp.neighbors(combined, n_neighbors=15)
     sc.tl.umap(combined)

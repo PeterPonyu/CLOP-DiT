@@ -77,8 +77,8 @@ C_DECODE_MID = "#00796B"
 C_DECODE_BOX = "#E0F2F1"
 C_DECODE_ACCENT = "#00695C"
 
-# Neutral
-C_GREY = "#455A64"
+# Neutral (aligned with style.py semantic palette)
+C_GREY = COLORS["neutral"]
 C_MID_GREY = "#607D8B"
 C_LIGHT_GREY = "#B0BEC5"
 C_WHITE = "#FFFFFF"

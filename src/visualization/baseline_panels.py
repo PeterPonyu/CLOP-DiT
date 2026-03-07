@@ -120,7 +120,7 @@ def plot_baseline_comparison(
                       alpha=0.85, edgecolor="white")
     ax.set_xticks(x)
     ax.set_xticklabels(metric_labels, fontsize=9, rotation=0, ha="center")
-    ax.legend(fontsize=8, loc="upper right", frameon=False)
+    ax.legend(fontsize=8, loc="upper left", bbox_to_anchor=(1.02, 1.0), frameon=False)
     style_axes(ax, "bar", title="Key Metrics Comparison", ylabel="Value")
 
     # ── O2: Radar chart ──

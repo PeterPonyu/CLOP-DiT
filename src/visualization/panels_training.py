@@ -338,6 +338,7 @@ def plot_training_dynamics_combined(
     gs = fig.add_gridspec(2, 4, wspace=0.55, hspace=0.52,
                           width_ratios=[1.0, 1.0, 1.0, 1.2], height_ratios=[1, 1])
     set_figure_suptitle(fig, "Training Dynamics (CLOP + DiT)", fontsize=11, y=SUPTITLE_Y_CLOSE)
+    fig._clop_layout_rect = (0.02, 0.03, 0.98, 0.92)
 
     # ════════════════════════════════════════════════════════════
     # Top row: CLOP (4 panels spanning columns 0-3)

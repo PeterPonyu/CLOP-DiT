@@ -56,6 +56,12 @@ def plot_text_cell_heatmap(
     proj_text = np.load(proj_text_path)
     proj_cells = np.load(proj_cell_path)
     group_ids = np.load(gid_path)
+    # Use full text group IDs for text centroid computation if sizes differ
+    gid_text_path = cache / "text_group_ids.npy"
+    if gid_text_path.exists() and proj_text.shape[0] != group_ids.shape[0]:
+        text_group_ids = np.load(gid_text_path)
+    else:
+        text_group_ids = group_ids
 
     unique_types = np.sort(np.unique(group_ids))
     n_types = len(unique_types)
@@ -66,7 +72,7 @@ def plot_text_cell_heatmap(
     for i, t in enumerate(unique_types):
         mask = group_ids == t
         type_counts[i] = mask.sum()
-        tc = proj_text[mask].mean(axis=0)
+        tc = proj_text[text_group_ids == t].mean(axis=0)
         text_centroids[i] = tc / (np.linalg.norm(tc) + 1e-8)
         cc = proj_cells[mask].mean(axis=0)
         cell_centroids[i] = cc / (np.linalg.norm(cc) + 1e-8)

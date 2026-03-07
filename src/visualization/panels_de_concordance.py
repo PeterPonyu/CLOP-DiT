@@ -109,7 +109,8 @@ def plot_de_concordance_panel(
         ax.legend(
             fontsize=8,
             frameon=False,
-            loc="lower right",
+            loc="upper left",
+            bbox_to_anchor=(0.0, 1.0),
         )
         discord_pct = 100 * discordant.mean() if len(discordant) > 0 else 0
         n_genes_shown = len(shared_genes)
@@ -120,7 +121,7 @@ def plot_de_concordance_panel(
             color=COLORS["neutral"],
         )
         add_colorbar_safe(sc, ax=ax, label=cbar_label,
-                         shrink=0.5, pad=0.08, orientation="horizontal", aspect=20)
+                         shrink=0.5, pad=0.14, orientation="horizontal", aspect=20)
 
     contrast_display = first_key.replace("_", " ")[:28]
     style_axes(ax, "scatter", title="Effect-Size Concordance",

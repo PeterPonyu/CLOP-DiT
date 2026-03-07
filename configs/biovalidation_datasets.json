@@ -1,0 +1,37 @@
+[
+  {
+    "dataset_key": "GSE123902_LungAdreHmCancer",
+    "reference_h5ad": "data/processed_h5ad/GSE123902_LungAdreHmCancer_processed.h5ad",
+    "tissue": "lung",
+    "organism": "human",
+    "description": "Lung adenocarcinoma tumor microenvironment"
+  },
+  {
+    "dataset_key": "GSE183904_GastricHmCancer",
+    "reference_h5ad": "data/processed_h5ad/GSE183904_GastricHmCancer_processed.h5ad",
+    "tissue": "gastric",
+    "organism": "human",
+    "description": "Gastric cancer tumor microenvironment"
+  },
+  {
+    "dataset_key": "GSE123813_bccHmCancer",
+    "reference_h5ad": "data/processed_h5ad/GSE123813_bccHmCancer_processed.h5ad",
+    "tissue": "skin",
+    "organism": "human",
+    "description": "Basal cell carcinoma of the skin"
+  },
+  {
+    "dataset_key": "GSE98638_TcellLiverHmCancer",
+    "reference_h5ad": "data/processed_h5ad/GSE98638_TcellLiverHmCancer_processed.h5ad",
+    "tissue": "liver",
+    "organism": "human",
+    "description": "T cell landscape of hepatocellular carcinoma"
+  },
+  {
+    "dataset_key": "GSE132509_acutelymluekPBMCHmCancer",
+    "reference_h5ad": "data/processed_h5ad/GSE132509_acutelymluekPBMCHmCancer_processed.h5ad",
+    "tissue": "blood",
+    "organism": "human",
+    "description": "Acute myeloid leukemia peripheral blood mononuclear cells"
+  }
+]

@@ -47,6 +47,8 @@ def plot_clop_embedding_space(
     proj_text_path = cache / "projected_text.npy"
     proj_cell_path = cache / "projected_cells.npy"
     gid_path = cache / "text_group_ids_dedup.npy"
+    # text_group_ids (full) matches projected_text; dedup version matches cells
+    gid_text_path = cache / "text_group_ids.npy"
 
     for p in [proj_text_path, gid_path]:
         if not p.exists():
@@ -68,6 +70,11 @@ def plot_clop_embedding_space(
 
     proj_text = np.load(proj_text_path)
     group_ids = np.load(gid_path)
+    # Use full text group IDs for text prototype computation if available
+    if gid_text_path.exists() and proj_text.shape[0] != group_ids.shape[0]:
+        text_group_ids = np.load(gid_text_path)
+    else:
+        text_group_ids = group_ids
     unique_types = np.unique(group_ids)
     logger.info(
         f"Panel B: {cell_proj.shape[0]} cells ({space_label}), "
@@ -78,7 +85,7 @@ def plot_clop_embedding_space(
     proto_dim = proj_text.shape[1]
     text_proto = np.zeros((n_types, proto_dim), dtype=np.float32)
     for i, t in enumerate(unique_types):
-        text_proto[i] = proj_text[group_ids == t].mean(axis=0)
+        text_proto[i] = proj_text[text_group_ids == t].mean(axis=0)
     norms = np.linalg.norm(text_proto, axis=1, keepdims=True) + 1e-8
     text_proto = text_proto / norms
     logger.info(f"Computed {n_types} text prototype centroids")

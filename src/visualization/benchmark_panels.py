@@ -65,6 +65,27 @@ def plot_benchmark_panel(
         logger.warning("Empty benchmark report — skipping Panel S")
         return None
 
+    # Derive composite scores from normalised metrics when the report
+    # does not include pre-computed composite scores (avoids text-only S2).
+    if not composite and methods_data:
+        _dir_map = {"lower": -1, "higher": 1}
+        _hm = [
+            ("frechet_distance", "lower"),
+            ("coverage", "higher"),
+            ("mean_centroid_cosine", "higher"),
+            ("diversity_ratio", "higher"),
+            ("gene_pearson_r", "higher"),
+        ]
+        for mname in methods_data:
+            _score = 0.0
+            _count = 0
+            for mk, direction in _hm:
+                v = methods_data[mname].get(mk)
+                if v is not None:
+                    _score += v * _dir_map[direction]
+                    _count += 1
+            composite[mname] = _score / max(_count, 1)
+
     method_names = list(methods_data.keys())
     n_methods = len(method_names)
 

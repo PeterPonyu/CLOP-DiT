@@ -318,7 +318,8 @@ def plot_metrics_summary(
         return None
 
     fig = plt.figure(figsize=(12.6, 8.0))
-    gs = fig.add_gridspec(2, 2, wspace=0.52, hspace=0.50, width_ratios=[1.15, 0.85])
+    gs = fig.add_gridspec(2, 2, wspace=0.52, hspace=0.50, width_ratios=[1.0, 1.0])
+    fig._clop_layout_rect = (0.02, 0.03, 0.96, 0.94)
     set_figure_suptitle(fig, "Core Evaluation Metrics Dashboard", fontsize=11)
 
     # ── D1: Training convergence bars ──

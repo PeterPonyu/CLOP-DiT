@@ -56,6 +56,8 @@ def plot_embedding_space_merged(
     group_ids = np.load(gid_path)
     unique_types = np.unique(group_ids)
     n_types = len(unique_types)
+    # Full text group IDs for text prototype computation
+    gid_text_path = cache / "text_group_ids.npy"
 
     proj_text_path = cache / "projected_text.npy"
     proj_cell_path = cache / "projected_cells.npy"
@@ -88,14 +90,19 @@ def plot_embedding_space_merged(
     gs = fig.add_gridspec(n_rows, 3, wspace=0.46, hspace=0.48,
                           width_ratios=[1.2, 1.2, 1.0])
     set_figure_suptitle(fig, "Embedding Space Analysis", fontsize=11, y=SUPTITLE_Y_CLOSE)
+    fig._clop_layout_rect = (0.02, 0.03, 0.98, 0.92)
     row = 0
 
     if has_b:
         proj_text = np.load(proj_text_path)
         cell_proj = np.load(proj_cell_path)
+        if gid_text_path.exists() and proj_text.shape[0] != group_ids.shape[0]:
+            text_group_ids = np.load(gid_text_path)
+        else:
+            text_group_ids = group_ids
         text_proto = np.zeros((n_types, proj_text.shape[1]), dtype=np.float32)
         for i, t in enumerate(unique_types):
-            text_proto[i] = proj_text[group_ids == t].mean(axis=0)
+            text_proto[i] = proj_text[text_group_ids == t].mean(axis=0)
         norms = np.linalg.norm(text_proto, axis=1, keepdims=True) + 1e-8
         text_proto = text_proto / norms
         type_counts = np.array([np.sum(group_ids == t) for t in unique_types])
