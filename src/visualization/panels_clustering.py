@@ -53,9 +53,10 @@ def plot_clustering_panel(
     fig = plt.figure(figsize=(13.0, 5.5))
     gs = fig.add_gridspec(1, 3, width_ratios=[1.3, 1.0, 0.8],
                           wspace=0.45)
-    set_figure_suptitle(fig, "Downstream: Clustering & Real–Generated Mixing", fontsize=11)
+    # suptitle removed per revision; title information moved to LaTeX caption
 
     ax = fig.add_subplot(gs[0])
+    add_panel_label(ax, 'a')
     unique_types = np.unique(cell_type)
     ct_colors = {}
     for i, ct in enumerate(sorted(unique_types)):
@@ -83,7 +84,7 @@ def plot_clustering_panel(
                xlabel="UMAP 1", ylabel="UMAP 2")
 
     ax2 = fig.add_subplot(gs[1])
-    mixing = clustering_data.get("per_type_mixing", {})
+    add_panel_label(ax2, 'b')
     if mixing:
         sorted_types = sorted(mixing.keys(), key=lambda k: mixing[k])
         vals = [mixing[t] for t in sorted_types]
@@ -108,6 +109,7 @@ def plot_clustering_panel(
         ax2.set_title("kNN Mixing Score")
 
     ax3 = fig.add_subplot(gs[2])
+    add_panel_label(ax3, 'c')
     ax3.axis("off")
 
     gauge_items = [

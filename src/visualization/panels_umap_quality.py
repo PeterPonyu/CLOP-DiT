@@ -113,10 +113,11 @@ def plot_real_vs_generated(
 
     fig = plt.figure(figsize=(9.0, 5.2))
     gs_e = fig.add_gridspec(1, 3, wspace=0.40)
-    set_figure_suptitle(fig, "Real vs Generated Cell Embeddings (DiT v1)", fontsize=11)
+    # suptitle removed per revision; title information moved to LaTeX caption
 
     # E1: Real — type-coloured
     ax = fig.add_subplot(gs_e[0])
+    add_panel_label(ax, 'a')
     if real_gids_sub is not None:
         for t in np.unique(real_gids_sub):
             mask = real_gids_sub == t
@@ -139,6 +140,7 @@ def plot_real_vs_generated(
 
     # E2: Generated — type-coloured
     ax = fig.add_subplot(gs_e[1])
+    add_panel_label(ax, 'b')
     if gen_gids_sub is not None:
         for t in np.unique(gen_gids_sub):
             mask = gen_gids_sub == t
@@ -158,6 +160,7 @@ def plot_real_vs_generated(
 
     # E3: Overlay — type-coloured, shape-split (circle=real, triangle=gen)
     ax = fig.add_subplot(gs_e[2])
+    add_panel_label(ax, 'c')
     if real_gids_sub is not None and gen_gids_sub is not None:
         for t in np.unique(np.concatenate([real_gids_sub, gen_gids_sub])):
             color = TYPE_PALETTE[int(t) % len(TYPE_PALETTE)]

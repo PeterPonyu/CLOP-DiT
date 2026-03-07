@@ -132,7 +132,7 @@ Text descriptions were generated per cell type using the template:
 ```
 {cell type}, tissue: {tissue}, organism: {organism}, markers: {top-5 DE genes}, context: {disease}
 ```
-The exact script is `scripts/build_text_captions.py`. Marker genes were identified by one-vs.-rest Wilcoxon rank-sum test on the training set; top genes are in `data/cached_latents_v5.2/text_captions_deduplicated.json`.
+The caption generation logic is in `src/data_pipeline/subcluster_annotation.py`, with evidence enrichment in `scripts/02b_enrich_descriptions.py`. Marker genes were identified by one-vs.-rest Wilcoxon rank-sum test on the training set; top genes are in `data/cached_latents_v5.2/text_captions_deduplicated.json`.
 
 ---
 

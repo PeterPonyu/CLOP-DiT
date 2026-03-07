@@ -143,7 +143,7 @@ def plot_classifier_panel(
     gen_acc = classifier_data.get("gen_accuracy", 0)
     gen_f1 = classifier_data.get("gen_f1", 0)
     disc_auc = classifier_data.get("discriminator_auc", 0)
-    set_figure_suptitle(fig, "Downstream: Classifier Alignment", fontsize=11)
+    # suptitle removed per revision; title information moved to LaTeX caption
     fig.text(
         0.5, 0.94,
         f"Gen Acc = {gen_acc:.3f}   |   Gen F1 = {gen_f1:.3f}   |   Disc AUC = {disc_auc:.3f}",
@@ -152,6 +152,7 @@ def plot_classifier_panel(
     )
 
     ax = fig.add_subplot(gs[0])
+    add_panel_label(ax, 'a')
     cm_norm = cm.astype(float) / (cm.sum(axis=1, keepdims=True) + 1e-8)
     im = ax.imshow(cm_norm, cmap="Blues", aspect="auto", vmin=0, vmax=1)
 
@@ -194,6 +195,7 @@ def plot_classifier_panel(
                xlabel="Predicted", ylabel="True Type")
 
     ax2 = fig.add_subplot(gs[1])
+    add_panel_label(ax2, 'b')
     if per_type_acc:
         summary = _plot_classifier_metric_heatmap(fig, ax2, cm, class_names)
         f1 = summary["f1"]
@@ -215,6 +217,7 @@ def plot_classifier_panel(
         ax2.set_title("Per-Type Summary")
 
     ax3 = fig.add_subplot(gs[2])
+    add_panel_label(ax3, 'c')
     disc_proba = classifier_data.get("_disc_proba")
     disc_y = classifier_data.get("_disc_y")
 

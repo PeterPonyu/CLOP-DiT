@@ -89,7 +89,7 @@ def plot_embedding_space_merged(
     fig = plt.figure(figsize=(14.2, 5.6 * n_rows))
     gs = fig.add_gridspec(n_rows, 3, wspace=0.46, hspace=0.48,
                           width_ratios=[1.2, 1.2, 1.0])
-    set_figure_suptitle(fig, "Embedding Space Analysis", fontsize=11, y=SUPTITLE_Y_CLOSE)
+    # suptitle removed per revision; title information moved to LaTeX caption
     fig._clop_layout_rect = (0.02, 0.03, 0.98, 0.92)
     row = 0
 

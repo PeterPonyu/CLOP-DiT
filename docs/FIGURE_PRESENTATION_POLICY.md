@@ -1,6 +1,6 @@
 # Figure Presentation Policy
 
-*Last revised: 2026-03-06*
+*Last revised: 2026-03-07*
 
 This document defines presentation rules for CLOP-DiT figures so panels stay readable and consistent. It complements [LEGEND_CAPTION_POLICY.md](LEGEND_CAPTION_POLICY.md) and is referenced by [FIGURE_ORGANIZATION.md](FIGURE_ORGANIZATION.md). Enforce these rules in code review.
 
@@ -47,10 +47,15 @@ Use consistent visual language across panels so readers are not taught different
 - **Use style constants for typography:** `style.py` defines `FONT_SUPTITLE`, `FONT_TITLE`, `FONT_LABEL`, `FONT_TICK`, `FONT_TICK_DENSE`, `FONT_LEGEND`, `TICK_PAD_PT`. Use these (or the global `VIS_STYLE` defaults) so font sizes are consistent across all figures. Do not use fontsize=6 or arbitrary values; prefer `FONT_TICK_DENSE` (8) for dense axes and `FONT_TICK` (10) elsewhere.
 - **Tick labels must not be truncated:** `xtick.major.pad` and `ytick.major.pad` are set to `TICK_PAD_PT` (4pt). Save uses `pad_inches=0.10` so rotated or long tick labels have room. If a panel still clips labels, increase pad or use `set_dense_tick_labels()` to reduce label count.
 
-## 9. Panel letters (A–S) vs article Figure numbers (1–15)
+## 9. Panel labels (a), (b), (c), ... for article figures
 
-- **Figure numbers (Figure 1 … Figure 15) are only in the LaTeX caption**, not drawn on the image. The article uses `\caption{...}` with descriptive text; subfigure references in the caption use (\textbf{a}), (\textbf{b}), etc. for multi-panel figures.
-- **Do not draw "(A)", "Figure 1", or panel letters on the figure content** for article-facing outputs. Subplot titles are descriptive only (e.g. "Loss Convergence", "Metrics Comparison Heatmap"). The internal pipeline still names panels A–S for code and the full report; the 15 article PDFs are the same images, referenced in the manuscript as Figure 1–15.
+- **All article-facing multi-panel figures MUST include panel labels** drawn directly on the figure image using `style.add_panel_label(ax, 'a')` or the batch helper `style.add_panel_labels_to_axes(axes)`.
+- Panel labels use bold lowercase letters in parentheses: (a), (b), (c), etc., positioned at the top-left corner of each subplot (default x=0.02, y=0.98 in axes coordinates).
+- Labels have a semi-transparent white background (alpha=0.85) to ensure readability over any plot content.
+- Panel labels must not be clipped by tight_layout or figure boundaries.
+- The LaTeX caption references panels using matching bold letters: `(\textbf{a})`, `(\textbf{b})`, etc.
+- Figure-level suptitles are **not used** for article figures; figure-level information belongs in the LaTeX `\caption{}`. Subplot titles (e.g., "Loss Convergence") are retained.
+- **Internal pipeline panel codes (A–S) and article Figure numbers (1–15)** appear only in code comments and LaTeX captions, never drawn on the figure image.
 
 ## Code and review checklist
 
@@ -59,6 +64,8 @@ Use consistent visual language across panels so readers are not taught different
 - Use `style.add_threshold_bands()` and `quality_color()` for good/warn/bad bands and colours instead of ad hoc hex and thresholds.
 - Use `style.add_colorbar_safe()` for all colorbars so they do not overlap main content (see §7).
 - Use style font constants (FONT_*, TICK_PAD_PT) for consistency; avoid fontsize=6 or 12 (see §8).
-- Do not draw "Figure N" or "(A)"–"(S)" on the figure; captions provide numbering (see §9).
+- Use `style.add_panel_label(ax, label)` to add panel letters to every article-facing subplot (see §9).
+- Do not use `set_figure_suptitle()` for article figures; use it only if needed for internal report-only figures.
+- Do not draw "Figure N" on the figure; captions provide numbering (see §9).
 - Review: each subplot has a single primary message; no subplot has more than three text elements beyond axes labels/ticks.
 - Review: article-facing producers do not use legend titles containing statistics (see LEGEND_CAPTION_POLICY.md); contract test enforces this.

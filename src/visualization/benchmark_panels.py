@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .style import (
-    COLORS, add_colorbar_safe, save_panel, save_with_vcd, set_figure_suptitle, style_axes
+    COLORS, add_colorbar_safe, add_panel_label, save_panel, save_with_vcd, set_figure_suptitle, style_axes
 )
 from src.utils.paths import RESULTS_DIR, FIG_DIR
 

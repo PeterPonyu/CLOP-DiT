@@ -318,7 +318,7 @@ def plot_training_dynamics_combined(
     """Combined training dynamics figure.
 
     Top row (4 panels): CLOP — A1 Loss, A2 Temperature, A3 Accuracy, A4 Embedding Quality
-    Bottom row (3 panels): DiT — C1 Loss, C2 Cosine Similarity, C3 LR Schedule
+    Bottom row (4 panels): DiT — C1 Loss, C2 Cosine Similarity, C3 LR Schedule, C4 Summary
 
     Parameters
     ----------
@@ -426,7 +426,7 @@ def plot_training_dynamics_combined(
         add_panel_label(ax_a4, 'd', x=0.02, y=0.98)
 
     # ════════════════════════════════════════════════════════════
-    # Bottom row: DiT (3 panels spanning columns 0-2, col 3 empty)
+    # Bottom row: DiT (3 plots + 1 summary, columns 0-3)
     # ════════════════════════════════════════════════════════════
     if dit_hist:
         h = dit_hist
@@ -482,6 +482,31 @@ def plot_training_dynamics_combined(
         ax_c3.set_xlim(0, max(epochs) * 1.05)
         ax_c3.xaxis.set_major_locator(MaxNLocator(nbins=2, integer=True, prune="both"))
         add_panel_label(ax_c3, 'g', x=0.02, y=0.98)
+
+        # C4: Key DiT metrics summary
+        ax_c4 = fig.add_subplot(gs[1, 3])
+        ax_c4.axis("off")
+        val_cos_f = h["val_cosine_sim"][-1]
+        lr_f = h["lr"][-1]
+        train_loss_f = h["train_loss"][-1]
+        val_loss_f = h["val_loss"][-1]
+        summary = (
+            f"Final val cosine: {val_cos_f:.4f}\n"
+            f"Final train loss: {train_loss_f:.4e}\n"
+            f"Final val loss:   {val_loss_f:.4e}\n"
+            f"Final LR: {lr_f:.2e}\n"
+            "EMA decay: 0.9999\n"
+            "Sampler: 10-step Euler"
+        )
+        ax_c4.text(
+            0.5, 0.5, summary,
+            ha="center", va="center", fontsize=10,
+            transform=ax_c4.transAxes, family="monospace",
+            bbox=dict(boxstyle="round,pad=0.35", facecolor=COLORS["bg_light"],
+                      edgecolor=COLORS["neutral"]),
+        )
+        ax_c4.set_title("DiT Summary", fontsize=11)
+        add_panel_label(ax_c4, 'h', x=0.02, y=0.98)
 
     if save:
         if save_panel_fn:

@@ -24,6 +24,7 @@ from .style import (
     COLORS,
     TYPE_PALETTE,
     add_colorbar_safe,
+    add_panel_label,
     apply_style,
     quality_color,
     save_panel,
