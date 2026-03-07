@@ -132,14 +132,20 @@ def plot_panel_m(
     apply_style()
     n_modes = 1 + len(mode_diversity)  # real + each mode
     _fw = max(10.0, 2.8 * n_modes)
-    fig, axes = plt.subplots(1, n_modes, figsize=(_fw, 5.2),
-                             gridspec_kw={"wspace": 0.45}, squeeze=False)
-    axes = axes[0]
+    fig = plt.figure(figsize=(_fw, 8.4))
+    outer = fig.add_gridspec(2, 1, height_ratios=[2.1, 1.2], hspace=0.48)
+    gs_top = outer[0].subgridspec(1, n_modes, wspace=0.45)
+    axes = [fig.add_subplot(gs_top[0, i]) for i in range(n_modes)]
 
+    # Local spacing policy for Panel M:
+    # - suptitle raised to y=1.00 to increase clearance above row-1 titles
+    # - row-1 titles kept short and semantic
+    # - figure-level legend at bottom with stable anchor, no overlap
     set_figure_suptitle(
         fig,
         f"Conditioning Mode Comparison (CFG={cfg_scale}, {len(selected_types)} types, PCA 2D)",
         fontsize=11,
+        y=1.00,
     )
 
     type_to_color = {tid: TYPE_PALETTE[i % len(TYPE_PALETTE)] for i, tid in enumerate(selected_types)}
@@ -155,7 +161,7 @@ def plot_panel_m(
                        c=[type_to_color[tid]], s=size, alpha=alpha,
                        edgecolors="white", linewidths=0.2,
                        label=type_to_name[tid])
-        ax.set_title(title, fontsize=10, pad=10)
+        ax.set_title(title, fontsize=10, pad=6)
         ax.set_xlabel("PC1", fontsize=9)
         if show_ylabel:
             ax.set_ylabel("PC2", fontsize=9)
@@ -182,12 +188,98 @@ def plot_panel_m(
             show_ylabel=False,
         )
 
+    # Quantitative second row: mode shift and diversity summaries.
+    gs_bottom = outer[1].subgridspec(1, 3, wspace=0.38)
+    ax_b1 = fig.add_subplot(gs_bottom[0, 0])
+    ax_b2 = fig.add_subplot(gs_bottom[0, 1])
+    ax_b3 = fig.add_subplot(gs_bottom[0, 2])
+
+    # Build per-type real centroids in 2D for shift summaries.
+    real_centroids = {}
+    for tid in selected_types:
+        rmask = real_mask_bool & (combined_labels == tid)
+        if np.any(rmask):
+            real_centroids[tid] = coords[rmask].mean(axis=0)
+
+    shift_means = []
+    shift_stds = []
+    shift_labels = []
+    per_type_shift_distributions = []
+
+    for mode_name in mode_diversity.keys():
+        mode_mask = combined_source == mode_name
+        shifts = []
+        for tid in selected_types:
+            if tid not in real_centroids:
+                continue
+            mmask = mode_mask & (combined_labels == tid)
+            if not np.any(mmask):
+                continue
+            mode_centroid = coords[mmask].mean(axis=0)
+            shifts.append(float(np.linalg.norm(mode_centroid - real_centroids[tid])))
+        if shifts:
+            shift_labels.append(mode_name)
+            shift_means.append(float(np.mean(shifts)))
+            shift_stds.append(float(np.std(shifts)))
+            per_type_shift_distributions.append(shifts)
+
+    if shift_labels:
+        xpos = np.arange(len(shift_labels))
+        ax_b1.bar(
+            xpos,
+            shift_means,
+            yerr=shift_stds,
+            capsize=3,
+            color=COLORS["generated"],
+            alpha=0.85,
+            edgecolor="white",
+        )
+        ax_b1.set_xticks(xpos)
+        ax_b1.set_xticklabels([m.split(" (")[0] for m in shift_labels], rotation=18, ha="right", fontsize=8)
+        ax_b1.set_ylabel("Mean centroid shift (PC units)", fontsize=9)
+        ax_b1.set_title("Mode -> Real Shift", fontsize=10)
+    else:
+        ax_b1.text(0.5, 0.5, "No centroid shift data", ha="center", va="center", transform=ax_b1.transAxes)
+        ax_b1.set_title("Mode -> Real Shift", fontsize=10)
+
+    div_labels = ["Real"] + list(mode_diversity.keys())
+    div_values = [real_diversity] + [mode_diversity[m] for m in mode_diversity.keys()]
+    div_colors = [COLORS["real"]] + [COLORS["generated"] for _ in mode_diversity.keys()]
+    xdiv = np.arange(len(div_labels))
+    ax_b2.bar(xdiv, div_values, color=div_colors, alpha=0.85, edgecolor="white")
+    ax_b2.axhline(real_diversity, color=COLORS["real"], linestyle="--", linewidth=1.2, alpha=0.8)
+    ax_b2.set_xticks(xdiv)
+    ax_b2.set_xticklabels([m.split(" (")[0] for m in div_labels], rotation=18, ha="right", fontsize=8)
+    ax_b2.set_ylabel("Within-type diversity", fontsize=9)
+    ax_b2.set_title("Diversity by Mode", fontsize=10)
+
+    if per_type_shift_distributions:
+        ax_b3.boxplot(
+            per_type_shift_distributions,
+            labels=[m.split(" (")[0] for m in shift_labels],
+            patch_artist=True,
+            boxprops=dict(facecolor=COLORS["bg_light"], edgecolor=COLORS["neutral"]),
+            medianprops=dict(color=COLORS["bad"], linewidth=1.3),
+            whiskerprops=dict(color=COLORS["neutral"], linewidth=1.0),
+            capprops=dict(color=COLORS["neutral"], linewidth=1.0),
+            flierprops=dict(marker="o", markersize=3, markerfacecolor=COLORS["warn"], markeredgecolor="none", alpha=0.6),
+        )
+        ax_b3.tick_params(axis="x", labelrotation=18, labelsize=8)
+        ax_b3.set_ylabel("Per-type centroid shift", fontsize=9)
+        ax_b3.set_title("Shift Distribution", fontsize=10)
+    else:
+        ax_b3.text(0.5, 0.5, "No shift distribution data", ha="center", va="center", transform=ax_b3.transAxes)
+        ax_b3.set_title("Shift Distribution", fontsize=10)
+
+    # Legend: type keys only, anchored at bottom with no overlap
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="lower center",
                ncol=min(len(handles), 5), fontsize=7,
                markerscale=1.5, frameon=False,
                columnspacing=0.8, handletextpad=0.3,
-               bbox_to_anchor=(0.5, -0.02))
+               bbox_to_anchor=(0.5, -0.01))
+    # Layout rect: extra top clearance (0.96) for suptitle-to-row-1 separation
+    fig._clop_layout_rect = (0.02, 0.06, 0.98, 0.96)
 
     path = output_dir / "panel_m_conditioning_umap.png"
     save_with_vcd(fig, path, dpi)

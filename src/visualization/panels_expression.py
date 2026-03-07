@@ -109,7 +109,6 @@ def plot_expression_correlation(
         f"Gene Expression Recovery \u2014 r={pearson_r:.6f}, "
         f"\u03c1={spearman_rho:.6f}, n={len(gene_names)}",
         fontsize=11,
-        y=1.01,
     )
     fig._clop_layout_rect = (0.02, 0.03, 0.98, 0.92)
 
@@ -183,10 +182,8 @@ def plot_expression_correlation(
         ax2.set_xlabel("Pearson r", fontsize=10)
         ax2.legend(
             fontsize=8,
-            loc="lower left",
+            loc="lower right",
             frameon=False,
-            bbox_to_anchor=(1.02, 0.0),
-            borderaxespad=0.0,
         )
     else:
         ax2.text(0.5, 0.5, "No per-type data", ha="center", va="center",
@@ -245,7 +242,7 @@ def plot_expression_correlation(
             fontsize=9, rotation=90, ha="center",
         )
         ax3.set_ylabel("Expression (mean \u00b1 0.5\u00d7std)", fontsize=10)
-        ax3.legend(fontsize=8, loc="upper left", ncol=1, frameon=False, bbox_to_anchor=(1.02, 1.0))
+        ax3.legend(fontsize=8, loc="upper right", ncol=1, frameon=False)
     else:
         ax3.text(0.5, 0.5, "No marker genes found", ha="center", va="center",
                  transform=ax3.transAxes)
