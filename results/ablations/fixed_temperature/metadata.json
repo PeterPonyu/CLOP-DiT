@@ -1,0 +1,17 @@
+{
+  "ablation_name": "fixed_temperature",
+  "description": "Freeze temperature instead of learning it",
+  "category": "optimization",
+  "overrides": {
+    "temperature_learnable": false
+  },
+  "base_config_diff": {
+    "temperature_learnable": {
+      "base": null,
+      "ablation": false
+    }
+  },
+  "seed": 42,
+  "started_at": "2026-03-07T13:46:29.758420",
+  "status": "completed"
+}

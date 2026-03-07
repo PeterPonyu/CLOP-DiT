@@ -319,9 +319,13 @@ class OODEvaluator:
         -------
         dict mapping prompt name to metrics dict.
         """
-        prototypes = _build_training_prototypes(
-            reference_adata, embedding_key=embedding_key, cell_type_key=cell_type_key,
-        )
+        try:
+            prototypes = _build_training_prototypes(
+                reference_adata, embedding_key=embedding_key, cell_type_key=cell_type_key,
+            )
+        except (KeyError, Exception) as exc:
+            logger.warning("Cannot build training prototypes: %s. Skipping embedding distance.", exc)
+            prototypes = {}
 
         results = {}
         for entry in prompts:
@@ -342,7 +346,7 @@ class OODEvaluator:
             metrics: Dict[str, Any] = {"prompt": prompt_text, "reference_type": ref_type}
 
             # Embedding distance to closest prototype
-            if "X_clop_dit" in gen_adata.obsm:
+            if "X_clop_dit" in gen_adata.obsm and prototypes:
                 gen_emb = gen_adata.obsm["X_clop_dit"]
 
                 if ref_type and ref_type in prototypes:
@@ -356,10 +360,11 @@ class OODEvaluator:
                         d = np.mean(np.linalg.norm(gen_emb - proto[None, :], axis=1))
                         if d < best_dist:
                             best_type, best_dist = ct, d
-                    metrics["closest_prototype"] = best_type
-                    metrics["embedding_distance"] = _compute_embedding_distance(
-                        gen_emb, prototypes[best_type],
-                    )
+                    if best_type is not None:
+                        metrics["closest_prototype"] = best_type
+                        metrics["embedding_distance"] = _compute_embedding_distance(
+                            gen_emb, prototypes[best_type],
+                        )
 
             # Expression metrics
             if ref_type:
@@ -400,15 +405,19 @@ class OODEvaluator:
         dict mapping prompt name to metrics dict with keys
         "free_form_metrics", "structured_metrics", and "comparison".
         """
-        prototypes = _build_training_prototypes(
-            reference_adata, embedding_key=embedding_key, cell_type_key=cell_type_key,
-        )
+        try:
+            prototypes = _build_training_prototypes(
+                reference_adata, embedding_key=embedding_key, cell_type_key=cell_type_key,
+            )
+        except (KeyError, Exception) as exc:
+            logger.warning("Cannot build training prototypes: %s. Skipping embedding distance.", exc)
+            prototypes = {}
 
         results = {}
         for entry in prompts:
             name = entry["name"]
             free_text = entry["prompt"]
-            struct_text = entry["structured_equivalent"]
+            struct_text = entry.get("structured_equivalent", None)
             ref_type = entry.get("reference_type", None)
 
             logger.info("OOD free-form evaluation: '%s'", name)
@@ -421,13 +430,15 @@ class OODEvaluator:
                 reference_adata=reference_adata,
             )
 
-            # Generate from structured equivalent
-            gen_struct = self.pipeline.generate_adata(
-                prompt=struct_text,
-                num_cells=num_cells,
-                decode_expression=True,
-                reference_adata=reference_adata,
-            )
+            # Generate from structured equivalent (if available)
+            gen_struct = None
+            if struct_text:
+                gen_struct = self.pipeline.generate_adata(
+                    prompt=struct_text,
+                    num_cells=num_cells,
+                    decode_expression=True,
+                    reference_adata=reference_adata,
+                )
 
             entry_results: Dict[str, Any] = {
                 "free_form_prompt": free_text,
@@ -446,7 +457,7 @@ class OODEvaluator:
                     free_metrics["embedding_distance"] = _compute_embedding_distance(
                         gen_free.obsm["X_clop_dit"], proto,
                     )
-                if "X_clop_dit" in gen_struct.obsm:
+                if gen_struct is not None and "X_clop_dit" in gen_struct.obsm:
                     struct_metrics["embedding_distance"] = _compute_embedding_distance(
                         gen_struct.obsm["X_clop_dit"], proto,
                     )
@@ -456,9 +467,10 @@ class OODEvaluator:
                 free_metrics["expression_metrics"] = _compute_expression_metrics(
                     gen_free, reference_adata, ref_type, cell_type_key=cell_type_key,
                 )
-                struct_metrics["expression_metrics"] = _compute_expression_metrics(
-                    gen_struct, reference_adata, ref_type, cell_type_key=cell_type_key,
-                )
+                if gen_struct is not None:
+                    struct_metrics["expression_metrics"] = _compute_expression_metrics(
+                        gen_struct, reference_adata, ref_type, cell_type_key=cell_type_key,
+                    )
 
             entry_results["free_form_metrics"] = free_metrics
             entry_results["structured_metrics"] = struct_metrics
@@ -653,8 +665,8 @@ def main() -> None:
 
     # Load prompts
     prompt_config = _load_prompts_yaml(args.prompts_yaml)
-    novel_prompts = prompt_config.get("novel_types", [])
-    free_form_prompts = prompt_config.get("free_form", [])
+    novel_prompts = prompt_config.get("novel_cell_types", prompt_config.get("novel_types", []))
+    free_form_prompts = prompt_config.get("free_form_text", prompt_config.get("free_form", []))
 
     if not novel_prompts and not free_form_prompts:
         logger.error("No prompts found in %s. Exiting.", args.prompts_yaml)

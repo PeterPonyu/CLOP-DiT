@@ -100,9 +100,12 @@ DEFAULT_RARE_TYPE_PROMPTS: dict[str, str] = {
 # Helpers
 # ═══════════════════════════════════════════════════════════════════════
 
-def _to_dense(x: np.ndarray) -> np.ndarray:
-    """Convert sparse matrix to dense if necessary."""
-    return x.A if hasattr(x, "A") else np.asarray(x)
+def _to_dense(x) -> np.ndarray:
+    """Convert sparse matrix to dense float64 array."""
+    import scipy.sparse as sp
+    if sp.issparse(x):
+        return np.asarray(x.toarray(), dtype=np.float64)
+    return np.asarray(x, dtype=np.float64)
 
 
 def _get_embeddings(adata: ad.AnnData, embedding_key: str = "X_clop_dit") -> np.ndarray:
@@ -130,8 +133,24 @@ def _get_embeddings(adata: ad.AnnData, embedding_key: str = "X_clop_dit") -> np.
     from sklearn.decomposition import PCA
 
     X = _to_dense(adata.X)
+    # Replace NaN/Inf that can arise from scGPT decode or outer-join padding
+    X = np.nan_to_num(X, nan=0.0, posinf=0.0, neginf=0.0)
+    # Drop zero-variance columns to avoid NaN from PCA standardisation
+    col_var = np.var(X, axis=0)
+    keep = col_var > 1e-12
+    if keep.sum() < X.shape[1]:
+        logger.info(
+            "Dropping %d zero-variance genes before PCA (%d → %d).",
+            X.shape[1] - int(keep.sum()), X.shape[1], int(keep.sum()),
+        )
+        X = X[:, keep]
     n_components = min(50, X.shape[0], X.shape[1])
-    return PCA(n_components=n_components, random_state=42).fit_transform(X)
+    if n_components == 0:
+        return np.zeros((len(adata), 1), dtype=np.float64)
+    features = PCA(n_components=n_components, random_state=42).fit_transform(X)
+    # Safety: ensure no residual NaN after PCA
+    features = np.nan_to_num(features, nan=0.0, posinf=0.0, neginf=0.0)
+    return features
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -355,9 +374,44 @@ class RareCellAugmenter:
         dict with "overall_f1_macro", "overall_f1_weighted", "per_type_f1",
         and "classification_report".
         """
-        # Extract features
-        X_train = _get_embeddings(train_adata, self.embedding_key)
-        X_test = _get_embeddings(test_adata, self.embedding_key)
+        # Extract features — always use PCA on expression to keep train/test
+        # in the same feature space.  We fit PCA on train and transform test.
+        from sklearn.decomposition import PCA
+
+        X_train_raw = _to_dense(train_adata.X)
+        X_test_raw = _to_dense(test_adata.X)
+
+        # Align columns: intersect var_names (gene sets may differ after concat)
+        train_vars = list(train_adata.var_names)
+        test_vars = list(test_adata.var_names)
+        common = sorted(set(train_vars) & set(test_vars))
+        if len(common) < len(train_vars) or len(common) < len(test_vars):
+            logger.info(
+                "Aligning gene sets: train=%d, test=%d, common=%d",
+                len(train_vars), len(test_vars), len(common),
+            )
+            tr_idx = [train_vars.index(g) for g in common]
+            te_idx = [test_vars.index(g) for g in common]
+            X_train_raw = X_train_raw[:, tr_idx]
+            X_test_raw = X_test_raw[:, te_idx]
+
+        X_train_raw = np.nan_to_num(X_train_raw, nan=0.0, posinf=0.0, neginf=0.0)
+        X_test_raw = np.nan_to_num(X_test_raw, nan=0.0, posinf=0.0, neginf=0.0)
+
+        # Drop zero-variance columns (based on train)
+        col_var = np.var(X_train_raw, axis=0)
+        keep = col_var > 1e-12
+        X_train_raw = X_train_raw[:, keep]
+        X_test_raw = X_test_raw[:, keep]
+
+        n_components = min(50, X_train_raw.shape[0], X_train_raw.shape[1])
+        pca = PCA(n_components=n_components, random_state=self.seed)
+        X_train = pca.fit_transform(X_train_raw)
+        X_test = pca.transform(X_test_raw)
+
+        # Final safety net
+        X_train = np.nan_to_num(X_train, nan=0.0, posinf=0.0, neginf=0.0)
+        X_test = np.nan_to_num(X_test, nan=0.0, posinf=0.0, neginf=0.0)
 
         y_train = train_adata.obs[self.cell_type_key].values
         y_test = test_adata.obs[self.cell_type_key].values
@@ -442,11 +496,15 @@ class RareCellAugmenter:
         for ratio, syn_adata in sorted(augmented_adatas.items()):
             logger.info("Training augmented classifier (ratio=%dx)...", ratio)
 
-            # Combine real + synthetic
+            # Combine real + synthetic (inner join to keep only shared genes)
             combined = ad.concat(
-                [real_adata_train, syn_adata], join="outer",
+                [real_adata_train, syn_adata], join="inner",
             )
             combined.obs_names_make_unique()
+            # Safety: fill any residual NaN
+            combined.X = np.nan_to_num(
+                _to_dense(combined.X), nan=0.0, posinf=0.0, neginf=0.0,
+            )
 
             aug_result = self.train_classifier(combined, test_adata)
             results[f"ratio_{ratio}x"] = aug_result
@@ -504,6 +562,30 @@ class RareCellAugmenter:
         logger.info("Loading reference data: %s", reference_h5ad)
         adata = sc.read_h5ad(reference_h5ad)
         logger.info("Reference: %d cells, %d genes", adata.n_obs, adata.n_vars)
+
+        # If cell_type column is missing, try to populate from subcluster metadata
+        if self.cell_type_key not in adata.obs.columns:
+            meta_path = Path(reference_h5ad).parent / "subcluster_metadata.json"
+            dataset_key = Path(reference_h5ad).stem.replace("_processed", "")
+            if meta_path.exists():
+                import json as _json
+                _meta = _json.load(open(meta_path))
+                if dataset_key in _meta and "clusters" in _meta[dataset_key]:
+                    ct_map = ["Unknown"] * adata.n_obs
+                    for cid, info in _meta[dataset_key]["clusters"].items():
+                        for idx in info.get("cell_indices", []):
+                            if idx < adata.n_obs:
+                                ct_map[idx] = info["cell_type"]
+                    adata.obs[self.cell_type_key] = ct_map
+                    adata.obs[self.cell_type_key] = adata.obs[self.cell_type_key].astype("category")
+                    logger.info("Populated '%s' from subcluster metadata: %d types",
+                                self.cell_type_key, adata.obs[self.cell_type_key].nunique())
+                else:
+                    raise KeyError(f"'{self.cell_type_key}' not in adata.obs and dataset_key "
+                                   f"'{dataset_key}' not found in subcluster metadata")
+            else:
+                raise KeyError(f"'{self.cell_type_key}' not found in adata.obs and no "
+                               f"subcluster metadata at {meta_path}")
 
         # Step 1: Identify rare types
         rare_types = self.identify_rare_types(adata, threshold_fraction)

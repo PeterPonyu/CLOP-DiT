@@ -86,14 +86,40 @@ class Cell2CellInference:
     ):
         self.device = torch.device(device)
 
+        def cfg_value(config: dict, key: str, default):
+            value = config.get(key, default)
+            return default if value is None else value
+
         # --- Load CLOP ---
         logger.info("Loading CLOP aligner...")
         clop_ckpt = torch.load(clop_checkpoint, map_location=self.device, weights_only=False)
         clop_config = clop_ckpt.get("config", {})
         self.clop = CLOPAligner(
-            text_dim=clop_config.get("text_dim", 1024),
-            cell_dim=clop_config.get("cell_dim", 512),
-            proj_dim=clop_config.get("proj_dim", 256),
+            text_dim=cfg_value(clop_config, "text_dim", 1024),
+            cell_dim=cfg_value(clop_config, "cell_dim", 512),
+            proj_dim=cfg_value(clop_config, "proj_dim", 256),
+            text_hidden_dim=cfg_value(clop_config, "text_hidden_dim", None),
+            cell_hidden_dim=cfg_value(clop_config, "cell_hidden_dim", None),
+            text_layers=cfg_value(clop_config, "text_layers", 3),
+            cell_layers=cfg_value(clop_config, "cell_layers", 3),
+            dropout=cfg_value(clop_config, "dropout", 0.1),
+            use_batch_norm=cfg_value(clop_config, "use_batch_norm", True),
+            temperature=cfg_value(clop_config, "temperature", 0.07),
+            min_temperature=cfg_value(clop_config, "min_temperature", 0.01),
+            max_temperature=cfg_value(clop_config, "max_temperature", 0.5),
+            label_smoothing=cfg_value(clop_config, "label_smoothing", 0.1),
+            use_ema=cfg_value(clop_config, "use_ema", False),
+            ema_decay=cfg_value(clop_config, "ema_decay", 0.999),
+            use_soft_labels=cfg_value(clop_config, "use_soft_labels", False),
+            soft_label_alpha=cfg_value(clop_config, "soft_label_alpha", 2.0),
+            soft_label_bias=cfg_value(clop_config, "soft_label_bias", 5.0),
+            cell_noise_std=cfg_value(clop_config, "cell_noise_std", 0.0),
+            use_whitening=cfg_value(clop_config, "use_whitening", False),
+            whitening_eps=cfg_value(clop_config, "whitening_eps", 1e-4),
+            loss_type=cfg_value(clop_config, "loss_type", "infonce"),
+            auto_duplicate_mask=cfg_value(clop_config, "auto_duplicate_mask", False),
+            cohesion_weight=cfg_value(clop_config, "cohesion_weight", 0.1),
+            temp_reg_weight=cfg_value(clop_config, "temp_reg_weight", 0.0),
         )
         self.clop.load_state_dict(clop_ckpt["model_state_dict"])
         self.clop.to(self.device).eval()

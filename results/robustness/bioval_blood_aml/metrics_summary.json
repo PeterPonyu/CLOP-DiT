@@ -1,0 +1,24 @@
+{
+  "text2cell_multi": {
+    "datasets": {
+      "GSE132509_acutelymluekPBMCHmCancer": {
+        "gene_mean_pearson": 0.9992595911026001,
+        "gene_mean_R2": 0.9985193610191345,
+        "gene_var_pearson": -0.006788751110434532,
+        "FD_gene_pca50": 8.867663821427504e-06,
+        "FD_scgpt_embedding": 69.05327680039534,
+        "marker_specificity_real": 0.2500120970730152,
+        "marker_specificity_generated": 0.25000035384897895
+      }
+    },
+    "interpretation": {
+      "gene_mean_pearson": "Pearson r between per-gene mean expression of real (scGPT-reconstructed) vs generated. >0.9 = high fidelity; 1.0 = perfect.",
+      "gene_mean_R2": "R-squared of gene means; fraction of variance explained. >0.8 is good.",
+      "gene_var_pearson": "Pearson r of per-gene variance. Captures whether expression variability is preserved.",
+      "FD_gene_pca50": "Frechet Distance in PCA-50 gene space. Lower = more similar distributions. <1 is excellent.",
+      "FD_scgpt_embedding": "Frechet Distance in scGPT 512-d embedding space. Lower = better.",
+      "marker_specificity_real": "Marker specificity index (MSI) on real cells. Higher = markers are enriched in intended cell types.",
+      "marker_specificity_generated": "MSI on generated cells. Higher = markers remain cell-type specific after generation."
+    }
+  }
+}
