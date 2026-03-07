@@ -176,15 +176,15 @@ def create_architecture_figure(output_dir=None):
         from src.utils.paths import FIG_DIR
         output_dir = Path(FIG_DIR)
     output_dir = Path(output_dir)
-    fig, ax = plt.subplots(figsize=(7.8, 3.8))
+    fig, ax = plt.subplots(figsize=(7.8, 3.2))
     # Use non-equal aspect so we can fill the canvas properly; xlim extends past 7.0 so right side (decoder, gene expr) is not truncated
     ax.set_xlim(-0.1, 7.45)
-    ax.set_ylim(-0.3, 3.4)
+    ax.set_ylim(-0.15, 3.15)
     ax.axis("off")
     ax.set_xticks([])
     ax.set_yticks([])
     fig.patch.set_facecolor(C_WHITE)
-    fig.subplots_adjust(left=0.02, right=0.98, top=0.91, bottom=0.04)
+    fig.subplots_adjust(left=0.02, right=0.98, top=0.93, bottom=0.02)
 
     # Box dimensions (compact for 7-inch width)
     BW = 0.78   # standard box width
@@ -196,13 +196,13 @@ def create_architecture_figure(output_dir=None):
     # ===================================================================
     #  Stage backgrounds
     # ===================================================================
-    draw_stage_bg(ax, (-0.05, -0.15), 3.25, 3.30,
+    draw_stage_bg(ax, (-0.05, -0.05), 3.25, 3.00,
                   "Stage 1: CLOP Alignment",
                   C_TEXT_DARK, alpha=0.08, label_color=C_TEXT_DARK)
-    draw_stage_bg(ax, (3.30, -0.15), 2.30, 3.30,
+    draw_stage_bg(ax, (3.30, -0.05), 2.30, 3.00,
                   "Stage 2: DiT Generation",
                   C_GEN_DARK, alpha=0.08, label_color=C_GEN_DARK)
-    draw_stage_bg(ax, (5.70, -0.15), 1.25, 3.30,
+    draw_stage_bg(ax, (5.70, -0.05), 1.25, 3.00,
                   "Stage 3: Decoding",
                   C_DECODE_DARK, alpha=0.08, label_color=C_DECODE_DARK)
 
@@ -210,34 +210,34 @@ def create_architecture_figure(output_dir=None):
     #  Panel labels (a, b, c) for each stage
     # ===================================================================
     # Panel (a) - CLOP Stage: top-left corner
-    ax.text(0.02, 3.05, "(a)", ha="left", va="top",
+    ax.text(0.02, 2.85, "(a)", ha="left", va="top",
             fontsize=12, fontweight="bold", color="black",
             bbox=dict(boxstyle="round,pad=0.2", facecolor="white",
                      edgecolor="none", alpha=0.9), zorder=10)
     # Panel (b) - DiT Stage: top-left corner
-    ax.text(3.35, 3.05, "(b)", ha="left", va="top",
+    ax.text(3.35, 2.85, "(b)", ha="left", va="top",
             fontsize=12, fontweight="bold", color="black",
             bbox=dict(boxstyle="round,pad=0.2", facecolor="white",
                      edgecolor="none", alpha=0.9), zorder=10)
     # Panel (c) - Decoding Stage: top-left corner
-    ax.text(5.75, 3.05, "(c)", ha="left", va="top",
+    ax.text(5.75, 2.85, "(c)", ha="left", va="top",
             fontsize=12, fontweight="bold", color="black",
             bbox=dict(boxstyle="round,pad=0.2", facecolor="white",
                      edgecolor="none", alpha=0.9), zorder=10)
 
-    ax.text(1.58, 2.93, "train: align text and cell latents",
+    ax.text(1.58, 2.73, "train: align text and cell latents",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color=C_TEXT_DARK, zorder=2)
-    ax.text(4.45, 2.93, "inference: ODE latent sampling",
+    ax.text(4.45, 2.73, "ODE latent sampling",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color=C_GEN_DARK, zorder=2)
-    ax.text(6.32, 2.93, "inference: decode to genes",
+    ax.text(6.32, 2.73, "decode to genes",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color=C_DECODE_DARK, zorder=2)
 
     # ===================================================================
     #  CLOP Stage -- Text path (top) & Cell path (bottom)
     # ===================================================================
 
-    # --- Text path (top row y~2.4) ---
-    ty = 2.40
+    # --- Text path (top row y~2.25) ---
+    ty = 2.25
     tx0 = 0.02
 
     # Text Description input
@@ -272,8 +272,8 @@ def create_architecture_figure(output_dir=None):
     draw_arrow(ax, (tx2 + zca_w, ty + SBH / 2),
                (tx3, ty + SBH / 2 - 0.02), color=C_TEXT_MID, linewidth=1.2)
 
-    # --- Cell path (bottom row y~0.5) ---
-    cy = 0.50
+    # --- Cell path (bottom row y~0.60) ---
+    cy = 0.60
     cx0 = 0.02
 
     # Cell Profile input
@@ -301,9 +301,9 @@ def create_architecture_figure(output_dir=None):
 
     # --- Shared Space (between text and cell) ---
     shared_w = 0.62
-    shared_h = 0.85
+    shared_h = 0.72
     shared_x = tx3 + BW + gap + 0.02
-    shared_y = 1.18
+    shared_y = 1.22
 
     box = FancyBboxPatch(
         (shared_x, shared_y), shared_w, shared_h,
@@ -332,7 +332,7 @@ def create_architecture_figure(output_dir=None):
                connectionstyle="arc3,rad=0.1")
 
     # --- PrototypeSigLIP Loss label ---
-    loss_y = 1.58
+    loss_y = 1.52
     loss_x = 0.80
     loss_w = 1.10
     draw_box(ax, (loss_x, loss_y), loss_w, SBH, "PrototypeSigLIP",
@@ -355,7 +355,7 @@ def create_architecture_figure(output_dir=None):
     #  DiT Stage (centre)
     # ===================================================================
     dit_x0 = 3.45
-    dit_y_mid = 1.45
+    dit_y_mid = 1.40
 
     # z0 noise input
     z0_w = 0.50
@@ -448,14 +448,14 @@ def create_architecture_figure(output_dir=None):
                connectionstyle="arc3,rad=0.10")
 
     # CFG formula (top)
-    cfg_y = 2.75
+    cfg_y = 2.48
     ax.text(cx_dit, cfg_y,
             r"$\mathbf{v} = v_{\rm unc} + s(v_{\rm cond} - v_{\rm unc})$",
             ha="center", va="center", fontsize=FONT_ARCH_LABEL,
             color=C_GEN_DARK, zorder=5,
             bbox=dict(boxstyle="round,pad=0.15", facecolor=C_GEN_BOX,
                       edgecolor=C_GEN_DARK, linewidth=0.6, alpha=0.9))
-    ax.text(cx_dit, cfg_y + 0.25, "CFG guidance",
+    ax.text(cx_dit, cfg_y + 0.18, "CFG guidance",
             ha="center", va="center", fontsize=FONT_ARCH_LABEL,
             color=C_GEN_DARK, zorder=5)
 
@@ -463,7 +463,7 @@ def create_architecture_figure(output_dir=None):
     #  Decoder Stage (right)
     # ===================================================================
     dec_x0 = 5.82
-    dec_y_mid = 1.45
+    dec_y_mid = 1.40
 
     # z1 output
     z1_w = 0.40
@@ -496,7 +496,7 @@ def create_architecture_figure(output_dir=None):
 
     # Output: Gene Expression
     out_x = dec_bx - 0.10
-    out_y = dec_y_mid + 0.62
+    out_y = dec_y_mid + 0.55
     out_w = 0.90
     draw_box(ax, (out_x, out_y), out_w, SBH + 0.04, "Gene Expr.\nProfile",
             facecolor="#E8EAF6", edgecolor="#283593", fontsize=FONT_ARCH_LABEL,
@@ -508,7 +508,7 @@ def create_architecture_figure(output_dir=None):
     # ===================================================================
     #  Legend at bottom
     # ===================================================================
-    legend_y = -0.22
+    legend_y = -0.08
     legend_items = [
         (C_TEXT_LIGHT, C_TEXT_DARK, "Text Path"),
         (C_CELL_LIGHT, C_CELL_DARK, "Cell Path"),

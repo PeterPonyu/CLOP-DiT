@@ -1,4 +1,4 @@
-"""Article figure delivery — single source of truth for the 15 MDPI article figures.
+"""Article figure delivery — single source of truth for the 17 MDPI article figures.
 
 Verify PDFs exist in a source directory and create symlinks (or copies) in the
 article figures directory so LaTeX can include them. The manifest below is the
@@ -18,20 +18,23 @@ import sys
 from pathlib import Path
 from typing import List, Tuple
 
-# Single source of truth: 15 article figure basenames (no .pdf).
-# Order: 6 merged figures, then 9 standalone panels (matches LaTeX and FIGURE_ORGANIZATION.md).
+# Single source of truth: 17 article figure basenames (no .pdf).
+# Order: 4 merged figures, then 13 standalone panels (matches LaTeX and FIGURE_ORGANIZATION.md).
+# Note: fig_fidelity_alignment split into panel_g + panel_f; fig_diversity_tradeoff split into panel_l + panel_k.
 ARTICLE_FIGURE_BASENAMES: List[str] = [
     "fig_architecture",
     "fig_training_dynamics",
     "fig_embedding_space",
-    "fig_fidelity_alignment",
-    "fig_diversity_tradeoff",
     "fig_downstream_pq",
     "panel_d_metrics_summary",
+    "panel_g_per_type_generation",
+    "panel_f_text_cell_heatmap",
     "panel_n_marker_gene_comparison",
     "panel_h_expression_correlation",
     "panel_i_expression_analysis",
     "panel_m_conditioning_umap",
+    "panel_l_noise_tradeoff",
+    "panel_k_expression_diversity",
     "panel_j_diversity_diagnostics",
     "panel_o_baseline_comparison",
     "panel_s_benchmark",
@@ -44,14 +47,16 @@ ARTICLE_FIGURE_PRODUCERS: List[Tuple[str, str]] = [
     ("fig_architecture", "scripts/generate_architecture_figure.py"),
     ("fig_training_dynamics", "src/visualization/panels_training.py"),
     ("fig_embedding_space", "src/visualization/panels_merged.py"),
-    ("fig_fidelity_alignment", "src/visualization/panels_merged.py"),
-    ("fig_diversity_tradeoff", "src/visualization/results_visualizer.py"),
     ("fig_downstream_pq", "src/visualization/downstream_panels.py"),
     ("panel_d_metrics_summary", "src/visualization/panels_metrics.py"),
+    ("panel_g_per_type_generation", "src/visualization/results_visualizer.py"),
+    ("panel_f_text_cell_heatmap", "src/visualization/results_visualizer.py"),
     ("panel_n_marker_gene_comparison", "src/visualization/panels_expression.py"),
     ("panel_h_expression_correlation", "src/visualization/panels_expression.py"),
     ("panel_i_expression_analysis", "src/visualization/panels_expression.py"),
     ("panel_m_conditioning_umap", "scripts/conditioning_analysis.py"),
+    ("panel_l_noise_tradeoff", "scripts/diversity_diagnostics.py"),
+    ("panel_k_expression_diversity", "scripts/diversity_diagnostics.py"),
     ("panel_j_diversity_diagnostics", "scripts/diversity_diagnostics.py"),
     ("panel_o_baseline_comparison", "src/visualization/baseline_panels.py"),
     ("panel_s_benchmark", "src/visualization/benchmark_panels.py"),
@@ -77,7 +82,7 @@ def deliver_figures(
 
     Returns
     -------
-    True if all 15 PDFs are present (and, when not check_only, successfully linked/copied).
+    True if all 17 PDFs are present (and, when not check_only, successfully linked/copied).
     """
     source_dir = Path(source_dir).resolve()
     target_dir = Path(target_dir).resolve()
@@ -128,7 +133,7 @@ def main() -> int:
     parser.add_argument(
         "--check-only",
         action="store_true",
-        help="Only verify all 15 PDFs exist in source dir; do not create symlinks/copies",
+        help="Only verify all 17 PDFs exist in source dir; do not create symlinks/copies",
     )
     parser.add_argument(
         "--copy",
@@ -156,7 +161,7 @@ def main() -> int:
         print(f"Checking {len(ARTICLE_FIGURE_BASENAMES)} article figures in {source}...")
         ok = deliver_figures(source, target, symlink=True, check_only=True)
         if ok:
-            print("  All 15 PDFs present.")
+            print("  All 17 PDFs present.")
         else:
             print("Run 'bash scripts/regenerate_report.sh' to generate them.", file=sys.stderr)
         return 0 if ok else 1
@@ -168,9 +173,9 @@ def main() -> int:
         return 1
     print("  All 15 PDFs present.")
     mode = "copied" if args.copy else "symlinked"
-    print(f"  15 figures {mode} in {target}.")
+    print(f"  17 figures {mode} in {target}.")
     print("")
-    print("All 15 article figures verified and symlinked." if not args.copy else "All 15 article figures verified and copied.")
+    print("All 17 article figures verified and symlinked." if not args.copy else "All 17 article figures verified and copied.")
     return 0
 
 

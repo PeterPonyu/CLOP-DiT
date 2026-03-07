@@ -164,9 +164,14 @@ $^{1}$ \quad State Key Laboratory of Trauma and Chemical Poisoning, Institute of
 
 Single-cell RNA sequencing (scRNA-seq) has enabled the characterization of cellular heterogeneity at unprecedented resolution~\cite{ref-scrnaseq-review}. However, generating realistic synthetic single-cell expression profiles conditioned on natural-language descriptions of cell identity remains an open challenge. Such a capability would enable data augmentation for rare cell types, and could potentially support hypothesis testing via \textit{in silico} perturbation and atlas completion without additional sequencing, though these applications remain to be validated.
 
-Existing approaches to single-cell data generation include variational autoencoders such as scVI~\cite{ref-scvi} and scGen~\cite{ref-scgen}, geometric deep generative models~\cite{ref-scdiff}, and more recently, large-scale single-cell foundation models such as Geneformer~\cite{ref-geneformer} and scBERT~\cite{ref-scbert} that leverage transfer learning for downstream prediction. These methods condition on categorical cell-type labels or perturbation metadata, but to our knowledge none accept structured natural-language biological descriptions as conditioning input. In parallel, contrastive vision--language models such as CLIP~\cite{ref-clip} have demonstrated that aligning two modalities into a shared embedding space enables powerful zero-shot transfer, with the SimCLR~\cite{ref-simclr} and MoCo~\cite{ref-moco} frameworks establishing the self-supervised contrastive paradigm. Domain-specific variants such as BiomedCLIP~\cite{ref-biomedclip} and SigLIP~\cite{ref-siglip} extend this paradigm to biomedical data. Meanwhile, Diffusion Transformers (DiTs)~\cite{ref-dit} have emerged as state-of-the-art conditional generators, building on latent diffusion models~\cite{ref-latent-diffusion}, and flow matching~\cite{ref-flow-matching} provides a simulation-free training objective that simplifies the diffusion framework. The Transformer architecture~\cite{ref-transformer} underpins both the DiT generator and the frozen encoders.
+The clinical motivation for text-conditioned generation is threefold. First, rare cell populations---circulating tumor cells, therapy-resistant subclones, and transitional progenitor states---are chronically undersampled in standard scRNA-seq experiments, yet their accurate representation is critical for biomarker discovery and treatment-response prediction. Synthetic augmentation of these populations could improve classifier balance and statistical power without additional sequencing cost. Second, large-scale atlas efforts such as the Human Cell Atlas require imputation of missing cell states across tissue contexts; a generative model conditioned on descriptive text could fill gaps where donor material is unavailable. Third, \textit{in silico} hypothesis generation---predicting the transcriptomic consequences of a cell-state transition described in natural language---could accelerate experimental design in perturbation biology, although this application remains speculative and unvalidated.
+
+A fundamental technical gap separates current generative methods from this vision. Variational autoencoders such as scVI~\cite{ref-scvi} and scGen~\cite{ref-scgen}, geometric deep generative models~\cite{ref-scdiff}, and foundation models such as Geneformer~\cite{ref-geneformer} and scBERT~\cite{ref-scbert} all condition on categorical cell-type labels or perturbation metadata. To our knowledge, no existing method accepts structured natural-language biological descriptions as conditioning input for single-cell generation. In parallel, contrastive vision--language models such as CLIP~\cite{ref-clip} have demonstrated that aligning two modalities into a shared embedding space enables powerful zero-shot transfer, with SimCLR~\cite{ref-simclr} and MoCo~\cite{ref-moco} establishing the self-supervised contrastive paradigm and domain-specific variants such as BiomedCLIP~\cite{ref-biomedclip} and SigLIP~\cite{ref-siglip} extending it to biomedical data. Meanwhile, Diffusion Transformers (DiTs)~\cite{ref-dit} have emerged as state-of-the-art conditional generators, building on latent diffusion models~\cite{ref-latent-diffusion}, and flow matching~\cite{ref-flow-matching} provides a simulation-free training objective that simplifies the diffusion framework. The Transformer architecture~\cite{ref-transformer} underpins both the DiT generator and the frozen encoders. Bridging these two lines of work---contrastive language--omics alignment and conditional diffusion generation---is the central contribution of this paper.
 
 We present CLOP-DiT, a two-stage pipeline that combines \textbf{C}ontrastive \textbf{L}anguage--\textbf{O}mics \textbf{P}retraining (CLOP) with a conditional \textbf{Di}ffusion \textbf{T}ransformer (DiT) to generate single-cell gene expression profiles from text descriptions. The pipeline (Figure~\ref{fig:architecture}) first aligns text and cell embeddings into a shared contrastive space, then generates latents via flow matching, and finally decodes to gene expression. Building on BiomedBERT~\cite{ref-biomedbert} and scGPT~\cite{ref-scgpt}, CLOP-DiT is, to our knowledge, the first method to accept structured natural-language biological descriptions as conditioning input for single-cell generation. Across 100 evaluated cell types, CLOP-DiT achieves a KNN classification accuracy of 36.9\% (37$\times$ random chance, but 52 points below the 89\% real-data ceiling), a steering accuracy of 81.0\%, and a diversity ratio of 0.93, indicating that text conditioning drives detectable type-specific generation, albeit with a substantial fidelity gap from real data.
+
+The principal contributions of this work are: (1)~a contrastive alignment module (CLOP) that maps text and cell embeddings into a shared space via PrototypeSigLIP loss, amplifying inter-group cosine separation from~0.006 to~0.778; (2)~a 1D Diffusion Transformer (DiT1D, 22.1M parameters) that performs conditional flow matching in the 512-dimensional scGPT latent space; (3)~a comprehensive four-axis evaluation framework---KNN fidelity, steering accuracy, diversity ratio, and downstream biological validation---applied to 100 cell types with bootstrap confidence intervals; and (4)~a cross-dataset biological validation pipeline demonstrating near-perfect gene-level fidelity (Pearson~$r > 0.999$) across five independent tissue contexts.
+
 The remainder of this paper is organized as follows:
 Section~\ref{sec:dataset}--\ref{sec:evaluation} describe the dataset, model architecture, and evaluation framework;
 Section~\ref{sec:results} presents training dynamics, generation quality, and downstream validation results;
@@ -196,7 +201,7 @@ This subsection describes the curated dataset, text-group organization, and trai
 
 The corpus was split into 72 training datasets (199,670 cells) and 8 held-out validation datasets (20,634 cells). The 8 validation datasets were selected by study (not by cell) to ensure no sample overlap between training and validation splits, and were chosen to span the major tissue and cancer categories in the corpus (lung, gastric, skin, liver, blood); the full list of GEO accession identifiers for all 80 datasets is provided in Supplementary Table~S1, and the validation study identifiers are in Supplementary Table~S2. Within the 72 training datasets, a cell-type-stratified split reserves $\sim$10\% of cells per type for training-time validation, ensuring that all 69 deduplicated cell types are represented in both partitions. This held-out design tests interpolation within the training distribution; the 8 held-out datasets share tissue types and cell populations with the training corpus and do not represent a stringent out-of-distribution generalization test.
 
-The relationship between the 1,088 text groups and the 100 evaluated cell types is as follows. The 1,088 text groups correspond to sub-cluster-level descriptions: each Leiden~\cite{ref-leiden} cluster within each dataset receives a unique text caption. Many sub-clusters share the same canonical cell type (e.g., ``CD8+ T cells'' in lung and liver datasets produce separate text groups). For evaluation, text groups are consolidated by core cell-type identity, retaining only groups with at least 20 cells (to ensure stable centroid estimation), yielding 100 evaluable cell types. KNN accuracy is therefore computed over these 100 consolidated types (random chance = 1/100 = 1.0\%). The text--cell alignment heatmap (Figure~\ref{fig:fidelity-alignment}) uses 69 centroids because it operates on the deduplicated condition space, which merges cross-dataset sub-clusters into canonical types.
+The relationship between the 1,088 text groups and the 100 evaluated cell types is as follows. The 1,088 text groups correspond to sub-cluster-level descriptions: each Leiden~\cite{ref-leiden} cluster within each dataset receives a unique text caption. Many sub-clusters share the same canonical cell type (e.g., ``CD8+ T cells'' in lung and liver datasets produce separate text groups). For evaluation, text groups are consolidated by core cell-type identity, retaining only groups with at least 20 cells (to ensure stable centroid estimation), yielding 100 evaluable cell types. KNN accuracy is therefore computed over these 100 consolidated types (random chance = 1/100 = 1.0\%). The text--cell alignment heatmap (Figure~\ref{fig:per-type-gen} and~\ref{fig:text-cell-alignment}) uses 69 centroids because it operates on the deduplicated condition space, which merges cross-dataset sub-clusters into canonical types.
 
 The 80 datasets comprise both \textit{Homo sapiens} ($\sim$59 datasets) and \textit{Mus musculus} ($\sim$21 datasets), predominantly from tumor microenvironment and developmental contexts. Consequently, all generation and evaluation results should be interpreted as applying to human and mouse cancer and developmental single-cell biology; generalization to other organisms, non-cancer tissues, or perturbation conditions has not been tested.
 
@@ -255,7 +260,7 @@ This subsection defines the four evaluation axes and the figure roadmap for Resu
 
 All metrics are reported as point estimates over the fixed evaluation set described above. Two configurations are designated as \emph{primary operating points}: CFG\,=\,2.0 with 10-step Euler integration (high-fidelity regime) and CFG\,=\,1.0 with 10-step Midpoint integration (high-diversity regime). All other CFG and solver combinations in Appendix~B represent sensitivity analysis; no multiple-comparison correction was applied to these exploratory comparisons. Bootstrap 95\% confidence intervals for the composite benchmark scores are shown in Figure~\ref{fig:benchmark}d; variability across single-measurement metrics (KNN, steering, diversity ratio) is characterized by the CFG sweep (Appendix~B, Table~\ref{tab:cfg-sweep}).
 
-The biological evidence is organized by figure family: Figures~\ref{fig:markers}--\ref{fig:expr-analysis} establish marker-level and gene-level fidelity; Figures~\ref{fig:diversity}--\ref{fig:diversity-tradeoff} provide robustness readouts for guidance and diversity; Figures~\ref{fig:baselines}--\ref{fig:benchmark} report benchmarking; Figures~\ref{fig:downstream-pq} and~\ref{fig:downstream-r} test downstream biology.
+The biological evidence is organized by figure family: Figures~\ref{fig:markers}--\ref{fig:expr-analysis} establish marker-level and gene-level fidelity; Figures~\ref{fig:diversity}--\ref{fig:noise-tradeoff} and~\ref{fig:expr-diversity} provide robustness readouts for guidance and diversity; Figures~\ref{fig:baselines}--\ref{fig:benchmark} report benchmarking; Figures~\ref{fig:downstream-pq} and~\ref{fig:downstream-r} test downstream biology.
 Having established the methodology and evaluation framework, we now present the empirical results.
 
 \subsection{Statistical Analysis}\label{sec:stats}
@@ -291,9 +296,9 @@ Because not all methods support downstream biology (Section~\ref{sec:evaluation}
 
 We report results along the four evaluation axes defined in the Methods, organized by evidence type:
 training dynamics and embedding space (Figures~\ref{fig:training}--\ref{fig:embedding-space});
-core generation quality metrics (Figures~\ref{fig:metrics}--\ref{fig:fidelity-alignment});
+core generation quality metrics (Figures~\ref{fig:metrics}--\ref{fig:per-type-gen} and~\ref{fig:text-cell-alignment});
 gene-level fidelity (Figures~\ref{fig:markers}--\ref{fig:expr-analysis});
-conditioning robustness and diversity trade-offs (Figures~\ref{fig:cond-umap}--\ref{fig:diversity-tradeoff});
+conditioning robustness and diversity trade-offs (Figures~\ref{fig:cond-umap}--\ref{fig:noise-tradeoff} and~\ref{fig:expr-diversity});
 baseline comparisons and benchmarking (Figures~\ref{fig:baselines}--\ref{fig:benchmark});
 and downstream biological validation (Figures~\ref{fig:downstream-pq}--\ref{fig:downstream-r}).
 This structure allows readers to assess evidence quality at multiple resolutions, from training convergence through partial downstream biological utility.
@@ -350,12 +355,18 @@ Random chance    & 0.010 & ---   & 0.500 & ---   & ---   & ---  \\
 
 \subsection{Per-Type Generation Quality and Text--Cell Alignment}
 
-Beyond aggregate metrics, this subsection assesses per-type fidelity and the alignment between text conditions and generated cell profiles. Figure~\ref{fig:fidelity-alignment} combines per-type generation quality (top row) with text--cell alignment analysis (bottom row). The enhanced per-type analysis now makes heterogeneity explicit: centroid cosine is ranked across the 100 evaluated cell types, the Fr\'echet profile highlights outlier types rather than only reporting the mean, and the abundance--fidelity scatter encodes Fr\'echet distance as bubble size and diversity ratio as colour. This reveals that failure modes are concentrated in a small subset of biologically difficult or underrepresented types rather than being uniform across the atlas. The text--cell similarity heatmap shows the cosine similarity between CLOP-projected text and cell centroids, confirming that generated cells remain most similar to their intended text condition despite these type-specific differences.
+Beyond aggregate metrics, this subsection assesses per-type fidelity and the alignment between text conditions and generated cell profiles. Figure~\ref{fig:per-type-gen} presents per-type generation quality. The enhanced per-type analysis now makes heterogeneity explicit: centroid cosine is ranked across the 100 evaluated cell types, the Fr\'echet profile highlights outlier types rather than only reporting the mean, and the abundance--fidelity scatter encodes Fr\'echet distance as bubble size and diversity ratio as colour. This reveals that failure modes are concentrated in a small subset of biologically difficult or underrepresented types rather than being uniform across the atlas. Figure~\ref{fig:text-cell-alignment} shows the text--cell alignment analysis, confirming that generated cells remain most similar to their intended text condition despite these type-specific differences.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{figures/fig_fidelity_alignment.pdf}
-\caption{Per-type fidelity and text--cell alignment. (\textbf{a})~Per-type centroid cosine similarity ranked across cell types, (\textbf{b})~Fr\'{e}chet outlier profile with the global mean marked, and (\textbf{c})~abundance--fidelity scatter (bubble size $\propto$ Fr\'{e}chet distance, colour encodes diversity ratio). Cell-type names are mapped by rank position in the supplementary materials. (\textbf{d})~69$\times$69 cosine similarity heatmap between text and cell centroids (strong diagonal dominance), (\textbf{e})~per-type alignment bars, and (\textbf{f})~diagonal vs.\ off-diagonal distribution comparison.\label{fig:fidelity-alignment}}
+\includegraphics[width=\textwidth]{figures/panel_g_per_type_generation.pdf}
+\caption{Per-type generation fidelity. (\textbf{a})~Per-type centroid cosine similarity ranked across cell types, (\textbf{b})~Fr\'{e}chet outlier profile with the global mean marked, and (\textbf{c})~abundance--fidelity scatter (bubble size $\propto$ Fr\'{e}chet distance, colour encodes diversity ratio). Cell-type names are mapped by rank position in the supplementary materials.\label{fig:per-type-gen}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/panel_f_text_cell_heatmap.pdf}
+\caption{Text--cell alignment. (\textbf{a})~69$\times$69 cosine similarity heatmap between text and cell centroids (strong diagonal dominance), (\textbf{b})~per-type alignment bars, and (\textbf{c})~diagonal vs.\ off-diagonal distribution comparison.\label{fig:text-cell-alignment}}
 \end{figure}
 
 \subsection{Marker Gene Fidelity}
@@ -386,7 +397,7 @@ This subsection examines gene-level fidelity of generated expression profiles. F
 
 \subsection{Conditioning Landscape and Diversity Trade-Offs}
 
-Figure~\ref{fig:cond-umap} visualizes how text conditions distribute in the CLOP projection space and how the resulting generated cell clouds cluster accordingly. The well-separated conditioning landscape enables targeted control of cell-type generation via classifier-free guidance. Together with Figures~\ref{fig:diversity} and~\ref{fig:diversity-tradeoff}, this section is the main robustness analysis for whether control can be increased without erasing biologically meaningful heterogeneity.
+Figure~\ref{fig:cond-umap} visualizes how text conditions distribute in the CLOP projection space and how the resulting generated cell clouds cluster accordingly. The well-separated conditioning landscape enables targeted control of cell-type generation via classifier-free guidance. Together with Figures~\ref{fig:diversity} and~\ref{fig:noise-tradeoff} and~\ref{fig:expr-diversity}, this section is the main robustness analysis for whether control can be increased without erasing biologically meaningful heterogeneity.
 
 \begin{figure}[H]
 \centering
@@ -402,12 +413,18 @@ Building on this conditioning structure, a sweep across CFG $\in \{0.5, 1.0, 1.5
 \caption{Diversity diagnostics. Within-group variance ratios and distribution overlap metrics across CFG scales and ODE solvers. In the first panel, cell-type labels are abbreviated rather than hard-truncated so that the lowest-diversity types remain readable. KNN accuracy saturates at CFG $\approx$ 2.0--3.0 while diversity decreases monotonically.\label{fig:diversity}}
 \end{figure}
 
-Figure~\ref{fig:diversity-tradeoff} further quantifies the two operating regimes: high-fidelity (CFG $\geq$ 2.0, DivR $\approx$ 0.5) vs.\ high-diversity (CFG = 1.0 Midpoint, DivR = 0.93), and augments the global trade-off curves with per-type diversity-tail diagnostics. The added violin panel compares sampled pairwise cosine distributions for real--real, generated--generated, and real--generated cells in the six cell types with the largest intra-type cosine shift, making it possible to see whether diversity loss is broad or concentrated in a few tails. Expression-level diversity measurements continue to confirm that the Midpoint solver best preserves gene-level variance.
+Figure~\ref{fig:noise-tradeoff} and Figure~\ref{fig:expr-diversity} further quantify the two operating regimes: high-fidelity (CFG $\geq$ 2.0, DivR $\approx$ 0.5) vs.\ high-diversity (CFG = 1.0 Midpoint, DivR = 0.93), and augment the global trade-off curves with per-type diversity-tail diagnostics. Expression-level diversity measurements confirm that the Midpoint solver best preserves gene-level variance.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{figures/fig_diversity_tradeoff.pdf}
-\caption{Noise--scale trade-off and expression diversity. (\textbf{a})~Fr\'{e}chet distance, centroid cosine, and diversity ratio as a function of noise scale $\varepsilon$ at CFG = 1.5, with the production configuration ($\varepsilon = 0.03$) highlighted. (\textbf{b})~Gene-expression-level diversity in generated vs.\ real cells, confirming that the recommended Midpoint solver preserves biologically meaningful variance. (\textbf{c})~Violin comparison of sampled pairwise cosine distributions (real--real, generated--generated, and real--generated) for the six cell types with the largest intra-type cosine shifts.\label{fig:diversity-tradeoff}}
+\includegraphics[width=\textwidth]{figures/panel_l_noise_tradeoff.pdf}
+\caption{Noise--scale trade-off. Fr\'{e}chet distance, centroid cosine, and diversity ratio as a function of noise scale $\varepsilon$ at CFG = 1.5, with the production configuration ($\varepsilon = 0.03$) highlighted.\label{fig:noise-tradeoff}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/panel_k_expression_diversity.pdf}
+\caption{Expression-level diversity. Gene-expression-level diversity in generated vs.\ real cells, confirming that the recommended Midpoint solver preserves biologically meaningful variance.\label{fig:expr-diversity}}
 \end{figure}
 
 \subsection{Baseline Comparison and Composite Benchmark}
@@ -449,10 +466,65 @@ Beyond distributional metrics, we evaluate whether generated cells are usable in
 \end{figure}
 Together, these results establish that CLOP-DiT generates text-conditioned single-cell profiles with measurable type specificity, though with performance trade-offs between fidelity and diversity that depend on the operating regime.
 
+\subsection{Cross-Dataset Biological Validation}\label{sec:cross-dataset}
+
+To assess generalization across tissue contexts, we performed biological validation on five held-out datasets spanning lung adenocarcinoma (GSE123902), basal cell carcinoma (GSE123813), liver T-cell hepatocellular carcinoma (GSE98638), gastric cancer (GSE183904), and acute myeloid leukemia in peripheral blood (GSE132509). For each dataset, cells were generated conditioned on the dataset-specific text descriptions and compared with real (scGPT-reconstructed) expression profiles. Per-gene mean expression, gene-level variance, Fr\'{e}chet distance in both gene space and embedding space, and marker specificity indices were computed for each dataset independently (Table~\ref{tab:cross-dataset}).
+
+\begin{table}[H]
+\caption{Cross-dataset biological validation. Per-gene mean expression Pearson correlation ($r$) and coefficient of determination ($R^2$), gene variance Pearson correlation ($r_\text{var}$), Fr\'{e}chet distance in PCA-50 gene space (FD\textsubscript{gene}) and scGPT embedding space (FD\textsubscript{embed}), and marker specificity index (MSI) for real and generated cells. All five held-out datasets achieve gene\_mean $r > 0.999$.\label{tab:cross-dataset}}
+\centering
+\small
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Dataset (GEO)} & \textbf{Tissue} & \textbf{$r_\text{mean}$} & \textbf{$R^2$} & \textbf{$r_\text{var}$} & \textbf{FD\textsubscript{gene}} & \textbf{FD\textsubscript{embed}} \\
+\midrule
+GSE123902 & Lung     & 0.9995 & 0.9990 & $+$0.011  & $3.07 \times 10^{-5}$ & 73.9 \\
+GSE123813 & Skin (BCC)  & 0.9997 & 0.9995 & $-$0.019  & $5.25 \times 10^{-6}$ & 72.7 \\
+GSE98638  & Liver    & 0.9995 & 0.9989 & $-$0.003  & $2.04 \times 10^{-5}$ & 155.4 \\
+GSE183904 & Gastric  & 0.9997 & 0.9994 & $+$0.013  & $1.30 \times 10^{-5}$ & 62.1 \\
+GSE132509 & Blood (AML)  & 0.9993 & 0.9985 & $-$0.007  & $8.87 \times 10^{-6}$ & 69.1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Across all five datasets, per-gene mean expression Pearson correlation exceeds 0.999 (range: 0.9993--0.9997), and $R^2$ exceeds 0.998 (range: 0.9985--0.9995), confirming near-perfect preservation of cell-type-specific mean expression signatures. Fr\'{e}chet distance in PCA-50 gene space is consistently below $10^{-4}$ (range: $5.25 \times 10^{-6}$ to $3.07 \times 10^{-5}$), indicating excellent gene-space distributional agreement at the level of first and second moments. Marker specificity indices are nearly identical between real and generated cells (MSI\textsubscript{real} $\approx$ MSI\textsubscript{gen} across all datasets), confirming that cell-type-specific marker enrichment patterns are preserved after generation.
+
+However, per-gene variance correlation ($r_\text{var}$) is near zero or slightly negative across all datasets (range: $-0.019$ to $+0.013$), indicating that while the model reproduces mean expression accurately, it does not faithfully preserve gene-level variability structure. This is consistent with the diversity ratio analysis (Section~\ref{sec:results}): the flow matching objective optimizes for mean trajectory matching, and gene-level variance preservation may require explicit variance-matching terms in the loss function. The embedding-space Fr\'{e}chet distance (FD\textsubscript{embed}) ranges from 62.1 to 155.4 across datasets, substantially higher than gene-space FD. This apparent discrepancy---near-perfect gene-level fidelity alongside high embedding-space FD---arises because the scGPT decoder maps a broad range of latent vectors to similar expression profiles (many-to-one mapping), so gene-level fidelity does not require precise latent-space distributional matching.
+
+\subsection{CLOP Ablation Study}\label{sec:ablation}
+
+To validate the contribution of individual CLOP components, we conducted 15 ablation experiments, removing or modifying one component at a time while holding all other settings constant. Table~\ref{tab:ablation} summarizes the six most informative ablations.
+
+\begin{table}[H]
+\caption{CLOP ablation study. Validation prototype accuracy (top-1) for the baseline configuration (v8.2, all features enabled) and representative ablations. $\Delta$~denotes the change from baseline in percentage points.\label{tab:ablation}}
+\centering
+\small
+\begin{tabular}{llcc}
+\toprule
+\textbf{Ablation} & \textbf{Category} & \textbf{Val Proto Acc (\%)} & \textbf{$\Delta$ (pp)} \\
+\midrule
+$-$cohesion        & regularization & 86.41 & $+$10.24 \\
+$-$cell noise      & regularization & 86.23 & $+$10.07 \\
+$-$dropout (lighter) & regularization & 77.32 & $+$1.15 \\
+Baseline (v8.2)    & reference      & 76.17 & --- \\
+Fixed temperature   & optimization   & 71.55 & $-$4.61 \\
+High variant prob   & regularization & 70.14 & $-$6.03 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The two most impactful ablations are cohesion regularization removal ($+$10.24~pp) and cell noise augmentation removal ($+$10.07~pp), both of which improve prototype accuracy. This counterintuitive result suggests that these regularization techniques, while designed to prevent overfitting, may over-regularize the small-scale contrastive objective by forcing excessively tight within-group clustering before inter-group separation has been established. Architecture ablations (projection dimension 256 vs.\ 512 vs.\ 768) have minimal impact (within $\pm$0.3~pp), indicating that the CLOP aligner is not sensitive to projection dimension in this range. Fixed temperature ($-$4.61~pp) and high variant probability ($-$6.03~pp) degrade performance substantially, confirming that learned temperature scheduling and moderate augmentation are both beneficial. Note that prototype accuracy measures text-to-centroid alignment rather than downstream generation quality; the ablation results characterize the CLOP alignment stage specifically and do not directly predict DiT generation performance.
+
+\subsection{Rare Cell Augmentation}\label{sec:rare-cell}
+
+As a proof-of-concept downstream application, we evaluated whether CLOP-DiT-generated cells can improve classifier performance on an underrepresented cell type. We identified ``Cycling cells'' as the rarest type in a test dataset (below 5\% prevalence), downsampled the training set to exacerbate the class imbalance, and augmented with synthetic cells at 1$\times$, 5$\times$, and 10$\times$ ratios. The baseline classifier (trained on real cells only) achieves an overall macro F1 of 0.964 and a Cycling-cell-specific F1 of 0.828. After augmentation at 1$\times$, overall macro F1 remains 0.953 and Cycling-cell F1 is 0.786; at 5$\times$ and 10$\times$, macro F1 stabilizes at 0.947 with Cycling-cell F1 at 0.741. The augmented cells therefore do not improve the rare-type classifier on this dataset, but they also do not substantially degrade overall classification, indicating that the synthetic profiles are sufficiently realistic to be mixed into training data without catastrophic interference. A more targeted augmentation strategy---selecting the most confident generated cells or combining with real-cell oversampling---may be needed to achieve a net positive augmentation effect.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion}\label{sec:discussion}
 
-CLOP-DiT addresses what is, to our knowledge, a previously unmet challenge: generating single-cell gene expression profiles conditioned on structured natural-language descriptions. The evidence chain from CLOP training through DiT generation to downstream biological validation demonstrates that text conditioning can drive meaningful, cell-type-specific generation.
+CLOP-DiT addresses what is, to our knowledge, a previously unmet challenge: generating single-cell gene expression profiles conditioned on structured natural-language descriptions. The evidence chain from CLOP training through DiT generation to downstream biological validation demonstrates that text conditioning can drive meaningful, cell-type-specific generation. Cross-dataset validation across five independent tissue contexts (Table~\ref{tab:cross-dataset}) confirms near-perfect gene-mean fidelity ($r > 0.999$), while the CLOP ablation study (Table~\ref{tab:ablation}) identifies cohesion regularization and cell noise as over-regularizing components whose removal improves alignment accuracy by over 10 percentage points.
+
+\textbf{Gene variance preservation.} A consistent finding across all five cross-dataset validation experiments is that gene-level variance correlation is near zero ($r_\text{var}$ range: $-0.019$ to $+0.013$; Table~\ref{tab:cross-dataset}), despite near-perfect mean preservation. This indicates that the flow matching objective captures the conditional expectation of each gene accurately but does not reproduce the stochastic variability around that expectation. From a biological perspective, this means generated cell populations share the correct average expression signature but lack the cell-to-cell heterogeneity characteristic of real tissue samples. Preserving this heterogeneity---critical for applications such as trajectory inference and gene regulatory network reconstruction---likely requires explicit variance-matching or distributional loss terms during training, and represents a key direction for future work.
 
 \textbf{Interpreting the KNN gap.} Generated cells achieve 37$\times$ random chance accuracy (36.9\% vs.\ 1.0\%) but fall 52 percentage points short of real-data classification levels (89.0\%). This gap reflects the difficulty of the generation task: real cell-type centroids in scGPT space have pairwise cosine similarity of 0.994, meaning inter-type differences occupy only $\sim$0.6\% of the embedding variance. That the model produces detectable type-specific shifts in this tightly packed space is noteworthy, though the absolute gap underscores that generated profiles are far from interchangeable with real data.
 
@@ -462,7 +534,7 @@ CLOP-DiT addresses what is, to our knowledge, a previously unmet challenge: gene
 
 \textbf{Frozen encoder design choice.} Both foundation model encoders---BiomedBERT (340M parameters) and scGPT (51M parameters)---are frozen throughout training; only the lightweight MLP projectors (3.02M parameters combined) are updated. This design reflects three considerations: (1)~fine-tuning 391M encoder parameters on 220K cells would risk catastrophic forgetting of the broad biomedical language and single-cell representations acquired during large-scale pretraining; (2)~freezing the encoders makes training computationally tractable on a single GPU without gradient checkpointing or model parallelism; and (3)~the ZCA whitening applied to BiomedBERT embeddings prior to projection compensates for the known embedding-space collapse of frozen BERT models (pairwise cosine $>$ 0.88) without modifying encoder weights. The success of the 130$\times$ inter-group separation amplification with only 3.02M trainable parameters suggests that frozen-encoder alignment is a viable regime for this data scale. Nonetheless, adapter-based fine-tuning (e.g., LoRA) of the text encoder could improve alignment for challenging cell types and is a natural next step.
 
-\textbf{Why the biological evidence is credible.} The manuscript does not rely on a single aggregate metric. Biological meaning is localized across marker-gene preservation (Figure~\ref{fig:markers}), gene-level correlation and variance structure (Figures~\ref{fig:expr-corr} and~\ref{fig:expr-analysis}), per-type heterogeneity and diversity tails (Figures~\ref{fig:fidelity-alignment} and~\ref{fig:diversity-tradeoff}), and downstream reuse in clustering, classification, and DE workflows (Figures~\ref{fig:downstream-pq} and~\ref{fig:downstream-r}). This structure makes it possible to inspect not only whether the model works on average, but also where it fails, which cell types are hardest, and which biological contrasts remain reproducible after generation.
+\textbf{Why the biological evidence is credible.} The manuscript does not rely on a single aggregate metric. Biological meaning is localized across marker-gene preservation (Figure~\ref{fig:markers}), gene-level correlation and variance structure (Figures~\ref{fig:expr-corr} and~\ref{fig:expr-analysis}), per-type heterogeneity and diversity tails (Figures~\ref{fig:per-type-gen} and~\ref{fig:text-cell-alignment} and~\ref{fig:noise-tradeoff} and~\ref{fig:expr-diversity}), and downstream reuse in clustering, classification, and DE workflows (Figures~\ref{fig:downstream-pq} and~\ref{fig:downstream-r}). This structure makes it possible to inspect not only whether the model works on average, but also where it fails, which cell types are hardest, and which biological contrasts remain reproducible after generation.
 
 \textbf{Broader biological applications.} Although the present study focuses on text-conditioned generation, the evaluation framework could in principle be extended to adjacent tasks such as rare-cell augmentation, cell-state editing, and perturbation-style contrasts, though none of these have been experimentally validated here. In practical terms, the most promising potential future applications include low-coverage atlas completion, simulation of treatment-response hypotheses, and condition-specific DE analysis in which generated cells are judged by downstream concordance rather than by distributional similarity alone; each would require dedicated validation before claims of utility can be made.
 
@@ -930,7 +1002,7 @@ Love,~M.I.; Huber,~W.; Anders,~S. Moderated estimation of fold change and disper
 Ho,~J.; Salimans,~T. Classifier-free diffusion guidance. In Proceedings of the NeurIPS 2021 Workshop on Deep Generative Models and Downstream Applications, Virtual, 13 December 2021.
 
 \bibitem{ref-ema}
-Tarone,~R.E. The use of the harmonic mean in the calculation of average speeds. {\em Biometrics} {\bf 1976}, {\em 32}, 671--674.
+Polyak,~B.T.; Juditsky,~A.B. Acceleration of stochastic approximation by averaging. {\em SIAM J.\ Control Optim.} {\bf 1992}, {\em 30}, 838--855.
 
 \bibitem{ref-adamw}
 Loshchilov,~I.; Hutter,~F. Decoupled weight decay regularization. In Proceedings of the 7th International Conference on Learning Representations (ICLR), New Orleans, LA, USA, 6--9 May 2019.
