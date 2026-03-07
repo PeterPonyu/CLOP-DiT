@@ -212,6 +212,80 @@ def set_figure_suptitle(
     fig.suptitle(title, fontsize=fontsize, y=y, **kwargs)
 
 
+def add_panel_label(
+    ax: plt.Axes,
+    label: str,
+    x: float = 0.02,
+    y: float = 0.98,
+    *,
+    fontsize: int = 12,
+    fontweight: str = "bold",
+    color: str = "black",
+    bbox_alpha: float = 0.85,
+    bbox_pad: float = 0.3,
+) -> None:
+    """Add a panel label (a, b, c, etc.) to a subplot.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The axes to add the label to.
+    label : str
+        The label text (e.g., 'a', 'b', 'c').
+    x, y : float
+        Position in axes coordinates (0-1).
+    fontsize : int
+        Font size for the label.
+    fontweight : str
+        Font weight (e.g., 'bold', 'normal').
+    color : str
+        Text color.
+    bbox_alpha : float
+        Background box transparency (0-1).
+    bbox_pad : float
+        Padding around the text in the bbox.
+    """
+    ax.text(
+        x, y, f"({label})",
+        transform=ax.transAxes,
+        fontsize=fontsize,
+        fontweight=fontweight,
+        color=color,
+        va="top",
+        ha="left",
+        bbox=dict(
+            boxstyle=f"round,pad={bbox_pad}",
+            facecolor="white",
+            edgecolor="none",
+            alpha=bbox_alpha,
+        ),
+        zorder=100,  # Ensure label is on top
+    )
+
+
+def add_panel_labels_to_axes(
+    axes: list[plt.Axes],
+    labels: Optional[list[str]] = None,
+    **kwargs,
+) -> None:
+    """Add sequential panel labels to a list of axes.
+
+    Parameters
+    ----------
+    axes : list of matplotlib.axes.Axes
+        List of axes to label.
+    labels : list of str, optional
+        Custom labels. If None, uses 'a', 'b', 'c', ...
+    **kwargs
+        Passed to add_panel_label.
+    """
+    if labels is None:
+        labels = [chr(ord('a') + i) for i in range(len(axes))]
+
+    for ax, label in zip(axes, labels):
+        add_panel_label(ax, label, **kwargs)
+
+
 def add_colorbar_safe(
     mappable,
     *,

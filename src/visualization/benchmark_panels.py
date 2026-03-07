@@ -106,10 +106,12 @@ def plot_benchmark_panel(
 
     fig = plt.figure(figsize=(15.0, 9.5))
     gs = fig.add_gridspec(2, 2, wspace=0.55, hspace=0.50, height_ratios=[1.0, 1.15])
-    set_figure_suptitle(fig, "Model Benchmarking — CLOP-DiT vs Baselines", fontsize=11)
+    # Title moved to LaTeX caption
+    # set_figure_suptitle(fig, "Model Benchmarking — CLOP-DiT vs Baselines", fontsize=11)
 
     # ── S1: Heatmap (methods × metrics) ──
     ax1 = fig.add_subplot(gs[0, 0])
+    add_panel_label(ax1, 'a')
     metric_labels = [m[1] for m in heatmap_metrics]
     metric_keys = [m[0] for m in heatmap_metrics]
     directions = [m[2] for m in heatmap_metrics]
@@ -163,6 +165,7 @@ def plot_benchmark_panel(
 
     # ── S2: Composite score bars ──
     ax2 = fig.add_subplot(gs[0, 1])
+    add_panel_label(ax2, 'b')
     sorted_methods = sorted(composite.keys(), key=lambda k: composite[k], reverse=True)
     scores = [composite[m] for m in sorted_methods]
     bar_colors = [METHOD_COLORS.get(m, COLORS["neutral"]) for m in sorted_methods]
@@ -192,6 +195,7 @@ def plot_benchmark_panel(
 
     # ── S3: Grouped bar chart for key metrics ──
     ax3 = fig.add_subplot(gs[1, 0])
+    add_panel_label(ax3, 'c')
     key_metrics = [
         ("frechet_distance", "FD ↓"),
         ("mean_centroid_cosine", "Cos ↑"),
@@ -219,6 +223,7 @@ def plot_benchmark_panel(
 
     # ── S4: CI comparison — error-bar plot ──
     ax4 = fig.add_subplot(gs[1, 1])
+    add_panel_label(ax4, 'd')
     ci_metrics = [
         ("frechet_distance", "fd_ci", "FD"),
         ("mean_centroid_cosine", "centroid_cosine_ci", "Centroid Cos"),

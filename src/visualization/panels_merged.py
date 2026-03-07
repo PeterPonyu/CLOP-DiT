@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from . import io as viz_io
-from .style import COLORS, FONT_LEGEND, SUPTITLE_Y_CLOSE, TYPE_PALETTE, apply_style, set_dense_tick_labels, set_figure_suptitle, style_axes
+from .style import COLORS, FONT_LEGEND, SUPTITLE_Y_CLOSE, TYPE_PALETTE, apply_style, set_dense_tick_labels, set_figure_suptitle, style_axes, add_panel_label
 from .panels_heatmaps import plot_per_type_generation, plot_text_cell_heatmap
 
 matplotlib.use("Agg")
@@ -289,7 +289,7 @@ def plot_fidelity_and_alignment_merged(
         logger.info("Both panels G and F required for merged figure; skipping (missing %s)", missing)
         return None
 
-    from .style import run_vcd_check
+    from .style import run_vcd_check, add_panel_label
     run_vcd_check(fig_g, "panel_g_per_type_generation")
     run_vcd_check(fig_f, "panel_f_text_cell_heatmap")
 
@@ -341,7 +341,7 @@ def plot_fidelity_and_alignment_merged(
         if save_panel_fn is not None:
             save_panel_fn(fig_merged, path, dpi)
         else:
-            from .style import save_with_vcd
+            from .style import save_with_vcd, add_panel_label
             save_with_vcd(fig_merged, path, dpi)
         logger.info(f"Saved merged G+F → {path}")
     return fig_merged

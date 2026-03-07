@@ -1,4 +1,7 @@
-from .style import VIS_STYLE, TYPE_PALETTE, COLORS, apply_style, style_axes, save_panel
+from .style import (
+    VIS_STYLE, TYPE_PALETTE, COLORS, apply_style, style_axes, save_panel,
+    add_panel_label, add_panel_labels_to_axes,
+)
 
 try:
     from .results_visualizer import ResultsVisualizer
@@ -13,4 +16,6 @@ __all__ = [
     "apply_style",
     "style_axes",
     "save_panel",
+    "add_panel_label",
+    "add_panel_labels_to_axes",
 ]

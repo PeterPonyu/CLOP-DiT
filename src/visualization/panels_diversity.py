@@ -14,7 +14,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import COLORS, apply_style, save_with_vcd, set_figure_suptitle
+from .style import COLORS, apply_style, save_with_vcd, set_figure_suptitle, add_panel_label
 
 matplotlib.use("Agg")
 logger = logging.getLogger(__name__)
@@ -35,6 +35,10 @@ def plot_diagnostics(
     # ── Panel J: Diversity Diagnostics (4 subplots) ──
     fig, axes = plt.subplots(2, 2, figsize=(9.0, 7.5),
                              gridspec_kw={"hspace": 0.60, "wspace": 0.55})
+    add_panel_label(axes[0, 0], 'a')
+    add_panel_label(axes[0, 1], 'b')
+    add_panel_label(axes[1, 0], 'c')
+    add_panel_label(axes[1, 1], 'd')
 
     ax = axes[0, 0]
     t1 = all_results.get("test1_intratype_diversity", {}).get("per_type", {})
@@ -137,13 +141,16 @@ def plot_diagnostics(
     t6 = all_results.get("test6_expression_diversity", {})
     if t6 and t6.get("overall"):
         fig, axes = plt.subplots(1, 2, figsize=(6.5, 4.0))
+        add_panel_label(axes[0], 'a')
+        add_panel_label(axes[1], 'b')
 
         o = t6["overall"]
-        set_figure_suptitle(
-            fig,
-            f"Expression-Level Diversity — gene_std_ratio={o['gene_std_ratio']:.4f}",
-            fontsize=11,
-        )
+        # Title moved to LaTeX caption
+        # set_figure_suptitle(
+        #     fig,
+        #     f"Expression-Level Diversity — gene_std_ratio={o['gene_std_ratio']:.4f}",
+        #     fontsize=11,
+        # )
 
         ax = axes[0]
         labels = ["Cell Std\n(across genes)", "Gene Std\n(across cells)"]

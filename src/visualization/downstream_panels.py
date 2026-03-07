@@ -51,13 +51,15 @@ def plot_clustering_and_classifier_merged(
     gs = fig.add_gridspec(2, 3, wspace=0.50, hspace=0.50,
                           height_ratios=[1, 1.05],
                           width_ratios=[1.5, 1.2, 1.0])
-    set_figure_suptitle(fig, "Downstream Validation: Clustering & Classifier Alignment", fontsize=11)
+    # Title moved to LaTeX caption
+    # set_figure_suptitle(fig, "Downstream Validation: Clustering & Classifier Alignment", fontsize=11)
 
     umap_coords = clustering_data.get("_umap_coords")
     source = clustering_data.get("_source")
     cell_type = clustering_data.get("_cell_type")
 
     ax_p1 = fig.add_subplot(gs[0, 0])
+    add_panel_label(ax_p1, 'a')
     if umap_coords is not None:
         umap_coords = np.asarray(umap_coords)
         source = np.asarray(source)
@@ -95,6 +97,7 @@ def plot_clustering_and_classifier_merged(
                    transform=ax_p1.transAxes)
 
     ax_p2 = fig.add_subplot(gs[0, 1])
+    add_panel_label(ax_p2, 'b')
     mixing = clustering_data.get("per_type_mixing", {})
     if mixing:
         sorted_types = sorted(mixing.keys(), key=lambda k: mixing[k])
@@ -119,6 +122,7 @@ def plot_clustering_and_classifier_merged(
                    transform=ax_p2.transAxes)
 
     ax_ps = fig.add_subplot(gs[0, 2])
+    add_panel_label(ax_ps, 'c')
     summary_items = [
         ("ARI", clustering_data.get("ari_gt_vs_leiden", 0), (0.7, 0.4)),
         ("NMI", clustering_data.get("nmi_gt_vs_leiden", 0), (0.7, 0.4)),
@@ -155,6 +159,7 @@ def plot_clustering_and_classifier_merged(
     disc_auc = classifier_data.get("discriminator_auc", 0)
 
     ax_q1 = fig.add_subplot(gs[1, 0])
+    add_panel_label(ax_q1, 'd')
     if cm is not None:
         cm = np.array(cm)
         n_classes = len(class_names) if class_names else cm.shape[0]
@@ -184,6 +189,7 @@ def plot_clustering_and_classifier_merged(
                    transform=ax_q1.transAxes)
 
     ax_q2 = fig.add_subplot(gs[1, 1])
+    add_panel_label(ax_q2, 'e')
     if per_type_acc and cm is not None:
         summary = _plot_classifier_metric_heatmap(
             fig,
@@ -208,6 +214,7 @@ def plot_clustering_and_classifier_merged(
                    transform=ax_q2.transAxes)
 
     ax_q3 = fig.add_subplot(gs[1, 2])
+    add_panel_label(ax_q3, 'f')
     disc_proba = classifier_data.get("_disc_proba")
     disc_y = classifier_data.get("_disc_y")
     if disc_proba is not None and disc_y is not None:

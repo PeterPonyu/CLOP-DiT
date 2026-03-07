@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .style import (
+    add_panel_label,
     COLORS,
     FONT_LEGEND,
     add_colorbar_safe,

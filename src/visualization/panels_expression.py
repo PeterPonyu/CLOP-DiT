@@ -21,7 +21,7 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import COLORS, add_colorbar_safe, quality_color, save_with_vcd, set_figure_suptitle, style_axes
+from .style import COLORS, add_colorbar_safe, add_panel_label, quality_color, save_with_vcd, set_figure_suptitle, style_axes
 
 logger = logging.getLogger(__name__)
 
@@ -104,13 +104,7 @@ def plot_expression_correlation(
 
     fig = plt.figure(figsize=(11.2, 7.8))
     gs = fig.add_gridspec(2, 2, wspace=0.62, hspace=0.56)
-    set_figure_suptitle(
-        fig,
-        f"Gene Expression Recovery \u2014 r={pearson_r:.6f}, "
-        f"\u03c1={spearman_rho:.6f}, n={len(gene_names)}",
-        fontsize=11,
-        y=0.96,
-    )
+    # Note: Figure-level title removed per revision requirements; stats moved to caption
     fig._clop_layout_rect = (0.02, 0.03, 0.98, 0.95)
 
     # -- H1: Density scatter with residual coloring --
@@ -135,6 +129,7 @@ def plot_expression_correlation(
     cbar = add_colorbar_safe(sc, ax=ax1, label="|Resid|", shrink=0.78, pad=0.03, aspect=24)
     cbar.ax.tick_params(labelsize=8)
     cbar.ax.xaxis.set_major_locator(_MaxNLoc(nbins=2, prune="both"))
+    add_panel_label(ax1, 'a', x=0.02, y=0.98)
 
     # Annotate outlier genes (top 2 residuals)
     outlier_idx = np.argsort(abs_res)[-2:]
@@ -192,6 +187,7 @@ def plot_expression_correlation(
     ax2.set_title("Per-Type Expression Fidelity", fontsize=11)
     ax2.xaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
     ax2.yaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
+    add_panel_label(ax2, 'b', x=0.02, y=0.98)
 
     # -- H3: Marker gene expression with error bars --
     ax3 = fig.add_subplot(gs[1, 0])
@@ -250,6 +246,7 @@ def plot_expression_correlation(
     ax3.set_title("Marker Gene Expression", fontsize=11)
     ax3.xaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
     ax3.yaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
+    add_panel_label(ax3, 'c', x=0.02, y=0.98)
 
     # -- H4: Residual distribution --
     ax4 = fig.add_subplot(gs[1, 1])
@@ -265,6 +262,7 @@ def plot_expression_correlation(
     ax4.legend(fontsize=8, frameon=False)
     ax4.xaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
     ax4.yaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
+    add_panel_label(ax4, 'd', x=0.02, y=0.98)
 
     pct_within_01 = (np.abs(residuals) < 0.1).mean() * 100
     pct_within_001 = (np.abs(residuals) < 0.01).mean() * 100
@@ -330,13 +328,7 @@ def plot_expression_analysis(
 
     fig = plt.figure(figsize=(9.8, 7.4))
     gs = fig.add_gridspec(2, 2, wspace=0.58, hspace=0.56)
-    set_figure_suptitle(
-        fig,
-        f"Expression Decoder \u2014 "
-        f"{real.shape[0]} real, {gen.shape[0]} gen, "
-        f"{len(gene_names)} genes",
-        fontsize=11,
-    )
+    # Note: Figure-level title removed per revision requirements; stats moved to caption
 
     # -- I1: CV scatter (real vs gen) with gene labels --
     ax1 = fig.add_subplot(gs[0, 0])
@@ -373,6 +365,7 @@ def plot_expression_analysis(
     from matplotlib.ticker import MaxNLocator
     ax1.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
     ax1.yaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
+    add_panel_label(ax1, 'a', x=0.02, y=0.98)
 
     # -- I2: Expression range with percentile bands --
     ax2 = fig.add_subplot(gs[0, 1])
@@ -402,6 +395,7 @@ def plot_expression_analysis(
     ax2.set_ylabel("Expression", fontsize=10)
     ax2.set_title("Expression Range", fontsize=11)
     ax2.legend(fontsize=7, loc="upper left", ncol=2, frameon=False)
+    add_panel_label(ax2, 'b', x=0.02, y=0.98)
 
     # -- I3: Per-cell std as overlaid smooth histograms --
     ax3 = fig.add_subplot(gs[1, 0])
@@ -428,6 +422,7 @@ def plot_expression_analysis(
     ax3.set_title("Per-Cell Variability Distribution", fontsize=11)
     ax3.legend(fontsize=8, loc='upper right', ncol=1, frameon=False)
     ax3.locator_params(axis='x', nbins=4)
+    add_panel_label(ax3, 'c', x=0.02, y=0.98)
 
     std_ratio = gen_cell_std.mean() / (real_cell_std.mean() + 1e-8)
     ax3.text(0.02, 0.95,
@@ -462,6 +457,7 @@ def plot_expression_analysis(
     ax4.set_yticklabels(names_show, fontsize=9, ha="right")
     ax4.set_xlabel("Std Ratio (Gen / Real, clipped at 5\u00d7)", fontsize=10)
     ax4.set_title("Top Variable Genes (std gen/real)", fontsize=11)
+    add_panel_label(ax4, 'd', x=0.02, y=0.98)
     placed_annotations: list = []
     for i, r in enumerate(ratios_show):
         # Skip annotations within 0.05 of an already-placed one to avoid overlap
@@ -570,7 +566,7 @@ def plot_marker_gene_comparison(
 
     fig = plt.figure(figsize=(11.0, 7.5))
     gs = fig.add_gridspec(2, 2, wspace=0.60, hspace=0.50)
-    set_figure_suptitle(fig, "Marker Gene Comparison", fontsize=11)
+    # Note: Figure-level title removed per revision requirements
 
     # -- N1: Paired bars with error whiskers and category coloring --
     ax1 = fig.add_subplot(gs[0, 0])
@@ -609,6 +605,7 @@ def plot_marker_gene_comparison(
                        Patch(facecolor="#666", alpha=0.4, hatch="///", label="Gen")]
     ax1.legend(handles=legend_elements, fontsize=8, loc="upper right",
                bbox_to_anchor=(1.0, 1.0))
+    add_panel_label(ax1, 'a', x=0.02, y=0.98)
 
     # -- N2 & N3: Heatmaps (if per-type labels) --
     if n_sel_types >= 2 and real_labels is not None and gen_labels is not None:
@@ -650,6 +647,7 @@ def plot_marker_gene_comparison(
              ha="center", fontsize=10, color=COLORS["generated"])
 
         add_colorbar_safe(im, ax=ax2, label="Expr.", shrink=0.6, pad=0.05)
+        add_panel_label(ax2, 'b', x=0.02, y=0.98)
 
         # N3: Difference heatmap with significance
         ax3 = fig.add_subplot(gs[1, 0])
@@ -665,6 +663,7 @@ def plot_marker_gene_comparison(
         ax3.set_xticklabels(all_marker_genes, fontsize=10, rotation=90, ha="center")
         ax3.set_title("\u0394 Expression (Gen \u2212 Real)", fontsize=10)
         add_colorbar_safe(im3, ax=ax3, label="\u0394", shrink=0.6, pad=0.12)
+        add_panel_label(ax3, 'c', x=0.02, y=0.98)
         # Only annotate cells with large differences
         for i in range(n_sel_types):
             for j in range(n_markers):
@@ -691,6 +690,7 @@ def plot_marker_gene_comparison(
                             fontsize=8)
         ax4.set_xlabel("Fold Change (Gen / Real)", fontsize=10)
         ax4.set_title("Marker Fold Change", fontsize=11)
+        add_panel_label(ax4, 'd', x=0.02, y=0.98)
         for i, fc in enumerate(fc_sorted):
             # Skip annotations where fold change is negligibly close to 1.0
             if abs(fc - 1.0) < 0.01:

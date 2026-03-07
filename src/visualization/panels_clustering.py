@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .style import (
+    add_panel_label,
     set_figure_suptitle,
     TYPE_PALETTE,
     quality_color,

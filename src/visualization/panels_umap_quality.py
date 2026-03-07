@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from . import io as viz_io
-from .style import COLORS, FONT_LEGEND, TYPE_PALETTE, set_figure_suptitle
+from .style import COLORS, FONT_LEGEND, TYPE_PALETTE, set_figure_suptitle, add_panel_label
 from src.utils.paths import FIG_DIR
 
 logger = logging.getLogger(__name__)

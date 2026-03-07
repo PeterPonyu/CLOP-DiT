@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from . import io as viz_io
-from .style import COLORS, FONT_LEGEND_DENSE, apply_style, set_figure_suptitle
+from .style import COLORS, FONT_LEGEND_DENSE, add_panel_label, apply_style, set_figure_suptitle
 from ._utils import sample_pairwise_cosines
 from src.utils.paths import CACHE_DIR, RESULTS_DIR, FIG_DIR, CHECKPOINT_DIR
 
@@ -333,7 +333,7 @@ def plot_metrics_summary(
     fig = plt.figure(figsize=(12.6, 8.0))
     gs = fig.add_gridspec(2, 2, wspace=0.52, hspace=0.50, width_ratios=[1.0, 1.0])
     fig._clop_layout_rect = (0.02, 0.03, 0.96, 0.94)
-    set_figure_suptitle(fig, "Core Evaluation Metrics Dashboard", fontsize=11)
+    # Note: Figure-level title removed per revision requirements
 
     # ── D1: Training convergence bars ──
     ax1 = fig.add_subplot(gs[0, 0])
@@ -370,6 +370,7 @@ def plot_metrics_summary(
         ax1.invert_yaxis()
         from matplotlib.ticker import MaxNLocator as _MNL
         ax1.xaxis.set_major_locator(_MNL(nbins=4, prune="both"))
+    add_panel_label(ax1, 'a', x=0.02, y=0.98)
 
     # ── D2: Generation quality radar ──
     ax2_placeholder = fig.add_subplot(gs[0, 1])
@@ -405,13 +406,15 @@ def plot_metrics_summary(
             ax2.plot(angles_plot, radar_vals_plot, "o-", linewidth=2.5,
                      color=COLORS["real"], markersize=8, zorder=5)
             ax2.fill(angles_plot, radar_vals_plot, alpha=0.15, color=COLORS["real"])
-            ax2.set_ylim(0, 1.05)
-            ax2.set_title("Quality Profile", pad=10,
-                          fontsize=11)
+        ax2.set_ylim(0, 1.05)
+        ax2.set_title("Quality Profile", pad=10,
+                      fontsize=11)
+        add_panel_label(ax2, 'b', x=0.02, y=0.98)
     else:
         ax2_placeholder.text(0.5, 0.5, "No generation data", ha="center",
                              va="center", transform=ax2_placeholder.transAxes)
         ax2_placeholder.set_title("Generation Quality Profile")
+        add_panel_label(ax2_placeholder, 'b', x=0.02, y=0.98)
 
     # ── D3: Diversity gauges ──
     ax3 = fig.add_subplot(gs[1, 0])
@@ -452,6 +455,7 @@ def plot_metrics_summary(
         ax3.text(0.5, 0.5, "No diversity data", ha="center", va="center",
                  transform=ax3.transAxes)
         ax3.set_title("Diversity Health")
+    add_panel_label(ax3, 'c', x=0.02, y=0.98)
 
     # ── D4: Expression fidelity + config ──
     ax4 = fig.add_subplot(gs[1, 1])
@@ -499,6 +503,7 @@ def plot_metrics_summary(
         ax4.text(0.5, 0.5, "No expression data", ha="center", va="center",
                  transform=ax4.transAxes)
         ax4.set_title("Expression Fidelity")
+    add_panel_label(ax4, 'd', x=0.02, y=0.98)
 
     if save:
         viz_io.save_to_dir(fig, "panel_d_metrics_summary", output_dir, dpi, save_panel_fn)

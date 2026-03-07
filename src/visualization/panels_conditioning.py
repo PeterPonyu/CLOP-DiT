@@ -16,7 +16,7 @@ import numpy as np
 from matplotlib.colors import Normalize
 from matplotlib.ticker import MaxNLocator
 
-from .style import COLORS, SUPTITLE_Y_CLOSE, TYPE_PALETTE, apply_style, save_with_vcd, set_figure_suptitle
+from .style import COLORS, SUPTITLE_Y_CLOSE, TYPE_PALETTE, apply_style, save_with_vcd, set_figure_suptitle, add_panel_label
 
 matplotlib.use("Agg")
 logger = logging.getLogger(__name__)
@@ -37,7 +37,9 @@ def plot_panel_l(
 
     apply_style()
     fig, ax1 = plt.subplots(figsize=(6.8, 4.8))
-    set_figure_suptitle(fig, "Noise-Scale Trade-off (CFG=1.5)", fontsize=11)
+    # Title moved to LaTeX caption
+    # set_figure_suptitle(fig, "Noise-Scale Trade-off (CFG=1.5)", fontsize=11)
+    add_panel_label(ax1, 'a')
 
     color_fd = COLORS["real"]
     color_cos = COLORS["baseline_gauss"]
@@ -145,17 +147,20 @@ def plot_panel_m(
         outer = fig.add_gridspec(2, 1, height_ratios=[2.1, 1.2], hspace=0.48)
     gs_top = outer[0].subgridspec(1, n_modes, wspace=0.45)
     axes = [fig.add_subplot(gs_top[0, i]) for i in range(n_modes)]
+    for i, ax in enumerate(axes):
+        add_panel_label(ax, chr(ord('a') + i))
 
     # Local spacing policy for Panel M:
     # - suptitle raised to y=1.00 to increase clearance above row-1 titles
     # - row-1 titles kept short and semantic
     # - figure-level legend at bottom with stable anchor, no overlap
-    set_figure_suptitle(
-        fig,
-        f"Conditioning Mode Comparison (CFG={cfg_scale}, {len(selected_types)} types, PCA 2D)",
-        fontsize=11,
-        y=0.97,
-    )
+    # Title moved to LaTeX caption
+    # set_figure_suptitle(
+    #     fig,
+    #     f"Conditioning Mode Comparison (CFG={cfg_scale}, {len(selected_types)} types, PCA 2D)",
+    #     fontsize=11,
+    #     y=0.97,
+    # )
 
     type_to_color = {tid: TYPE_PALETTE[i % len(TYPE_PALETTE)] for i, tid in enumerate(selected_types)}
     type_to_name = {
@@ -200,8 +205,11 @@ def plot_panel_m(
     # Quantitative second row: mode shift and diversity summaries.
     gs_bottom = outer[1].subgridspec(1, 3, wspace=0.38)
     ax_b1 = fig.add_subplot(gs_bottom[0, 0])
+    add_panel_label(ax_b1, chr(ord('a') + n_modes))
     ax_b2 = fig.add_subplot(gs_bottom[0, 1])
+    add_panel_label(ax_b2, chr(ord('a') + n_modes + 1))
     ax_b3 = fig.add_subplot(gs_bottom[0, 2])
+    add_panel_label(ax_b3, chr(ord('a') + n_modes + 2))
 
     # Build per-type real centroids in 2D for shift summaries.
     real_centroids = {}
@@ -287,8 +295,11 @@ def plot_panel_m(
 
         gs_row3 = outer[2].subgridspec(1, 3, wspace=0.38)
         ax_c1 = fig.add_subplot(gs_row3[0, 0])
+        add_panel_label(ax_c1, chr(ord('a') + n_modes + 3))
         ax_c2 = fig.add_subplot(gs_row3[0, 1])
+        add_panel_label(ax_c2, chr(ord('a') + n_modes + 4))
         ax_c3 = fig.add_subplot(gs_row3[0, 2])
+        add_panel_label(ax_c3, chr(ord('a') + n_modes + 5))
 
         # PCA reduce full-dim data for KNN
         pca_full = _PCA(n_components=30, random_state=42)

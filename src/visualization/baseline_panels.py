@@ -16,7 +16,7 @@ from typing import Dict, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import COLORS, save_panel, style_axes, set_dense_tick_labels, set_figure_suptitle
+from .style import COLORS, save_panel, style_axes, set_dense_tick_labels, set_figure_suptitle, add_panel_label
 from src.utils.paths import CACHE_DIR, RESULTS_DIR, FIG_DIR
 
 logger = logging.getLogger(__name__)
@@ -106,10 +106,12 @@ def plot_baseline_comparison(
 
     fig = plt.figure(figsize=(13.8, 5.8))
     gs = fig.add_gridspec(1, 3, width_ratios=[1.3, 1.1, 1.0], wspace=0.58)
-    set_figure_suptitle(fig, "CLOP-DiT vs Baselines", fontsize=11)
+    # Title moved to LaTeX caption
+    # set_figure_suptitle(fig, "CLOP-DiT vs Baselines", fontsize=11)
 
     # ── O1: Grouped bar chart ──
     ax = fig.add_subplot(gs[0])
+    add_panel_label(ax, 'a')
     x = np.arange(len(metric_labels))
     w = 0.8 / n_methods
     for i, mname in enumerate(method_names):
@@ -125,6 +127,7 @@ def plot_baseline_comparison(
 
     # ── O2: Radar chart ──
     ax_placeholder = fig.add_subplot(gs[1])
+    add_panel_label(ax_placeholder, 'b')
     # Normalize metrics for radar [0,1]; FD inverted
     all_vals = {k: [methods[m][k] for m in method_names] for k in metric_keys}
     normalized = {}
@@ -157,6 +160,7 @@ def plot_baseline_comparison(
 
     # ── O3: Relative improvement strip (graphical — replaces table) ──
     ax3 = fig.add_subplot(gs[2])
+    add_panel_label(ax3, 'c')
     # For each baseline, compute % improvement of CLOP-DiT vs that baseline
     clop_vals = methods["CLOP-DiT"]
     improvement_data = {}

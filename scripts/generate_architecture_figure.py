@@ -205,6 +205,26 @@ def create_architecture_figure(output_dir=None):
     draw_stage_bg(ax, (5.70, -0.15), 1.25, 3.30,
                   "Stage 3: Decoding",
                   C_DECODE_DARK, alpha=0.08, label_color=C_DECODE_DARK)
+
+    # ===================================================================
+    #  Panel labels (a, b, c) for each stage
+    # ===================================================================
+    # Panel (a) - CLOP Stage: top-left corner
+    ax.text(0.02, 3.05, "(a)", ha="left", va="top",
+            fontsize=12, fontweight="bold", color="black",
+            bbox=dict(boxstyle="round,pad=0.2", facecolor="white",
+                     edgecolor="none", alpha=0.9), zorder=10)
+    # Panel (b) - DiT Stage: top-left corner
+    ax.text(3.35, 3.05, "(b)", ha="left", va="top",
+            fontsize=12, fontweight="bold", color="black",
+            bbox=dict(boxstyle="round,pad=0.2", facecolor="white",
+                     edgecolor="none", alpha=0.9), zorder=10)
+    # Panel (c) - Decoding Stage: top-left corner
+    ax.text(5.75, 3.05, "(c)", ha="left", va="top",
+            fontsize=12, fontweight="bold", color="black",
+            bbox=dict(boxstyle="round,pad=0.2", facecolor="white",
+                     edgecolor="none", alpha=0.9), zorder=10)
+
     ax.text(1.58, 2.93, "train: align text and cell latents",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color=C_TEXT_DARK, zorder=2)
     ax.text(4.45, 2.93, "inference: ODE latent sampling",

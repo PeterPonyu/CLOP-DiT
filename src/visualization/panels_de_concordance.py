@@ -12,7 +12,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import COLORS, add_colorbar_safe, save_panel, set_figure_suptitle, style_axes
+from .style import COLORS, add_colorbar_safe, save_panel, set_figure_suptitle, style_axes, add_panel_label
 
 matplotlib.use("Agg")
 logger = logging.getLogger(__name__)
@@ -39,10 +39,12 @@ def plot_de_concordance_panel(
 
     fig = plt.figure(figsize=(14.8, 7.2))
     gs = fig.add_gridspec(1, 3, width_ratios=[1.4, 1.0, 1.0], wspace=0.62)
-    set_figure_suptitle(fig, "DE Concordance — Real vs Generated", fontsize=11)
-    fig._clop_layout_rect = (0.02, 0.03, 0.98, 0.94)
+    # Title moved to LaTeX caption
+    # set_figure_suptitle(fig, "DE Concordance — Real vs Generated", fontsize=11)
+    fig._clop_layout_rect = (0.02, 0.03, 0.98, 0.95)
 
     ax = fig.add_subplot(gs[0])
+    add_panel_label(ax, 'a')
     first_key = contrasts[0]
     first = de_data[first_key]
     real_logfc = np.array(first.get("_real_logfc", []))
@@ -143,6 +145,7 @@ def plot_de_concordance_panel(
     ax.tick_params(axis='x', labelsize=8)
 
     ax2 = fig.add_subplot(gs[1])
+    add_panel_label(ax2, 'b')
     # Display labels for heatmap and bar chart — kept short to avoid tick overlap
     metric_names = ["Pears. r", "Spear. \u03c1", "Jacc.@50", "Sign agr."]
     metric_keys = ["logfc_pearson_r", "logfc_spearman_rho", "top_k_jaccard", "top_k_sign_agreement"]
@@ -175,6 +178,7 @@ def plot_de_concordance_panel(
     style_axes(ax2, "heatmap", title="Concordance Across Contrasts")
 
     ax3 = fig.add_subplot(gs[2])
+    add_panel_label(ax3, 'c')
     x = np.arange(n_contrasts)
     n_metrics = len(metric_names)
     w = 0.8 / n_metrics

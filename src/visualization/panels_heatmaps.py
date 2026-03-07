@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from . import io as viz_io
-from .style import COLORS, FONT_LEGEND, add_colorbar_safe, quality_color, set_adaptive_ytick_labels, set_dense_tick_labels, set_figure_suptitle
+from .style import COLORS, FONT_LEGEND, add_colorbar_safe, quality_color, set_adaptive_ytick_labels, set_dense_tick_labels, set_figure_suptitle, add_panel_label
 from src.utils.paths import FIG_DIR
 
 logger = logging.getLogger(__name__)
@@ -92,10 +92,12 @@ def plot_text_cell_heatmap(
 
     fig = plt.figure(figsize=(14.0, 9.0))
     gs = fig.add_gridspec(1, 3, width_ratios=[1.4, 0.7, 0.5], wspace=0.55)
-    set_figure_suptitle(fig, "Text–Cell Alignment", fontsize=11)
+    # Title moved to LaTeX caption
+    # set_figure_suptitle(fig, "Text–Cell Alignment", fontsize=11)
 
     # ── F1: Clustered heatmap with annotations ──
     ax1 = fig.add_subplot(gs[0])
+    add_panel_label(ax1, 'a')
     cmap = mcolors.LinearSegmentedColormap.from_list(
         "custom_heat",
         [
@@ -138,6 +140,7 @@ def plot_text_cell_heatmap(
 
     # ── F2: Per-type alignment bars ──
     ax2 = fig.add_subplot(gs[1])
+    add_panel_label(ax2, 'b')
     sorted_idx_asc = np.argsort(diag)
     d_asc = diag[sorted_idx_asc]
     labels_asc = [labels[i] for i in sorted_idx_asc]
@@ -156,6 +159,7 @@ def plot_text_cell_heatmap(
 
     # ── F3: Distribution comparison ──
     ax3 = fig.add_subplot(gs[2])
+    add_panel_label(ax3, 'c')
     # Legend keys kept short; μ values are in suptitle/caption
     ax3.hist(
         diag, bins=10, alpha=0.7, color=COLORS["real"], edgecolor="white",
@@ -267,10 +271,12 @@ def plot_per_type_generation(
     gs_g = fig.add_gridspec(1, 3, wspace=0.55, width_ratios=[1.3, 1.1, 1.0])
     summary = data.get("summary", {})
     overall = data.get("overall", {})
-    set_figure_suptitle(fig, "Per-Type Generation Fidelity", fontsize=11)
+    # Title moved to LaTeX caption
+    # set_figure_suptitle(fig, "Per-Type Generation Fidelity", fontsize=11)
 
     # G1: Centroid cosine (sorted)
     ax = fig.add_subplot(gs_g[0])
+    add_panel_label(ax, 'a')
     sorted_idx = np.argsort(cosines)
     sorted_cos = [cosines[i] for i in sorted_idx]
     sorted_names_cos = [short_names[i] for i in sorted_idx]
@@ -302,6 +308,7 @@ def plot_per_type_generation(
 
     # G2: Fréchet outlier profile
     ax = fig.add_subplot(gs_g[1])
+    add_panel_label(ax, 'b')
     if fd_valid.any():
         fd_idx = np.where(fd_valid)[0][np.argsort(fd_array[fd_valid])]
         fd_vals = fd_array[fd_idx]
@@ -329,6 +336,7 @@ def plot_per_type_generation(
 
     # G3: Cosine vs abundance with FD bubble size and diversity colouring
     ax = fig.add_subplot(gs_g[2])
+    add_panel_label(ax, 'c')
     fd_for_size = np.where(fd_valid, fd_array, np.nanmedian(fd_array[fd_valid]) if fd_valid.any() else 1.0)
     fd_min = float(np.nanmin(fd_for_size)) if np.isfinite(fd_for_size).any() else 0.0
     fd_ptp = float(np.nanmax(fd_for_size) - fd_min) if np.isfinite(fd_for_size).any() else 1.0
