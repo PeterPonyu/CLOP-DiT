@@ -39,13 +39,13 @@ class PanelConfig:
     width_ratios: Optional[List[float]] = None
     height_ratios: Optional[List[float]] = None
     suptitle_fontsize: int = 11
-    suptitle_y: float = 0.98
+    suptitle_y: float = 0.96
     axes: Dict[str, AxisConfig] = field(default_factory=dict)
 
     # Margins
     left_margin: float = 0.10
     right_margin: float = 0.95
-    top_margin: float = 0.93
+    top_margin: float = 0.95
     bottom_margin: float = 0.08
 
     # Layout-aware fields for long-label handling

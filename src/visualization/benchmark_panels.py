@@ -142,7 +142,7 @@ def plot_benchmark_panel(
                 norm[i, j] = (raw[i, j] - mn) / rng
 
     # Plot heatmap
-    cmap = matplotlib.colormaps.get_cmap("RdYlGn")
+    cmap = matplotlib.colormaps.get_cmap("PiYG")
     im = ax1.imshow(norm, cmap=cmap, aspect="auto", vmin=0, vmax=1)
 
     # Labels

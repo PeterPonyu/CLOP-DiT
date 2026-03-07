@@ -88,7 +88,7 @@ def _plot_classifier_metric_heatmap(
         rows_truncated = True
         display_mode = "worst+best"
 
-    im = ax.imshow(display_matrix, cmap="viridis", aspect="auto", vmin=0, vmax=1)
+    im = ax.imshow(display_matrix, cmap="inferno", aspect="auto", vmin=0, vmax=1)
     ax.set_xticks(range(3))
     ax.set_xticklabels(["Precision", "Recall", "F1"], fontsize=9)
     ax.set_yticks(range(len(display_names)))

@@ -156,7 +156,7 @@ def plot_de_concordance_panel(
         short = f"{parts[0][:8]} v {parts[1][:8]}" if len(parts) == 2 else cname[:18]
         contrast_labels.append(short)
 
-    im = ax2.imshow(heatmap_data, cmap="RdYlGn", aspect="auto", vmin=0, vmax=1)
+    im = ax2.imshow(heatmap_data, cmap="PiYG", aspect="auto", vmin=0, vmax=1)
     ax2.set_xticks(range(len(metric_names)))
     ax2.set_xticklabels(metric_names, fontsize=8, rotation=45, ha="right")
     ax2.set_yticks(range(n_contrasts))

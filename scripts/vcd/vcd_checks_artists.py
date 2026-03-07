@@ -5,16 +5,20 @@ import numpy as np
 from matplotlib.collections import PathCollection
 from matplotlib.transforms import Bbox
 
-from .vcd_core import _ArtistInfo, _safe_bbox, _shrink, _fig_bbox, _overlap_area, _sides_outside, _artist_label
+from .vcd_core import _ArtistInfo, _safe_bbox, _shrink, _fig_bbox, _overlap_area, _sides_outside, _artist_label, _tight_bbox
 
 
-def _check_truncation(infos: list[_ArtistInfo], fig_bb: Bbox, tol_px: float = 3.0, fig=None):
+def _check_truncation(infos: list[_ArtistInfo], fig_bb: Bbox, tol_px: float = 3.0, fig=None, renderer=None, tight_bb=None):
     """Pass 2–3: Check if any artist extends beyond figure canvas.
 
     Uses *tol_px* to ignore harmless sub-pixel overflows typical of
     ``bbox_inches='tight'`` save behaviour.  Overflows up to 50 px past
     tolerance are downgraded to ``severity='info'`` since tight bbox saving
     recovers them in the final output.
+
+    When *tight_bb* is provided (the effective bbox after ``bbox_inches='tight'``
+    saving), artists that extend beyond the raw canvas but remain within
+    tight_bb are downgraded to info — they will appear in the saved file.
     """
     # Build set of polar axes IDs to skip their patches in truncation checks
     _polar_ax_ids = set()
@@ -49,18 +53,24 @@ def _check_truncation(infos: list[_ArtistInfo], fig_bb: Bbox, tol_px: float = 3.
             # downgrade anything within that range to info.
             if overshoot < tol_px + 15:
                 sev = "info"
+            # If the artist is within the tight bbox (the actual saved area),
+            # bbox_inches='tight' will capture it — downgrade to info.
+            elif tight_bb is not None and not _sides_outside(a.bbox, tight_bb, tol_px):
+                sev = "info"
             elif a.kind == "text":
                 sev = "warning"
             elif a.kind in ("collection", "patch", "line"):
                 sev = "warning"
             else:
                 sev = "info"
+            is_fig_level = a.tag.startswith(("suptitle", "fig_text"))
             issues.append({
                 "type": f"{a.kind}_truncation",
                 "severity": sev,
                 "detail": (f"'{a.tag}' extends beyond figure border "
                            f"({', '.join(sides)}, {overshoot:.0f}px)"),
                 "elements": [a.tag],
+                "is_fig_level": is_fig_level,
             })
     return issues
 

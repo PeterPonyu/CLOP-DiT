@@ -11,7 +11,7 @@ TEXT_OVERLAP_TOL_PX: float = 2.5
 
 # ── Truncation (Pass 2-3) ──────────────────────────────────────────────────
 BORDER_TOL_PX: float = 3.0
-BORDER_INFO_WINDOW_PX: float = 15.0   # overshoot < tol + this → info
+BORDER_INFO_WINDOW_PX: float = 30.0   # overshoot < tol + this → info
 EXTREME_OVERSHOOT_PX: float = 10000   # skip polar geometry artefacts
 
 # ── Artist-vs-artist overlap (Pass 4) ──────────────────────────────────────
@@ -126,3 +126,7 @@ HEIGHT_COMPACT_MIN: float = 4.0          # never shrink below this many inches
 
 # ── Semantic integrity (label preservation) ────────────────────────────
 MIN_LABEL_DISPLAY_CHARS: int = 12        # never shorten a label below this
+
+# ── Tight-bbox tolerance ─────────────────────────────────────────────
+TIGHT_BBOX_PAD_INCHES: float = 0.08      # must match save_with_vcd pad_inches
+TIGHT_BBOX_ENABLED: bool = True           # use tight bbox for truncation checks

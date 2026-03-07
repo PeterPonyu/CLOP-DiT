@@ -309,7 +309,7 @@ def plot_per_type_generation(
         fd_min = float(np.nanmin(fd_vals))
         fd_ptp = float(np.nanmax(fd_vals) - fd_min) or 1.0
         fd_norm = np.clip((fd_vals - fd_min) / fd_ptp, 0, 1)
-        colors_fd = plt.cm.RdYlGn_r(fd_norm)
+        colors_fd = plt.cm.PiYG_r(fd_norm)
         y_pos = np.arange(len(fd_vals))
         ax.hlines(y_pos, 0, fd_vals, color=colors_fd, linewidth=2.8, alpha=0.85)
         ax.scatter(fd_vals, y_pos, s=28 + 70 * fd_norm, color=colors_fd, edgecolors="white", linewidths=0.4, zorder=3)

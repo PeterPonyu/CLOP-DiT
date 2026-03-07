@@ -613,7 +613,7 @@ class ResultsVisualizer:
             fig,
             "Diversity Trade-off and Expression Variance",
             fontsize=11,
-            y=0.97,
+            y=0.96,
         )
 
         for col, (_, image) in enumerate(images):
@@ -647,7 +647,7 @@ class ResultsVisualizer:
             merged_path,
             self.dpi,
             close=True,
-            layout_rect=(0.02, 0.04, 0.98, 0.95),
+            layout_rect=(0.02, 0.04, 0.98, 0.96),
         )
         logger.info(f"Saved merged L+K → {merged_path}")
         return merged_path

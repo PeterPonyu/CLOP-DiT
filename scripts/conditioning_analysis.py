@@ -206,6 +206,9 @@ def panel_m_conditioning_umap(
         selected_types, mode_diversity, real_diversity, type_names,
         output_dir, dpi, cfg_scale,
         n_real=real_sub.shape[0], mode_counts=mode_counts,
+        full_dim_data=combined,
+        full_dim_labels=combined_labels,
+        full_dim_source=combined_source,
     )
 
 

@@ -127,9 +127,21 @@ def _actions_text_overlap(issue: dict) -> list[Action]:
 
 
 def _actions_text_truncation(issue: dict) -> list[Action]:
-    """Generate actions for ``text_truncation`` issues."""
+    """Generate actions for ``text_truncation`` issues.
+
+    Suptitles and figure-level text that extend beyond the top of the raw
+    canvas are always captured by ``bbox_inches='tight'``.  No corrective
+    action is needed for these — return an empty list so the auto-refine
+    loop does not fight the user's intentional positioning.
+    """
     detail = issue.get("detail", "").lower()
+    elements = issue.get("elements", [])
+    is_fig_level = issue.get("is_fig_level", False)
     actions: list[Action] = []
+
+    # Suptitle / fig_text at the top: bbox_inches='tight' handles this.
+    if is_fig_level or any("suptitle" in str(e).lower() or "fig_text" in str(e).lower() for e in elements):
+        return []
 
     if "bottom" in detail:
         actions.append(Action(

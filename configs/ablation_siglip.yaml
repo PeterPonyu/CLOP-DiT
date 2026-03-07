@@ -1,0 +1,62 @@
+# clop_v9.3.yaml — Stratified validation split + fixed temperature
+#
+# Key change from v9.2:
+#   v9.2: Dataset-level split → only 27/69 cell types in validation
+#         (42 types NEVER evaluated, a critical blind spot)
+#   v9.3: Cell-type-stratified split → ALL 69 types in both train & val
+#         Each type contributes ~10% of its cells to validation,
+#         guaranteeing comprehensive evaluation coverage.
+#
+# Same hyperparameters as v9.2 (fixed temperature, moderate regularization).
+
+cache_dir: "data/cached_latents_v5.2"
+use_preprocessed: true
+use_deduplicated: true
+
+variant_prob: 0.0
+val_split: 0.1
+n_folds: 1
+fold_idx: 0
+num_workers: 4
+split_strategy: "stratified"    # NEW: all 69 types in validation
+
+# Model — fixed temperature, moderate regularization
+text_dim: 1024
+cell_dim: 512
+proj_dim: 512
+text_layers: 3
+cell_layers: 3
+dropout: 0.2
+temperature: 14.0
+temperature_init: 14.0
+temperature_learnable: false
+label_smoothing: 0.1
+use_batch_norm: false
+use_ema: false
+cell_noise_std: 0.03
+use_whitening: false
+
+# Loss
+loss_type: "siglip"
+auto_duplicate_mask: true
+cohesion_weight: 0.15
+max_temperature: 16.0
+temp_reg_weight: 0.0
+
+# Training
+batch_size: 1024
+lr: 5.0e-4
+weight_decay: 0.06
+num_epochs: 60
+warmup_epochs: 5
+grad_clip: 1.0
+use_amp: true
+early_stopping_patience: 0
+temp_lr_multiplier: 0.0
+
+# Preprocessing
+preprocess_text_method: "whiten"
+preprocess_cell_method: "whiten"
+
+device: "cuda"
+save_dir: "models/checkpoints/ablation_siglip"

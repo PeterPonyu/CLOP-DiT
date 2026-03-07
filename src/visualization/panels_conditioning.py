@@ -13,6 +13,7 @@ from typing import Dict, List, Optional
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import Normalize
 from matplotlib.ticker import MaxNLocator
 
 from .style import COLORS, SUPTITLE_Y_CLOSE, TYPE_PALETTE, apply_style, save_with_vcd, set_figure_suptitle
@@ -124,6 +125,9 @@ def plot_panel_m(
     cfg_scale: float = 1.5,
     n_real: int = 0,
     mode_counts: Optional[Dict[str, int]] = None,
+    full_dim_data: Optional[np.ndarray] = None,
+    full_dim_labels: Optional[np.ndarray] = None,
+    full_dim_source: Optional[np.ndarray] = None,
 ) -> Path:
     """Panel M: Conditioning mode comparison (plot only). coords are (n, 2) PCA/UMAP."""
     output_dir = Path(output_dir)
@@ -132,8 +136,13 @@ def plot_panel_m(
     apply_style()
     n_modes = 1 + len(mode_diversity)  # real + each mode
     _fw = max(10.0, 2.8 * n_modes)
-    fig = plt.figure(figsize=(_fw, 8.4))
-    outer = fig.add_gridspec(2, 1, height_ratios=[2.1, 1.2], hspace=0.48)
+    has_row3 = full_dim_data is not None and len(full_dim_data) > 0
+    if has_row3:
+        fig = plt.figure(figsize=(_fw, 12.0))
+        outer = fig.add_gridspec(3, 1, height_ratios=[2.1, 1.2, 1.2], hspace=0.42)
+    else:
+        fig = plt.figure(figsize=(_fw, 8.4))
+        outer = fig.add_gridspec(2, 1, height_ratios=[2.1, 1.2], hspace=0.48)
     gs_top = outer[0].subgridspec(1, n_modes, wspace=0.45)
     axes = [fig.add_subplot(gs_top[0, i]) for i in range(n_modes)]
 
@@ -145,7 +154,7 @@ def plot_panel_m(
         fig,
         f"Conditioning Mode Comparison (CFG={cfg_scale}, {len(selected_types)} types, PCA 2D)",
         fontsize=11,
-        y=1.00,
+        y=0.97,
     )
 
     type_to_color = {tid: TYPE_PALETTE[i % len(TYPE_PALETTE)] for i, tid in enumerate(selected_types)}
@@ -271,14 +280,137 @@ def plot_panel_m(
         ax_b3.text(0.5, 0.5, "No shift distribution data", ha="center", va="center", transform=ax_b3.transAxes)
         ax_b3.set_title("Shift Distribution", fontsize=10)
 
+    # ── Row 3: KNN accuracy, diversity heatmap, pairwise cosine violin ──
+    if has_row3:
+        from sklearn.decomposition import PCA as _PCA
+        from sklearn.neighbors import KNeighborsClassifier
+
+        gs_row3 = outer[2].subgridspec(1, 3, wspace=0.38)
+        ax_c1 = fig.add_subplot(gs_row3[0, 0])
+        ax_c2 = fig.add_subplot(gs_row3[0, 1])
+        ax_c3 = fig.add_subplot(gs_row3[0, 2])
+
+        # PCA reduce full-dim data for KNN
+        pca_full = _PCA(n_components=30, random_state=42)
+        fd_pca = pca_full.fit_transform(full_dim_data)
+
+        real_fd_mask = full_dim_source == "Real"
+        real_fd_pca = fd_pca[real_fd_mask]
+        real_fd_labels = full_dim_labels[real_fd_mask]
+
+        # Train KNN on real data
+        knn = KNeighborsClassifier(n_neighbors=5, metric="cosine", n_jobs=-1)
+        knn.fit(real_fd_pca, real_fd_labels)
+
+        # ── C1: Per-mode KNN accuracy ──
+        mode_names_list = list(mode_diversity.keys())
+        knn_accs = []
+        for mode_name in mode_names_list:
+            mode_fd_mask = full_dim_source == mode_name
+            if not np.any(mode_fd_mask):
+                knn_accs.append(0.0)
+                continue
+            mode_fd_pca = fd_pca[mode_fd_mask]
+            mode_fd_lab = full_dim_labels[mode_fd_mask]
+            preds = knn.predict(mode_fd_pca)
+            knn_accs.append(float(np.mean(preds == mode_fd_lab)))
+
+        xpos_c1 = np.arange(len(mode_names_list))
+        bars = ax_c1.bar(
+            xpos_c1, knn_accs,
+            color=COLORS["generated"], alpha=0.85, edgecolor="white",
+        )
+        for bar, acc in zip(bars, knn_accs):
+            ax_c1.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01,
+                       f"{acc:.2f}", ha="center", va="bottom", fontsize=7)
+        ax_c1.set_xticks(xpos_c1)
+        ax_c1.set_xticklabels([m.split(" (")[0] for m in mode_names_list],
+                               rotation=18, ha="right", fontsize=8)
+        ax_c1.set_ylabel("KNN-5 Accuracy", fontsize=9)
+        ax_c1.set_title("Type Identity (KNN-5)", fontsize=10)
+        ax_c1.set_ylim(0, min(1.0, max(knn_accs) * 1.25) if knn_accs else 1.0)
+
+        # ── C2: Per-type diversity heatmap (types × modes) ──
+        all_mode_names = ["Real"] + mode_names_list
+        n_types_sel = len(selected_types)
+        div_matrix = np.full((n_types_sel, len(all_mode_names)), np.nan)
+
+        for j, src_name in enumerate(all_mode_names):
+            src_mask = full_dim_source == src_name
+            for i, tid in enumerate(selected_types):
+                tmask = src_mask & (full_dim_labels == tid)
+                pts = full_dim_data[tmask]
+                if len(pts) >= 5:
+                    norms = np.linalg.norm(pts, axis=1, keepdims=True) + 1e-8
+                    pts_n = pts / norms
+                    sim = pts_n @ pts_n.T
+                    idx_tri = np.triu_indices(len(pts), k=1)
+                    div_matrix[i, j] = 1.0 - float(sim[idx_tri].mean())
+
+        type_short_names = [
+            (type_names.get(int(tid), f"T{tid}")[:15] if type_names else f"T{tid}")
+            for tid in selected_types
+        ]
+        im = ax_c2.imshow(div_matrix, aspect="auto", cmap="YlOrRd",
+                          norm=Normalize(vmin=np.nanmin(div_matrix) * 0.9,
+                                         vmax=np.nanmax(div_matrix) * 1.1))
+        ax_c2.set_xticks(np.arange(len(all_mode_names)))
+        ax_c2.set_xticklabels([m.split(" (")[0] for m in all_mode_names],
+                               rotation=25, ha="right", fontsize=7)
+        ax_c2.set_yticks(np.arange(n_types_sel))
+        ax_c2.set_yticklabels(type_short_names, fontsize=7)
+        ax_c2.set_title("Within-Type Diversity (1−cos)", fontsize=10)
+        # Annotate cells
+        for i in range(n_types_sel):
+            for j in range(len(all_mode_names)):
+                val = div_matrix[i, j]
+                if not np.isnan(val):
+                    ax_c2.text(j, i, f"{val:.2f}", ha="center", va="center",
+                               fontsize=6, color="white" if val > np.nanmedian(div_matrix) else "black")
+        fig.colorbar(im, ax=ax_c2, shrink=0.7, pad=0.02)
+
+        # ── C3: Pairwise cosine violin per source ──
+        violin_data = []
+        violin_labels_list = []
+        max_pairs = 2000  # subsample for speed
+        rng_v = np.random.default_rng(42)
+
+        for src_name in all_mode_names:
+            src_mask = full_dim_source == src_name
+            pts = full_dim_data[src_mask]
+            if len(pts) >= 5:
+                norms = np.linalg.norm(pts, axis=1, keepdims=True) + 1e-8
+                pts_n = pts / norms
+                sim = pts_n @ pts_n.T
+                idx_tri = np.triu_indices(len(pts), k=1)
+                pw_sims = sim[idx_tri]
+                if len(pw_sims) > max_pairs:
+                    pw_sims = rng_v.choice(pw_sims, max_pairs, replace=False)
+                violin_data.append(pw_sims)
+                violin_labels_list.append(src_name.split(" (")[0])
+
+        if violin_data:
+            parts = ax_c3.violinplot(violin_data, showmeans=True, showmedians=True)
+            for pc in parts["bodies"]:
+                pc.set_facecolor(COLORS["generated"])
+                pc.set_alpha(0.6)
+            if "cmeans" in parts:
+                parts["cmeans"].set_color(COLORS["real"])
+            if "cmedians" in parts:
+                parts["cmedians"].set_color(COLORS["bad"])
+            ax_c3.set_xticks(np.arange(1, len(violin_labels_list) + 1))
+            ax_c3.set_xticklabels(violin_labels_list, rotation=18, ha="right", fontsize=8)
+        ax_c3.set_ylabel("Pairwise Cosine Similarity", fontsize=9)
+        ax_c3.set_title("Cluster Tightness", fontsize=10)
+
     # Legend: type keys only, anchored at bottom with no overlap
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="lower center",
                ncol=min(len(handles), 5), fontsize=7,
                markerscale=1.5, frameon=False,
                columnspacing=0.8, handletextpad=0.3,
-               bbox_to_anchor=(0.5, -0.01))
-    # Layout rect: extra top clearance (0.96) for suptitle-to-row-1 separation
+               bbox_to_anchor=(0.5, 0.005))
+    # Layout rect: bottom at 0.06 to make room for figure-level legend
     fig._clop_layout_rect = (0.02, 0.06, 0.98, 0.96)
 
     path = output_dir / "panel_m_conditioning_umap.png"

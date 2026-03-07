@@ -109,8 +109,9 @@ def plot_expression_correlation(
         f"Gene Expression Recovery \u2014 r={pearson_r:.6f}, "
         f"\u03c1={spearman_rho:.6f}, n={len(gene_names)}",
         fontsize=11,
+        y=0.96,
     )
-    fig._clop_layout_rect = (0.02, 0.03, 0.98, 0.94)
+    fig._clop_layout_rect = (0.02, 0.03, 0.98, 0.95)
 
     # -- H1: Density scatter with residual coloring --
     ax1 = fig.add_subplot(gs[0, 0])

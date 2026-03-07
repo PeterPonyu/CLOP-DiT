@@ -6,8 +6,13 @@ from matplotlib.transforms import Bbox
 from .vcd_core import _ArtistInfo, _safe_bbox, _shrink, _fig_bbox, _overlap_area, _sides_outside
 
 
-def _check_legend_spillover(fig, renderer, tol_px=5.0):
-    """Pass 10: Legends extending beyond their parent axes or the figure."""
+def _check_legend_spillover(fig, renderer, tol_px=5.0, tight_bb=None):
+    """Pass 10: Legends extending beyond their parent axes or the figure.
+
+    When *tight_bb* is provided, figure-level legends that extend beyond
+    the raw canvas but stay within tight_bb are downgraded to info —
+    ``bbox_inches='tight'`` will capture them in the saved output.
+    """
     issues = []
     fig_bb = _fig_bbox(fig)
 
@@ -59,9 +64,15 @@ def _check_legend_spillover(fig, renderer, tol_px=5.0):
                 continue
             sides = _sides_outside(leg_bb, fig_bb, tol_px)
             if sides:
+                # Figure-level legends are always captured by bbox_inches='tight'.
+                # If within tight_bb, downgrade to info.
+                if tight_bb is not None and not _sides_outside(leg_bb, tight_bb, tol_px):
+                    sev = "info"
+                else:
+                    sev = "warning"
                 issues.append({
                     "type": "legend_truncation",
-                    "severity": "warning",
+                    "severity": sev,
                     "detail": f"Figure legend extends beyond border ({', '.join(sides)})",
                     "elements": ["fig_legend"],
                 })
@@ -223,13 +234,15 @@ def _check_fig_legend_vs_subplot_content(fig, renderer, infos,
     return issues
 
 
-def _check_legend_internal(fig, renderer, tol_px=1.0):
+def _check_legend_internal(fig, renderer, tol_px=1.0, tight_bb=None):
     """Pass 15: Detect internal crowding within legend boxes.
 
     Checks:
       a) Legend text entries overlapping each other.
       b) Legend texts extending beyond the legend frame bbox.
       c) Legend texts extending beyond figure bounds.
+         When *tight_bb* is provided, texts beyond the raw canvas but
+         within tight_bb are downgraded to info.
     """
     issues: list[dict] = []
     fig_bb = _fig_bbox(fig)
@@ -286,13 +299,18 @@ def _check_legend_internal(fig, renderer, tol_px=1.0):
                     "elements": [f"legend_text:{txt_t}"],
                 })
 
-        # c) Texts extending beyond figure
+        # c) Texts extending beyond figure — use tight bbox when available
         for txt_t, bb_t in text_bbs:
             sides = _sides_outside(bb_t, fig_bb, 1.0)
             if sides:
+                # If within tight bbox, bbox_inches='tight' will capture it
+                if tight_bb is not None and not _sides_outside(bb_t, tight_bb, 1.0):
+                    sev = "info"
+                else:
+                    sev = "warning"
                 issues.append({
                     "type": "legend_text_truncation",
-                    "severity": "warning",
+                    "severity": sev,
                     "detail": (
                         f"Legend text '{txt_t}' extends beyond "
                         f"figure border ({', '.join(sides)})"

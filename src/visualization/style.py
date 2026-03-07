@@ -70,9 +70,9 @@ COLORS = {
     "generated": "#BF360C",
     "baseline_gauss": "#1B5E20",
     "baseline_shuffle": "#4A148C",
-    "good": "#1B5E20",
-    "warn": "#E65100",
-    "bad": "#B71C1C",
+    "good": "#1565C0",
+    "warn": "#F9A825",
+    "bad": "#D84315",
     "neutral": "#455A64",
     "accent": "#FF8F00",
     "bg_light": "#F5F5F5",
@@ -94,7 +94,7 @@ def _build_type_palette(n: int = 69) -> np.ndarray:
 TYPE_PALETTE = _build_type_palette(69)
 
 # Consistent suptitle vertical position — keeps title close to axes
-SUPTITLE_Y = 0.98
+SUPTITLE_Y = 0.96
 SUPTITLE_Y_CLOSE = 0.96  # Multi-row figures: keeps suptitle closer to axes
 # Standard legend font size (matches VIS_STYLE legend.fontsize)
 FONT_LEGEND = 10
@@ -286,7 +286,7 @@ def save_with_vcd(
         if layout_rect is not None:
             rect = list(layout_rect)
         else:
-            rect = list(getattr(fig, "_clop_layout_rect", None) or [0.02, 0.03, 0.98, 0.94])
+            rect = list(getattr(fig, "_clop_layout_rect", None) or [0.02, 0.03, 0.98, 0.95])
         fig.tight_layout(rect=rect, pad=0.8)
     except Exception:
         pass  # fall back gracefully
