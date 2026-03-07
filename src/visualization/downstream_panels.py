@@ -112,7 +112,7 @@ def plot_clustering_and_classifier_merged(
                        label=f"mean={clustering_data.get('mean_mixing_score', 0):.3f}")
         ax_p2.set_xlim(0, max(max(vals) * 1.1, 0.5))
         ax_p2.legend(fontsize=8, frameon=False, loc="lower right")
-        style_axes(ax_p2, "bar", title="kNN Mixing",
+        style_axes(ax_p2, "bar", title="Sorted kNN Mixing",
                    xlabel="Fraction Real Neighbours")
     else:
         ax_p2.text(0.5, 0.5, "No mixing data", ha="center", va="center",
@@ -195,7 +195,7 @@ def plot_clustering_and_classifier_merged(
         ax_q2.text(
             0.96,
             0.96,
-            f"Acc {gen_acc:.3f}  |  Med F1 {np.median(summary['f1']):.3f}",
+            f"Acc {gen_acc:.3f}  |  Median per-type F1 {np.median(summary['f1']):.3f}",
             transform=ax_q2.transAxes,
             ha="right",
             va="top",
@@ -235,7 +235,7 @@ def plot_clustering_and_classifier_merged(
             fig,
             output_dir / "fig_downstream_pq.png",
             dpi,
-            layout_rect=(0.02, 0.04, 0.98, 0.96),
+            layout_rect=(0.02, 0.04, 0.98, 0.94),
         )
         logger.info(f"Saved merged P+Q → {path}")
     return fig

@@ -40,6 +40,7 @@ def plot_de_concordance_panel(
     fig = plt.figure(figsize=(14.8, 7.2))
     gs = fig.add_gridspec(1, 3, width_ratios=[1.4, 1.0, 1.0], wspace=0.62)
     set_figure_suptitle(fig, "DE Concordance — Real vs Generated", fontsize=11)
+    fig._clop_layout_rect = (0.02, 0.03, 0.98, 0.94)
 
     ax = fig.add_subplot(gs[0])
     first_key = contrasts[0]
@@ -96,7 +97,7 @@ def plot_de_concordance_panel(
         ax.axvline(0, color="#666", linestyle=":", linewidth=1.0, alpha=0.6)
 
         residuals = np.abs(gen_logfc - real_logfc) * np.maximum(effect_size, 1e-6)
-        top_idx = np.argsort(residuals)[-min(3, len(residuals)):]
+        top_idx = np.argsort(residuals)[-min(2, len(residuals)):]
         for i in top_idx:
             if i < len(shared_genes):
                 ax.annotate(shared_genes[i], (real_logfc[i], gen_logfc[i]),
@@ -142,7 +143,8 @@ def plot_de_concordance_panel(
     ax.tick_params(axis='x', labelsize=8)
 
     ax2 = fig.add_subplot(gs[1])
-    metric_names = ["r", "\u03c1", "J", "SA"]
+    # Display labels for heatmap and bar chart — kept short to avoid tick overlap
+    metric_names = ["Pears. r", "Spear. \u03c1", "Jacc.@50", "Sign agr."]
     metric_keys = ["logfc_pearson_r", "logfc_spearman_rho", "top_k_jaccard", "top_k_sign_agreement"]
     heatmap_data = np.zeros((n_contrasts, len(metric_names)))
     contrast_labels = []
@@ -156,7 +158,7 @@ def plot_de_concordance_panel(
 
     im = ax2.imshow(heatmap_data, cmap="RdYlGn", aspect="auto", vmin=0, vmax=1)
     ax2.set_xticks(range(len(metric_names)))
-    ax2.set_xticklabels(metric_names, fontsize=10, rotation=45, ha="right")
+    ax2.set_xticklabels(metric_names, fontsize=8, rotation=45, ha="right")
     ax2.set_yticks(range(n_contrasts))
     ax2.set_yticklabels(contrast_labels, fontsize=7)
 
@@ -192,7 +194,7 @@ def plot_de_concordance_panel(
     ax3.set_xticks(x)
     ax3.set_xticklabels(short_xlabels, fontsize=7, rotation=45, ha="right")
     ax3.set_ylim(0, 1.15)
-    ax3.legend(fontsize=8, ncol=1, loc="center left", bbox_to_anchor=(1.02, 0.5), frameon=False, borderaxespad=0.0)
+    ax3.legend(fontsize=8, ncol=2, loc="upper right", frameon=False)
     style_axes(ax3, "bar", title="Per-Contrast Summary", ylabel="Score")
 
     if save:
