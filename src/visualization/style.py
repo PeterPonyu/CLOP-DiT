@@ -95,6 +95,7 @@ TYPE_PALETTE = _build_type_palette(69)
 
 # Consistent suptitle vertical position — keeps title close to axes
 SUPTITLE_Y = 0.98
+SUPTITLE_Y_CLOSE = 0.96  # Multi-row figures: keeps suptitle closer to axes
 # Standard legend font size (matches VIS_STYLE legend.fontsize)
 FONT_LEGEND = 10
 # Dense multi-panel figures where 10pt legends would crowd the layout
@@ -102,6 +103,14 @@ FONT_LEGEND_DENSE = 8
 # Architecture diagram (Fig 1) — diagram-specific labels (min 5.5pt per VCD)
 FONT_ARCH_LABEL = 7
 FONT_ARCH_SUBLABEL = 7
+# Centralized font sizes for publication figures
+FONT_SUPTITLE = 11
+FONT_TITLE = 11
+FONT_LABEL = 10
+FONT_TICK = 10
+FONT_TICK_DENSE = 8
+FONT_ANNOTATION = 8
+FONT_SMALL = 7
 _FONTS_REGISTERED = False
 
 
@@ -199,7 +208,8 @@ def set_figure_suptitle(
     **kwargs,
 ) -> None:
     """Set a figure suptitle at the canonical vertical position."""
-    fig.suptitle(title, fontsize=fontsize, y=SUPTITLE_Y, **kwargs)
+    y = kwargs.pop("y", SUPTITLE_Y)
+    fig.suptitle(title, fontsize=fontsize, y=y, **kwargs)
 
 
 def add_colorbar_safe(
@@ -273,7 +283,10 @@ def save_with_vcd(
     #    and avoid labels being clipped.  Do NOT follow this with subplots_adjust,
     #    which would fight the layout engine and produce inconsistent spacing.
     try:
-        rect = list(layout_rect) if layout_rect is not None else [0.02, 0.03, 0.98, 0.94]
+        if layout_rect is not None:
+            rect = list(layout_rect)
+        else:
+            rect = list(getattr(fig, "_clop_layout_rect", None) or [0.02, 0.03, 0.98, 0.94])
         fig.tight_layout(rect=rect, pad=0.8)
     except Exception:
         pass  # fall back gracefully
@@ -420,3 +433,30 @@ def set_scientific_tickformat(
         fmt_y.set_scientific(True)
         fmt_y.set_powerlimits(scilimits)
         ax.yaxis.set_major_formatter(fmt_y)
+
+
+def set_adaptive_ytick_labels(
+    ax: plt.Axes,
+    labels: list[str],
+    *,
+    min_visible: int = 5,
+    max_visible: int = 14,
+    fontsize: int = 8,
+    preserve_ends: bool = True,
+) -> None:
+    """Show an adaptive number of y-tick labels, avoiding overlap.
+
+    Replaces hard-coded ``i % 7 == 0`` thinning with a formula
+    that guarantees at least *min_visible* labels are shown.
+    """
+    n = len(labels)
+    ax.set_yticks(range(n))
+    if n <= max_visible:
+        ax.set_yticklabels(labels, fontsize=fontsize, ha="right")
+        return
+    step = max(1, int(np.ceil(n / max_visible)))
+    thinned = [labels[i] if i % step == 0 else "" for i in range(n)]
+    if preserve_ends and n > 0:
+        thinned[0] = labels[0]
+        thinned[-1] = labels[-1]
+    ax.set_yticklabels(thinned, fontsize=fontsize, ha="right")

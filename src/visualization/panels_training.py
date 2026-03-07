@@ -15,7 +15,7 @@ from typing import Callable, Dict, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import COLORS, FONT_LEGEND_DENSE, apply_style, save_with_vcd, set_figure_suptitle, set_scientific_tickformat
+from .style import COLORS, FONT_LEGEND_DENSE, SUPTITLE_Y_CLOSE, apply_style, save_with_vcd, set_figure_suptitle, set_scientific_tickformat
 
 logger = logging.getLogger(__name__)
 
@@ -334,10 +334,10 @@ def plot_training_dynamics_combined(
         return None
 
     apply_style()
-    fig = plt.figure(figsize=(14.4, 8.2))
+    fig = plt.figure(figsize=(14.4, 8.6))
     gs = fig.add_gridspec(2, 4, wspace=0.55, hspace=0.52,
                           width_ratios=[1.0, 1.0, 1.0, 1.2], height_ratios=[1, 1])
-    set_figure_suptitle(fig, "Training Dynamics (CLOP + DiT)", fontsize=11)
+    set_figure_suptitle(fig, "Training Dynamics (CLOP + DiT)", fontsize=11, y=SUPTITLE_Y_CLOSE)
 
     # ════════════════════════════════════════════════════════════
     # Top row: CLOP (4 panels spanning columns 0-3)

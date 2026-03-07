@@ -119,21 +119,33 @@ def plot_clustering_and_classifier_merged(
                    transform=ax_p2.transAxes)
 
     ax_ps = fig.add_subplot(gs[0, 2])
-    ax_ps.axis("off")
     summary_items = [
-        ("ARI", clustering_data.get("ari_gt_vs_leiden", 0)),
-        ("NMI", clustering_data.get("nmi_gt_vs_leiden", 0)),
-        ("C.Purity", clustering_data.get("mean_cluster_purity", 0)),
-        ("Mean Mix", clustering_data.get("mean_mixing_score", 0)),
+        ("ARI", clustering_data.get("ari_gt_vs_leiden", 0), (0.7, 0.4)),
+        ("NMI", clustering_data.get("nmi_gt_vs_leiden", 0), (0.7, 0.4)),
+        ("Purity", clustering_data.get("mean_cluster_purity", 0), (0.8, 0.5)),
+        ("Mix", clustering_data.get("mean_mixing_score", 0), (0.6, 0.3)),
     ]
-    summary_text = "\n".join(f"{k}: {v:.3f}" for k, v in summary_items)
+    metric_names = [s[0] for s in summary_items]
+    metric_vals = [s[1] for s in summary_items]
+    thresholds = [s[2] for s in summary_items]
+    y_pos = np.arange(len(summary_items))
+    # Background reference bars
+    ax_ps.barh(y_pos, [1.0] * len(summary_items), height=0.6,
+               color="#E0E0E0", edgecolor="none", zorder=1)
+    # Foreground quality-colored bars
+    bar_colors = [quality_color(v, t) for v, t in zip(metric_vals, thresholds)]
+    ax_ps.barh(y_pos, metric_vals, height=0.6, color=bar_colors,
+               edgecolor="white", linewidth=0.8, zorder=2)
+    for i, val in enumerate(metric_vals):
+        ax_ps.text(min(val + 0.03, 0.98), i, f"{val:.3f}",
+                   va="center", fontsize=8, zorder=3)
+    ax_ps.set_yticks(y_pos)
+    ax_ps.set_yticklabels(metric_names, fontsize=9)
+    ax_ps.set_xlim(0, 1.15)
+    ax_ps.invert_yaxis()
     n_cl = clustering_data.get("n_leiden_clusters", "?")
-    summary_text += f"\nLeiden clusters: {n_cl}"
-    ax_ps.text(0.5, 0.5, summary_text, ha="center", va="center",
-               fontsize=10, transform=ax_ps.transAxes, family="sans-serif",
-               bbox=dict(boxstyle="round,pad=0.5", facecolor=COLORS["bg_light"],
-                         edgecolor=COLORS["neutral"]))
-    ax_ps.set_title("Cluster Metrics", fontsize=10)
+    ax_ps.set_xlabel(f"Leiden clusters: {n_cl}", fontsize=8)
+    style_axes(ax_ps, "bar", title="Cluster Metrics")
 
     cm = classifier_data.get("_confusion_matrix")
     class_names = classifier_data.get("class_names", [])
@@ -211,7 +223,7 @@ def plot_clustering_and_classifier_merged(
         ax_q3.set_xticks([0.0, 0.25, 0.5, 0.75, 1.0])
         ax_q3.set_yticks([0.0, 0.25, 0.5, 0.75, 1.0])
         ax_q3.set_aspect("equal")
-        ax_q3.legend(fontsize=8, loc="lower right")
+        ax_q3.legend(fontsize=8, loc="lower right", frameon=False)
         style_axes(ax_q3, "scatter", title="Discriminator ROC",
                    xlabel="FPR", ylabel="TPR")
     else:

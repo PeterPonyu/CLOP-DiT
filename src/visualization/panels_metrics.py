@@ -317,8 +317,8 @@ def plot_metrics_summary(
     if not train_metrics and not gen_metrics:
         return None
 
-    fig = plt.figure(figsize=(12.4, 7.8))
-    gs = fig.add_gridspec(2, 2, wspace=0.58, hspace=0.52)
+    fig = plt.figure(figsize=(12.6, 8.0))
+    gs = fig.add_gridspec(2, 2, wspace=0.52, hspace=0.50, width_ratios=[1.15, 0.85])
     set_figure_suptitle(fig, "Core Evaluation Metrics Dashboard", fontsize=11)
 
     # ── D1: Training convergence bars ──
@@ -428,11 +428,10 @@ def plot_metrics_summary(
         collapsed = div_metrics.get("Collapsed", 0)
         total = div_metrics.get("Total Types", 69)
         copies = div_metrics.get("Near-copies", 0)
-        ax3.text(0.95, 0.02,
+        ax3.text(0.98, 0.02,
                  f"Collapsed: {collapsed}/{total} | Near-copies: {copies}",
                  transform=ax3.transAxes, ha="right", va="bottom",
-                 fontsize=8,
-                 bbox=dict(boxstyle="round,pad=0.2", fc="white", ec=COLORS["neutral"], alpha=0.9))
+                 fontsize=8, color=COLORS["neutral"])
         ax3.set_title("Diversity Health", fontsize=11)
         ax3.set_xlabel("Score")
     else:
@@ -479,10 +478,9 @@ def plot_metrics_summary(
         if n_genes:
             cfg_text_parts.append(f"G={n_genes}")
         if cfg_text_parts:
-            ax4.text(0.95, 0.0, " | ".join(cfg_text_parts),
+            ax4.text(0.98, 0.01, " | ".join(cfg_text_parts),
                      transform=ax4.transAxes, ha="right", va="bottom",
-                     fontsize=8, color=COLORS["neutral"],
-                     bbox=dict(boxstyle="round,pad=0.2", fc="#F5F5F5", ec="#CCC"))
+                     fontsize=7, color=COLORS["neutral"], alpha=0.8)
     else:
         ax4.text(0.5, 0.5, "No expression data", ha="center", va="center",
                  transform=ax4.transAxes)

@@ -47,31 +47,41 @@ matplotlib.rcParams.update({
 # ---------------------------------------------------------------------------
 # Colour palette
 # ---------------------------------------------------------------------------
+# Stage 1: CLOP (blue text / green cell)
 C_TEXT_DARK = COLORS["real"]
 C_TEXT_MID = "#1E88E5"
 C_TEXT_LIGHT = "#90CAF9"
 C_TEXT_BOX = "#E3F2FD"
+C_TEXT_ACCENT = "#1565C0"
 
 C_CELL_DARK = COLORS["baseline_gauss"]
 C_CELL_MID = "#43A047"
 C_CELL_LIGHT = "#A5D6A7"
 C_CELL_BOX = "#E8F5E9"
-
-C_GEN_DARK = COLORS["generated"]
-C_GEN_MID = "#E65100"
-C_GEN_LIGHT = "#FFCCBC"
-C_GEN_BOX = "#FFF3E0"
+C_CELL_ACCENT = "#2E7D32"
 
 C_SHARED = COLORS["baseline_shuffle"]
 C_SHARED_LIGHT = "#CE93D8"
 C_SHARED_BOX = "#F3E5F5"
 
-C_GREY = "#455A64"
-C_WHITE = "#FFFFFF"
+# Stage 2: DiT (orange generation)
+C_GEN_DARK = COLORS["generated"]
+C_GEN_MID = "#E65100"
+C_GEN_LIGHT = "#FFCCBC"
+C_GEN_BOX = "#FFF3E0"
+C_GEN_ACCENT = "#BF360C"
 
+# Stage 3: Decode (teal)
 C_DECODE_DARK = "#004D40"
 C_DECODE_MID = "#00796B"
 C_DECODE_BOX = "#E0F2F1"
+C_DECODE_ACCENT = "#00695C"
+
+# Neutral
+C_GREY = "#455A64"
+C_MID_GREY = "#607D8B"
+C_LIGHT_GREY = "#B0BEC5"
+C_WHITE = "#FFFFFF"
 
 
 # ---------------------------------------------------------------------------
@@ -188,13 +198,13 @@ def create_architecture_figure(output_dir=None):
     # ===================================================================
     draw_stage_bg(ax, (-0.05, -0.15), 3.25, 3.30,
                   "Stage 1: CLOP Alignment",
-                  C_TEXT_DARK, alpha=0.06, label_color=C_TEXT_DARK)
+                  C_TEXT_DARK, alpha=0.08, label_color=C_TEXT_DARK)
     draw_stage_bg(ax, (3.30, -0.15), 2.30, 3.30,
                   "Stage 2: DiT Generation",
-                  C_GEN_DARK, alpha=0.06, label_color=C_GEN_DARK)
+                  C_GEN_DARK, alpha=0.08, label_color=C_GEN_DARK)
     draw_stage_bg(ax, (5.70, -0.15), 1.25, 3.30,
                   "Stage 3: Decoding",
-                  C_DECODE_DARK, alpha=0.06, label_color=C_DECODE_DARK)
+                  C_DECODE_DARK, alpha=0.08, label_color=C_DECODE_DARK)
 
     # ===================================================================
     #  CLOP Stage -- Text path (top) & Cell path (bottom)
@@ -309,8 +319,8 @@ def create_architecture_figure(output_dir=None):
     # scGPT latent annotation
     ax.text(cx1 + BW / 2, cy + BH + 0.22,
             "scGPT latent =\nDiT training target",
-            ha="center", va="bottom", fontsize=FONT_ARCH_SUBLABEL, color=C_GREY,
-            zorder=5)
+            ha="center", va="bottom", fontsize=FONT_ARCH_SUBLABEL, color=C_MID_GREY,
+            fontweight="medium", zorder=5)
 
     # ===================================================================
     #  DiT Stage (centre)
@@ -466,16 +476,16 @@ def create_architecture_figure(output_dir=None):
     # ===================================================================
     legend_y = -0.22
     legend_items = [
-        (C_TEXT_LIGHT, C_TEXT_DARK, "Text"),
-        (C_CELL_LIGHT, C_CELL_DARK, "Cell"),
+        (C_TEXT_LIGHT, C_TEXT_DARK, "Text Path"),
+        (C_CELL_LIGHT, C_CELL_DARK, "Cell Path"),
         (C_GEN_LIGHT, C_GEN_DARK, "Generation"),
-        (C_SHARED_BOX, C_SHARED, "Contrastive"),
+        (C_SHARED_BOX, C_SHARED, "Shared Space"),
         (C_DECODE_BOX, C_DECODE_DARK, "Decoding"),
     ]
     lx = 1.2
     for fc, ec, label in legend_items:
         box = FancyBboxPatch(
-            (lx, legend_y), 0.16, 0.12,
+            (lx, legend_y), 0.18, 0.14,
             boxstyle="round,pad=0.02",
             facecolor=fc, edgecolor=ec,
             linewidth=0.6, zorder=5,
@@ -483,7 +493,7 @@ def create_architecture_figure(output_dir=None):
         ax.add_patch(box)
         ax.text(lx + 0.22, legend_y + 0.06, label,
                 fontsize=FONT_ARCH_SUBLABEL, va="center", color=ec, zorder=5)
-        lx += 1.00
+        lx += 1.15
 
     # ===================================================================
     #  Save

@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from . import io as viz_io
-from .style import COLORS, FONT_LEGEND, add_colorbar_safe, quality_color, set_dense_tick_labels, set_figure_suptitle
+from .style import COLORS, FONT_LEGEND, add_colorbar_safe, quality_color, set_adaptive_ytick_labels, set_dense_tick_labels, set_figure_suptitle
 from src.utils.paths import FIG_DIR
 
 logger = logging.getLogger(__name__)
@@ -141,10 +141,9 @@ def plot_text_cell_heatmap(
     ax2.barh(range(n_types), d_asc, color=color_map, height=0.8,
              edgecolor="white", linewidth=0.3)
     ax2.set_yticks(range(n_types))
-    _step2 = 7
-    _ytl2 = [labels_asc[i] if i % _step2 == 0 else "" for i in range(n_types)]
-    ax2.set_yticklabels(_ytl2, fontsize=8, ha="right")
-    set_dense_tick_labels(ax2, axis="y", max_labels=10, fontsize=8, rotation=0)
+    step = max(1, int(np.ceil(n_types / 14)))
+    _ytl2 = [labels_asc[i] if i % step == 0 else "" for i in range(n_types)]
+    ax2.set_yticklabels(_ytl2, fontsize=7, ha="right")
     ax2.set_title("Per-Type Alignment", fontsize=11)
     ax2.axvline(x=mean_diag, color=COLORS["bad"], linestyle="--", alpha=0.7, linewidth=1.5)
     ax2.set_xlim(0, 1.05)
@@ -258,8 +257,8 @@ def plot_per_type_generation(
     fd_valid = np.isfinite(fd_array)
     fd_mean = float(np.nanmean(fd_array)) if fd_valid.any() else float("nan")
 
-    fig = plt.figure(figsize=(12.2, 6.8))
-    gs_g = fig.add_gridspec(1, 3, wspace=0.55)
+    fig = plt.figure(figsize=(12.8, 7.2))
+    gs_g = fig.add_gridspec(1, 3, wspace=0.55, width_ratios=[1.3, 1.1, 1.0])
     summary = data.get("summary", {})
     overall = data.get("overall", {})
     set_figure_suptitle(fig, "Per-Type Generation Fidelity", fontsize=11)
@@ -279,12 +278,12 @@ def plot_per_type_generation(
             colors.append(quality_color(v, (0.9, 0.7)))
     ax.barh(range(len(sorted_cos)), sorted_cos, color=colors, height=0.8)
     ax.set_yticks(range(len(sorted_cos)))
+    step = max(1, int(np.ceil(len(sorted_cos) / 14)))
     _ytlg = [
-        sorted_names_cos[i] if i % 7 == 0 else ""
+        sorted_names_cos[i] if i % step == 0 else ""
         for i in range(len(sorted_cos))
     ]
-    ax.set_yticklabels(_ytlg, fontsize=8, ha="right")
-    set_dense_tick_labels(ax, axis="y", max_labels=10, fontsize=8, rotation=0)
+    ax.set_yticklabels(_ytlg, fontsize=7, ha="right")
     ax.set_xlabel("Centroid Cosine Similarity")
     ax.set_title("Real\u2194Gen Centroid Cosine", fontsize=11)
     ax.axvline(
@@ -311,8 +310,8 @@ def plot_per_type_generation(
         if np.isfinite(fd_mean):
             ax.axvline(fd_mean, color=COLORS["bad"], linestyle="--", alpha=0.7, linewidth=1.5, label="mean (see caption)")
         ax.set_yticks(y_pos)
-        ax.set_yticklabels([fd_names[i] if i % 7 == 0 else "" for i in range(len(fd_vals))], fontsize=8, ha="right")
-        set_dense_tick_labels(ax, axis="y", max_labels=10, fontsize=8, rotation=0)
+        fd_step = max(1, int(np.ceil(len(fd_vals) / 14)))
+        ax.set_yticklabels([fd_names[i] if i % fd_step == 0 else "" for i in range(len(fd_vals))], fontsize=7, ha="right")
         ax.set_xlabel("Fr\u00e9chet Distance (lower = better)")
         ax.set_title("Fr\u00e9chet Outlier Profile")
         ax.legend(fontsize=FONT_LEGEND, frameon=False, loc="lower right")
@@ -381,8 +380,6 @@ def plot_per_type_generation(
     from matplotlib.ticker import MaxNLocator
     ax.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
     ax.set_xlim(x_vals.min() - 0.10, x_vals.max() + 0.10)
-
-    fig.subplots_adjust(left=0.18, right=0.95)
 
     if save:
         viz_io.save_to_dir(fig, "panel_g_per_type_generation", output_dir, dpi, save_panel_fn)

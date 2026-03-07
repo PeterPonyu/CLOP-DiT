@@ -37,8 +37,8 @@ def plot_de_concordance_panel(
     contrasts = list(de_data.keys())
     n_contrasts = len(contrasts)
 
-    fig = plt.figure(figsize=(14.4, 6.9))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.35, 1.05, 1.0], wspace=0.62)
+    fig = plt.figure(figsize=(14.8, 7.2))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.4, 1.0, 1.0], wspace=0.62)
     set_figure_suptitle(fig, "DE Concordance — Real vs Generated", fontsize=11)
 
     ax = fig.add_subplot(gs[0])
@@ -96,7 +96,7 @@ def plot_de_concordance_panel(
         ax.axvline(0, color="#666", linestyle=":", linewidth=1.0, alpha=0.6)
 
         residuals = np.abs(gen_logfc - real_logfc) * np.maximum(effect_size, 1e-6)
-        top_idx = np.argsort(residuals)[-min(2, len(residuals)):]
+        top_idx = np.argsort(residuals)[-min(3, len(residuals)):]
         for i in top_idx:
             if i < len(shared_genes):
                 ax.annotate(shared_genes[i], (real_logfc[i], gen_logfc[i]),
@@ -111,10 +111,13 @@ def plot_de_concordance_panel(
             frameon=False,
             loc="lower right",
         )
+        discord_pct = 100 * discordant.mean() if len(discordant) > 0 else 0
+        n_genes_shown = len(shared_genes)
         ax.text(
-            0.98, 0.98, f"r = {r_val:.3f}, sign = {sign_agreement:.3f}",
+            0.98, 0.98,
+            f"r = {r_val:.3f}\nsign = {sign_agreement:.3f}\ndiscord = {discord_pct:.1f}%\nn = {n_genes_shown} genes",
             transform=ax.transAxes, ha="right", va="top", fontsize=8,
-            bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#CCCCCC", alpha=0.9),
+            color=COLORS["neutral"],
         )
         add_colorbar_safe(sc, ax=ax, label=cbar_label,
                          shrink=0.5, pad=0.08, orientation="horizontal", aspect=20)
@@ -130,8 +133,8 @@ def plot_de_concordance_panel(
         ha="left",
         va="top",
         fontsize=8,
-        color="#333",
-        bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#CCCCCC", alpha=0.9),
+        fontweight="medium",
+        color=COLORS["neutral"],
     )
     from matplotlib.ticker import MaxNLocator
     ax.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
@@ -187,8 +190,8 @@ def plot_de_concordance_panel(
 
     ax3.set_xticks(x)
     ax3.set_xticklabels(short_xlabels, fontsize=7, rotation=45, ha="right")
-    ax3.set_ylim(0, 1.1)
-    ax3.legend(fontsize=9, ncol=2, loc="lower right", frameon=False)
+    ax3.set_ylim(0, 1.15)
+    ax3.legend(fontsize=8, ncol=1, loc="center left", bbox_to_anchor=(1.02, 0.5), frameon=False, borderaxespad=0.0)
     style_axes(ax3, "bar", title="Per-Contrast Summary", ylabel="Score")
 
     if save:

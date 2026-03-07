@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import MaxNLocator
 
-from .style import COLORS, TYPE_PALETTE, apply_style, save_with_vcd, set_figure_suptitle
+from .style import COLORS, SUPTITLE_Y_CLOSE, TYPE_PALETTE, apply_style, save_with_vcd, set_figure_suptitle
 
 matplotlib.use("Agg")
 logger = logging.getLogger(__name__)
@@ -132,8 +132,8 @@ def plot_panel_m(
     apply_style()
     n_modes = 1 + len(mode_diversity)  # real + each mode
     _fw = max(10.0, 2.8 * n_modes)
-    fig, axes = plt.subplots(1, n_modes, figsize=(_fw, 4.8),
-                             gridspec_kw={"wspace": 0.40}, squeeze=False)
+    fig, axes = plt.subplots(1, n_modes, figsize=(_fw, 5.2),
+                             gridspec_kw={"wspace": 0.45}, squeeze=False)
     axes = axes[0]
 
     set_figure_suptitle(
@@ -153,13 +153,14 @@ def plot_panel_m(
             tmask = mask & (combined_labels == tid)
             ax.scatter(coords[tmask, 0], coords[tmask, 1],
                        c=[type_to_color[tid]], s=size, alpha=alpha,
+                       edgecolors="white", linewidths=0.2,
                        label=type_to_name[tid])
-        ax.set_title(title)
-        ax.set_xlabel("PC1")
+        ax.set_title(title, fontsize=10, pad=10)
+        ax.set_xlabel("PC1", fontsize=9)
         if show_ylabel:
-            ax.set_ylabel("PC2")
+            ax.set_ylabel("PC2", fontsize=9)
         else:
-            ax.set_ylabel("")
+            ax.set_ylabel("", fontsize=9)
             ax.tick_params(axis="y", labelleft=False)
         ax.xaxis.set_major_locator(MaxNLocator(nbins=4))
         ax.yaxis.set_major_locator(MaxNLocator(nbins=4))
@@ -183,8 +184,9 @@ def plot_panel_m(
 
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="lower center",
-               ncol=min(len(handles), 6), fontsize=8,
-               markerscale=2, frameon=False,
+               ncol=min(len(handles), 5), fontsize=7,
+               markerscale=1.5, frameon=False,
+               columnspacing=0.8, handletextpad=0.3,
                bbox_to_anchor=(0.5, -0.02))
 
     path = output_dir / "panel_m_conditioning_umap.png"

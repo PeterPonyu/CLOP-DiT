@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .style import (
-    COLORS, add_colorbar_safe, save_panel, set_figure_suptitle, style_axes
+    COLORS, add_colorbar_safe, save_panel, save_with_vcd, set_figure_suptitle, style_axes
 )
 from src.utils.paths import RESULTS_DIR, FIG_DIR
 
@@ -83,8 +83,8 @@ def plot_benchmark_panel(
         ("gene_spearman_rho", "gSp\u2191", "higher"),
     ]
 
-    fig = plt.figure(figsize=(15.0, 9.0))
-    gs = fig.add_gridspec(2, 2, wspace=0.55, hspace=0.50)
+    fig = plt.figure(figsize=(15.0, 9.5))
+    gs = fig.add_gridspec(2, 2, wspace=0.55, hspace=0.50, height_ratios=[1.0, 1.15])
     set_figure_suptitle(fig, "Model Benchmarking — CLOP-DiT vs Baselines", fontsize=11)
 
     # ── S1: Heatmap (methods × metrics) ──
@@ -193,7 +193,7 @@ def plot_benchmark_panel(
 
     ax3.set_xticks(x)
     ax3.set_xticklabels([km[1] for km in key_metrics], fontsize=10)
-    ax3.legend(fontsize=9, loc="upper center", bbox_to_anchor=(0.5, -0.15), ncol=3)
+    ax3.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.20), ncol=min(n_methods, 4), frameon=False, columnspacing=0.8)
     style_axes(ax3, "bar", title="Key Metrics Comparison", ylabel="Value")
 
     # ── S4: CI comparison — error-bar plot ──
@@ -234,11 +234,11 @@ def plot_benchmark_panel(
 
     # Add metric group titles on the right — removed: y-labels already convey grouping
 
-    ax4.legend(fontsize=8, loc="upper left", ncol=1)
+    ax4.legend(fontsize=7, loc="center left", bbox_to_anchor=(1.02, 0.5), ncol=1, frameon=False, borderaxespad=0.0)
     style_axes(ax4, "default", title="95% Bootstrap CI Comparison",
                xlabel="Metric Value")
 
     if save:
-        path = save_panel(fig, output_dir / "panel_s_benchmark.png", dpi)
+        path = save_with_vcd(fig, output_dir / "panel_s_benchmark.png", dpi, layout_rect=(0.02, 0.08, 0.98, 0.94))
         logger.info(f"Saved Panel S → {path}")
     return fig
