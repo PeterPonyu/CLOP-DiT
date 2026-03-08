@@ -71,3 +71,7 @@ Thumbs.db
 .env
 *.egg
 package-lock.json
+
+# Root archive (allow README, ignore subdirectories if created)
+archive/*/
+!archive/README.md
