@@ -120,7 +120,7 @@ The project has a comprehensive visualization policy framework:
 **Required Action**:
 ```bash
 bash scripts/regenerate_report.sh
-bash scripts/verify_article_figures.sh
+bash scripts/pipeline/verify_article_figures.sh
 cd articles && latexmk -pdf clop_dit_biology.tex
 ```
 
@@ -200,7 +200,7 @@ The `.tex` file contains resolved metadata (based on current reading), but check
 
 | # | Concern | Action Required |
 |---|---------|-----------------|
-| 1 | **Figures Not Generated** | Run `regenerate_report.sh` and `verify_article_figures.sh` |
+| 1 | **Figures Not Generated** | Run `regenerate_report.sh` and `scripts/pipeline/verify_article_figures.sh` |
 | 2 | **Uncertainty Reporting** | Add bootstrap CIs for key metrics in supplement |
 | 3 | **Validation Split Clarity** | Confirm explicit statement on how 8 validation datasets were chosen |
 | 4 | **OOD Limitation** | Add sentence in Limitations about OOD evaluation scope |
@@ -246,7 +246,7 @@ Based on `SUBMISSION_CHECKLIST.md` and this review:
 - [x] OOD limitation statement present
 
 ### Pre-Submission Verification
-- [ ] Run `bash scripts/verify_article_figures.sh` - all 15 PDFs present
+- [ ] Run `bash scripts/pipeline/verify_article_figures.sh` - all 15 PDFs present
 - [ ] Run VCD - confirm 0 warnings
 - [ ] Article builds: `cd articles && latexmk -pdf clop_dit_biology.tex`
 - [ ] No TODO or "Please add" placeholders remain
@@ -267,7 +267,7 @@ Based on `SUBMISSION_CHECKLIST.md` and this review:
 
 ### Priority Actions for Submission
 
-1. **IMMEDIATE**: Generate all figures using `regenerate_report.sh` and verify with `verify_article_figures.sh`
+1. **IMMEDIATE**: Generate all figures using `regenerate_report.sh` and verify with `scripts/pipeline/verify_article_figures.sh`
 2. **HIGH**: Verify VCD compliance (0 warnings target)
 3. **HIGH**: Confirm all 15 article figure PDFs exist and are properly symlinked
 4. **MEDIUM**: Add bootstrap CIs to supplementary materials for key metrics

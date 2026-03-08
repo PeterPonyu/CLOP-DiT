@@ -458,7 +458,7 @@ All 8 referenced file paths verified to exist on disk:
 - `requirements.txt` -- exists
 - `configs/clop_v9.3.yaml` -- exists
 - `configs/dit.yaml` -- exists
-- `scripts/regenerate_report.sh` -- exists
+- `scripts/pipeline/regenerate_report.sh` -- exists
 - `docs/QUICK_START.md` -- exists
 - `src/data_pipeline/subcluster_annotation.py` -- exists
 - `scripts/02b_enrich_descriptions.py` -- exists

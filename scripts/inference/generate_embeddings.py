@@ -14,10 +14,10 @@ Supports four conditioning modes:
                     different text conditions per type (highest diversity)
 
 Usage:
-    python scripts/generate_embeddings.py                                         # condition_noise + CFG=1.5
-    python scripts/generate_embeddings.py --condition-mode variant                # real prompt diversity
-    python scripts/generate_embeddings.py --condition-mode centroid --cfg-scale 3 # original
-    python scripts/generate_embeddings.py --noise-scale 0.1                       # more noise
+    python scripts/inference/generate_embeddings.py                                         # condition_noise + CFG=1.5
+    python scripts/inference/generate_embeddings.py --condition-mode variant                # real prompt diversity
+    python scripts/inference/generate_embeddings.py --condition-mode centroid --cfg-scale 3 # original
+    python scripts/inference/generate_embeddings.py --noise-scale 0.1                       # more noise
 """
 
 import argparse
@@ -31,7 +31,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from src.architecture.dit import DiT1D
 from src.utils.paths import CACHE_DIR, RESULTS_DIR, CHECKPOINT_DIR

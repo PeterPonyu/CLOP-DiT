@@ -13,7 +13,7 @@
 1. **SyntaxError in `diversity_diagnostics.py:636`** — Fixed double closing parenthesis that would prevent step 3 from running
 2. **Dead code removal** — Removed unused `compose_diversity_and_tradeoff()` from diversity_diagnostics.py and `compose_fig12()` from downstream_panels.py
 3. **Single source of truth** — Ensured each of 15 article figures has exactly one canonical producer; removed duplicate logic
-4. **Pipeline verification** — Added `scripts/verify_article_figures.sh` to verify all 15 PDFs exist and manage symlinks
+4. **Pipeline verification** — Added `scripts/pipeline/verify_article_figures.sh` to verify all 15 PDFs exist and manage symlinks
 5. **Documentation** — Updated FIGURE_ORGANIZATION.md with canonical producers table, QUICK_START.md with steps 0-8
 
 ### Regeneration Status ✅
@@ -25,7 +25,7 @@ Refreshed on 2026-03-06:
 | Figures | Status | Notes |
 |---------|--------|-------|
 | Figs 9–12 | Regenerated | Policy fixes applied and outputs refreshed |
-| Article figure symlinks | Verified | `scripts/verify_article_figures.sh` reports all 15 PDFs present |
+| Article figure symlinks | Verified | `scripts/pipeline/verify_article_figures.sh` reports all 15 PDFs present |
 | LaTeX article PDF | Rebuilt | `articles/clop_dit_biology.pdf` refreshed after figure regeneration |
 
 ### Why Regeneration Is Essential
@@ -67,10 +67,10 @@ You must have:
 cd /home/zeyufu/Desktop/CLOP-DiT
 
 # Full regeneration (all steps 0-8)
-bash scripts/regenerate_report.sh
+bash scripts/pipeline/regenerate_report.sh
 
 # Or with existing embeddings/metrics (recompute downstream + visualizations only):
-bash scripts/regenerate_report.sh --skip-gen
+bash scripts/pipeline/regenerate_report.sh --skip-gen
 ```
 
 ### Expected Output
@@ -103,7 +103,7 @@ Step 8/8: Verify article figures + create symlinks
 ls -lh results/figures/*.pdf | wc -l
 # Should show 15 (for article figures) or 19+ (for all panels)
 
-bash scripts/verify_article_figures.sh
+bash scripts/pipeline/verify_article_figures.sh
 # Should output: "All 15 article figures verified and symlinked"
 ```
 
@@ -116,7 +116,7 @@ bash scripts/build_article.sh
 cd articles/
 latexmk -pdf clop_dit_biology.tex
 ```
-Full article workflow: run `regenerate_report.sh` (or `python scripts/run_pipeline.py --from generate`), then `build_article.sh`.
+Full article workflow: run `regenerate_report.sh` (or `python scripts/pipeline/run_pipeline.py --from generate`), then `build_article.sh`.
 
 ### 3. Check Output
 ```bash
@@ -191,8 +191,8 @@ Regeneration requires your development environment with GPU support and all trai
 ## Next Steps For You
 
 ### Immediate (When You Have Your Dev Environment)
-1. Run: `bash scripts/regenerate_report.sh` (or `--skip-gen` if you prefer to reuse embeddings)
-2. Verify: `bash scripts/verify_article_figures.sh`
+1. Run: `bash scripts/pipeline/regenerate_report.sh` (or `--skip-gen` if you prefer to reuse embeddings)
+2. Verify: `bash scripts/pipeline/verify_article_figures.sh`
 3. Rebuild article: `latexmk -pdf articles/clop_dit_biology.tex`
 
 ### Coming Next (After Regeneration)
@@ -219,11 +219,11 @@ All enhancements use data already computed by the pipeline—no new experiments 
 | **Code cleanup** | ✅ Complete |
 | **Figure staleness** | ⚠️ 7 of 15 stale (pre-image changes) |
 | **Pipeline policy** | ✅ Single source of truth established |
-| **Verification tools** | ✅ verify_article_figures.sh ready |
+| **Verification tools** | ✅ scripts/pipeline/verify_article_figures.sh ready |
 | **Documentation** | ✅ Updated (FIGURE_ORGANIZATION.md, QUICK_START.md) |
 | **Regeneration** | ⏳ Requires your dev environment (PyTorch + GPU) |
 | **Enhancements roadmap** | ✅ Complete (see FIGURE_ENHANCEMENT_ROADMAP.md) |
 
-**Action:** Run `bash scripts/regenerate_report.sh` in your development environment, then follow the enhancement roadmap for richer visualizations.
+**Action:** Run `bash scripts/pipeline/regenerate_report.sh` in your development environment, then follow the enhancement roadmap for richer visualizations.
 
 **See also:** [docs/INDEX.md](INDEX.md) for a full doc index; [docs/ENHANCEMENT_TASKS.md](ENHANCEMENT_TASKS.md) for a short task list; [FIGURE_ORGANIZATION.md](FIGURE_ORGANIZATION.md) for the save and presentation policy.

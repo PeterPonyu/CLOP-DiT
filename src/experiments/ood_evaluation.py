@@ -51,7 +51,7 @@ from src.utils.logging_config import setup_logging
 from src.visualization.style import COLORS as VIZ_COLORS, apply_style, save_with_vcd
 
 # ── Load CLOPDiTInference from numbered script via importlib ───────────
-_INFERENCE_SCRIPT = _PROJECT_ROOT / "scripts" / "05_inference.py"
+_INFERENCE_SCRIPT = _PROJECT_ROOT / "scripts" / "inference" / "05_inference.py"
 _spec = importlib.util.spec_from_file_location("inference", str(_INFERENCE_SCRIPT))
 _inference_mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_inference_mod)

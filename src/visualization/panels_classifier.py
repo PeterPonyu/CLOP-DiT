@@ -100,13 +100,13 @@ def _plot_classifier_metric_heatmap(
         ],
         fontsize=8,
     )
-    default_title = "Per-Type Precision / Recall / F1"
+    default_title = "Per-Type P/R/F1"
     if rows_truncated:
         if display_mode == "worst+best":
-            default_title += f" (worst+best {len(display_names)} of {len(ordered_names)})"
+            default_title += f" (worst+best {len(display_names)})"
         else:
-            default_title += f" (top {len(display_names)} of {len(ordered_names)})"
-    ax.set_title(title or default_title, fontsize=11)
+            default_title += f" (top {len(display_names)})"
+    ax.set_title(title or default_title, fontsize=10)
     ax.set_ylabel("Cell Type (sorted by F1)")
     # ax.set_xlabel("Metric")  # Removed to reduce label density
 
@@ -143,13 +143,7 @@ def plot_classifier_panel(
     gen_acc = classifier_data.get("gen_accuracy", 0)
     gen_f1 = classifier_data.get("gen_f1", 0)
     disc_auc = classifier_data.get("discriminator_auc", 0)
-    # suptitle removed per revision; title information moved to LaTeX caption
-    fig.text(
-        0.5, 0.94,
-        f"Gen Acc = {gen_acc:.3f}   |   Gen F1 = {gen_f1:.3f}   |   Disc AUC = {disc_auc:.3f}",
-        ha="center", va="top", fontsize=9,
-        bbox=dict(boxstyle="round,pad=0.25", fc="#F5F5F5", ec="0.8", alpha=0.9),
-    )
+    # suptitle and stats banner removed per revision; title information moved to LaTeX caption
 
     ax = fig.add_subplot(gs[0])
     add_panel_label(ax, 'a')
@@ -195,7 +189,7 @@ def plot_classifier_panel(
                xlabel="Predicted", ylabel="True Type")
 
     ax2 = fig.add_subplot(gs[1])
-    add_panel_label(ax2, 'b')
+    add_panel_label(ax2, 'b', x=-0.15, y=1.08)
     if per_type_acc:
         summary = _plot_classifier_metric_heatmap(fig, ax2, cm, class_names)
         f1 = summary["f1"]
@@ -217,7 +211,7 @@ def plot_classifier_panel(
         ax2.set_title("Per-Type Summary")
 
     ax3 = fig.add_subplot(gs[2])
-    add_panel_label(ax3, 'c')
+    add_panel_label(ax3, 'c', x=-0.15, y=1.02)
     disc_proba = classifier_data.get("_disc_proba")
     disc_y = classifier_data.get("_disc_y")
 

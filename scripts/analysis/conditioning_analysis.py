@@ -29,9 +29,9 @@ import torch
 import torch.nn.functional as F
 from sklearn.decomposition import PCA
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from scripts.generate_embeddings import (
+from scripts.inference.generate_embeddings import (
     load_dit, load_clop, load_variant_conditions, generate_all_types,
 )
 from src.utils.helpers import seed_everything, get_device

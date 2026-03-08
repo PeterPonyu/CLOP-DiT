@@ -39,7 +39,7 @@
 
 ## 3. Figure Overlap and Truncation — What Was Done
 
-- **Visual conflict detector** (`scripts/visual_conflict_detector.py`) is now used:
+- **Visual conflict detector** (`scripts/analysis/visual_conflict_detector.py`) is now used:
   - In **`src/visualization/results_visualizer.py`**: before every panel save in `_save_panel()`, `detect_all_conflicts(fig, label=basename, verbose=True)` is called; save uses `bbox_inches="tight"`, `pad_inches=0.10`.
   - In **`scripts/diversity_diagnostics.py`**: before saving Panel J and Panel K; same save options.
   - In **`scripts/conditioning_analysis.py`**: before saving Panel L and Panel M; same save options.

@@ -179,7 +179,7 @@ in-distribution.
 | Fig 14 | `fig_downstream_pq` | Required |
 | Fig 15 | `panel_r_de_concordance` | Required |
 
-**Verification:** `scripts/verify_article_figures.sh` confirms all 15 PDFs exist.
+**Verification:** `scripts/pipeline/verify_article_figures.sh` confirms all 15 PDFs exist.
 
 ### 3.5 Figure Caption-Subsection Alignment
 
@@ -247,7 +247,7 @@ in-distribution.
 
 **From `REVIEWER_CONCERNS_AND_NEXT_STEPS.md`:**
 > 19. Run at least one learned baseline and write its artifacts into `results/baselines/{method}/`
-> 20. Use `scripts/run_downstream_for_baselines.py` to generate per-method downstream biological validation
+> 20. Use `scripts/analysis/run_downstream_for_baselines.py` to generate per-method downstream biological validation
 
 **Status:** Policy exists but execution status unclear from documentation.
 
@@ -258,7 +258,7 @@ in-distribution.
 - Subsampling robustness
 - Prompt sensitivity analysis
 
-**Status:** Centralized in `scripts/run_robustness_experiments.py`  
+**Status:** Centralized in `scripts/training/run_robustness_experiments.py`  
 **Gap:** No explicit robustness summary in the main manuscript supplement.
 
 ---
@@ -353,7 +353,7 @@ Based on `docs/SUBMISSION_CHECKLIST.md`:
 
 6. **Create minimal supplement tables:** Table S1 (GEO accessions), S2 (validation IDs), S3 (CFG sweep) - verify these exist and are referenced.
 
-7. **Run verification script:** `bash scripts/verify_article_figures.sh` - confirm all 15 PDFs present.
+7. **Run verification script:** `bash scripts/pipeline/verify_article_figures.sh` - confirm all 15 PDFs present.
 
 ### Optional Enhancements
 

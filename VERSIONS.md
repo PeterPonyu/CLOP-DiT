@@ -109,7 +109,7 @@ Previous scattered archive folders (`*/archive/`) have been consolidated here fo
 | Train latest CLOP | `configs/clop.yaml` | This is v9.3, unversioned = current |
 | Reproduce old result | `configs/archive/clop_v{VERSION}.yaml` | Pin to specific version |
 | Run full pipeline | `scripts/10_full_pipeline.py` | Uses current configs |
-| Generate figures | `bash scripts/regenerate_report.sh` | Uses current results/ |
+| Generate figures | `bash scripts/pipeline/regenerate_report.sh` | Uses current results/ |
 
 ---
 

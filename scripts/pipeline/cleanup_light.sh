@@ -3,10 +3,10 @@
 #
 # Safe to run at any time. Does NOT touch model weights, cached latents,
 # or training logs. Everything removed can be rebuilt via:
-#   bash scripts/regenerate_report.sh
+#   bash scripts/pipeline/regenerate_report.sh
 #
 set -euo pipefail
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$REPO_ROOT"
 
 echo "=== CLOP-DiT Light Cleanup ==="
@@ -42,4 +42,4 @@ rm -rf .pytest_cache/
 echo "  ✓ .pytest_cache/"
 
 echo ""
-echo "Done. Run 'bash scripts/regenerate_report.sh' to rebuild all outputs."
+echo "Done. Run 'bash scripts/pipeline/regenerate_report.sh' to rebuild all outputs."

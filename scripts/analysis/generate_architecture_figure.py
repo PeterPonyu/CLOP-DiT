@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 
 # Ensure project root is on sys.path for style imports
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 import matplotlib
@@ -266,7 +266,7 @@ def create_architecture_figure(output_dir=None):
     # Text Projector
     tx3 = tx2 + zca_w + gap
     draw_box(ax, (tx3, ty - 0.05), BW, BH + 0.10, "Text Proj.",
-             sublabel="MLP 1024\u2192256",
+             sublabel="MLP 1024\u2192512",
             facecolor=C_TEXT_LIGHT, edgecolor=C_TEXT_DARK, fontsize=7.0,
              textcolor="black", bold=True)
     draw_arrow(ax, (tx2 + zca_w, ty + SBH / 2),
@@ -293,7 +293,7 @@ def create_architecture_figure(output_dir=None):
     # Cell Projector (aligned with Text Projector x-position)
     cx2 = tx3
     draw_box(ax, (cx2, cy - 0.05), BW, BH + 0.10, "Cell Proj.",
-             sublabel="MLP 512\u2192256",
+             sublabel="MLP 512\u2192512",
             facecolor=C_CELL_LIGHT, edgecolor=C_CELL_DARK, fontsize=7.0,
              textcolor="black", bold=True)
     draw_arrow(ax, (cx1 + BW, cy + SBH / 2 - 0.02),
@@ -316,7 +316,7 @@ def create_architecture_figure(output_dir=None):
     )
     ax.add_patch(box)
     ax.text(shared_x + shared_w / 2, shared_y + shared_h / 2,
-            "Shared\nSpace\n(256-d)",
+            "Shared\nSpace\n(512-d)",
             ha="center", va="center", fontsize=FONT_ARCH_LABEL,
             color="black", zorder=3)
 
@@ -349,7 +349,7 @@ def create_architecture_figure(output_dir=None):
     ax.text(cx1 + BW / 2, cy + BH + 0.22,
             "scGPT latent =\nDiT training target",
             ha="center", va="bottom", fontsize=FONT_ARCH_SUBLABEL, color=C_MID_GREY,
-            fontweight="medium", zorder=5)
+            fontweight="normal", zorder=5)
 
     # ===================================================================
     #  DiT Stage (centre)
@@ -415,7 +415,7 @@ def create_architecture_figure(output_dir=None):
     cond_bh = 0.36
     draw_box(ax, (cond_bx, cond_by), cond_bw, cond_bh,
             "Cond. Embed",
-            sublabel="256\u2192384",
+            sublabel="512\u2192512",
             facecolor=C_SHARED_BOX, edgecolor=C_SHARED, fontsize=FONT_ARCH_SUBLABEL,
             textcolor="black", bold=True)
 

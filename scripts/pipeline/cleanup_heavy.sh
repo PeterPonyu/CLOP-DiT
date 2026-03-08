@@ -7,7 +7,7 @@
 # To recover: re-train CLOP and DiT from scratch (04a → 04b).
 #
 set -euo pipefail
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$REPO_ROOT"
 
 echo "=== CLOP-DiT Heavy Cleanup ==="
@@ -15,7 +15,7 @@ echo ""
 
 # --- 1. Light cleanup first ---
 echo "--- Phase 1: Light cleanup ---"
-bash scripts/cleanup_light.sh
+bash scripts/pipeline/cleanup_light.sh
 echo ""
 
 # --- 2. Intermediate model checkpoints ---
@@ -72,5 +72,5 @@ echo "  ✓ results/*_metrics.json, generation_metadata.json"
 echo ""
 TOTAL=$(du -sh . 2>/dev/null | cut -f1)
 echo "=== Done. Repo size: $TOTAL ==="
-echo "To fully rebuild: bash scripts/full_retrain_pipeline.sh"
-echo "To rebuild outputs only: bash scripts/regenerate_report.sh"
+echo "To fully rebuild: bash scripts/training/full_retrain_pipeline.sh"
+echo "To rebuild outputs only: bash scripts/pipeline/regenerate_report.sh"

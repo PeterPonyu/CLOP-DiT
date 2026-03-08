@@ -4,8 +4,8 @@
 # Delegates to the Python delivery module (single source of truth for the figure list).
 #
 # Usage:
-#   bash scripts/verify_article_figures.sh            # verify + create symlinks
-#   bash scripts/verify_article_figures.sh --check   # verify only (no symlink changes)
+#   bash scripts/pipeline/verify_article_figures.sh            # verify + create symlinks
+#   bash scripts/pipeline/verify_article_figures.sh --check   # verify only (no symlink changes)
 set -euo pipefail
 
 cd "$(dirname "$0")/.."

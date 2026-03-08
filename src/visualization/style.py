@@ -20,6 +20,7 @@ from typing import Optional
 
 import matplotlib
 import matplotlib.font_manager as fm
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import ScalarFormatter
@@ -223,8 +224,13 @@ def add_panel_label(
     color: str = "black",
     bbox_alpha: float = 0.85,
     bbox_pad: float = 0.3,
+    stroke_linewidth: float = 2.5,
+    stroke_foreground: str = "white",
 ) -> None:
     """Add a panel label (a, b, c, etc.) to a subplot.
+
+    Uses a white outline stroke (path_effects) instead of a background
+    box so the label never occludes figure content.
 
     Parameters
     ----------
@@ -241,11 +247,15 @@ def add_panel_label(
     color : str
         Text color.
     bbox_alpha : float
-        Background box transparency (0-1).
+        Deprecated; kept for backward compatibility but ignored.
     bbox_pad : float
-        Padding around the text in the bbox.
+        Deprecated; kept for backward compatibility but ignored.
+    stroke_linewidth : float
+        Width of the white outline stroke for readability.
+    stroke_foreground : str
+        Color of the outline stroke.
     """
-    ax.text(
+    txt = ax.text(
         x, y, f"({label})",
         transform=ax.transAxes,
         fontsize=fontsize,
@@ -253,14 +263,12 @@ def add_panel_label(
         color=color,
         va="top",
         ha="left",
-        bbox=dict(
-            boxstyle=f"round,pad={bbox_pad}",
-            facecolor="white",
-            edgecolor="none",
-            alpha=bbox_alpha,
-        ),
         zorder=100,  # Ensure label is on top
     )
+    txt.set_path_effects([
+        pe.withStroke(linewidth=stroke_linewidth, foreground=stroke_foreground),
+        pe.Normal(),
+    ])
 
 
 def add_panel_labels_to_axes(
@@ -369,7 +377,7 @@ def save_with_vcd(
     if run_vcd:
         try:
             import sys
-            _scripts = Path(__file__).resolve().parent.parent.parent / "scripts"
+            _scripts = Path(__file__).resolve().parent.parent.parent / "scripts" / "analysis"
             if str(_scripts) not in sys.path:
                 sys.path.insert(0, str(_scripts))
             from visual_conflict_detector import detect_all_conflicts
@@ -412,7 +420,7 @@ def run_vcd_check(fig: plt.Figure, label: str) -> None:
 
     try:
         import sys
-        _scripts = Path(__file__).resolve().parent.parent.parent / "scripts"
+        _scripts = Path(__file__).resolve().parent.parent.parent / "scripts" / "analysis"
         if str(_scripts) not in sys.path:
             sys.path.insert(0, str(_scripts))
         from visual_conflict_detector import detect_all_conflicts

@@ -26,15 +26,15 @@
 | `06_cell2cell_inference.py` | Cell2Cell inference |
 | `07_marker_gene_analysis.py` | Marker gene visualization |
 | `08_biological_validation.py` | Biological validation metrics |
-| `run_robustness_experiments.py` | Seed/subsample/prompt robustness experiment planner/executor |
-| `run_downstream_for_baselines.py` | Re-run downstream biology for every baseline with expression artifacts |
+| `training/run_robustness_experiments.py` | Seed/subsample/prompt robustness experiment planner/executor |
+| `analysis/run_downstream_for_baselines.py` | Re-run downstream biology for every baseline with expression artifacts |
 
 ### Phase 4: Evaluation & Publication Pipeline (Current)
 
 The canonical evaluation and figure pipeline is:
 
 ```bash
-bash scripts/regenerate_report.sh     # Steps 0–7: generate → evaluate → visualize
+bash scripts/pipeline/regenerate_report.sh     # Steps 0–7: generate → evaluate → visualize
 ```
 
 This orchestrates:
@@ -42,7 +42,7 @@ This orchestrates:
 | Step | Script / Module | Purpose |
 |------|----------------|---------|
 | 0 | `generate_architecture_figure.py` | Architecture diagram (Fig 1) |
-| 1 | `generate_embeddings.py` | Generate latent embeddings from DiT |
+| 1 | `inference/generate_embeddings.py` | Generate latent embeddings from DiT |
 | 2 | `decode_expression.py` | Decode latents → gene expression via scGPT |
 | 3 | `diversity_diagnostics.py` | Panels J + K (diversity, CFG sweep) |
 | 4 | `conditioning_analysis.py` | Panels L + M (noise trade-off, conditioning UMAP) |
@@ -69,7 +69,7 @@ Scripts in `scripts/archive/` are from earlier development phases and are **not*
 | `16_publication_figures.py` | Superseded by `results_visualizer` |
 | `17_baseline_comparison.py` | Superseded by `model_benchmarking` |
 
-**Figure cleanup:** `bash scripts/remove_outdated_figures.sh` removes legacy outputs (fig1_*–fig5_*, visual_conflict_report.json) from `results/figures/` if present. See docs/FIGURE_ORGANIZATION.md.
+**Figure cleanup:** `bash scripts/pipeline/remove_outdated_figures.sh` removes legacy outputs (fig1_*–fig5_*, visual_conflict_report.json) from `results/figures/` if present. See docs/FIGURE_ORGANIZATION.md.
 
 ### Auxiliary
 | Script | Purpose |
@@ -78,7 +78,7 @@ Scripts in `scripts/archive/` are from earlier development phases and are **not*
 | `11_jbhi_enhanced_eval.py` | JBHI article enhanced evaluation |
 | `12_compose_and_check.py` | Compose article and consistency checks |
 | `13_tier_comparison_fixed.py` | Tier comparison (fixed version) |
-| `run_5fold_cv.py` | 5-fold cross-validation runner |
+| `training/run_5fold_cv.py` | 5-fold cross-validation runner |
 
 ## v5.2 Key Results
 

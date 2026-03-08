@@ -243,7 +243,7 @@ in the figure caption or in a small, non-dominant in-figure annotation
 - Use VCD and contract tests to enforce this
 
 **Recommended Actions:**
-1. Run `scripts/visual_conflict_detector.py` on all figures
+1. Run `scripts/analysis/visual_conflict_detector.py` on all figures
 2. Move any "r =", "p =", "Sign =" from legend titles to captions
 3. Add contract test in `tests/test_article_delivery.py`
 
@@ -391,7 +391,7 @@ conditioning drives specificity"
 **Next steps:**
 19. **Run at least one learned baseline** and write its artifacts into 
 `results/baselines/{method}/`...
-20. **Use `scripts/run_downstream_for_baselines.py`** to generate per-method 
+20. **Use `scripts/analysis/run_downstream_for_baselines.py`** to generate per-method 
 downstream biological validation...
 ```
 

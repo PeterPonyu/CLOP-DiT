@@ -8,10 +8,10 @@ Concise list of actionable tasks. Full detail is in [FIGURE_ENHANCEMENT_ROADMAP.
 
 1. **Regenerate figures** (in a dev environment with PyTorch + GPU):
    ```bash
-   bash scripts/regenerate_report.sh
-   # or: bash scripts/regenerate_report.sh --skip-gen
+   bash scripts/pipeline/regenerate_report.sh
+   # or: bash scripts/pipeline/regenerate_report.sh --skip-gen
    ```
-2. **Verify:** `bash scripts/verify_article_figures.sh`
+2. **Verify:** `bash scripts/pipeline/verify_article_figures.sh`
 3. **Rebuild article:** `cd articles && latexmk -pdf clop_dit_biology.tex`
 
 See [REGENERATION_STATUS.md](REGENERATION_STATUS.md) for prerequisites and [QUICK_START.md](QUICK_START.md) for the full pipeline.

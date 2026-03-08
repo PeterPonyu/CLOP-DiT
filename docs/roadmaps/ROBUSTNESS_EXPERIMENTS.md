@@ -31,7 +31,7 @@ This document defines the robustness experiments used to broaden the CLOP-DiT re
 Use:
 
 ```bash
-python scripts/run_robustness_experiments.py \
+python scripts/training/run_robustness_experiments.py \
   --dataset-manifest configs/biovalidation_datasets.json \
   --output-dir results/robustness
 ```
@@ -39,7 +39,7 @@ python scripts/run_robustness_experiments.py \
 To include caption-sensitivity experiments (default, marker-dropped, and context-shuffled prompts), pass the example prompt-variants config:
 
 ```bash
-python scripts/run_robustness_experiments.py \
+python scripts/training/run_robustness_experiments.py \
   --dataset-manifest configs/biovalidation_datasets.json \
   --output-dir results/robustness \
   --prompt-variants-json configs/robustness_prompt_variants.example.json

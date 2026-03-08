@@ -18,7 +18,7 @@ conda activate clopdit
 pip install -r requirements.txt
 ```
 
-The complete package list is in `requirements.txt`. The training configuration (hyperparameters, dataset paths, HVG selection) is in `configs/clop_v9.3.yaml`.
+The complete package list is in `requirements.txt`. The training configuration (hyperparameters, dataset paths, HVG selection) is in `configs/clop.yaml`.
 
 ---
 
@@ -50,14 +50,14 @@ Checkpoints and pre-processed embeddings are available upon request from the cor
 All 19 panels (A–S) and the combined PDF report can be regenerated with:
 
 ```bash
-bash scripts/regenerate_report.sh
+bash scripts/pipeline/regenerate_report.sh
 ```
 
 This script orchestrates 7 steps:
-1. `scripts/generate_embeddings.py` — generate latent-space embeddings from DiT
-2. `scripts/decode_expression.py` — decode latents to gene expression via scGPT
-3. `scripts/diversity_diagnostics.py` — Panels J + K (diversity, CFG sweep)
-4. `scripts/conditioning_analysis.py` — Panels L + M (noise tradeoff, conditioning comparison)
+1. `scripts/inference/generate_embeddings.py` — generate latent-space embeddings from DiT
+2. `scripts/analysis/decode_expression.py` — decode latents to gene expression via scGPT
+3. `scripts/analysis/diversity_diagnostics.py` — Panels J + K (diversity, CFG sweep)
+4. `scripts/analysis/conditioning_analysis.py` — Panels L + M (noise tradeoff, conditioning comparison)
 5. `python -m src.evaluation.downstream_biology` — Panels P, Q, R (clustering, classifier, DE)
 6. `python -m src.evaluation.model_benchmarking` — Panel S (composite benchmark)
 7. `python -m src.visualization.results_visualizer` — all visualization panels A–S
@@ -132,7 +132,7 @@ Text descriptions were generated per cell type using the template:
 ```
 {cell type}, tissue: {tissue}, organism: {organism}, markers: {top-5 DE genes}, context: {disease}
 ```
-The caption generation logic is in `src/data_pipeline/subcluster_annotation.py`, with evidence enrichment in `scripts/02b_enrich_descriptions.py`. Marker genes were identified by one-vs.-rest Wilcoxon rank-sum test on the training set; top genes are in `data/cached_latents_v5.2/text_captions_deduplicated.json`.
+The caption generation logic is in `src/data_pipeline/subcluster_annotation.py`, with evidence enrichment in `scripts/data_prep/02b_enrich_descriptions.py`. Marker genes were identified by one-vs.-rest Wilcoxon rank-sum test on the training set; top genes are in `data/cached_latents_v5.2/text_captions_deduplicated.json`.
 
 ---
 

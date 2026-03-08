@@ -1,7 +1,7 @@
 # run_metrics.py — Shared API for CLOP-DiT evaluation
 """
 Single entry point for loading models and running embedding-space metrics.
-Used by scripts/06_evaluate.py, scripts/10_full_pipeline.py, and scripts/run_5fold_cv.py
+Used by scripts/06_evaluate.py, scripts/10_full_pipeline.py, and scripts/training/run_5fold_cv.py
 so defaults and logic stay consistent.
 """
 

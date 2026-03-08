@@ -314,7 +314,7 @@ From Line 440:
 
 | # | Issue | Action |
 |---|-------|--------|
-| 9 | Figure verification | Run `verify_article_figures.sh` to confirm all 15 PDFs present |
+| 9 | Figure verification | Run `scripts/pipeline/verify_article_figures.sh` to confirm all 15 PDFs present |
 | 10 | VCD check | Confirm 0 warnings for all panels |
 | 11 | Reference completeness | Verify all cited works match intended references |
 

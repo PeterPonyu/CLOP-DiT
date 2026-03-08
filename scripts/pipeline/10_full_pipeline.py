@@ -33,7 +33,7 @@ import torch.nn.functional as F
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from src.utils.logging_config import setup_logging
 from src.utils.paths import (
@@ -533,7 +533,7 @@ def generate_all_figures(metrics, gen_dict, real_emb, projected_text, sample_ids
     ax.set_xlim(1, len(dit_hist["train_loss"]))
     ax.set_ylim(0, 1)
 
-    fig1.suptitle("Figure 1: CLOP-DiT Training Dynamics", fontsize=13, fontweight="bold")
+    # suptitle removed per revision; title information moved to LaTeX caption
     fig1.tight_layout(rect=[0, 0, 1, 0.96])
     _save_publication(fig1, "fig1_training_dynamics")
     plt.close(fig1)
@@ -597,7 +597,7 @@ def generate_all_figures(metrics, gen_dict, real_emb, projected_text, sample_ids
     ax.set_title("(c) Embedding Norm Distribution", fontweight="bold")
     ax.legend(frameon=False)
 
-    fig2.suptitle("Figure 2: Embedding Space Analysis", fontsize=13, fontweight="bold")
+    # suptitle removed per revision; title information moved to LaTeX caption
     fig2.tight_layout(rect=[0, 0, 1, 0.95])
     _save_publication(fig2, "fig2_embedding_space")
     plt.close(fig2)
@@ -684,7 +684,7 @@ def generate_all_figures(metrics, gen_dict, real_emb, projected_text, sample_ids
         ax.set_ylim(0, 1)
     ax.set_title("(f) Prompt Robustness", fontweight="bold")
 
-    fig3.suptitle("Figure 3: Generation Quality Metrics", fontsize=13, fontweight="bold")
+    # suptitle removed per revision; title information moved to LaTeX caption
     fig3.tight_layout(rect=[0, 0, 1, 0.96])
     _save_publication(fig3, "fig3_metrics_dashboard")
     plt.close(fig3)
@@ -774,7 +774,7 @@ def generate_all_figures(metrics, gen_dict, real_emb, projected_text, sample_ids
     ax.set_ylabel("Top-50 Real Cosine Sim ↑")
     ax.set_title("(d) Conditioning Fidelity", fontweight="bold")
 
-    fig4.suptitle("Figure 4: Biological Validation", fontsize=13, fontweight="bold")
+    # suptitle removed per revision; title information moved to LaTeX caption
     fig4.tight_layout(rect=[0, 0, 1, 0.96])
     _save_publication(fig4, "fig4_biological_validation")
     plt.close(fig4)
@@ -900,7 +900,7 @@ def generate_all_figures(metrics, gen_dict, real_emb, projected_text, sample_ids
     ax.set_ylabel("Fréchet Distance ↓")
     ax.set_title("(d) CFG Scale Ablation", fontweight="bold")
 
-    fig5.suptitle("Figure 5: Dimension & Sampling Analysis", fontsize=13, fontweight="bold")
+    # suptitle removed per revision; title information moved to LaTeX caption
     fig5.tight_layout(rect=[0, 0, 1, 0.96])
     _save_publication(fig5, "fig5_dimension_sampling")
     plt.close(fig5)

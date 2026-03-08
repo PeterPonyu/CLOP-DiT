@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # build_article.sh — Verify article figures and build the LaTeX PDF.
 #
-# 1. Runs verify_article_figures.sh so all 15 PDFs are in articles/figures/
+# 1. Runs scripts/pipeline/verify_article_figures.sh so all 15 PDFs are in articles/figures/
 # 2. Runs latexmk -pdf in the articles directory
 #
 # Paths respect configs/pipeline.yaml and env (CLOPDIT_FIG_DIR, CLOPDIT_ARTICLE_FIGURES_DIR).
@@ -11,10 +11,10 @@
 #   bash scripts/build_article.sh --check   # verify figures only, do not build PDF
 set -euo pipefail
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 
 echo "▶ Verifying article figures..."
-bash scripts/verify_article_figures.sh
+bash scripts/pipeline/verify_article_figures.sh
 
 if [[ "${1:-}" == "--check" ]]; then
     echo "  (--check: skipping LaTeX build)"
@@ -23,7 +23,7 @@ fi
 
 echo ""
 echo "▶ Building article PDF..."
-mapfile -t _article_paths < <(python scripts/get_article_paths.py)
+mapfile -t _article_paths < <(python scripts/pipeline/get_article_paths.py)
 ARTICLE_DIR="${_article_paths[0]}"
 ARTICLE_TEX="${_article_paths[1]}"
 cd "$ARTICLE_DIR"

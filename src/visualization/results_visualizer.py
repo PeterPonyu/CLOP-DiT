@@ -580,17 +580,52 @@ class ResultsVisualizer:
     # MERGED L+K: Diversity & Trade-off (PIL composition)
     # ──────────────────────────────────────────────────────────
     def _compose_diversity_tradeoff(self) -> Optional[Path]:
-        """Compose Panels L and K with a new diversity-tail violin panel for the article figure."""
+        """Compose Panels L and K with a new diversity-tail violin panel for the article figure.
+
+        Panel labels are offset to avoid duplication in the merged figure:
+          L = (a), K = (b)(c), violin = unlabelled (full-width row).
+        """
+        import io as _io
         from PIL import Image
         from .panels_quality import plot_diversity_distributions_violin
+        from .panels_diversity import plot_expression_diversity_panel
 
-        k_path = self.output / "panel_k_expression_diversity.png"
         l_path = self.output / "panel_l_noise_tradeoff.png"
 
-        if not l_path.exists() or not k_path.exists():
-            missing = [x for x, p in [("L", l_path), ("K", k_path)] if not p.exists()]
+        # Regenerate K with label_offset=1 so labels become (b)(c) in merged fig.
+        div_metrics_path = str(RESULTS_DIR / "diversity_diagnostics.json")
+        div_path = Path(div_metrics_path)
+        t6_data: Dict = {}
+        if div_path.exists():
+            with open(div_path) as f:
+                div_all = json.load(f)
+            t6_data = div_all.get("test6_expression_diversity", {})
+
+        fig_k = plot_expression_diversity_panel(
+            t6_data,
+            output_dir=str(self.output),
+            dpi=self.dpi,
+            label_offset=1,  # (b)(c) to complement L's (a)
+            save=False,
+        )
+
+        if not l_path.exists() or fig_k is None:
+            missing = []
+            if not l_path.exists():
+                missing.append("L")
+            if fig_k is None:
+                missing.append("K")
             logger.info("Both panels L and K required for merged figure; skipping (missing %s)", ", ".join(missing))
+            if fig_k is not None:
+                plt.close(fig_k)
             return None
+
+        # Render K figure to a PIL image
+        buf_k = _io.BytesIO()
+        fig_k.savefig(buf_k, format="png", dpi=self.dpi, bbox_inches="tight", pad_inches=0.08)
+        buf_k.seek(0)
+        k_image = Image.open(buf_k)
+        plt.close(fig_k)
 
         def _trim_whitespace(image: Image.Image, threshold: int = 245, pad: int = 6) -> np.ndarray:
             """Crop near-white borders from raster panels before tiling."""
@@ -605,7 +640,8 @@ class ResultsVisualizer:
             x1 = min(int(xs.max()) + pad + 1, arr.shape[1])
             return arr[y0:y1, x0:x1]
 
-        images = [(l_path.stem, Image.open(l_path)), (k_path.stem, Image.open(k_path))]
+        l_image = Image.open(l_path)
+        images = [(l_path.stem, l_image), ("panel_k_expression_diversity", k_image)]
 
         fig = plt.figure(figsize=(13.6, 8.6), dpi=self.dpi)
         gs = fig.add_gridspec(2, 2, height_ratios=[1.0, 1.0], wspace=0.04, hspace=0.14)
@@ -622,7 +658,7 @@ class ResultsVisualizer:
         ax_bottom = fig.add_subplot(gs[1, :])
         violin_fig = plot_diversity_distributions_violin(
             cache_dir=str(self.cache),
-            div_metrics_path=str(RESULTS_DIR / "diversity_diagnostics.json"),
+            div_metrics_path=div_metrics_path,
             output_dir=str(self.output),
             dpi=self.dpi,
             save=False,

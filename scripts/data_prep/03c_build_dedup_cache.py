@@ -33,7 +33,7 @@ from collections import defaultdict
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from src.utils.paths import CACHE_DIR
 from src.utils.logging_config import setup_logging
 

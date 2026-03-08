@@ -20,26 +20,26 @@ This document describes the pipeline stages, which scripts or modules run them, 
 Run the full pipeline with:
 
 ```bash
-python scripts/run_pipeline.py --stage all
-python scripts/run_pipeline.py --from generate   # from generate through article_delivery
-python scripts/run_pipeline.py --stage figures
+python scripts/pipeline/run_pipeline.py --stage all
+python scripts/pipeline/run_pipeline.py --from generate   # from generate through article_delivery
+python scripts/pipeline/run_pipeline.py --stage figures
 ```
 
 | Stage | Script / module | Config source |
 |-------|------------------|----------------|
-| **data_prep** | `scripts/00_prepare_all_data.py` | paths: `PROCESSED_H5AD_DIR` |
-| **cache** | `scripts/03_cache_latents.py` | paths: `PROCESSED_H5AD_DIR`, `CACHE_DIR` |
-| **dedup** | `scripts/03c_build_dedup_cache.py` | paths: `CACHE_DIR` |
-| **preprocess** | `scripts/03b_preprocess_embeddings.py` | paths: `CACHE_DIR` |
-| **train_clop** | `scripts/04a_train_clop.py` | `configs/clop.yaml` + paths: `--cache_dir`, `--save_dir` |
-| **train_dit** | `scripts/04b_train_dit.py` | `configs/dit.yaml` + paths: `--cache_dir`, `--save_dir` |
-| **generate** | `scripts/generate_embeddings.py` | paths (CACHE_DIR, CHECKPOINT_DIR, etc.) |
-| **decode** | `scripts/decode_expression.py` | paths |
-| **diversity** | `scripts/diversity_diagnostics.py` | paths |
-| **conditioning** | `scripts/conditioning_analysis.py` | paths |
+| **data_prep** | `scripts/data_prep/00_prepare_all_data.py` | paths: `PROCESSED_H5AD_DIR` |
+| **cache** | `scripts/data_prep/03_cache_latents.py` | paths: `PROCESSED_H5AD_DIR`, `CACHE_DIR` |
+| **dedup** | `scripts/data_prep/03c_build_dedup_cache.py` | paths: `CACHE_DIR` |
+| **preprocess** | `scripts/data_prep/03b_preprocess_embeddings.py` | paths: `CACHE_DIR` |
+| **train_clop** | `scripts/training/04a_train_clop.py` | `configs/clop.yaml` + paths: `--cache_dir`, `--save_dir` |
+| **train_dit** | `scripts/training/04b_train_dit.py` | `configs/dit.yaml` + paths: `--cache_dir`, `--save_dir` |
+| **generate** | `scripts/inference/generate_embeddings.py` | paths (CACHE_DIR, CHECKPOINT_DIR, etc.) |
+| **decode** | `scripts/analysis/decode_expression.py` | paths |
+| **diversity** | `scripts/analysis/diversity_diagnostics.py` | paths |
+| **conditioning** | `scripts/analysis/conditioning_analysis.py` | paths |
 | **downstream** | `python -m src.evaluation.downstream_biology` | paths: `RESULTS_DIR/downstream` |
 | **benchmark** | `python -m src.evaluation.model_benchmarking` | paths |
-| **figures** | `scripts/generate_architecture_figure.py` then `python -m src.visualization.results_visualizer` | paths |
+| **figures** | `scripts/analysis/generate_architecture_figure.py` then `python -m src.visualization.results_visualizer` | paths |
 | **article_delivery** | `python -m src.visualization.article_delivery` | paths |
 
 Optional: `--build-article` runs `latexmk -pdf` in the article directory after article_delivery.
@@ -114,8 +114,8 @@ When you run `run_pipeline.py`, it passes `--cache_dir` and `--save_dir` from `p
 
 ## Other entry points
 
-- **scripts/10_full_pipeline.py**: Alternative single-script pipeline (preprocess → train_clop → train_dit → evaluate → figures → VCD). Does not run data_prep/cache/dedup; assumes cache exists.
-- **scripts/run_5fold_cv.py**: 5-fold group CV; uses `paths.CACHE_DIR`, `paths.CHECKPOINT_DIR`, `paths.RESULTS_DIR`, `paths.LOG_DIR` so it respects the same overrides.
-- **scripts/06_evaluate.py**: Standalone evaluation (FD, MMD, coverage, etc.); can be wired as an optional stage or run manually.
+- **scripts/pipeline/10_full_pipeline.py**: Alternative single-script pipeline (preprocess → train_clop → train_dit → evaluate → figures → VCD). Does not run data_prep/cache/dedup; assumes cache exists.
+- **scripts/training/run_5fold_cv.py**: 5-fold group CV; uses `paths.CACHE_DIR`, `paths.CHECKPOINT_DIR`, `paths.RESULTS_DIR`, `paths.LOG_DIR` so it respects the same overrides.
+- **scripts/inference/06_evaluate.py**: Standalone evaluation (FD, MMD, coverage, etc.); can be wired as an optional stage or run manually.
 
 See **REPRODUCIBILITY.md** for one-command figure regeneration and minimal reproduction steps.

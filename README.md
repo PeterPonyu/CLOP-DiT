@@ -139,8 +139,8 @@ User Text ─→ BiomedBERT-large (1024-d) ─→ [ZCA Whitening] ─→ CLOP Te
 | **Storage format** | Flat duplicated .npy | **Deduplicated** (text_embeddings_unique + text_group_ids) |
 
 New files:
-- `scripts/02b_enrich_descriptions.py` — Evidence extraction + enriched caption generation
-- `scripts/02c_build_enriched_cache.py` — Build deduplicated cache from enriched metadata
+- `scripts/data_prep/02b_enrich_descriptions.py` — Evidence extraction + enriched caption generation
+- `scripts/archive/02c_build_enriched_cache.py` — Build deduplicated cache from enriched metadata
 - `data/processed_h5ad/subcluster_metadata_enriched.json` — Enriched cluster annotations
 
 ### v6.1.0 (March 2026)
@@ -261,23 +261,23 @@ cd CLOP-DiT
 
 ```bash
 # Local h5ad datasets
-python scripts/00_prepare_all_data.py \
+python scripts/data_prep/00_prepare_all_data.py \
     --output_dir data/processed_h5ad --max_cells 3000
 
 # Integrate 10x h5 datasets
-python scripts/01_integrate_h5_datasets.py
+python scripts/data_prep/01_integrate_h5_datasets.py
 
 # Integrate GEO-DataHub h5ad datasets
-python scripts/01b_integrate_geodh_h5ad.py
+python scripts/data_prep/01b_integrate_geodh_h5ad.py
 
 # Generate sub-cluster descriptions (→ 1,088 text groups)
-python scripts/02_subcluster_descriptions.py
+python scripts/data_prep/02_subcluster_descriptions.py
 ```
 
 ### Step 2: Cache Latent Embeddings (scGPT pan-cancer + BiomedBERT-large)
 
 ```bash
-python scripts/03_cache_latents.py \
+python scripts/data_prep/03_cache_latents.py \
     --h5ad_dir data/processed_h5ad \
     --metadata data/processed_h5ad/metadata_structured.json \
     --output_dir data/cached_latents_v5.2 \
@@ -291,21 +291,21 @@ python scripts/03_cache_latents.py \
 ```bash
 # ZCA whitening to fix embedding space collapse
 # Text cosine: 0.96 → 0.002, Cell cosine: 0.99 → 0.0003
-python scripts/03b_preprocess_embeddings.py --cache_dir data/cached_latents_v5.2
+python scripts/data_prep/03b_preprocess_embeddings.py --cache_dir data/cached_latents_v5.2
 ```
 
 ### Step 3: Train CLOP Alignment (SigLIP + whitened embeddings, 200 epochs)
 
 ```bash
-python scripts/04a_train_clop.py --config configs/clop.yaml
+python scripts/training/04a_train_clop.py --config configs/clop.yaml
 ```
 
 ### Step 4: Train DiT (200 epochs, with optional resume)
 
 ```bash
-python scripts/04b_train_dit.py --config configs/dit.yaml
+python scripts/training/04b_train_dit.py --config configs/dit.yaml
 # Resume:
-python scripts/04b_train_dit.py --config configs/dit.yaml --resume
+python scripts/training/04b_train_dit.py --config configs/dit.yaml --resume
 ```
 
 ### Step 5: Evaluate & Generate Publication Figures
@@ -313,19 +313,19 @@ python scripts/04b_train_dit.py --config configs/dit.yaml --resume
 ```bash
 # One-command: runs diversity diagnostics, conditioning analysis,
 # downstream biology, model benchmarking, and all panels A–S
-bash scripts/regenerate_report.sh
+bash scripts/pipeline/regenerate_report.sh
 
 # Options:
 #   --skip-gen   Skip embedding generation (reuse existing results/)
 #   --no-umap    Skip slow UMAP panels (B, E) for faster iteration
 ```
 
-See [REPRODUCIBILITY.md](REPRODUCIBILITY.md) and [docs/QUICK_START.md](docs/QUICK_START.md) for detailed one-command figure regeneration and environment setup.
+See [REPRODUCIBILITY.md](REPRODUCIBILITY.md) and [docs/operational/QUICK_START.md](docs/operational/QUICK_START.md) for detailed one-command figure regeneration and environment setup.
 
 ### Step 6: Generate Cells
 
 ```bash
-python scripts/05_inference.py \
+python scripts/inference/05_inference.py \
     --prompt "CD8+ cytotoxic T cells from human lung adenocarcinoma" \
     --num_cells 500 \
     --cfg_scale 2.0 \
@@ -339,10 +339,10 @@ python scripts/05_inference.py \
 ## Reproduction
 
 For one-command figure regeneration and full result reproduction:
-- **Quick start:** [docs/QUICK_START.md](docs/QUICK_START.md) — single `bash scripts/regenerate_report.sh` command
+- **Quick start:** [docs/operational/QUICK_START.md](docs/operational/QUICK_START.md) — single `bash scripts/pipeline/regenerate_report.sh` command
 - **Full guide:** [REPRODUCIBILITY.md](REPRODUCIBILITY.md) — environment, data, checkpoints, numeric results
-- **Configs:** All hyperparameters and paths in `configs/clop_v9.3.yaml` and `configs/dit.yaml`
-- **Figures:** 19 standalone panels (A–S) + 5 merged article figures, documented in [docs/FIGURE_ORGANIZATION.md](docs/FIGURE_ORGANIZATION.md)
+- **Configs:** All hyperparameters and paths in `configs/clop.yaml` and `configs/dit.yaml`
+- **Figures:** 19 standalone panels (A–S) + 5 merged article figures, documented in [docs/roadmaps/FIGURE_ORGANIZATION.md](docs/roadmaps/FIGURE_ORGANIZATION.md)
 
 ---
 

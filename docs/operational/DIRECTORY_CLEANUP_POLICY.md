@@ -56,7 +56,7 @@ bash scripts/setup_data.sh
 | DiT model | `conda run -n dl python scripts/04b_train_dit.py` |
 | Inference | `conda run -n dl python scripts/05_inference.py` |
 | Evaluation | `conda run -n dl python scripts/06_evaluate.py` |
-| All 19 panels | `bash scripts/regenerate_report.sh` |
+| All 19 panels | `bash scripts/pipeline/regenerate_report.sh` |
 | Full retrain | `bash scripts/full_retrain_pipeline.sh` |
 
 ## Archive Policy

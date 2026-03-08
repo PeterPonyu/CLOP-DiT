@@ -22,10 +22,10 @@ Stages (in order):
   build_article   — latexmk -pdf (optional)
 
 Usage:
-  python scripts/run_pipeline.py --stage all
-  python scripts/run_pipeline.py --from generate   # from generate through article_delivery
-  python scripts/run_pipeline.py --stage figures
-  python scripts/run_pipeline.py --stage all --build-article
+  python scripts/pipeline/run_pipeline.py --stage all
+  python scripts/pipeline/run_pipeline.py --from generate   # from generate through article_delivery
+  python scripts/pipeline/run_pipeline.py --stage figures
+  python scripts/pipeline/run_pipeline.py --stage all --build-article
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ import sys
 from pathlib import Path
 
 # Project root
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 from src.utils.paths import (
@@ -75,16 +75,16 @@ def run(cmd: list[str], cwd: Path | None = None) -> int:
 def run_stage(stage: str, extra: list[str] | None = None) -> int:
     extra = extra or []
     if stage == "data_prep":
-        return run(["python", "scripts/00_prepare_all_data.py", "--output_dir", str(PROCESSED_H5AD_DIR), *extra])
+        return run(["python", "scripts/data_prep/00_prepare_all_data.py", "--output_dir", str(PROCESSED_H5AD_DIR), *extra])
     if stage == "cache":
-        return run(["python", "scripts/03_cache_latents.py", "--h5ad_dir", str(PROCESSED_H5AD_DIR), "--output_dir", str(CACHE_DIR), *extra])
+        return run(["python", "scripts/data_prep/03_cache_latents.py", "--h5ad_dir", str(PROCESSED_H5AD_DIR), "--output_dir", str(CACHE_DIR), *extra])
     if stage == "dedup":
-        return run(["python", "scripts/03c_build_dedup_cache.py", "--cache-dir", str(CACHE_DIR), *extra])
+        return run(["python", "scripts/data_prep/03c_build_dedup_cache.py", "--cache-dir", str(CACHE_DIR), *extra])
     if stage == "preprocess":
-        return run(["python", "scripts/03b_preprocess_embeddings.py", "--cache_dir", str(CACHE_DIR), *extra])
+        return run(["python", "scripts/data_prep/03b_preprocess_embeddings.py", "--cache_dir", str(CACHE_DIR), *extra])
     if stage == "train_clop":
         return run([
-            "python", "scripts/04a_train_clop.py",
+            "python", "scripts/training/04a_train_clop.py",
             "--config", "configs/clop.yaml",
             "--cache_dir", str(CACHE_DIR),
             "--save_dir", str(CHECKPOINT_DIR),
@@ -92,7 +92,7 @@ def run_stage(stage: str, extra: list[str] | None = None) -> int:
         ])
     if stage == "train_dit":
         return run([
-            "python", "scripts/04b_train_dit.py",
+            "python", "scripts/training/04b_train_dit.py",
             "--config", "configs/dit.yaml",
             "--cache_dir", str(CACHE_DIR),
             "--save_dir", str(CHECKPOINT_DIR),
@@ -100,23 +100,23 @@ def run_stage(stage: str, extra: list[str] | None = None) -> int:
         ])
     if stage == "generate":
         return run([
-            "python", "scripts/generate_embeddings.py",
+            "python", "scripts/inference/generate_embeddings.py",
             "--condition-mode", "condition_noise", "--noise-scale", "0.03", "--cfg-scale", "1.5",
             "--num-per-type", "100", "--num-steps", "20",
             *extra,
         ])
     if stage == "decode":
-        return run(["python", "scripts/decode_expression.py", *extra])
+        return run(["python", "scripts/analysis/decode_expression.py", *extra])
     if stage == "diversity":
-        return run(["python", "scripts/diversity_diagnostics.py", "--num-per-type", "100", *extra])
+        return run(["python", "scripts/analysis/diversity_diagnostics.py", "--num-per-type", "100", *extra])
     if stage == "conditioning":
-        return run(["python", "scripts/conditioning_analysis.py", "--num-per-type", "100", "--cfg-scale", "1.5", "--noise-scale", "0.03", *extra])
+        return run(["python", "scripts/analysis/conditioning_analysis.py", "--num-per-type", "100", "--cfg-scale", "1.5", "--noise-scale", "0.03", *extra])
     if stage == "downstream":
         return run(["python", "-m", "src.evaluation.downstream_biology", "--output-dir", str(RESULTS_DIR / "downstream"), *extra])
     if stage == "benchmark":
         return run(["python", "-m", "src.evaluation.model_benchmarking", *extra])
     if stage == "figures":
-        code = run(["python", "scripts/generate_architecture_figure.py"])
+        code = run(["python", "scripts/analysis/generate_architecture_figure.py"])
         if code != 0:
             return code
         return run(["python", "-m", "src.visualization.results_visualizer", *extra])

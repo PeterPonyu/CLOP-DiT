@@ -44,7 +44,7 @@ ARTICLE_FIGURE_BASENAMES: List[str] = [
 # Basename -> producer file path (relative to repo root). Used for presentation-policy tests.
 # Must match FIGURE_ORGANIZATION.md "Canonical producers" table.
 ARTICLE_FIGURE_PRODUCERS: List[Tuple[str, str]] = [
-    ("fig_architecture", "scripts/generate_architecture_figure.py"),
+    ("fig_architecture", "scripts/analysis/generate_architecture_figure.py"),
     ("fig_training_dynamics", "src/visualization/panels_training.py"),
     ("fig_embedding_space", "src/visualization/panels_merged.py"),
     ("fig_downstream_pq", "src/visualization/downstream_panels.py"),
@@ -54,10 +54,10 @@ ARTICLE_FIGURE_PRODUCERS: List[Tuple[str, str]] = [
     ("panel_n_marker_gene_comparison", "src/visualization/panels_expression.py"),
     ("panel_h_expression_correlation", "src/visualization/panels_expression.py"),
     ("panel_i_expression_analysis", "src/visualization/panels_expression.py"),
-    ("panel_m_conditioning_umap", "scripts/conditioning_analysis.py"),
-    ("panel_l_noise_tradeoff", "scripts/diversity_diagnostics.py"),
-    ("panel_k_expression_diversity", "scripts/diversity_diagnostics.py"),
-    ("panel_j_diversity_diagnostics", "scripts/diversity_diagnostics.py"),
+    ("panel_m_conditioning_umap", "scripts/analysis/conditioning_analysis.py"),
+    ("panel_l_noise_tradeoff", "scripts/analysis/diversity_diagnostics.py"),
+    ("panel_k_expression_diversity", "scripts/analysis/diversity_diagnostics.py"),
+    ("panel_j_diversity_diagnostics", "scripts/analysis/diversity_diagnostics.py"),
     ("panel_o_baseline_comparison", "src/visualization/baseline_panels.py"),
     ("panel_s_benchmark", "src/visualization/benchmark_panels.py"),
     ("panel_r_de_concordance", "src/visualization/panels_de_concordance.py"),

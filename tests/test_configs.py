@@ -1,4 +1,4 @@
-"""Tests for current production configs (clop_v9.3, dit)."""
+"""Tests for current production configs (clop, dit)."""
 
 import pytest
 import yaml
@@ -15,9 +15,9 @@ class TestClopConfig:
 
     @pytest.fixture
     def config(self):
-        path = CONFIGS_DIR / "clop_v9.3.yaml"
+        path = CONFIGS_DIR / "clop.yaml"
         if not path.exists():
-            pytest.skip("clop_v9.3.yaml not found")
+            pytest.skip("clop.yaml not found")
         with open(path) as f:
             return yaml.safe_load(f)
 

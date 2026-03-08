@@ -203,7 +203,8 @@ class EmbeddingVisualizer:
             ax.grid(True, alpha=0.3)
             plot_idx += 1
 
-        fig.suptitle(title, fontsize=14, fontweight="bold", y=1.02)
+        # suptitle removed per revision; title information moved to LaTeX caption
+        # fig.suptitle(title, fontsize=14, fontweight="bold", y=1.02)
         plt.tight_layout()
         plt.savefig(self.save_dir / filename, dpi=self.dpi, bbox_inches="tight")
         plt.close()
@@ -243,7 +244,8 @@ class EmbeddingVisualizer:
         for i in range(len(dims), len(axes)):
             axes[i].set_visible(False)
 
-        plt.suptitle("Per-Dimension Distribution Comparison", fontsize=14, fontweight="bold")
+        # suptitle removed per revision; title information moved to LaTeX caption
+        # plt.suptitle("Per-Dimension Distribution Comparison", fontsize=14, fontweight="bold")
         plt.tight_layout()
         plt.savefig(self.save_dir / filename, dpi=self.dpi, bbox_inches="tight")
         plt.close()

@@ -16,8 +16,8 @@ Outputs:
   - text_variants.json: {group_id: [variant_str_1, ...]} for inspection
 
 Usage:
-    python scripts/generate_caption_variants.py
-    python scripts/generate_caption_variants.py --n_variants 5 --cache_dir data/cached_latents_v5.2
+    python scripts/data_prep/generate_caption_variants.py
+    python scripts/data_prep/generate_caption_variants.py --n_variants 5 --cache_dir data/cached_latents_v5.2
 """
 
 import argparse
@@ -32,7 +32,7 @@ from typing import List, Dict
 import numpy as np
 import torch
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from src.utils.logging_config import setup_logging
 
 logger = logging.getLogger(__name__)

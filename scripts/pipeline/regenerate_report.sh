@@ -16,7 +16,7 @@
 #   bash scripts/regenerate_report.sh --skip-gen    # reuse existing embeddings
 set -euo pipefail
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 echo "═══════════════════════════════════════════════════════════════"
 echo "  CLOP-DiT Report Regeneration Pipeline"
 echo "═══════════════════════════════════════════════════════════════"
@@ -34,13 +34,13 @@ done
 # ── Step 0: Generate architecture figure ──
 echo ""
 echo "▶ Step 0/8: Generating architecture figure..."
-python scripts/generate_architecture_figure.py
+python scripts/analysis/generate_architecture_figure.py
 
 # ── Step 1: Generate embeddings (condition_noise ε=0.03, CFG=1.5) ──
 if [ "$SKIP_GEN" = false ]; then
     echo ""
     echo "▶ Step 1/8: Generating cell embeddings..."
-    python scripts/generate_embeddings.py \
+    python scripts/inference/generate_embeddings.py \
         --condition-mode condition_noise \
         --noise-scale 0.03 \
         --cfg-scale 1.5 \
@@ -51,19 +51,19 @@ fi
 # ── Step 2: Decode gene expression ──
 echo ""
 echo "▶ Step 2/8: Decoding gene expression via scGPT..."
-python scripts/decode_expression.py
+python scripts/analysis/decode_expression.py
 
 # ── Step 3: Diversity diagnostics (Panels J + K) ──
 echo ""
 echo "▶ Step 3/8: Running diversity diagnostics..."
-python scripts/diversity_diagnostics.py \
+python scripts/analysis/diversity_diagnostics.py \
     --num-per-type 100 \
     --cfg-scales 1.0 1.5 2.0 3.0 5.0 7.0
 
 # ── Step 4: Conditioning analysis (Panels L + M) ──
 echo ""
 echo "▶ Step 4/8: Running conditioning analysis..."
-python scripts/conditioning_analysis.py \
+python scripts/analysis/conditioning_analysis.py \
     --num-per-type 100 \
     --cfg-scale 1.5 \
     --noise-scale 0.03
@@ -87,7 +87,7 @@ python -m src.visualization.results_visualizer $UMAP_FLAG
 # ── Step 8: Verify article figures + create symlinks ──
 echo ""
 echo "▶ Step 8/8: Verifying article figures + creating symlinks..."
-bash scripts/verify_article_figures.sh
+bash scripts/pipeline/verify_article_figures.sh
 
 # ── Summary ──
 echo ""

@@ -1,0 +1,9 @@
+Index	GEO_Accession	Dataset_Key	Organism	Description	N_Cells	Selection_Method
+1	GSE103867	GSE103867_geodh	Homo sapiens	Single-cell RNA sequencing dataset from GEO series GSE103867 (Homo sapiens)	2787	Study-level random split (seed=42, val_split=0.1)
+2	GSE167597	GSE167597_spineMm	Mus musculus	Single-cell RNA sequencing of mouse spinal cord during development	3000	Study-level random split (seed=42, val_split=0.1)
+3	GSE183904	GSE183904_GastricHmCancer	Homo sapiens	Single-cell RNA sequencing of human gastric cancer (stomach adenocarcinoma)	3000	Study-level random split (seed=42, val_split=0.1)
+4	GSE213740	GSE213740_ADHm	Homo sapiens	Single-cell RNA sequencing of human ascending aortic wall tissue from patients with sporadic type A aortic dissection	2704	Study-level random split (seed=42, val_split=0.1)
+5	GSE226762	GSE226762_geodh	Homo sapiens	Single-cell RNA sequencing dataset from GEO series GSE226762 (Homo sapiens)	830	Study-level random split (seed=42, val_split=0.1)
+6	GSE277740	GSE277740_scRNA25100	Mus musculus	Single-cell RNA sequencing of mouse thalamus brain tissue comparing Illumina SBS and DNBSEQ sequencing platforms	2644	Study-level random split (seed=42, val_split=0.1)
+7	GSE300862	GSE300862_scRNA25100	Mus musculus	Single-cell RNA sequencing of mouse Kras/Trp53-driven lung adenocarcinoma tumors	2716	Study-level random split (seed=42, val_split=0.1)
+8	GSE302433	GSE302433_scRNA25100	Mus musculus	Single-cell RNA sequencing of mouse B16F10 melanoma tumors investigating the role of ZDHHC13 palmitoyl transferase	2953	Study-level random split (seed=42, val_split=0.1)

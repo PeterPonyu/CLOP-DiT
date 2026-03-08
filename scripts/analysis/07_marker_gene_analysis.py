@@ -25,7 +25,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from src.utils.logging_config import setup_logging
 from src.visualization.style import apply_style, save_with_vcd
 
@@ -235,10 +235,7 @@ def plot_marker_violin_grid(
         row, col = idx // n_cols, idx % n_cols
         axes[row, col].set_visible(False)
 
-    fig.suptitle(
-        f"Marker Gene Expression: {ct_name}\n{description}",
-        fontweight="bold", fontsize=13, y=1.02
-    )
+    # suptitle removed per revision; title information moved to LaTeX caption
     plt.tight_layout()
     safe_name = ct_name.replace(" ", "_").replace("/", "_").replace("+", "plus")
     save_with_vcd(fig, output_dir / f"markers_{safe_name}.png", dpi=200, close=True)
@@ -446,9 +443,7 @@ def plot_discriminative_genes_grid(gene_names, gen_expr_dict, output_dir, max_co
         row, col = idx // n_cols, idx % n_cols
         axes[row, col].set_visible(False)
 
-    fig.suptitle("Top Discriminative Genes per Generated Cell Type\n"
-                 "(log₂ fold change vs pooled other types)",
-                 fontweight="bold", fontsize=13, y=1.02)
+    # suptitle removed per revision; title information moved to LaTeX caption
     plt.tight_layout()
     save_with_vcd(fig, output_dir / "discriminative_genes.png", dpi=200, close=True)
     logger.info(f"  Saved: discriminative_genes.png ({n_rows}x{n_cols} grid)")
@@ -513,9 +508,7 @@ def plot_distribution_comparison(
         row, col = idx // n_cols, idx % n_cols
         axes[row, col].set_visible(False)
 
-    fig.suptitle("Expression Distribution Comparison: Real vs Generated\n"
-                 "(density histograms overlaid for key markers)",
-                 fontweight="bold", fontsize=13, y=1.02)
+    # suptitle removed per revision; title information moved to LaTeX caption
     plt.tight_layout()
     save_with_vcd(fig, output_dir / "distribution_comparison.png", dpi=200, close=True)
     logger.info(f"  Saved: distribution_comparison.png ({len(key_markers)} markers)")
@@ -577,9 +570,7 @@ def plot_correlation_scatter(real_expr, gen_expr_dict, gene_names, output_dir, m
         row, col = idx // n_cols, idx % n_cols
         axes[row, col].set_visible(False)
 
-    fig.suptitle("Gene Expression Correlation: Real vs Generated\n"
-                 "(per-gene mean expression across cells)",
-                 fontweight="bold", fontsize=13, y=1.02)
+    # suptitle removed per revision; title information moved to LaTeX caption
     plt.tight_layout()
     save_with_vcd(fig, output_dir / "correlation_scatter.png", dpi=200, close=True)
     logger.info(f"  Saved: correlation_scatter.png")

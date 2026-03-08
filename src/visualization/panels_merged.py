@@ -86,11 +86,11 @@ def plot_embedding_space_merged(
 
     apply_style()
     n_rows = (1 if has_b else 0) + (1 if has_e else 0)
-    fig = plt.figure(figsize=(14.2, 5.6 * n_rows))
-    gs = fig.add_gridspec(n_rows, 3, wspace=0.46, hspace=0.48,
+    fig = plt.figure(figsize=(14.2, 5.2 * n_rows))
+    gs = fig.add_gridspec(n_rows, 3, wspace=0.46, hspace=0.15,
                           width_ratios=[1.2, 1.2, 1.0])
     # suptitle removed per revision; title information moved to LaTeX caption
-    fig._clop_layout_rect = (0.02, 0.03, 0.98, 0.92)
+    fig._clop_layout_rect = (0.02, 0.03, 0.98, 0.97)
     row = 0
 
     if has_b:

@@ -21,7 +21,7 @@ The **trunk** is the core scientific narrative that must be internally consisten
 
 | Agent | Name | Scope | Responsibilities |
 |-------|------|-------|------------------|
-| **Trunk Agent 1** | Methods coherence and reproducibility | Materials and Methods (all subsections) | Check: dataset description and splits, CLOP/DiT equations and parameters, decoding and evaluation metrics; alignment with scripts and configs (e.g. `configs/clop_v9.3.yaml`, `scripts/regenerate_report.sh`); consistent notation and terminology; no missing steps for reproduction. |
+| **Trunk Agent 1** | Methods coherence and reproducibility | Materials and Methods (all subsections) | Check: dataset description and splits, CLOP/DiT equations and parameters, decoding and evaluation metrics; alignment with scripts and configs (e.g. `configs/clop_v9.3.yaml`, `scripts/pipeline/regenerate_report.sh`); consistent notation and terminology; no missing steps for reproduction. |
 | **Trunk Agent 2** | Results and figure-text alignment | Results (all subsections) | Check: each Results subsection references the correct figure(s); narrative matches figure panels and captions; numbers in text match figure/caption; one clear message per subsection; smooth transitions between subsections. |
 
 ### Trunk workflow

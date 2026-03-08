@@ -12,19 +12,19 @@ This framework is designed for:
 
 Usage:
     # Run all ablation experiments sequentially
-    python scripts/run_ablation_study.py --base_config configs/clop_v8.2.yaml
+    python scripts/training/run_ablation_study.py --base_config configs/clop_v8.2.yaml
 
     # Run a specific ablation only
-    python scripts/run_ablation_study.py --base_config configs/clop_v8.2.yaml --ablation no_mixup
+    python scripts/training/run_ablation_study.py --base_config configs/clop_v8.2.yaml --ablation no_mixup
 
     # List available ablations
-    python scripts/run_ablation_study.py --list
+    python scripts/training/run_ablation_study.py --list
 
     # Generate comparison report from completed experiments
-    python scripts/run_ablation_study.py --report
+    python scripts/training/run_ablation_study.py --report
 
     # Resume from a specific ablation (skip completed ones)
-    python scripts/run_ablation_study.py --base_config configs/clop_v8.2.yaml --resume
+    python scripts/training/run_ablation_study.py --base_config configs/clop_v8.2.yaml --resume
 """
 
 import argparse
@@ -41,7 +41,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 RESULTS_DIR = PROJECT_ROOT / "results" / "ablations"
 PYTHON = sys.executable
 
@@ -257,7 +257,7 @@ def run_single_ablation(
 
     log_path = exp_dir / "console.log"
     cmd = [
-        PYTHON, str(PROJECT_ROOT / "scripts" / "04a_train_clop.py"),
+        PYTHON, str(PROJECT_ROOT / "scripts" / "training" / "04a_train_clop.py"),
         "--config", str(config_path),
     ]
 
@@ -513,19 +513,19 @@ def main():
         epilog="""
 Examples:
     # Run all ablations
-    python scripts/run_ablation_study.py --base_config configs/clop_v8.2.yaml
+    python scripts/training/run_ablation_study.py --base_config configs/clop_v8.2.yaml
 
     # Run specific ablation
-    python scripts/run_ablation_study.py --base_config configs/clop_v8.2.yaml --ablation no_mixup
+    python scripts/training/run_ablation_study.py --base_config configs/clop_v8.2.yaml --ablation no_mixup
 
     # Quick ablation (fewer epochs for initial screening)
-    python scripts/run_ablation_study.py --base_config configs/clop_v8.2.yaml --quick
+    python scripts/training/run_ablation_study.py --base_config configs/clop_v8.2.yaml --quick
 
     # Just generate comparison report
-    python scripts/run_ablation_study.py --report
+    python scripts/training/run_ablation_study.py --report
 
     # List available ablations
-    python scripts/run_ablation_study.py --list
+    python scripts/training/run_ablation_study.py --list
         """,
     )
     parser.add_argument("--base_config", type=str,

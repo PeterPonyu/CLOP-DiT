@@ -24,7 +24,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from src.training.train_cell2cell import Cell2CellTrainer
 from src.utils.helpers import seed_everything, get_device

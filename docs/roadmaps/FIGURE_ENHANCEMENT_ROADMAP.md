@@ -363,7 +363,7 @@ The pipeline computes rich statistics that are underutilized:
 ### Files to modify:
 - `src/visualization/results_visualizer.py` — add calls to new functions, optionally extend report generation
 - `src/visualization/style.py` — ensure color schemes consistent across new plots
-- `scripts/regenerate_report.sh` — optionally document new outputs
+- `scripts/pipeline/regenerate_report.sh` — optionally document new outputs
 
 ### Integration points:
 - Call new functions from `ResultsVisualizer.generate_full_report()` after base panels are generated
@@ -375,15 +375,15 @@ The pipeline computes rich statistics that are underutilized:
 
 1. ✅ **Complete code cleanup** (removed dead code, fixed SyntaxError) — DONE
 2. ✅ **Verify figure pipeline** (confirm single source of truth for each figure) — DONE
-3. ⏭️ **Regenerate pipeline** (run `bash scripts/regenerate_report.sh` in your environment with PyTorch)
+3. ⏭️ **Regenerate pipeline** (run `bash scripts/pipeline/regenerate_report.sh` in your environment with PyTorch)
    ```bash
    # In your development environment with CUDA/PyTorch:
    cd /home/zeyufu/Desktop/CLOP-DiT
-   bash scripts/regenerate_report.sh
+   bash scripts/pipeline/regenerate_report.sh
    ```
 4. ⏭️ **Verify regeneration succeeded** (check all 15 PDFs updated)
    ```bash
-   bash scripts/verify_article_figures.sh
+   bash scripts/pipeline/verify_article_figures.sh
    ```
 5. ⏭️ **Rebuild article** (confirm LaTeX builds with new figures)
    ```bash

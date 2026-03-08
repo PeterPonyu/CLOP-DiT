@@ -127,8 +127,8 @@ def plot_expression_correlation(
     ax1.xaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
     ax1.yaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
     cbar = add_colorbar_safe(sc, ax=ax1, label="|Resid|", shrink=0.78, pad=0.03, aspect=24)
-    cbar.ax.tick_params(labelsize=8)
-    cbar.ax.xaxis.set_major_locator(_MaxNLoc(nbins=2, prune="both"))
+    cbar.ax.tick_params(labelsize=6, length=2)
+    cbar.ax.set_xticks([])
     add_panel_label(ax1, 'a', x=0.02, y=0.98)
 
     # Annotate outlier genes (top 2 residuals)
@@ -149,7 +149,7 @@ def plot_expression_correlation(
         type_rs = [per_type[n]["pearson_r"] for n in type_names_sorted]
 
         # Show only bottom 6 and top 6 types to avoid 69-label overlap
-        n_show_each = min(6, len(type_rs) // 2)
+        n_show_each = min(2, len(type_rs) // 2)
         if len(type_rs) > 2 * n_show_each + 2:
             show_idx = list(range(n_show_each)) + list(range(len(type_rs) - n_show_each, len(type_rs)))
             type_names_sorted = [type_names_sorted[i] for i in show_idx]
@@ -171,7 +171,7 @@ def plot_expression_correlation(
         ax2.scatter(type_rs, y_pos, c=colors_h2, s=30, zorder=3, edgecolors="white",
                     linewidths=0.5)
         ax2.set_yticks(y_pos)
-        ax2.set_yticklabels(short_names, fontsize=8, ha="right")
+        ax2.set_yticklabels(short_names, fontsize=7, ha="right")
         ax2.axvline(x=mean_r, color=COLORS["bad"], linestyle="--", alpha=0.6, linewidth=1.5,
                     label="mean (see caption)")
         ax2.set_xlim(min_r - 0.0005, 1.00005)
@@ -423,7 +423,7 @@ def plot_expression_analysis(
     ax3.set_title("Per-Cell Variability Distribution", fontsize=11)
     ax3.legend(fontsize=8, loc='upper right', ncol=1, frameon=False)
     ax3.locator_params(axis='x', nbins=4)
-    add_panel_label(ax3, 'c', x=0.02, y=0.98)
+    add_panel_label(ax3, 'c', x=-0.15, y=1.02)
 
     std_ratio = gen_cell_std.mean() / (real_cell_std.mean() + 1e-8)
     ax3.text(0.02, 0.95,
@@ -702,6 +702,7 @@ def plot_marker_gene_comparison(
                      fontweight="bold" if abs(fc - 1.0) > 0.05 else "normal")
     else:
         ax_fallback = fig.add_subplot(gs[0, 1])
+        add_panel_label(ax_fallback, 'b')
         ax_fallback.text(0.5, 0.5, "Per-type labels not available",
                          ha="center", va="center", transform=ax_fallback.transAxes)
 

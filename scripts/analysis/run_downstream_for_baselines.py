@@ -8,7 +8,7 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from src.evaluation.baseline_registry import get_method_specs, load_method_metadata
 from src.evaluation.downstream_biology import run_all_downstream

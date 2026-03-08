@@ -138,18 +138,18 @@ def plot_clop_embedding_space(
     ax_b0.invert_yaxis()
     ax_b0.set_xlabel("Cells")
     ax_b0.set_title("Cells per Type")
-    ax.axvline(
+    ax_b0.axvline(
         x=np.median(type_counts),
         color="red",
         linestyle="--",
         alpha=0.5,
         label=f"median={int(np.median(type_counts))}",
     )
-    ax.legend(fontsize=9, loc="lower right", frameon=False)
-    ax.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
+    ax_b0.legend(fontsize=9, loc="lower right", frameon=False)
+    ax_b0.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
 
     ax_b1 = fig.add_subplot(gs[1])
-    add_panel_label(ax_b1, 'b', x=-0.15, y=1.02)
+    add_panel_label(ax_b1, 'b', x=-0.18, y=1.02)
     top_label_candidates = np.argsort(type_counts)[::-1].tolist()
     label_offsets = [(0, 4), (0, -10), (8, 4), (-8, 4), (10, -8), (-10, -8)]
     labeled_points: list[np.ndarray] = []

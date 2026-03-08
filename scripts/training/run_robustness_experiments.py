@@ -46,7 +46,7 @@ def build_plan(
                 "seed": seed,
                 "command": [
                     "python",
-                    "scripts/08_biological_validation.py",
+                    "scripts/inference/08_biological_validation.py",
                     "--dataset_manifest",
                     dataset_manifest,
                     "--output_dir",
@@ -67,7 +67,7 @@ def build_plan(
                 "subsample_fraction": frac,
                 "command": [
                     "python",
-                    "scripts/08_biological_validation.py",
+                    "scripts/inference/08_biological_validation.py",
                     "--dataset_manifest",
                     dataset_manifest,
                     "--output_dir",
@@ -91,7 +91,7 @@ def build_plan(
                     "prompt_variant": variant_name,
                     "command": [
                         "python",
-                        "scripts/08_biological_validation.py",
+                        "scripts/inference/08_biological_validation.py",
                         "--dataset_manifest",
                         dataset_manifest,
                         "--output_dir",

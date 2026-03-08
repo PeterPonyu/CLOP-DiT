@@ -33,10 +33,10 @@ Any edit to the following requires regeneration and verification:
 
 1. Run the pipeline at least steps 3, 4, 7 so Figs 9–12 outputs are refreshed:
    ```bash
-   bash scripts/regenerate_report.sh
+   bash scripts/pipeline/regenerate_report.sh
    # or minimal: steps that produce M, J, L, K, O
    ```
-2. Run `bash scripts/verify_article_figures.sh`
+2. Run `bash scripts/pipeline/verify_article_figures.sh`
 3. Rebuild the LaTeX article: `cd articles && latexmk -pdf clop_dit_biology.tex`
 
 ---

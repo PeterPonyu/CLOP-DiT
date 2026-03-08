@@ -52,7 +52,7 @@ cd articles && latexmk -pdf clop_dit_biology.tex
 ### 5. Full regeneration script
 
 ```bash
-bash scripts/regenerate_report.sh
+bash scripts/pipeline/regenerate_report.sh
 ```
 - Runs steps 2 + 3 + 4 in sequence
 

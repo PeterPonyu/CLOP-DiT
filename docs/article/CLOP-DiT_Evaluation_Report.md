@@ -4,12 +4,14 @@
 
 ---
 
+> **DEPRECATION NOTICE (2026-03-08):** This markdown report is a **working analysis artifact** frozen from an earlier evaluation run. Specific numeric values (e.g., KNN accuracy, steering, diversity ratio, composite score) may **not** match the authoritative manuscript. In particular, the manuscript composite benchmark is **0.844** (not the legacy 0.668 that appeared in some earlier docs). **Do not cite numbers from this file in the submission.** The single source of truth for all claims is `articles/clop_dit_biology.tex`. See also `docs/reviewer_reports/` for the latest consolidated review.
+
 ## Current results (report pipeline)
 
 - **Figure and report outputs:** All figures and the full report are written to **`results/figures/`**. The combined report is **`results/figures/clop_dit_full_report.pdf`**.
 - **Regeneration:** From the repo root, run:
   ```bash
-  bash scripts/regenerate_report.sh
+  bash scripts/pipeline/regenerate_report.sh
   ```
   This uses the config in **`configs/clop_v9.3.yaml`** and produces **19 panels (A–S)** as PNG and PDF (e.g. `panel_a_clop_training.png`, …, `panel_s_benchmark.png`), plus the full PDF report.
 - **Panel mapping and usage:** See **`docs/FIGURE_ORGANIZATION.md`** for the list of panels, short descriptions, and how they map to the MDPI article and JBHI markdown.
@@ -408,4 +410,4 @@ Panels P/Q/R in the combined report.
 
 ---
 
-*Report based on verified evaluation results in `results/`. Metrics reproduced by `scripts/06_evaluate.py` and `bash scripts/regenerate_report.sh` (19 panels A–S, including benchmark Panel S with composite score 0.668). See also `src/evaluation/model_benchmarking.py` and `src/evaluation/downstream_biology.py`.*
+*Report based on verified evaluation results in `results/`. Metrics reproduced by `scripts/inference/06_evaluate.py` and `bash scripts/pipeline/regenerate_report.sh` (19 panels A–S, benchmark Panel S currently reported as 0.844 in the manuscript source of truth). See also `src/evaluation/model_benchmarking.py` and `src/evaluation/downstream_biology.py`.*

@@ -12,8 +12,11 @@ import logging
 from pathlib import Path
 from typing import Callable, Dict, Optional
 
+import math
+
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.ticker import FixedLocator, MaxNLocator
 
 from .style import COLORS, FONT_LEGEND_DENSE, SUPTITLE_Y_CLOSE, apply_style, save_with_vcd, set_figure_suptitle, set_scientific_tickformat, add_panel_label
 
@@ -97,7 +100,7 @@ def plot_clop_training(
     ax_a1.legend(loc="upper right", fontsize=FONT_LEGEND_DENSE, frameon=False)
     ax_a1.set_xlim(0, max(epochs) * 1.08)
     ax_a1.locator_params(axis='x', nbins=3)
-    ax_a1.locator_params(axis='y', nbins=4)
+    ax_a1.yaxis.set_major_locator(MaxNLocator(nbins=4, prune='both'))
     add_panel_label(ax_a1, 'a', x=0.02, y=0.98)
 
     # ── A2: Temperature stability ──
@@ -191,7 +194,7 @@ def plot_dit_training(
     C1 (top-left):     Train/Val MSE loss (log scale)
     C2 (top-right):    Cosine similarity (fidelity)
     C3 (bottom-left):  Learning-rate schedule
-    C4 (bottom-right): Key metrics summary table
+    C4 (bottom-right): Convergence rate (train vs val normalized loss gap)
 
     Parameters
     ----------
@@ -275,23 +278,29 @@ def plot_dit_training(
     ax_c3.xaxis.set_major_locator(MaxNLocator(nbins=2, integer=True, prune="both"))
     add_panel_label(ax_c3, 'g', x=0.02, y=0.98)
 
-    # ── C4: Key metrics summary (text) ──
+    # ── C4: Convergence rate (train vs val) ──
     ax_c4 = fig.add_subplot(gs_c[1, 1])
-    ax_c4.axis("off")
-    val_cos_f = h["val_cosine_sim"][-1]
-    lr_f = h["lr"][-1]
-    summary = (
-        f"Val cosine: {val_cos_f:.4f}\n"
-        f"Final LR: {lr_f:.2e}\n"
-        "EMA decay: 0.9999\n"
-        "10-step Euler / Midpoint"
-    )
-    ax_c4.text(
-        0.5, 0.5, summary,
-        ha="center", va="center", fontsize=10,
-        transform=ax_c4.transAxes, family="sans-serif",
-        bbox=dict(boxstyle="round,pad=0.35", facecolor=COLORS["bg_light"], edgecolor=COLORS["neutral"]),
-    )
+
+    dit_tl = np.array(h["train_loss"])
+    dit_vl = np.array(h["val_loss"])
+    tl_gap = dit_tl[0] - dit_tl.min()
+    vl_gap = dit_vl[0] - dit_vl.min()
+    train_norm = (dit_tl - dit_tl.min()) / tl_gap if tl_gap > 1e-12 else np.zeros_like(dit_tl)
+    val_norm = (dit_vl - dit_vl.min()) / vl_gap if vl_gap > 1e-12 else np.zeros_like(dit_vl)
+
+    progress = np.linspace(0, 100, len(dit_tl))
+    ax_c4.plot(progress, train_norm, label="Train", color=COLORS["real"], linewidth=1.5)
+    ax_c4.plot(progress, val_norm, label="Val", color=COLORS["generated"],
+               linewidth=1.5, linestyle="--")
+    ax_c4.axhline(y=0.1, color="gray", linestyle=":", alpha=0.5, label="90% converged")
+    ax_c4.set_xlabel("Training Progress (%)", fontsize=10)
+    ax_c4.set_ylabel("Remaining Loss Gap", fontsize=10)
+    ax_c4.set_title("Convergence Rate", fontsize=11)
+    ax_c4.set_xlim(0, 100)
+    ax_c4.set_ylim(-0.05, 1.05)
+    ax_c4.legend(fontsize=FONT_LEGEND_DENSE, loc="upper right", frameon=False)
+    ax_c4.locator_params(axis='x', nbins=4)
+    ax_c4.locator_params(axis='y', nbins=4)
     add_panel_label(ax_c4, 'h', x=0.02, y=0.98)
 
     # ── Save ──
@@ -318,7 +327,7 @@ def plot_training_dynamics_combined(
     """Combined training dynamics figure.
 
     Top row (4 panels): CLOP — A1 Loss, A2 Temperature, A3 Accuracy, A4 Embedding Quality
-    Bottom row (4 panels): DiT — C1 Loss, C2 Cosine Similarity, C3 LR Schedule, C4 Summary
+    Bottom row (4 panels): DiT — C1 Loss, C2 Cosine Similarity, C3 LR Schedule, C4 Convergence Comparison
 
     Parameters
     ----------
@@ -365,9 +374,9 @@ def plot_training_dynamics_combined(
         ax_a1.legend(loc="upper right", fontsize=FONT_LEGEND_DENSE, frameon=False)
         ax_a1.set_xlim(0, max(epochs) * 1.08)
         ax_a1.locator_params(axis='x', nbins=3)
-        ax_a1.locator_params(axis='y', nbins=4)
+        ax_a1.yaxis.set_major_locator(MaxNLocator(nbins=4, prune='both'))
         _add_training_phase_bands(ax_a1, int(max(epochs)))
-        add_panel_label(ax_a1, 'a', x=0.02, y=0.98)
+        add_panel_label(ax_a1, 'a', x=-0.18, y=1.06)
 
         # A2: Temperature
         ax_a2 = fig.add_subplot(gs[0, 1])
@@ -432,9 +441,6 @@ def plot_training_dynamics_combined(
         h = dit_hist
         epochs = np.arange(1, len(h["train_loss"]) + 1)
 
-        from matplotlib.ticker import MaxNLocator, FixedLocator
-        import math
-
         # C1: Loss
         ax_c1 = fig.add_subplot(gs[1, 0])
         ax_c1.plot(epochs, h["train_loss"], label="Train MSE", color=COLORS["real"])
@@ -450,14 +456,14 @@ def plot_training_dynamics_combined(
         ax_c1.set_ylim(_ymin, _ymax)
         ax_c1.legend(fontsize=FONT_LEGEND_DENSE, loc="upper right", frameon=False)
         ax_c1.set_xlim(0, max(epochs) * 1.02)
-        ax_c1.xaxis.set_major_locator(MaxNLocator(nbins=2, integer=True, prune="both"))
+        ax_c1.xaxis.set_major_locator(MaxNLocator(nbins=4, integer=True, prune="both"))
         _lo_exp = math.ceil(math.log10(_ymin * 1.01))
         _hi_exp = math.floor(math.log10(_ymax * 0.99))
         _decade_ticks = [10**e for e in range(_lo_exp, _hi_exp + 1)]
         if _decade_ticks:
             ax_c1.yaxis.set_major_locator(FixedLocator(_decade_ticks))
         _add_training_phase_bands(ax_c1, int(max(epochs)))
-        add_panel_label(ax_c1, 'e', x=0.02, y=0.98)
+        add_panel_label(ax_c1, 'e', x=-0.15, y=1.02)
 
         # C2: Cosine similarity
         ax_c2 = fig.add_subplot(gs[1, 1])
@@ -468,7 +474,7 @@ def plot_training_dynamics_combined(
         ax_c2.set_ylim(0.6, 1.0)
         ax_c2.axhline(y=1.0, color="gray", linestyle=":", alpha=0.4)
         ax_c2.set_xlim(0, max(epochs) * 1.05)
-        ax_c2.xaxis.set_major_locator(MaxNLocator(nbins=2, integer=True, prune="both"))
+        ax_c2.xaxis.set_major_locator(MaxNLocator(nbins=4, integer=True, prune="both"))
         ax_c2.locator_params(axis='y', nbins=4)
         add_panel_label(ax_c2, 'f', x=0.02, y=0.98)
 
@@ -480,32 +486,44 @@ def plot_training_dynamics_combined(
         ax_c3.set_title("LR Schedule", fontsize=11)
         set_scientific_tickformat(ax_c3, axis="y", scilimits=(-4, -4))
         ax_c3.set_xlim(0, max(epochs) * 1.05)
-        ax_c3.xaxis.set_major_locator(MaxNLocator(nbins=2, integer=True, prune="both"))
+        ax_c3.xaxis.set_major_locator(MaxNLocator(nbins=4, integer=True, prune="both"))
         add_panel_label(ax_c3, 'g', x=0.02, y=0.98)
 
-        # C4: Key DiT metrics summary
+        # C4: Normalized convergence comparison (CLOP + DiT)
         ax_c4 = fig.add_subplot(gs[1, 3])
-        ax_c4.axis("off")
-        val_cos_f = h["val_cosine_sim"][-1]
-        lr_f = h["lr"][-1]
-        train_loss_f = h["train_loss"][-1]
-        val_loss_f = h["val_loss"][-1]
-        summary = (
-            f"Final val cosine: {val_cos_f:.4f}\n"
-            f"Final train loss: {train_loss_f:.4e}\n"
-            f"Final val loss:   {val_loss_f:.4e}\n"
-            f"Final LR: {lr_f:.2e}\n"
-            "EMA decay: 0.9999\n"
-            "Sampler: 10-step Euler"
-        )
-        ax_c4.text(
-            0.5, 0.5, summary,
-            ha="center", va="center", fontsize=10,
-            transform=ax_c4.transAxes, family="monospace",
-            bbox=dict(boxstyle="round,pad=0.35", facecolor=COLORS["bg_light"],
-                      edgecolor=COLORS["neutral"]),
-        )
-        ax_c4.set_title("DiT Summary", fontsize=11)
+
+        # Normalize val loss: 1 = initial gap, 0 = fully converged
+        dit_vl = np.array(h["val_loss"])
+        dit_gap = dit_vl[0] - dit_vl.min()
+        if dit_gap > 1e-12:
+            dit_norm = (dit_vl - dit_vl.min()) / dit_gap
+        else:
+            dit_norm = np.zeros_like(dit_vl)
+        dit_progress = np.linspace(0, 100, len(dit_vl))
+        ax_c4.plot(dit_progress, dit_norm, label="DiT val loss",
+                   color=COLORS["generated"], linewidth=1.8)
+
+        if clop_hist:
+            clop_vl = np.array(clop_hist["val_loss"])
+            clop_gap = clop_vl[0] - clop_vl.min()
+            if clop_gap > 1e-12:
+                clop_norm = (clop_vl - clop_vl.min()) / clop_gap
+            else:
+                clop_norm = np.zeros_like(clop_vl)
+            clop_progress = np.linspace(0, 100, len(clop_vl))
+            ax_c4.plot(clop_progress, clop_norm, label="CLOP val loss",
+                       color=COLORS["real"], linewidth=1.8)
+
+        ax_c4.axhline(y=0.1, color="gray", linestyle=":", alpha=0.5,
+                       label="90% converged")
+        ax_c4.set_xlabel("Training Progress (%)", fontsize=10)
+        ax_c4.set_ylabel("Remaining Loss Gap", fontsize=10)
+        ax_c4.set_title("Convergence Comparison", fontsize=11)
+        ax_c4.set_xlim(0, 100)
+        ax_c4.set_ylim(-0.05, 1.05)
+        ax_c4.legend(fontsize=FONT_LEGEND_DENSE, loc="upper right", frameon=False)
+        ax_c4.locator_params(axis='x', nbins=4)
+        ax_c4.locator_params(axis='y', nbins=4)
         add_panel_label(ax_c4, 'h', x=0.02, y=0.98)
 
     if save:

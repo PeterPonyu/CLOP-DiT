@@ -13,7 +13,7 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from src.training.train_dit import DiTTrainer
 from src.utils.helpers import seed_everything, get_device

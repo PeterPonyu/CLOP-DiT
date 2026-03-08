@@ -5,10 +5,10 @@
 
 ```bash
 # Generate all 19 panels (A-S) + combined PDF + article symlinks
-bash scripts/regenerate_report.sh
+bash scripts/pipeline/regenerate_report.sh
 
 # Or skip embedding generation if results already exist
-bash scripts/regenerate_report.sh --skip-gen
+bash scripts/pipeline/regenerate_report.sh --skip-gen
 ```
 
 To build the article PDF after figures are ready:
@@ -18,8 +18,8 @@ bash scripts/build_article.sh
 
 For a single entry point that can run from data through to article (or from a given stage), use:
 ```bash
-python scripts/run_pipeline.py --from generate   # report only (like regenerate_report.sh)
-python scripts/run_pipeline.py --stage all --build-article   # full pipeline + PDF
+python scripts/pipeline/run_pipeline.py --from generate   # report only (like regenerate_report.sh)
+python scripts/pipeline/run_pipeline.py --stage all --build-article   # full pipeline + PDF
 ```
 
 Paths are controlled by `configs/pipeline.yaml` and env vars (`CLOPDIT_CACHE_DIR`, etc.).
@@ -27,8 +27,8 @@ Paths are controlled by `configs/pipeline.yaml` and env vars (`CLOPDIT_CACHE_DIR
 The pipeline automatically verifies all 15 article figures and creates symlinks in `articles/figures/`. To verify without regenerating:
 
 ```bash
-bash scripts/verify_article_figures.sh --check   # verify only
-bash scripts/verify_article_figures.sh            # verify + recreate symlinks
+bash scripts/pipeline/verify_article_figures.sh --check   # verify only
+bash scripts/pipeline/verify_article_figures.sh            # verify + recreate symlinks
 ```
 
 ## Current Pipeline (9 Steps)
@@ -36,14 +36,14 @@ bash scripts/verify_article_figures.sh            # verify + recreate symlinks
 `regenerate_report.sh` orchestrates:
 
 0. **Architecture figure** → `scripts/generate_architecture_figure.py`
-1. **Generate embeddings** → `scripts/generate_embeddings.py`
+1. **Generate embeddings** → `scripts/inference/generate_embeddings.py`
 2. **Decode gene expression** → `scripts/decode_expression.py`
 3. **Diversity diagnostics** (Panels J+K) → `scripts/diversity_diagnostics.py`
 4. **Conditioning analysis** (Panels L+M) → `scripts/conditioning_analysis.py`
 5. **Downstream biology** (Panels P/Q/R) → `python -m src.evaluation.downstream_biology`
 6. **Model benchmarking** (Panel S) → `python -m src.evaluation.model_benchmarking`
 7. **Visualization** (all 19 panels + 5 merged figures) → `python -m src.visualization.results_visualizer`
-8. **Verify + symlink** (article figures) → `scripts/verify_article_figures.sh`
+8. **Verify + symlink** (article figures) → `scripts/pipeline/verify_article_figures.sh`
 
 **Output:** `results/figures/panel_a_*.png` through `panel_s_*.png`, 5 merged `fig_*.pdf`, `clop_dit_full_report.pdf`, and 15 symlinks in `articles/figures/`.
 
@@ -274,4 +274,4 @@ done
 ---
 
 **Status**: Full 19-panel evaluation pipeline operational.
-**Regenerate**: `bash scripts/regenerate_report.sh`
+**Regenerate**: `bash scripts/pipeline/regenerate_report.sh`

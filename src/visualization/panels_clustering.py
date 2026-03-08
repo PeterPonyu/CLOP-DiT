@@ -85,6 +85,7 @@ def plot_clustering_panel(
 
     ax2 = fig.add_subplot(gs[1])
     add_panel_label(ax2, 'b')
+    mixing = clustering_data.get("per_type_mixing", {})
     if mixing:
         sorted_types = sorted(mixing.keys(), key=lambda k: mixing[k])
         vals = [mixing[t] for t in sorted_types]

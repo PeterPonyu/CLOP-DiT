@@ -97,15 +97,9 @@ def plot_panel_l(
         ax1.scatter([noise_scales[best_idx]], [fds[best_idx]], color="black", s=28, zorder=12)
         summary_chunks.append(f"Best FD ε={noise_scales[best_idx]:.2f}: {fds[best_idx]:.3f}")
 
-    if summary_chunks:
-        fig.text(
-            0.5,
-            0.015,
-            " | ".join(summary_chunks),
-            ha="center",
-            va="bottom",
-            fontsize=8,
-        )
+    # Summary footer removed per revision; information moved to LaTeX caption
+    # if summary_chunks:
+    #     fig.text(0.5, 0.015, " | ".join(summary_chunks), ...)
 
     path = output_dir / "panel_l_noise_tradeoff.png"
     save_with_vcd(fig, path, dpi)

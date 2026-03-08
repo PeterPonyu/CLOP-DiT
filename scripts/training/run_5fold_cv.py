@@ -5,8 +5,8 @@ Runs the full CLOP → DiT → Evaluate pipeline for each of 5 folds,
 then aggregates results (mean ± std) for publication.
 
 Usage:
-    python scripts/run_5fold_cv.py --config configs/clop.yaml --dit_config configs/dit.yaml
-    python scripts/run_5fold_cv.py --resume_from_fold 3   # resume from fold 3
+    python scripts/training/run_5fold_cv.py --config configs/clop.yaml --dit_config configs/dit.yaml
+    python scripts/training/run_5fold_cv.py --resume_from_fold 3   # resume from fold 3
 """
 
 import argparse
@@ -17,7 +17,7 @@ import time
 import numpy as np
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 from src.utils.paths import CACHE_DIR, CHECKPOINT_DIR, RESULTS_DIR, LOG_DIR
 
@@ -163,7 +163,7 @@ def main():
 
             # ── Step 1: CLOP Training ──
             clop_cmd = [
-                PYTHON, "scripts/04a_train_clop.py",
+                PYTHON, "scripts/training/04a_train_clop.py",
                 "--config", args.clop_config,
                 "--cache_dir", str(cache_dir),
                 "--n_folds", str(args.n_folds),
@@ -189,7 +189,7 @@ def main():
 
             # ── Step 2: DiT Training ──
             dit_cmd = [
-                PYTHON, "scripts/04b_train_dit.py",
+                PYTHON, "scripts/training/04b_train_dit.py",
                 "--config", args.dit_config,
                 "--cache_dir", str(cache_dir),
                 "--n_folds", str(args.n_folds),

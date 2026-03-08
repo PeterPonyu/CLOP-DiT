@@ -8,7 +8,7 @@
 # This script removes only known-outdated files (from 10_full_pipeline.py or older scripts)
 # so that current report figures are left intact.
 #
-# Usage: bash scripts/remove_outdated_figures.sh
+# Usage: bash scripts/pipeline/remove_outdated_figures.sh
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"

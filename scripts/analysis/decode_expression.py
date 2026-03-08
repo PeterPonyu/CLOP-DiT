@@ -24,7 +24,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from src.architecture.decoder import ScGPTDecoder
 from src.utils.paths import CACHE_DIR, RESULTS_DIR, SCGPT_DIR, PROCESSED_H5AD_DIR

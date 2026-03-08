@@ -120,7 +120,7 @@ Figure 14 (`fig_downstream_pq.pdf`) shows overall classifier accuracy and a conf
 Similar to 6.2, the Results section describes Figure 15 as containing "effect-size-weighted scatter...with point size proportional to average absolute effect size and colour indicating adjusted significance." This is Tier 1 Enhancement 1.4, which is not yet marked as done. If the current `panel_r_de_concordance.pdf` does not contain these features, the caption and Results text are ahead of the actual figure. **Required action:** Implement or correct the text description to match the current figure contents.
 
 ### 6.4 [MINOR] Annotation Budget Violations in Dense Panels
-Figure presentation policy (`docs/FIGURE_PRESENTATION_POLICY.md`, §1–4) limits each subplot to one stats box and two highlighted outliers, with at most three text elements beyond axes labels. The descriptions of Figures 5 and 14 in the manuscript text suggest these panels carry more annotation than the policy allows (e.g., "centroid cosine is ranked across the 100 evaluated cell types" with type labels). The VCD (Visual Conflict Detector) policy in `scripts/vcd/` enforces this, but VCD operates only at save-time. **Required action:** Run `scripts/verify_article_figures.sh` and check VCD output logs for annotation budget violations after the next regeneration.
+Figure presentation policy (`docs/FIGURE_PRESENTATION_POLICY.md`, §1–4) limits each subplot to one stats box and two highlighted outliers, with at most three text elements beyond axes labels. The descriptions of Figures 5 and 14 in the manuscript text suggest these panels carry more annotation than the policy allows (e.g., "centroid cosine is ranked across the 100 evaluated cell types" with type labels). The VCD (Visual Conflict Detector) policy in `scripts/vcd/` enforces this, but VCD operates only at save-time. **Required action:** Run `scripts/pipeline/verify_article_figures.sh` and check VCD output logs for annotation budget violations after the next regeneration.
 
 ### 6.5 [MINOR] Marker Gene Figure Uses Lineage-Color Mapping in Caption Only
 Figure 6 caption states "bar colours group markers by lineage family (CD8 T, myeloid, epithelial, stromal); the lineage colour mapping is described in the caption rather than repeated as an in-panel legend." This violates LEGEND_CAPTION_POLICY (the legend should list series/keys). A reader scanning the figure without the caption will not know what the bar colors mean. **Required action:** Add a minimal legend or color key directly in the figure for the four lineage colors, even if compact.
@@ -195,7 +195,7 @@ Given the "first method" claim (§5.1 above), a reviewer will check whether Cell
 - [ ] Clarify CLOP validation accuracy denominator (batch-level vs. full-set)
 - [ ] Add/check Cell2Sentence citation; verify scDiff reference
 - [ ] Verify Fig 11 violin panel is present in current PDF
-- [ ] Run `scripts/verify_article_figures.sh` and resolve any VCD violations
+- [ ] Run `scripts/pipeline/verify_article_figures.sh` and resolve any VCD violations
 - [ ] Tick completed items in `docs/SUBMISSION_CHECKLIST.md`
 
 ---

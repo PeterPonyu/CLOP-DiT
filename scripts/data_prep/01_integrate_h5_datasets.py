@@ -28,7 +28,7 @@ import numpy as np
 import scanpy as sc
 import scipy.sparse as sp
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from src.utils.logging_config import setup_logging
 
 logger = logging.getLogger(__name__)

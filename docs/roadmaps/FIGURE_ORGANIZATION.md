@@ -5,7 +5,7 @@
 All current figures are produced by the report pipeline and live under **`results/figures/`**. Regenerate with:
 
 ```bash
-bash scripts/regenerate_report.sh
+bash scripts/pipeline/regenerate_report.sh
 ```
 
 Outputs: 19 panels (A-S) as PNG and PDF, plus `fig_architecture.{png,pdf}` and 5 merged figures, plus `clop_dit_full_report.pdf`.
@@ -34,7 +34,7 @@ Outputs: 19 panels (A-S) as PNG and PDF, plus `fig_architecture.{png,pdf}` and 5
 | K | `panel_k_expression_diversity` | Expression diversity | (standalone, legacy) |
 | L | `panel_l_noise_tradeoff` | CFG/noise trade-off, ODE steps | (standalone, legacy) |
 | O | `panel_o_baseline_comparison` | Baseline/decoder comparison | Fig 12 (baselines) |
-| S | `panel_s_benchmark` | Composite benchmark (0.668) | Fig 13 (benchmark) |
+| S | `panel_s_benchmark` | Composite benchmark (0.844) | Fig 13 (benchmark) |
 | P+Q | `fig_downstream_pq` | **Merged**: Clustering + Classifier alignment | Fig 14 (downstream P+Q) |
 | P | `panel_p_clustering_mixing` | Clustering/mixing | (standalone, legacy) |
 | Q | `panel_q_classifier_alignment` | Classifier alignment | (standalone, legacy) |
@@ -81,7 +81,7 @@ All 15 figures are included in `articles/clop_dit_biology.tex`. Each figure is a
 
 ## Folder contents
 
-- **`results/figures/`**: All pipeline outputs — `fig_architecture`, 5 merged figures (`fig_training_dynamics`, etc.), 19 standalone panels (`panel_a_*` … `panel_s_*`), and `clop_dit_full_report.pdf`. Legacy panels (A, B, C, E, F, G, K, L, P, Q) are used only in the full report; the article uses the 15 listed in the table above. **Outdated files** (from old scripts): `fig1_training_dynamics.*`, `fig2_embedding_space.*`, `fig3_metrics_dashboard.*`, `fig4_biological_validation.*`, `fig5_dimension_sampling.*`, `visual_conflict_report.json` — remove with `bash scripts/remove_outdated_figures.sh`.
+- **`results/figures/`**: All pipeline outputs — `fig_architecture`, 5 merged figures (`fig_training_dynamics`, etc.), 19 standalone panels (`panel_a_*` … `panel_s_*`), and `clop_dit_full_report.pdf`. Legacy panels (A, B, C, E, F, G, K, L, P, Q) are used only in the full report; the article uses the 15 listed in the table above. **Outdated files** (from old scripts): `fig1_training_dynamics.*`, `fig2_embedding_space.*`, `fig3_metrics_dashboard.*`, `fig4_biological_validation.*`, `fig5_dimension_sampling.*`, `visual_conflict_report.json` — remove with `bash scripts/pipeline/remove_outdated_figures.sh`.
 - **`articles/figures/`**: Only the **15 article figure PDFs** (symlinks to `results/figures/`). No other figures belong here; the LaTeX build includes only these 15.
 - **`results/figures/biological_validation/`** (optional): Figure set from `scripts/08_biological_validation.py` (`figure1_text2cell_multi`, `figure2_cell2cell`, `figure3_celltypist`, `figure4_summary`) used for supplementary biological QA and reviewer support.
 
@@ -121,7 +121,7 @@ Each panel is a **standalone full-width figure** in the LaTeX article. LaTeX doe
 
 ## Legacy/outdated figure outputs (do not use; remove if present)
 
-The **canonical pipeline** is `bash scripts/regenerate_report.sh`. It does **not** produce the following. If they exist, they come from the legacy `scripts/10_full_pipeline.py` (Stage 4) or older scripts and should be removed:
+The **canonical pipeline** is `bash scripts/pipeline/regenerate_report.sh`. It does **not** produce the following. If they exist, they come from the legacy `scripts/10_full_pipeline.py` (Stage 4) or older scripts and should be removed:
 
 | Outdated file(s) | Source | Action |
 |------------------|--------|--------|
@@ -130,7 +130,7 @@ The **canonical pipeline** is `bash scripts/regenerate_report.sh`. It does **not
 
 `src/visualization/full_pipeline_figures.py` is now a no-op compatibility stub by design. It should not be used to produce any figure artifacts.
 
-Run `bash scripts/remove_outdated_figures.sh` to delete these from `results/figures/` without touching current report figures.
+Run `bash scripts/pipeline/remove_outdated_figures.sh` to delete these from `results/figures/` without touching current report figures.
 
 ## Report vs article
 
@@ -158,7 +158,7 @@ Each article figure has exactly one canonical producer. No duplicate logic write
 | Fig 14 | `fig_downstream_pq` | `downstream_panels.plot_clustering_and_classifier_merged()` | Step 7 |
 | Fig 15 | `panel_r_de_concordance` | `downstream_panels.plot_de_concordance_panel()` | Step 7 |
 
-After regeneration, run `bash scripts/verify_article_figures.sh` to confirm all 15 PDFs exist and update symlinks in `articles/figures/`. The script delegates to the Python delivery module; the **canonical list** of 15 article figure basenames lives in `src/visualization/article_delivery.py` (`ARTICLE_FIGURE_BASENAMES`). To add a new article figure, update that list, ensure one producer writes the PDF to `results/figures/`, and re-run the pipeline and delivery.
+After regeneration, run `bash scripts/pipeline/verify_article_figures.sh` to confirm all 15 PDFs exist and update symlinks in `articles/figures/`. The script delegates to the Python delivery module; the **canonical list** of 15 article figure basenames lives in `src/visualization/article_delivery.py` (`ARTICLE_FIGURE_BASENAMES`). To add a new article figure, update that list, ensure one producer writes the PDF to `results/figures/`, and re-run the pipeline and delivery.
 
 ## Figure logic and limitations
 
@@ -166,14 +166,14 @@ This section states how figures are produced, where they live, and what is fixed
 
 ### Data flow (logic)
 
-- **Pipeline:** `scripts/regenerate_report.sh` runs steps 0–8. Scripts and `src/visualization/` (e.g. `training_panels`, `panels_quality`, `panels_expression`, `downstream_panels`, `benchmark_panels`, `conditioning_analysis.py`, `diversity_diagnostics.py`) write outputs to `results/figures/`.
+- **Pipeline:** `scripts/pipeline/regenerate_report.sh` runs steps 0–8. Scripts and `src/visualization/` (e.g. `training_panels`, `panels_quality`, `panels_expression`, `downstream_panels`, `benchmark_panels`, `conditioning_analysis.py`, `diversity_diagnostics.py`) write outputs to `results/figures/`.
 - **Single producer per figure:** Each of the 15 article figures has exactly one canonical producer (table above). No duplicate code path writes the same filename.
-- **Symlinks:** `scripts/verify_article_figures.sh` calls `python -m src.visualization.article_delivery`, which reads the manifest in `src/visualization/article_delivery.py`, expects the 15 PDFs in `results/figures/` (or `FIG_DIR`), and (re)creates symlinks in `articles/figures/` (or `ARTICLE_FIGURES_DIR`). LaTeX includes only from `articles/figures/`; that directory is for consumption only (no hand-edited figures there).
+- **Symlinks:** `scripts/pipeline/verify_article_figures.sh` calls `python -m src.visualization.article_delivery`, which reads the manifest in `src/visualization/article_delivery.py`, expects the 15 PDFs in `results/figures/` (or `FIG_DIR`), and (re)creates symlinks in `articles/figures/` (or `ARTICLE_FIGURES_DIR`). LaTeX includes only from `articles/figures/`; that directory is for consumption only (no hand-edited figures there).
 
 ### Paths
 
 - **Default output:** Panel and figure generators resolve `output_dir=None` to `FIG_DIR` in `src/utils/paths.py`, which respects `CLOPDIT_FIG_DIR` (and `CLOPDIT_RESULTS_DIR`) so the output directory can be overridden at runtime.
-- **Article figures:** `articles/figures/` contains only symlinks (or copies) to `results/figures/` for the 15 article figures. Do not edit PDFs in `articles/figures/`; regenerate and re-run `verify_article_figures.sh` instead.
+- **Article figures:** `articles/figures/` contains only symlinks (or copies) to `results/figures/` for the 15 article figures. Do not edit PDFs in `articles/figures/`; regenerate and re-run `scripts/pipeline/verify_article_figures.sh` instead.
 
 ### Explicit limitations
 
@@ -182,7 +182,7 @@ This section states how figures are produced, where they live, and what is fixed
 | **VCD** | Panel S heatmap text uses explicit dark color for WCAG contrast. Run full regeneration and VCD to confirm 0 warnings; info-level issues are documented and accepted. |
 | **Pipeline order** | Steps must run in order; some figures depend on earlier steps (e.g. Fig 11 is composed from panels L and K produced in steps 4 and 3, plus a diversity-tail violin that requires `diversity_diagnostics.json`, dedup caches, and generated embeddings; see [FIGURES_9-12_POLICY.md](FIGURES_9-12_POLICY.md)). |
 | **Layout** | All multi-panel layout is done in Matplotlib. LaTeX uses a single `\includegraphics[width=\textwidth]` per figure — no `\subfloat` or LaTeX-composed subpanels. |
-| **Symlinks** | Article build assumes `articles/figures/*.pdf` resolve (symlinks or copies). `verify_article_figures.sh` is the single place that creates/updates them. |
+| **Symlinks** | Article build assumes `articles/figures/*.pdf` resolve (symlinks or copies). `scripts/pipeline/verify_article_figures.sh` is the single place that creates/updates them. |
 | **Legacy panels** | Standalone panels A, B, C, E, F, G, K, L, P, Q are still generated for the full report PDF but are not used in the LaTeX article. |
 
 ### Figure 1 (architecture) policy
@@ -218,7 +218,7 @@ This section states how figures are produced, where they live, and what is fixed
 - **Fig 9**: Conditioning landscape (UMAP of condition modes) — establishes context for the diversity analysis.
 - **Fig 10**: Diversity diagnostics (intra-type ratio, memorization, CFG sweep, condition sensitivity).
 - **Fig 11**: Noise trade-off and expression diversity — merged L+K.
-- **Fig 12–13**: Baselines and composite benchmark (CLOP-DiT vs baselines, composite score 0.668).
+- **Fig 12–13**: Baselines and composite benchmark (CLOP-DiT vs baselines, composite score 0.844).
 - **Fig 14**: Downstream biology: clustering + classifier — merged P+Q.
 - **Fig 15**: Downstream biology: DE concordance.
 

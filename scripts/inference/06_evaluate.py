@@ -43,7 +43,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from src.evaluation.run_metrics import run_embedding_metrics
 from src.evaluation.visualizer import EmbeddingVisualizer

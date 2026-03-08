@@ -42,10 +42,10 @@ This document answers the reviewer question "where is the biological meaning sho
 - "Where is biological meaning shown?"
   - Point to Fig 6-8 for gene-level fidelity, Fig 14-15 for downstream biological usefulness, and Fig 5 for per-type heterogeneity rather than only global means.
 - "How do you know the method is robust?"
-  - Point to Fig 10-11 for CFG and diversity sensitivity, Fig 13 for bootstrap confidence intervals, and the robustness harness in `scripts/run_robustness_experiments.py`.
+  - Point to Fig 10-11 for CFG and diversity sensitivity, Fig 13 for bootstrap confidence intervals, and the robustness harness in `scripts/training/run_robustness_experiments.py`.
 - "How do you know text matters?"
   - Point to Fig 3-5 and the unconditional-collapse control in Fig 4.
 - "How do you know this is not only an embedding trick?"
   - Point to gene-expression and DE figures: Fig 6-8 and Fig 15.
 - "How are baselines compared fairly?"
-  - Point to `src/evaluation/baseline_registry.py`, the artifact contract under `results/baselines/{method}/`, and the per-method downstream wrapper `scripts/run_downstream_for_baselines.py`.
+  - Point to `src/evaluation/baseline_registry.py`, the artifact contract under `results/baselines/{method}/`, and the per-method downstream wrapper `scripts/analysis/run_downstream_for_baselines.py`.

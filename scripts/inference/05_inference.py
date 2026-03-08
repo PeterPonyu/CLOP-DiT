@@ -28,7 +28,7 @@ import torch
 import anndata as ad
 
 # Add project root to path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from src.architecture.dit import DiT1D
 from src.architecture.clop import CLOPAligner

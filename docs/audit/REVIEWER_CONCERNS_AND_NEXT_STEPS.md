@@ -1,6 +1,65 @@
 # Professional Reviewer Concerns and Next Steps
 
-*Last revised: 2026-03-06*
+*Last revised: 2026-03-08*
+
+## 2026-03-08 Consolidation Addendum (Cursor-8 merge)
+
+- Consolidated whole-review report: `docs/reviewer_reports/consolidated_cursor8_whole_review_2026-03-08.md`
+- Authoritative source for submission claims: `articles/clop_dit_biology.tex`
+- Canonical regeneration command: `bash scripts/pipeline/regenerate_report.sh`
+- Benchmark value in active manuscript: `0.844` (legacy `0.668` references should be treated as stale)
+
+Immediate next actions:
+1. Regenerate article figures and archive verification logs from `scripts/pipeline/verify_article_figures.sh`.
+2. Confirm submission bundle includes Supplementary Tables S1/S2 referenced in the manuscript.
+3. Final consistency sweep to remove remaining stale metric/path references in non-authoritative docs.
+
+### Resolution Status (21 items from consolidated review, as of 2026-03-08)
+
+Based on the consolidated master review (`docs/reviewer_reports/consolidated_cursor8_whole_review_2026-03-08.md`), which merged findings from 16 independent reviews (8 reviewer reports + 8 figure-level worktree audits), the status of all 21 tracked submission concerns is as follows.
+
+#### Resolved (11 items)
+
+| # | Concern | Evidence in .tex |
+|---|---------|-----------------|
+| 1 | Data Availability statement (GEO, code repo, config) | Line 611: `\dataavailability{...}` with GEO accessions, S1/S2 refs, GitHub/Zenodo, `requirements.txt`, `QUICK_START.md` |
+| 2 | Reproducibility instructions in supplement | Line 577: supplement references `regenerate_report.sh` and `QUICK_START.md`; `REPRODUCIBILITY.md` exists |
+| 3 | Affiliation, correspondence, funding filled | Lines 85--97: real affiliation (Army Medical University), real email, ORCID; line 605: funding statement |
+| 4 | Ethics statements (IRB waiver, informed consent) | Lines 607--609: IRB waiver for public GEO data; informed consent "Not applicable" |
+| 5 | Author Contributions (CRediT-style) | Line 603: full CRediT statement for Z.F. |
+| 6 | Acknowledgments and Conflicts of interest | Lines 624, 626: acknowledgments and "no conflicts" |
+| 8 | Primary vs exploratory comparisons clarified | Lines 271, 278--280: two primary operating points designated; exploratory sweep in Appendix B |
+| 9 | Text-condition construction paragraph and software/versions | Line 202: full template with script paths; line 210: Python/PyTorch/CUDA/scGPT/Transformers versions |
+| 10 | Validation split clarified (8 datasets, selection criteria) | Line 204: 8 held-out datasets by study, tissue-stratified selection, S1/S2 refs |
+| 11 | OOD limitation in Limitations section | Line 558: explicit statement that OOD/free-form prompts not quantitatively evaluated |
+| -- | No TODO/placeholder remnants in .tex | Verified: only match is commented-out template at line 621 |
+
+#### Partially Resolved (2 items)
+
+| # | Concern | Current State | Remaining Work |
+|---|---------|---------------|----------------|
+| 7 | Uncertainty/CI paragraph and bootstrap table | Uncertainty paragraph exists (lines 282--283); composite bootstrap CIs in Figure benchmark panel d | Dedicated bootstrap CI table for individual metrics (KNN, steering, diversity) not yet created as supplement |
+| -- | Stale metric references in derivative docs | 0.844 is authoritative in .tex; legacy 0.668 flagged in this addendum | Remove stale 0.668 from `docs/roadmaps/FIGURE_DESIGN_AND_PROMPT_DIVERSITY_PLAN.md` and other derivative docs |
+
+#### Open (8 items)
+
+| # | Concern | Status | Action Required |
+|---|---------|--------|-----------------|
+| 12 | Confirm Fig 12--15 files and captions | Figures not yet regenerated | Run `verify_article_figures.sh`; regenerate all 17 figure PDFs |
+| 13 | Downstream numbers in abstract/conclusions | Abstract lacks explicit ARI/NMI/DE values | Optional: add one quantitative downstream sentence to abstract |
+| -- | Supplementary Tables S1/S2 files | Referenced in .tex but actual files not yet created | Create `articles/supplementary_tables.tex` with GEO accessions (S1) and validation IDs (S2) |
+| -- | Dimension typo at line 332 | "shared 256-dimensional" should be "shared 512-dimensional" | Single-site fix in .tex |
+| -- | Script name `build_text_captions.py` does not exist | Referenced in .tex but path is wrong | Correct to actual paths (`src/data_pipeline/subcluster_annotation.py`, `scripts/data_prep/02b_enrich_descriptions.py`) |
+| -- | Figure code critical issues (panel labels, MaxNLocator bug) | 6 critical + 16 high issues across 17 figures | Fix panel labels (Figs 3, 5/6, 12, 14), MaxNLocator (Fig 8), suptitle removal (15 figs) |
+| -- | Learned baselines incomplete (scVI dependency) | Acknowledged in Discussion (line 560); scVI blocked by dependency conflict | Resolve `scvi-tools`/`anndata` conflict or document as future work |
+| -- | Code/data publication posture | .tex references GitHub + Zenodo but URLs are placeholder-level | Author decision needed: public repo URL or controlled-access with SLA |
+
+#### Summary
+
+- **Resolved:** 11 of 21 tracked items (all 6 high-priority editorial items plus 5 of 5 medium-priority reviewer items)
+- **Partially resolved:** 2 items (uncertainty/CI table, stale metric cleanup)
+- **Open:** 8 items (figure regeneration, supplementary file creation, .tex typos, figure code fixes, baseline dependency, publication posture)
+- **Overall readiness:** Manuscript text is substantially complete; remaining work is concentrated in figure regeneration, supplementary material creation, and minor .tex corrections.
 
 Based on real-time MDPI Biology requirements, computational biology/single-cell generative model review norms, and common statistical/methods weaknesses, the following concerns could be raised by a professional reviewer. Each is paired with **concrete next-step tasks** for Claude (or the author) to perform.
 
@@ -39,7 +98,7 @@ Based on real-time MDPI Biology requirements, computational biology/single-cell 
 ## 3. Statistics and Uncertainty Reporting
 
 **Concern:** Reviewers of computational and single-cell papers often expect:
-- **Uncertainty/confidence**: No confidence intervals (e.g. bootstrap 95% CI) or standard errors for KNN accuracy (36.9%), steering (81%), diversity ratio, or composite score (0.668). Single-point estimates can be overstated if variability is high.
+- **Uncertainty/confidence**: No confidence intervals (e.g. bootstrap 95% CI) or standard errors for KNN accuracy (36.9%), steering (81%), diversity ratio, or composite score (0.844). Single-point estimates can be overstated if variability is high.
 - **Multiple comparisons**: Many configurations (CFG, solvers, steps) are compared; no mention of correction for multiple comparisons or pre-specified primary endpoints.
 - **Sample size / power**: No justification for 100 cell types, 200 cells per group, or 80/20 train–validation split (e.g. sensitivity or power considerations).
 
@@ -106,7 +165,7 @@ Based on real-time MDPI Biology requirements, computational biology/single-cell 
 
 **Next steps (Claude/author):**
 17. **Add a sentence** (e.g. in Data Availability or Methods): "Supplementary materials include: Table S1 (GEO accession list), Table S2 (validation dataset identifiers), Table S3 (full CFG sweep), and Figure S1 (…)."
-18. **Create minimal supplement** if not present: at least Table S1 (dataset list) and a one-page reproducibility instruction (or point to `docs/QUICK_START.md` / `scripts/regenerate_report.sh`).
+18. **Create minimal supplement** if not present: at least Table S1 (dataset list) and a one-page reproducibility instruction (or point to `docs/operational/QUICK_START.md` / `scripts/pipeline/regenerate_report.sh`).
 
 ---
 
@@ -117,11 +176,11 @@ Based on real-time MDPI Biology requirements, computational biology/single-cell 
 **Status update:**
 - Baseline registry and artifact contract are now centralized in `src/evaluation/baseline_registry.py`.
 - Learned baseline entry points now exist under `scripts/baselines/` (`train_embedding_vae_baseline.py`, `train_scvi_baseline.py`).
-- Robustness planning/execution is centralized in `scripts/run_robustness_experiments.py`, with design guidance in `docs/ROBUSTNESS_EXPERIMENTS.md`.
+- Robustness planning/execution is centralized in `scripts/training/run_robustness_experiments.py`, with design guidance in `docs/ROBUSTNESS_EXPERIMENTS.md`.
 
 **Next steps (Claude/author):**
 19. **Run at least one learned baseline** and write its artifacts into `results/baselines/{method}/` so `src.evaluation.model_benchmarking` and Panel S can score it automatically.
-20. **Use `scripts/run_downstream_for_baselines.py`** to generate per-method downstream biological validation for any baseline that exports expression.
+20. **Use `scripts/analysis/run_downstream_for_baselines.py`** to generate per-method downstream biological validation for any baseline that exports expression.
 21. **Add a supplement-ready robustness summary** covering seed stability, subsampling robustness, and prompt sensitivity.
 
 ---

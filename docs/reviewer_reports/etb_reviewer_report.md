@@ -59,7 +59,7 @@ The project has strong policy coverage and clear intent for publication-quality 
 - Reviewer risk: Submission packaging and figure-policy compliance cannot be audited from current project state.
 - Recommended fix:
   - Regenerate figures in the target environment and include the 15 article figure PDFs (or validated symlinks) before submission QA.
-  - Archive a verification log from `scripts/verify_article_figures.sh`.
+  - Archive a verification log from `scripts/pipeline/verify_article_figures.sh`.
 
 ## Medium Concerns
 

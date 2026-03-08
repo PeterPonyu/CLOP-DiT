@@ -26,7 +26,7 @@ import logging
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from src.utils.logging_config import setup_logging
 from src.data_pipeline.embedding_preprocessor import preprocess_cached_embeddings

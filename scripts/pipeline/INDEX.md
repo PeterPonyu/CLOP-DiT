@@ -52,7 +52,7 @@ python scripts/pipeline/10_full_pipeline.py \
 bash scripts/pipeline/regenerate_report.sh
 
 # Verify article figures
-bash scripts/verify_article_figures.sh
+bash scripts/pipeline/verify_article_figures.sh
 ```
 
 ### Cleanup

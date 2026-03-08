@@ -63,7 +63,7 @@ def plot_real_vs_generated(
     if generated_path is None or not Path(generated_path).exists():
         logger.info(
             "No generated cells found — Panel E deferred until after "
-            "DiT inference (run scripts/generate_embeddings.py first)"
+            "DiT inference (run scripts/inference/generate_embeddings.py first)"
         )
         return None
 

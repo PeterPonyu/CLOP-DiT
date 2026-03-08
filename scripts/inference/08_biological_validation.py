@@ -53,7 +53,7 @@ from sklearn.metrics import r2_score
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from src.utils.logging_config import setup_logging
 from src.architecture.decoder import ScGPTDecoder
 from src.visualization.style import COLORS as VIZ_COLORS, apply_style, save_with_vcd

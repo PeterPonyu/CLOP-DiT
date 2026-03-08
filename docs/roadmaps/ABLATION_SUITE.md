@@ -2,7 +2,7 @@
 
 *Last revised: 2026-03-06*
 
-The CLOP ablation runner in `scripts/run_ablation_study.py` is now organized by ablation family rather than as a flat list.
+The CLOP ablation runner in `scripts/training/run_ablation_study.py` is now organized by ablation family rather than as a flat list.
 
 ## Families
 
@@ -23,8 +23,8 @@ The CLOP ablation runner in `scripts/run_ablation_study.py` is now organized by 
 ## Usage
 
 ```bash
-python scripts/run_ablation_study.py --list
-python scripts/run_ablation_study.py --base_config configs/clop.yaml --report
+python scripts/training/run_ablation_study.py --list
+python scripts/training/run_ablation_study.py --base_config configs/clop.yaml --report
 ```
 
 ## Reporting guidance

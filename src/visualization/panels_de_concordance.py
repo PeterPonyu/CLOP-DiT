@@ -195,11 +195,14 @@ def plot_de_concordance_panel(
         parts = cname.split("_vs_")
         short_xlabels.append(f"{parts[0][:15]}…" if len(parts) == 2 else cname[:15])
 
+    # Truncate to 10 chars for bottom panel
+    xs_short = [s[:10]+"…" if len(s) > 10 else s for s in short_xlabels]
     ax3.set_xticks(x)
-    ax3.set_xticklabels(short_xlabels, fontsize=7, rotation=45, ha="right")
+    ax3.set_xticklabels(xs_short, fontsize=7, rotation=45, ha="right")
     ax3.set_ylim(0, 1.15)
     ax3.legend(fontsize=8, ncol=2, loc="upper right", frameon=False)
     style_axes(ax3, "bar", title="Per-Contrast Summary", ylabel="Score")
+    plt.subplots_adjust(bottom=0.25)
 
     if save:
         path = save_panel(fig, output_dir / "panel_r_de_concordance.png", dpi)

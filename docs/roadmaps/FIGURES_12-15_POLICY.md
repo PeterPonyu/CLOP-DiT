@@ -35,8 +35,8 @@ Reference: [article_delivery.py](../src/visualization/article_delivery.py) (`ART
 **Commands:**
 
 ```bash
-bash scripts/regenerate_report.sh
-bash scripts/verify_article_figures.sh
+bash scripts/pipeline/regenerate_report.sh
+bash scripts/pipeline/verify_article_figures.sh
 cd articles && latexmk -pdf clop_dit_biology.tex
 ```
 
