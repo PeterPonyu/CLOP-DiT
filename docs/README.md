@@ -1,58 +1,61 @@
 # Documentation
 
-Complete documentation for the CLOP-DiT project. For the version manifest, see [../VERSIONS.md](../VERSIONS.md).
+Complete documentation for the CLOP-DiT project. Start here for all documentation needs.
 
 ---
 
 ## Quick Start
 
-| Document | Status | Purpose |
-|----------|--------|---------|
-| **[INDEX.md](INDEX.md)** | Current | Complete documentation organization by category |
-| **[QUICK_START.md](QUICK_START.md)** | Current | 9-step pipeline to regenerate figures |
-| [DIRECTORY_CLEANUP_POLICY.md](DIRECTORY_CLEANUP_POLICY.md) | Current | Cleanup and organization guidelines |
+| Need | Document |
+|------|----------|
+| **Run the pipeline** | [operational/QUICK_START.md](operational/QUICK_START.md) |
+| **Find documentation** | [INDEX.md](INDEX.md) - Master document index |
+| **Clean workspace** | [operational/DIRECTORY_CLEANUP_POLICY.md](operational/DIRECTORY_CLEANUP_POLICY.md) |
 
 ---
 
-## Document Status Reference
+## Documentation Organization
 
-| Category | Documents | Status |
-|----------|-----------|--------|
-| **Operational** | QUICK_START.md, FIGURE_ORGANIZATION.md, REGENERATION_STATUS.md | Current |
-| **Roadmaps** | FIGURE_ENHANCEMENT_ROADMAP.md, BIOLOGICAL_CLAIM_MAP.md, ABLATION_SUITE.md | Current |
-| **Policies** | DIRECTORY_CLEANUP_POLICY.md, WRITING_AND_DOCS_POLICY.md, LEGEND_CAPTION_POLICY.md | Current |
-| **Article Content** | CLOP_DiT_JBHI_Article.md, CLOP-DiT_Evaluation_Report.md | Current |
-| **Archive** | See [archive/](archive/) | Historical session reports |
-
----
-
-## Document Organization
-
-All documentation is organized in **[INDEX.md](INDEX.md)** by category:
-
-1. **Operational** - Run pipeline, generate figures, directory cleanup
-2. **Roadmaps and Plans** - Enhancement roadmaps, biological claims, ablations
-3. **Audit and Status** - Completed work audits, submission checklists
-4. **Article Content** - Manuscript content and evaluation reports
-5. **Session/AI-generated** - Intermediate analysis (intermediate_analysis/), Historical reports (archive/)
+| Category | Location | Documents |
+|----------|----------|-----------|
+| **Operational** | [operational/](operational/INDEX.md) | 4 - Execution guides, quick start |
+| **Roadmaps** | [roadmaps/](roadmaps/INDEX.md) | 15 - Planning, figures, biology |
+| **Article** | [article/](article/INDEX.md) | 5 - Manuscript content |
+| **Audit** | [audit/](audit/INDEX.md) | 3 - Checklists, reviews |
+| **Archive** | [archive/](archive/INDEX.md) | 6 - Historical |
 
 ---
 
-## Common Actions
+## Document Status
 
-- **Regenerate figures**: `bash scripts/regenerate_report.sh` (see [QUICK_START.md](QUICK_START.md))
-- **Check figure status**: See [REGENERATION_STATUS.md](REGENERATION_STATUS.md)
-- **Clean up workspace**: See [DIRECTORY_CLEANUP_POLICY.md](DIRECTORY_CLEANUP_POLICY.md)
-- **Add new figure panels**: See [FIGURE_ENHANCEMENT_ROADMAP.md](FIGURE_ENHANCEMENT_ROADMAP.md)
+| Status | Meaning | Examples |
+|--------|---------|----------|
+| **Current** | Actively maintained | All docs in operational/, roadmaps/ |
+| **Archived** | Historical reference | docs/archive/ |
+| **Ephemeral** | Working outputs | docs/intermediate_analysis/ |
 
 ---
 
-## Archive Location
+## Version Information
 
-Old session reports and planning documents are in **[docs/archive/](archive/)**:
-- Session reports (2026-03-02 era)
-- Cleanup summaries
-- Experiment notes
-- Superseded enhancement summaries
+Current documentation version: **v9.3**
 
-These are gitignored and not required for regeneration or submission. See [DIRECTORY_CLEANUP_POLICY.md](DIRECTORY_CLEANUP_POLICY.md) for archive policy.
+See [VERSIONS.md](../VERSIONS.md) for file-to-version mapping.
+
+---
+
+## Regenerate All Figures
+
+```bash
+bash scripts/pipeline/regenerate_report.sh
+```
+
+See [operational/QUICK_START.md](operational/QUICK_START.md) for details.
+
+---
+
+## See Also
+
+- [Scripts Index](../scripts/INDEX.md)
+- [Project README](../README.md)
+- [VERSIONS.md](../VERSIONS.md)

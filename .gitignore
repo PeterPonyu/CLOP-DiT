@@ -75,3 +75,17 @@ package-lock.json
 # Root archive (allow README, ignore subdirectories if created)
 archive/*/
 !archive/README.md
+
+# Generated figure PNGs (generated on demand from PDFs)
+results/figures/generated_pngs/
+
+# LaTeX auxiliary files (explicitly listed for clarity)
+articles/*.aux
+articles/*.log
+articles/*.out
+articles/*.toc
+articles/*.synctex.gz
+articles/*.fdb_latexmk
+articles/*.fls
+articles/*.bbl
+articles/*.blg
