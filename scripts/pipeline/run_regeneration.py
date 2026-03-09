@@ -28,7 +28,7 @@ sys.path.insert(0, str(REPO))
 sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(REPO / "scripts"))
 sys.path.insert(0, str(REPO / "scripts" / "vcd"))
-sys.path.insert(0, str(REPO / "scripts" / "analysis"))
+sys.path.insert(0, str(REPO / "scripts"))
 
 import matplotlib.pyplot as plt
 from src.utils.paths import FIG_DIR, RESULTS_DIR, ARTICLE_FIGURES_DIR
@@ -92,7 +92,7 @@ def run_architecture_figure():
 def run_vcd_on_figures(pdf_list: list[Path]) -> dict:
     """Run the Visual Conflict Detector on each PDF (rendered to a figure)."""
     try:
-        from visual_conflict_detector import detect_conflicts_in_file, summarize_issues
+        from vcd import detect_conflicts_in_file, summarize_issues
     except ImportError as e:
         log.warning("VCD unavailable: %s — skipping VCD pass", e)
         return {}

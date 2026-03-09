@@ -46,7 +46,6 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.colors import LinearSegmentedColormap
 from scipy import stats
-from scipy.linalg import sqrtm
 from sklearn.decomposition import PCA
 from sklearn.metrics import r2_score
 
@@ -242,14 +241,9 @@ def select_nonredundant_markers(
 
 
 def frechet_distance(real: np.ndarray, gen: np.ndarray) -> float:
-    mu_r, mu_g = real.mean(0), gen.mean(0)
-    sig_r = np.cov(real, rowvar=False)
-    sig_g = np.cov(gen, rowvar=False)
-    diff = mu_r - mu_g
-    covmean = sqrtm(sig_r @ sig_g)
-    if np.iscomplexobj(covmean):
-        covmean = covmean.real
-    return float(diff @ diff + np.trace(sig_r + sig_g - 2 * covmean))
+    """Frechet Distance -- delegates to canonical implementation."""
+    from src.evaluation.metrics import GenerationMetrics
+    return GenerationMetrics.frechet_distance(real, gen)
 
 
 def gene_mean_pearson(real: ad.AnnData, gen: ad.AnnData) -> float:

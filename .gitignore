@@ -1,4 +1,8 @@
-# Python
+# ============================================================
+# CLOP-DiT .gitignore — GitHub-ready (strict binary blocking)
+# ============================================================
+
+# === Python ===
 __pycache__/
 *.py[cod]
 *$py.class
@@ -6,80 +10,60 @@ __pycache__/
 dist/
 build/
 .eggs/
+*.egg
 .pytest_cache/
 
-# Data (large files — binary embeddings and h5ad)
-data/cached_latents*/
-data/processed_h5ad/*.h5ad
-data/processed_h5ad/*.json
-data/processed_h5ad_v*/
+# === Binary safeguards (prevent accidental large-file commits) ===
+*.pth
+*.pt
+*.onnx
+*.safetensors
+*.npy
+*.npz
+*.h5ad
+*.h5
+*.hdf5
+*.parquet
+*.feather
+*.pkl
+*.pickle
 
-# Model weights and training artifacts (large binary files)
+# === Data (large files) ===
+data/
+
+# === Model weights ===
 models/scgpt_human/
 models/scgpt_pancancer/
-models/checkpoints/*.pth
-models/checkpoints/*.json
-models/checkpoints/archive/
-models/checkpoints_v*/
+models/checkpoints/
+!models/checkpoints/.gitkeep
+!models/checkpoints/CURRENT_VERSION.txt
+models/baselines/
 
-# Generated outputs
+# === Generated outputs ===
 results/
-figures_v*/
-# Root figures/ is deprecated; pipeline uses results/figures/ and articles/figures/ (symlinks)
+logs/
 figures/
+figures_v*/
 generated_*.h5ad
 
-# Logs
-logs/
-*.log
+# === Archives (historical, not for public repo) ===
+configs/archive/
+scripts/archive/
+
+# === Agent / IDE / working artifacts ===
+prompts.md
+*.prompt.md
+
+# === LaTeX auxiliary files ===
 *.aux
+*.bbl
+*.blg
 *.fdb_latexmk
 *.fls
+*.log
 *.out
 *.toc
 *.synctex.gz
-
-# Config archives
-configs/archive/
-
-# Doc archives (AI session reports)
-docs/archive/
-docs/intermediate_analysis/
-!docs/intermediate_analysis/README.md
-
-# Scripts archive
-scripts/archive/
-
-# Misc generated files
-preprocess_embeddings
-arch-figure/node_modules/
-arch-figure/.nuxt/
-arch-figure/.output/
-
-# Jupyter
-.ipynb_checkpoints/
-
-# IDE
-.vscode/
-.idea/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Environment
-.env
-*.egg
-package-lock.json
-
-# Root archive (allow README, ignore subdirectories if created)
-archive/*/
-!archive/README.md
-
-# Generated figure PNGs (generated on demand from PDFs)
-results/figures/generated_pngs/
-
-# LaTeX auxiliary files (explicitly listed for clarity)
 articles/*.aux
 articles/*.log
 articles/*.out
@@ -89,3 +73,23 @@ articles/*.fdb_latexmk
 articles/*.fls
 articles/*.bbl
 articles/*.blg
+
+# === Nuxt / Node (if any remain) ===
+node_modules/
+.nuxt/
+.output/
+package-lock.json
+
+# === Jupyter ===
+.ipynb_checkpoints/
+
+# === IDE ===
+.vscode/
+.idea/
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === Environment ===
+.env

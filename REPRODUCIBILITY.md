@@ -37,8 +37,8 @@ data/cached_latents_v5.2/
 
 Model checkpoints:
 ```
-models/checkpoints/clop_best.pth    # CLOP aligner (3.02M params)
-models/checkpoints/dit_best.pth     # DiT flow-matching model (22.10M params)
+models/checkpoints/CLOP/best/clop_best.pth    # CLOP aligner (3.02M params)
+models/checkpoints/DiT/best/dit_best.pth      # DiT flow-matching model (22.10M params)
 ```
 
 Checkpoints and pre-processed embeddings are available upon request from the corresponding author.
@@ -139,6 +139,12 @@ The caption generation logic is in `src/data_pipeline/subcluster_annotation.py`,
 ## 8. Hardware
 
 Training was performed on a single NVIDIA GPU (≥16 GB VRAM recommended for DiT training). Inference and figure generation require ≥8 GB VRAM. CPU-only inference is supported but significantly slower (set `--device cpu` in generation scripts).
+
+---
+
+## 10. Font Requirements
+
+Publication figures prefer Helvetica or DejaVu Sans (bundled with matplotlib). Arial is supported as a fallback but is not required. No proprietary fonts are distributed with the repository.
 
 ---
 

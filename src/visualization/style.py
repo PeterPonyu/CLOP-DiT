@@ -34,7 +34,7 @@ from matplotlib.ticker import ScalarFormatter
 # → min body text ~10pt, titles ~12pt, ticks ~10pt, legends ~10pt.
 VIS_STYLE: dict = {
     "font.family": "sans-serif",
-    "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+    "font.sans-serif": ["Helvetica", "DejaVu Sans", "Arial"],
     "font.size": 10,
     "axes.titlesize": 11,
     "axes.titleweight": "normal",
@@ -411,10 +411,10 @@ def save_with_vcd(
     if run_vcd:
         try:
             import sys
-            _scripts = Path(__file__).resolve().parent.parent.parent / "scripts" / "analysis"
+            _scripts = Path(__file__).resolve().parent.parent.parent / "scripts"
             if str(_scripts) not in sys.path:
                 sys.path.insert(0, str(_scripts))
-            from visual_conflict_detector import detect_all_conflicts
+            from vcd import detect_all_conflicts
             issues = detect_all_conflicts(fig, label=basename, verbose=True)
             if issues:
                 n_warn = sum(1 for x in issues if x.get("severity") == "warning")
@@ -454,10 +454,10 @@ def run_vcd_check(fig: plt.Figure, label: str) -> None:
 
     try:
         import sys
-        _scripts = Path(__file__).resolve().parent.parent.parent / "scripts" / "analysis"
+        _scripts = Path(__file__).resolve().parent.parent.parent / "scripts"
         if str(_scripts) not in sys.path:
             sys.path.insert(0, str(_scripts))
-        from visual_conflict_detector import detect_all_conflicts
+        from vcd import detect_all_conflicts
         issues = detect_all_conflicts(fig, label=label, verbose=True)
         if issues:
             n_warn = sum(1 for x in issues if x.get("severity") == "warning")

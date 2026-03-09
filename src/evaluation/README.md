@@ -37,7 +37,7 @@ Results are saved to `results/downstream/` and visualized in Panels P, Q, R.
 
 - `baseline_registry.py` -- `MethodSpec` dataclass defining per-method metadata, artifact paths, and capabilities. Registered methods: `clop_dit` (primary), `embedding_vae`, `scvi_latent`, plus built-in synthetic controls (`gaussian`, `shuffled_labels`, `random_normal`, `mean_only`).
 - `model_benchmarking.py` -- Benchmark engine that evaluates all registered methods under a common metric suite and produces `benchmark_report.json` (consumed by Panel S).
-- `run_metrics.py` -- Shared entry point for loading trained CLOP/DiT models and running embedding-space metrics. Used by `scripts/06_evaluate.py`, `scripts/10_full_pipeline.py`, and `scripts/training/run_5fold_cv.py`.
+- `run_metrics.py` -- Shared entry point for loading trained CLOP/DiT models and running embedding-space metrics. Used by `scripts/inference/06_evaluate.py` and `scripts/training/run_5fold_cv.py`.
 
 ## Artifact Contract
 

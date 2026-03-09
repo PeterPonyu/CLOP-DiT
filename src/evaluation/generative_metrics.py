@@ -56,35 +56,11 @@ class GenerativeEvaluator:
         fake_emb: np.ndarray,
     ) -> float:
         """Compute Fréchet Distance between real and generated embeddings.
-        
-        FID = ||μ_real - μ_fake||² + Tr(Σ_real + Σ_fake - 2√(Σ_real·Σ_fake))
-        
-        Parameters
-        ----------
-        real_emb : (N, D) real cell embeddings
-        fake_emb : (M, D) generated cell embeddings
-        
-        Returns
-        -------
-        fid : float
-            Lower is better (0 = perfect match).
+
+        Delegates to the canonical implementation in GenerationMetrics.
         """
-        mu_real = real_emb.mean(axis=0)
-        mu_fake = fake_emb.mean(axis=0)
-        
-        sigma_real = np.cov(real_emb, rowvar=False)
-        sigma_fake = np.cov(fake_emb, rowvar=False)
-        
-        # Mean difference
-        diff = mu_real - mu_fake
-        mean_term = np.dot(diff, diff)
-        
-        # Covariance term
-        cov_sqrt = np.real(np.linalg.cholesky(sigma_real @ sigma_fake + np.eye(len(sigma_real)) * 1e-6))
-        cov_term = np.trace(sigma_real + sigma_fake - 2 * cov_sqrt)
-        
-        fid = mean_term + cov_term
-        return float(fid)
+        from src.evaluation.metrics import GenerationMetrics
+        return GenerationMetrics.frechet_distance(real_emb, fake_emb)
     
     def maximum_mean_discrepancy(
         self,

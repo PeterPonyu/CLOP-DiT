@@ -107,14 +107,13 @@ flowchart LR
 ## Configuration flow
 
 - **configs/pipeline.yaml**: Read by `src.utils.paths` at import. Defines `cache_dir`, `checkpoint_dir`, `results_dir`, `fig_dir`, `article_figures_dir`, `processed_h5ad_dir`, `scgpt_dir`, `article_dir`, `article_tex`. Env vars `CLOPDIT_CACHE_DIR`, `CLOPDIT_RESULTS_DIR`, etc. override these.
-- **configs/clop.yaml**: Used by `04a_train_clop.py`, `10_full_pipeline.py`, and `run_5fold_cv.py` (via `--clop_config`). Contains cache_dir, save_dir, use_preprocessed, model and training args.
-- **configs/dit.yaml**: Same pattern for DiT; used by `04b_train_dit.py`, `10_full_pipeline.py`, `run_5fold_cv.py`.
+- **configs/clop.yaml**: Used by `04a_train_clop.py` and `run_5fold_cv.py` (via `--clop_config`). Contains cache_dir, save_dir, use_preprocessed, model and training args.
+- **configs/dit.yaml**: Same pattern for DiT; used by `04b_train_dit.py` and `run_5fold_cv.py`.
 
 When you run `run_pipeline.py`, it passes `--cache_dir` and `--save_dir` from `paths.py` to the training scripts so pipeline.yaml and env overrides apply to training as well.
 
 ## Other entry points
 
-- **scripts/pipeline/10_full_pipeline.py**: Alternative single-script pipeline (preprocess → train_clop → train_dit → evaluate → figures → VCD). Does not run data_prep/cache/dedup; assumes cache exists.
 - **scripts/training/run_5fold_cv.py**: 5-fold group CV; uses `paths.CACHE_DIR`, `paths.CHECKPOINT_DIR`, `paths.RESULTS_DIR`, `paths.LOG_DIR` so it respects the same overrides.
 - **scripts/inference/06_evaluate.py**: Standalone evaluation (FD, MMD, coverage, etc.); can be wired as an optional stage or run manually.
 
