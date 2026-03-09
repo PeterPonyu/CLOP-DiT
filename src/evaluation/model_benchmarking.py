@@ -56,17 +56,21 @@ def _per_type_metrics(
     unique_types = np.sort(np.unique(real_labels))
     cosines, div_ratios, collapsed = [], [], 0
 
+    dim_mismatch = real_cells.shape[1] != gen_cells.shape[1]
+
     for tid in unique_types:
         r = real_cells[real_labels == tid]
         g = gen_cells[gen_labels == tid]
         if len(r) < 5 or len(g) < 5:
             continue
 
-        rc = r.mean(0)
-        rc /= np.linalg.norm(rc) + 1e-8
-        gc = g.mean(0)
-        gc /= np.linalg.norm(gc) + 1e-8
-        cosines.append(float(np.dot(rc, gc)))
+        # Centroid cosine: skip when dimensions differ (not comparable)
+        if not dim_mismatch:
+            rc = r.mean(0)
+            rc /= np.linalg.norm(rc) + 1e-8
+            gc = g.mean(0)
+            gc /= np.linalg.norm(gc) + 1e-8
+            cosines.append(float(np.dot(rc, gc)))
 
         n_sub = min(100, len(r), len(g))
         r_sub = r[rng.choice(len(r), n_sub, replace=False)]
@@ -166,20 +170,44 @@ def _evaluate_method(
     real_sub = real_cells[r_idx]
     gen_sub = gen_cells[g_idx]
 
-    fd = GenerationMetrics.frechet_distance(real_sub, gen_sub)
-    mmd_val = GenerationMetrics.mmd(real_sub, gen_sub, kernel="rbf")
-    cov_den = GenerationMetrics.coverage_and_density(real_sub, gen_sub, k=5)
-    kl = GenerationMetrics.kl_per_dimension(real_sub, gen_sub)
+    # Handle dimension mismatch: project to common PCA space if needed
+    dim_mismatch = real_sub.shape[1] != gen_sub.shape[1]
+    if dim_mismatch:
+        from sklearn.decomposition import PCA
+        common_dim = min(real_sub.shape[1], gen_sub.shape[1], 32)
+        pca = PCA(n_components=common_dim, random_state=42)
+        pca.fit(real_sub)
+        real_proj = pca.transform(real_sub)
+        # For gen_sub with different dims, fit a separate PCA and project
+        pca_gen = PCA(n_components=common_dim, random_state=42)
+        gen_proj = pca_gen.fit_transform(gen_sub)
+        logger.warning(
+            "Dimension mismatch: real=%dD, gen=%dD → PCA projection to %dD for distributional metrics",
+            real_sub.shape[1], gen_sub.shape[1], common_dim,
+        )
+    else:
+        real_proj = real_sub
+        gen_proj = gen_sub
+
+    fd = GenerationMetrics.frechet_distance(real_proj, gen_proj)
+    mmd_val = GenerationMetrics.mmd(real_proj, gen_proj, kernel="rbf")
+    cov_den = GenerationMetrics.coverage_and_density(real_proj, gen_proj, k=5)
+    kl = GenerationMetrics.kl_per_dimension(real_proj, gen_proj)
 
     fd_boots = []
     for _ in range(50):
         ri = rng.choice(len(real_cells), n_sub, replace=True)
         gi = rng.choice(len(gen_cells), n_sub, replace=True)
-        fd_boots.append(GenerationMetrics.frechet_distance(real_cells[ri], gen_cells[gi]))
+        r_boot = real_cells[ri]
+        g_boot = gen_cells[gi]
+        if dim_mismatch:
+            r_boot = pca.transform(r_boot)
+            g_boot = pca_gen.transform(g_boot)
+        fd_boots.append(GenerationMetrics.frechet_distance(r_boot, g_boot))
     fd_arr = np.array(fd_boots)
 
     pt = _per_type_metrics(real_cells, gen_cells, real_labels, gen_labels, rng)
-    return {
+    result = {
         "frechet_distance": float(fd),
         "fd_ci": [float(np.percentile(fd_arr, 2.5)), float(np.percentile(fd_arr, 97.5))],
         "mmd_rbf": float(mmd_val),
@@ -188,6 +216,12 @@ def _evaluate_method(
         "mean_kl": float(kl["mean_kl"]),
         **pt,
     }
+    if dim_mismatch:
+        result["_dim_mismatch_note"] = (
+            f"Distributional metrics computed in PCA-{common_dim} space "
+            f"(real: {real_sub.shape[1]}D, gen: {gen_sub.shape[1]}D)"
+        )
+    return result
 
 
 def _load_json(path: Path) -> Optional[Dict]:
@@ -265,7 +299,7 @@ def _attach_optional_metrics(metrics: Dict, spec: MethodSpec, results_dir: Path)
         metrics["de_n_contrasts"] = len(de_data)
 
 
-def _build_rankings(all_methods: Dict[str, Dict]) -> Tuple[Dict, Dict]:
+def _build_rankings(all_methods: Dict[str, Dict]) -> Tuple[Dict, Dict, Dict]:
     ranking_metrics = [
         ("frechet_distance", "lower"),
         ("mmd_rbf", "lower"),
@@ -291,6 +325,22 @@ def _build_rankings(all_methods: Dict[str, Dict]) -> Tuple[Dict, Dict]:
         if any(all_methods[m].get(metric) is not None for m in all_methods):
             active_metrics.append((metric, direction))
 
+    # Identify common metrics (present in ALL methods)
+    common_metrics = [
+        (metric, direction) for metric, direction in active_metrics
+        if all(all_methods[m].get(metric) is not None for m in all_methods)
+    ]
+    exclusive_metrics = [
+        (metric, _) for metric, _ in active_metrics
+        if not all(all_methods[m].get(metric) is not None for m in all_methods)
+    ]
+    logger.info(
+        f"Composite metrics: {len(active_metrics)} total, "
+        f"{len(common_metrics)} common to all methods, "
+        f"{len(exclusive_metrics)} method-exclusive "
+        f"({[m for m, _ in exclusive_metrics]})"
+    )
+
     rankings = {}
     for metric, direction in active_metrics:
         default = float("inf") if direction == "lower" else float("-inf")
@@ -310,29 +360,34 @@ def _build_rankings(all_methods: Dict[str, Dict]) -> Tuple[Dict, Dict]:
             "best": sorted_methods[0],
         }
 
-    composite = {}
-    for method_name in all_methods:
-        scores = []
-        for metric, direction in active_metrics:
-            raw_val = all_methods[method_name].get(metric)
-            if raw_val is None:
-                scores.append(0.0)
-                continue
-            valid_vals = [all_methods[name].get(metric) for name in all_methods if all_methods[name].get(metric) is not None]
-            if not valid_vals:
-                scores.append(0.0)
-                continue
-            mn, mx = min(valid_vals), max(valid_vals)
-            rng_val = mx - mn
-            if rng_val < 1e-8:
-                scores.append(1.0)
-                continue
-            if direction == "lower":
-                scores.append(1.0 - (raw_val - mn) / rng_val)
-            else:
-                scores.append((raw_val - mn) / rng_val)
-        composite[method_name] = float(np.mean(scores)) if scores else 0.0
-    return rankings, composite
+    def _compute_composite(metrics_subset):
+        comp = {}
+        for method_name in all_methods:
+            scores = []
+            for metric, direction in metrics_subset:
+                raw_val = all_methods[method_name].get(metric)
+                if raw_val is None:
+                    scores.append(0.0)
+                    continue
+                valid_vals = [all_methods[name].get(metric) for name in all_methods if all_methods[name].get(metric) is not None]
+                if not valid_vals:
+                    scores.append(0.0)
+                    continue
+                mn, mx = min(valid_vals), max(valid_vals)
+                rng_val = mx - mn
+                if rng_val < 1e-8:
+                    scores.append(1.0)
+                    continue
+                if direction == "lower":
+                    scores.append(1.0 - (raw_val - mn) / rng_val)
+                else:
+                    scores.append((raw_val - mn) / rng_val)
+            comp[method_name] = float(np.mean(scores)) if scores else 0.0
+        return comp
+
+    composite_full = _compute_composite(active_metrics)
+    composite_common = _compute_composite(common_metrics) if common_metrics else composite_full
+    return rankings, composite_full, composite_common
 
 
 def run_benchmark(
@@ -406,7 +461,7 @@ def run_benchmark(
         logger.error("No methods could be evaluated")
         return {}
 
-    rankings, composite = _build_rankings(methods)
+    rankings, composite, composite_common = _build_rankings(methods)
     elapsed = time.time() - t0
     report = {
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -420,6 +475,7 @@ def run_benchmark(
         "methods": methods,
         "rankings": rankings,
         "composite_score": composite,
+        "composite_score_common_metrics_only": composite_common,
     }
 
     out = Path(output_path)
@@ -455,8 +511,12 @@ if __name__ == "__main__":
     )
 
     if report:
-        print("\n=== Composite Scores ===")
+        print("\n=== Composite Scores (all metrics) ===")
         for method, score in sorted(report["composite_score"].items(), key=lambda x: x[1], reverse=True):
+            print(f"  {method:25s}  {score:.4f}")
+
+        print("\n=== Composite Scores (common metrics only) ===")
+        for method, score in sorted(report["composite_score_common_metrics_only"].items(), key=lambda x: x[1], reverse=True):
             print(f"  {method:25s}  {score:.4f}")
 
         print("\n=== Rankings ===")

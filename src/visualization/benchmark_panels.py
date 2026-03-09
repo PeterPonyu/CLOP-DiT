@@ -163,11 +163,13 @@ def plot_benchmark_panel(
     add_colorbar_safe(im, ax=ax1, label="Normalised Score (1=best)", shrink=0.6, pad=0.08)
     style_axes(ax1, "heatmap", title="Metrics Comparison Heatmap")
 
-    # ── S2: Composite score bars ──
+    # ── S2: Composite score bars (full + common-metrics-only) ──
     ax2 = fig.add_subplot(gs[0, 1])
     add_panel_label(ax2, 'b', x=-0.10, y=1.05)
+    composite_common = report.get("composite_score_common_metrics_only", composite)
     sorted_methods = sorted(composite.keys(), key=lambda k: composite[k], reverse=True)
     scores = [composite[m] for m in sorted_methods]
+    scores_common = [composite_common.get(m, 0.0) for m in sorted_methods]
     bar_colors = [METHOD_COLORS.get(m, COLORS["neutral"]) for m in sorted_methods]
     short_sorted = [abbreviate_cell_type(m, 20) for m in sorted_methods]
 
@@ -178,18 +180,28 @@ def plot_benchmark_panel(
         ranked_labels.append(f"{badge} {name}")
 
     y_pos = np.arange(len(sorted_methods))
-    bars = ax2.barh(y_pos, scores, color=bar_colors, height=0.6,
-                    edgecolor="white", linewidth=0.8, alpha=0.85)
+    bar_height = 0.35
+    bars_full = ax2.barh(y_pos - bar_height / 2, scores, color=bar_colors,
+                         height=bar_height, edgecolor="white", linewidth=0.8,
+                         alpha=0.85, label="All metrics")
+    bars_common = ax2.barh(y_pos + bar_height / 2, scores_common, color=bar_colors,
+                           height=bar_height, edgecolor="white", linewidth=0.8,
+                           alpha=0.45, hatch="//", label="Common metrics only")
     ax2.set_yticks(y_pos)
     ax2.set_yticklabels(ranked_labels, fontsize=8)
     ax2.invert_yaxis()
 
-    for i, (bar, score) in enumerate(zip(bars, scores)):
+    for i, (bar, score) in enumerate(zip(bars_full, scores)):
         ax2.text(bar.get_width() + 0.01, bar.get_y() + bar.get_height() / 2,
-                 f"{score:.4f}", va="center", fontsize=8,
+                 f"{score:.3f}", va="center", fontsize=7,
+                 color=COLORS["neutral"])
+    for i, (bar, score) in enumerate(zip(bars_common, scores_common)):
+        ax2.text(bar.get_width() + 0.01, bar.get_y() + bar.get_height() / 2,
+                 f"{score:.3f}", va="center", fontsize=7, fontstyle="italic",
                  color=COLORS["neutral"])
 
     ax2.set_xlim(0, max(scores) * 1.25)
+    ax2.legend(fontsize=7, loc="lower right", framealpha=0.7)
     style_axes(ax2, "bar", title="Composite Score (higher = better)",
                xlabel="Normalised Aggregate Score")
 

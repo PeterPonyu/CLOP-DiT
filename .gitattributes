@@ -1,6 +1,5 @@
 # Git LFS tracking rules (for future large-file management)
 # If using Git LFS, uncomment the rules below and run: git lfs install
-
 # *.pth filter=lfs diff=lfs merge=lfs -text
 # *.pt filter=lfs diff=lfs merge=lfs -text
 # *.npy filter=lfs diff=lfs merge=lfs -text
