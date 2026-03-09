@@ -198,13 +198,13 @@ def create_architecture_figure(output_dir=None):
     # ===================================================================
     draw_stage_bg(ax, (-0.05, -0.05), 3.40, 3.00,
                   "Stage 1: CLOP Alignment",
-                  C_TEXT_DARK, alpha=0.08, label_color="black")
+                  C_TEXT_DARK, alpha=0.15, label_color="black")
     draw_stage_bg(ax, (3.60, -0.05), 2.40, 3.00,
                   "Stage 2: DiT Generation",
-                  C_GEN_DARK, alpha=0.08, label_color="black")
+                  C_GEN_DARK, alpha=0.15, label_color="black")
     draw_stage_bg(ax, (6.10, -0.05), 1.35, 3.00,
                   "Stage 3: Decoding",
-                  C_DECODE_DARK, alpha=0.08, label_color="black")
+                  C_DECODE_DARK, alpha=0.15, label_color="black")
 
     # ===================================================================
     #  Panel labels (a, b, c) for each stage — use standard add_panel_label
@@ -214,11 +214,11 @@ def create_architecture_figure(output_dir=None):
     # we match the project-wide add_panel_label style which uses bold.
     # Since this is the single-axes figure, place labels manually in data coords.
     ax.text(0.02, 2.85, "(a)", ha="left", va="top",
-            fontsize=12, fontweight="bold", color="black", zorder=10)
+            fontsize=14, fontweight="bold", color="black", zorder=10)
     ax.text(3.65, 2.85, "(b)", ha="left", va="top",
-            fontsize=12, fontweight="bold", color="black", zorder=10)
+            fontsize=14, fontweight="bold", color="black", zorder=10)
     ax.text(6.15, 2.85, "(c)", ha="left", va="top",
-            fontsize=12, fontweight="bold", color="black", zorder=10)
+            fontsize=14, fontweight="bold", color="black", zorder=10)
 
     ax.text(1.68, 2.80, "train: align text and cell latents",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=2)

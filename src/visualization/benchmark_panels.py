@@ -219,7 +219,7 @@ def plot_benchmark_panel(
     ax3.set_xticks(x)
     ax3.set_xticklabels([km[1] for km in key_metrics], fontsize=10)
     ax3.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.20), ncol=min(n_methods, 4), frameon=False, columnspacing=0.8)
-    fig._clop_layout_rect = (0.02, 0.12, 0.98, 0.95)
+    fig._clop_layout_rect = (0.02, 0.08, 0.98, 0.95)
     style_axes(ax3, "bar", title="Key Metrics Comparison", ylabel="Value")
 
     # ── S4: CI comparison — error-bar plot ──
@@ -262,7 +262,6 @@ def plot_benchmark_panel(
     # Add metric group titles on the right — removed: y-labels already convey grouping
 
     ax4.legend(fontsize=7, loc="center left", bbox_to_anchor=(1.02, 0.5), ncol=1, frameon=False, borderaxespad=0.0)
-    fig._clop_layout_rect = (0.02, 0.03, 0.85, 0.95)
     style_axes(ax4, "default", title="95% Bootstrap CI Comparison",
                xlabel="Metric Value")
 

@@ -220,7 +220,7 @@ def plot_expression_diversity_panel(
     apply_style()
 
     o = t6_data["overall"]
-    fig, axes = plt.subplots(1, 2, figsize=(6.5, 4.0))
+    fig, axes = plt.subplots(1, 2, figsize=(7.5, 4.8))
     add_panel_label(axes[0], chr(ord('a') + label_offset), x=-0.10, y=1.05)
     add_panel_label(axes[1], chr(ord('a') + label_offset + 1), x=-0.10, y=1.05)
 

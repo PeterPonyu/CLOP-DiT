@@ -139,7 +139,7 @@ def plot_panel_m(
 
     apply_style()
     n_modes = 1 + len(mode_diversity)  # real + each mode
-    _fw = max(12.0, 3.0 * n_modes)
+    _fw = 15.0  # Fixed width for reproducible layout
     has_row3 = full_dim_data is not None and len(full_dim_data) > 0
     if has_row3:
         fig = plt.figure(figsize=(_fw, 14.0))
@@ -374,7 +374,7 @@ def plot_panel_m(
             )
             for tid in selected_types
         ]
-        im = ax_c2.imshow(div_matrix, aspect="auto", cmap="YlOrRd",
+        im = ax_c2.imshow(div_matrix, aspect="auto", cmap="cividis",
                           norm=Normalize(vmin=np.nanmin(div_matrix) * 0.9,
                                          vmax=np.nanmax(div_matrix) * 1.1))
         ax_c2.set_xticks(np.arange(len(all_mode_names)))

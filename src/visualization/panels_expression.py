@@ -334,6 +334,7 @@ def plot_expression_analysis(
 
     fig = plt.figure(figsize=(9.8, 7.4))
     gs = fig.add_gridspec(2, 2, wspace=0.58, hspace=0.56)
+    fig._clop_layout_rect = (0.03, 0.04, 0.98, 0.96)
     # Note: Figure-level title removed per revision requirements; stats moved to caption
 
     # -- I1: CV scatter (real vs gen) with gene labels --

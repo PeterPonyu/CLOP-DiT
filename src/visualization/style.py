@@ -45,12 +45,12 @@ VIS_STYLE: dict = {
     "legend.fontsize": 10,
     "legend.frameon": False,
     "legend.edgecolor": "0.8",
-    "axes.linewidth": 0.8,
+    "axes.linewidth": 1.0,
     "axes.grid": True,
-    "grid.alpha": 0.25,
+    "grid.alpha": 0.35,
     "grid.linewidth": 0.5,
-    "xtick.major.width": 0.6,
-    "ytick.major.width": 0.6,
+    "xtick.major.width": 0.8,
+    "ytick.major.width": 0.8,
     "xtick.major.pad": 3,
     "ytick.major.pad": 3,
     "xtick.direction": "out",
@@ -58,7 +58,7 @@ VIS_STYLE: dict = {
     "lines.linewidth": 1.5,
     "savefig.dpi": 300,
     "savefig.bbox": "tight",
-    "savefig.pad_inches": 0.08,
+    "savefig.pad_inches": 0.10,
     "figure.constrained_layout.use": False,
     "figure.facecolor": "white",
 }
@@ -125,8 +125,8 @@ FONT_LEGEND = 10
 # Dense multi-panel figures where 10pt legends would crowd the layout
 FONT_LEGEND_DENSE = 8
 # Architecture diagram (Fig 1) — diagram-specific labels (min 5.5pt per VCD)
-FONT_ARCH_LABEL = 7
-FONT_ARCH_SUBLABEL = 7
+FONT_ARCH_LABEL = 9
+FONT_ARCH_SUBLABEL = 8
 # Centralized font sizes for publication figures
 FONT_SUPTITLE = 11
 FONT_TITLE = 11

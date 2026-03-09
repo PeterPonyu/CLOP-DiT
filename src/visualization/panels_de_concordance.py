@@ -79,8 +79,8 @@ def plot_de_concordance_panel(
         marker_sizes = 12 + 140 * np.clip(effect_size / effect_scale, 0, 1.5)
 
         if len(real_padj) == len(real_logfc) and len(gen_padj) == len(gen_logfc):
-            significance = -np.log10(np.clip(np.minimum(real_padj, gen_padj), 1e-300, 1.0))
-            cbar_label = "min \u2212log\u2081\u2080(adj. p)"
+            significance = -np.log10(np.clip(np.minimum(real_padj, gen_padj), 1e-50, 1.0))
+            cbar_label = r"$\min\;-\log_{10}(\mathrm{adj.\;p})$"
         else:
             significance = effect_size
             cbar_label   = "Effect size"

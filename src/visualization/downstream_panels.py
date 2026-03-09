@@ -50,7 +50,7 @@ def plot_clustering_and_classifier_merged(
     apply_style()
 
     fig = plt.figure(figsize=(15.2, 10.6))
-    gs = fig.add_gridspec(2, 3, wspace=0.50, hspace=0.50,
+    gs = fig.add_gridspec(2, 3, wspace=0.55, hspace=0.55,
                           height_ratios=[1, 1.05],
                           width_ratios=[1.5, 1.2, 1.0])
     # Title moved to LaTeX caption
