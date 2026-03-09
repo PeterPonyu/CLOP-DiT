@@ -87,6 +87,17 @@ def _sides_outside(bb: Bbox, fig_bb: Bbox, tol: float = 1.0) -> list[str]:
     return sides
 
 
+def _is_colorbar_axes(ax) -> bool:
+    """Return True if *ax* is a colorbar axes (not a data-plotting axes).
+
+    Centralises the heuristic so every check module uses the same logic.
+    Matplotlib marks colorbar axes with ``_colorbar_info`` (>=3.6) or
+    the older ``_colorbar`` attribute.
+    """
+    return (hasattr(ax, '_colorbar_info')
+            or getattr(ax, '_colorbar', None) is not None)
+
+
 def _artist_label(artist, hint: str = "") -> str:
     """Human-readable tag for an artist."""
     if isinstance(artist, Text):
@@ -127,7 +138,7 @@ def _collect_artists(fig, renderer) -> list[_ArtistInfo]:
     # Identify colorbar axes to annotate properly
     cbar_axes = set()
     for ax in fig.get_axes():
-        if hasattr(ax, '_colorbar_info') or getattr(ax, '_colorbar', None):
+        if _is_colorbar_axes(ax):
             cbar_axes.add(id(ax))
 
     for ax in fig.get_axes():

@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .style import (
-    COLORS, add_colorbar_safe, add_panel_label, save_panel, save_with_vcd, set_figure_suptitle, style_axes
+    COLORS, abbreviate_cell_type, add_colorbar_safe, add_panel_label, save_panel, save_with_vcd, set_figure_suptitle, style_axes
 )
 from src.utils.paths import RESULTS_DIR, FIG_DIR
 
@@ -111,7 +111,7 @@ def plot_benchmark_panel(
 
     # ── S1: Heatmap (methods × metrics) ──
     ax1 = fig.add_subplot(gs[0, 0])
-    add_panel_label(ax1, 'a')
+    add_panel_label(ax1, 'a', x=-0.10, y=1.05)
     metric_labels = [m[1] for m in heatmap_metrics]
     metric_keys = [m[0] for m in heatmap_metrics]
     directions = [m[2] for m in heatmap_metrics]
@@ -148,7 +148,7 @@ def plot_benchmark_panel(
     im = ax1.imshow(norm, cmap=cmap, aspect="auto", vmin=0, vmax=1)
 
     # Labels
-    short_method_names = [n[:20] for n in method_names]
+    short_method_names = [abbreviate_cell_type(n, 20) for n in method_names]
     ax1.set_xticks(range(len(metric_labels)))
     ax1.set_xticklabels(metric_labels, rotation=55, ha="right", fontsize=8)
     ax1.set_yticks(range(n_methods))
@@ -165,11 +165,11 @@ def plot_benchmark_panel(
 
     # ── S2: Composite score bars ──
     ax2 = fig.add_subplot(gs[0, 1])
-    add_panel_label(ax2, 'b')
+    add_panel_label(ax2, 'b', x=-0.10, y=1.05)
     sorted_methods = sorted(composite.keys(), key=lambda k: composite[k], reverse=True)
     scores = [composite[m] for m in sorted_methods]
     bar_colors = [METHOD_COLORS.get(m, COLORS["neutral"]) for m in sorted_methods]
-    short_sorted = [m[:20] for m in sorted_methods]
+    short_sorted = [abbreviate_cell_type(m, 20) for m in sorted_methods]
 
     # Merge rank badges directly into ytick labels to avoid overlap
     ranked_labels = []
@@ -195,7 +195,7 @@ def plot_benchmark_panel(
 
     # ── S3: Grouped bar chart for key metrics ──
     ax3 = fig.add_subplot(gs[1, 0])
-    add_panel_label(ax3, 'c')
+    add_panel_label(ax3, 'c', x=-0.10, y=1.05)
     key_metrics = [
         ("frechet_distance", "FD ↓"),
         ("mean_centroid_cosine", "Cos ↑"),
@@ -219,11 +219,12 @@ def plot_benchmark_panel(
     ax3.set_xticks(x)
     ax3.set_xticklabels([km[1] for km in key_metrics], fontsize=10)
     ax3.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.20), ncol=min(n_methods, 4), frameon=False, columnspacing=0.8)
+    fig._clop_layout_rect = (0.02, 0.12, 0.98, 0.95)
     style_axes(ax3, "bar", title="Key Metrics Comparison", ylabel="Value")
 
     # ── S4: CI comparison — error-bar plot ──
     ax4 = fig.add_subplot(gs[1, 1])
-    add_panel_label(ax4, 'd')
+    add_panel_label(ax4, 'd', x=-0.10, y=1.05)
     ci_metrics = [
         ("frechet_distance", "fd_ci", "FD"),
         ("mean_centroid_cosine", "centroid_cosine_ci", "Centroid Cos"),
@@ -261,6 +262,7 @@ def plot_benchmark_panel(
     # Add metric group titles on the right — removed: y-labels already convey grouping
 
     ax4.legend(fontsize=7, loc="center left", bbox_to_anchor=(1.02, 0.5), ncol=1, frameon=False, borderaxespad=0.0)
+    fig._clop_layout_rect = (0.02, 0.03, 0.85, 0.95)
     style_axes(ax4, "default", title="95% Bootstrap CI Comparison",
                xlabel="Metric Value")
 

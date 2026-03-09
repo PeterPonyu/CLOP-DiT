@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from . import io as viz_io
-from .style import COLORS, FONT_LEGEND_DENSE, add_panel_label, apply_style, set_figure_suptitle
+from .style import COLORS, FONT_LEGEND_DENSE, abbreviate_cell_type, add_panel_label, apply_style, set_figure_suptitle
 from ._utils import sample_pairwise_cosines
 from src.utils.paths import CACHE_DIR, RESULTS_DIR, FIG_DIR, CHECKPOINT_DIR
 
@@ -135,7 +135,7 @@ def plot_diversity_distributions_violin(
             mean_points_c.append(colors[label])
 
         xtick_positions.append(base)
-        short_name = name[:20] + "…" if len(name) > 20 else name
+        short_name = abbreviate_cell_type(name, 20)
         xtick_labels.append(short_name)
 
     if not violin_data:
@@ -156,7 +156,7 @@ def plot_diversity_distributions_violin(
         body.set_facecolor(color)
         body.set_edgecolor("white")
         body.set_alpha(0.65)
-    parts["cmedians"].set_color("#1E1E1E")
+    parts["cmedians"].set_color(COLORS["median_dark"])
     parts["cmedians"].set_linewidth(1.1)
 
     ax.scatter(
@@ -188,7 +188,6 @@ def plot_diversity_distributions_violin(
         va="top",
         fontsize=8,
         color=COLORS["neutral"],
-        bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.9),
     )
     for label, color in colors.items():
         ax.plot([], [], color=color, linewidth=6, alpha=0.8, label=label)
@@ -374,9 +373,9 @@ def plot_metrics_summary(
     if not train_metrics and not gen_metrics:
         return None
 
-    fig = plt.figure(figsize=(12.6, 8.0))
-    gs = fig.add_gridspec(2, 2, wspace=0.52, hspace=0.50, width_ratios=[1.0, 1.0])
-    fig._clop_layout_rect = (0.02, 0.03, 0.96, 0.94)
+    fig = plt.figure(figsize=(13.0, 8.4))
+    gs = fig.add_gridspec(2, 2, wspace=0.44, hspace=0.56, width_ratios=[1.02, 1.0])
+    fig._clop_layout_rect = (0.03, 0.04, 0.97, 0.95)
     # Note: Figure-level title removed per revision requirements
 
     # Map from display metric names to bootstrap_cis keys
@@ -432,11 +431,11 @@ def plot_metrics_summary(
                 # Draw error bar whisker
                 bar_center = bar.get_y() + bar.get_height() / 2
                 ax1.plot([ci_lo_d, ci_hi_d], [bar_center, bar_center],
-                         color="#333333", linewidth=1.2, zorder=5)
+                         color=COLORS["annotation_dark"], linewidth=1.2, zorder=5)
                 ax1.plot([ci_lo_d, ci_lo_d], [bar_center - 0.12, bar_center + 0.12],
-                         color="#333333", linewidth=1.0, zorder=5)
+                         color=COLORS["annotation_dark"], linewidth=1.0, zorder=5)
                 ax1.plot([ci_hi_d, ci_hi_d], [bar_center - 0.12, bar_center + 0.12],
-                         color="#333333", linewidth=1.0, zorder=5)
+                         color=COLORS["annotation_dark"], linewidth=1.0, zorder=5)
                 ci_text = f" [{ci_lo * 100:.1f}, {ci_hi * 100:.1f}]" if "Loss" not in n else ""
 
             fmt = f"{dv:.4f}" if "Loss" in n else f"{dv:.1f}{unit}"
@@ -449,12 +448,12 @@ def plot_metrics_summary(
         ax1.xaxis.set_major_locator(_MNL(nbins=5, prune="both"))
         ax1.grid(axis='both', alpha=0.15, linestyle='--')
 
-        # Add note about bootstrap CIs if any were shown
-        if bootstrap_cis:
-            ax1.text(0.98, 0.02, "Whiskers = 95% bootstrap CI (n=1000)",
-                     transform=ax1.transAxes, ha="right", va="bottom",
-                     fontsize=7, color=COLORS["neutral"], alpha=0.7)
-    add_panel_label(ax1, 'a', x=0.02, y=0.98)
+    else:
+        ax1.text(0.5, 0.5, "No training history available",
+                 ha="center", va="center", transform=ax1.transAxes,
+                 fontsize=9, color=COLORS["neutral"])
+        ax1.set_title("Training Convergence", fontsize=11)
+    add_panel_label(ax1, 'a', x=-0.10, y=1.05)
 
     # ── D2: Generation quality radar ──
     ax2_placeholder = fig.add_subplot(gs[0, 1])
@@ -493,6 +492,7 @@ def plot_metrics_summary(
             ax2.set_theta_offset(np.pi / 2)
             ax2.set_theta_direction(-1)
             ax2.set_thetagrids(np.degrees(angles), radar_labels, fontsize=9)
+            ax2.tick_params(axis="x", pad=10)
 
             # Plot CLOP-DiT (primary)
             ax2.plot(angles_plot, radar_vals_plot, "o-", linewidth=2.5,
@@ -500,21 +500,31 @@ def plot_metrics_summary(
                      label="CLOP-DiT")
             ax2.fill(angles_plot, radar_vals_plot, alpha=0.15, color=COLORS["real"])
 
-            # Add numeric annotations on each vertex
+            # Add numeric annotations on each vertex — per-vertex manual offsets
+            # to push values away from axis labels. With theta_offset=pi/2 and
+            # direction=-1, the axis order clockwise from top is:
+            # FD(inv), Coverage, Centroid Cos, Diversity, Gene Corr.
+            _vert_offsets = {
+                "fd_inv":          (14, -16),
+                "coverage":        (18, 6),
+                "centroid_cos":    (14, 12),
+                "diversity_ratio": (-18, 12),
+                "gene_corr":       (-24, -10),
+            }
             for angle, val, key in zip(angles, radar_vals, radar_label_keys):
-                # Position annotation slightly outside the point
-                r_offset = val + 0.07
-                if r_offset > 1.02:
-                    r_offset = val - 0.09
+                dx, dy = _vert_offsets.get(key, (0, -14))
                 ax2.annotate(
                     f"{val:.3f}",
                     xy=(angle, val),
-                    xytext=(angle, r_offset),
+                    xytext=(dx, dy),
+                    textcoords="offset points",
                     fontsize=7,
                     fontweight="bold",
                     color=COLORS["real"],
                     ha="center", va="center",
                     zorder=6,
+                    bbox=dict(boxstyle="round,pad=0.16", facecolor="white",
+                              edgecolor="none", alpha=0.82),
                 )
 
             # Overlay Gaussian baseline for comparison
@@ -544,18 +554,17 @@ def plot_metrics_summary(
                 ax2.fill(angles_plot, bl_vals_plot, alpha=0.06,
                          color=COLORS["baseline_gauss"])
 
-            ax2.legend(loc="lower right", bbox_to_anchor=(1.15, -0.12),
-                       fontsize=7, frameon=True, fancybox=True,
-                       edgecolor="#CCCCCC", facecolor="white")
-        ax2.set_ylim(0, 1.05)
-        ax2.set_title("Quality Profile", pad=18,
+            ax2.legend(loc="upper center", bbox_to_anchor=(0.5, -0.18),
+                       fontsize=7, frameon=False, ncol=2)
+        ax2.set_ylim(0, 1.10)
+        ax2.set_title("Quality Profile", pad=34,
                       fontsize=11)
-        add_panel_label(ax2, 'b', x=0.02, y=0.98)
+        add_panel_label(ax2, 'b', x=-0.16, y=1.16)
     else:
         ax2_placeholder.text(0.5, 0.5, "No generation data", ha="center",
                              va="center", transform=ax2_placeholder.transAxes)
         ax2_placeholder.set_title("Generation Quality Profile")
-        add_panel_label(ax2_placeholder, 'b', x=0.02, y=0.98)
+        add_panel_label(ax2_placeholder, 'b', x=-0.10, y=1.05)
 
     # ── D3: Diversity gauges ──
     ax3 = fig.add_subplot(gs[1, 0])
@@ -581,8 +590,9 @@ def plot_metrics_summary(
             gauss_bl_d3 = bench_baselines.get("Gaussian N(\u03bc,\u03c3\u00b2I)", {})
         gauss_div_ratio = gauss_bl_d3.get("diversity_ratio", None)
 
+        gauge_text_x = max(item[2] for item in gauge_items) + 0.18
         for i, (label, val, max_val, color, bci_key) in enumerate(gauge_items):
-            ax3.barh(i, max_val, height=0.5, color="#E0E0E0",
+            ax3.barh(i, max_val, height=0.5, color=COLORS["bg_gauge"],
                      edgecolor="none", zorder=1)
             ax3.barh(i, min(val, max_val), height=0.5, color=color,
                      edgecolor="white", linewidth=0.8, zorder=2)
@@ -595,29 +605,27 @@ def plot_metrics_summary(
                 ci_hi = ci.get("ci_95_upper", 0)
                 # Draw CI whisker on the gauge
                 ax3.plot([ci_lo, ci_hi], [i, i],
-                         color="#333333", linewidth=1.5, zorder=4)
+                         color=COLORS["annotation_dark"], linewidth=1.5, zorder=4)
                 ax3.plot([ci_lo, ci_lo], [i - 0.1, i + 0.1],
-                         color="#333333", linewidth=1.0, zorder=4)
+                         color=COLORS["annotation_dark"], linewidth=1.0, zorder=4)
                 ax3.plot([ci_hi, ci_hi], [i - 0.1, i + 0.1],
-                         color="#333333", linewidth=1.0, zorder=4)
-                ci_text = f"\n[{ci_lo:.3f}, {ci_hi:.3f}]"
+                         color=COLORS["annotation_dark"], linewidth=1.0, zorder=4)
+                ci_text = f"  [{ci_lo:.3f}, {ci_hi:.3f}]"
 
-            ax3.text(min(val, max_val) + 0.02, i, f"{val:.3f}" + ci_text,
-                     va="center", fontsize=9, zorder=3)
+            ann_text = f"{val:.3f}" + ci_text
+            ax3.text(gauge_text_x, i, ann_text,
+                     va="center", fontsize=8, zorder=3)
 
             # Add Gaussian baseline reference marker for Diversity Ratio
             if label == "Diversity\nRatio" and gauss_div_ratio is not None:
                 bl_val = min(gauss_div_ratio, max_val)
                 ax3.plot(bl_val, i, marker="v", color=COLORS["baseline_gauss"],
                          markersize=8, zorder=5, clip_on=True)
-                ax3.annotate(f"Gauss: {gauss_div_ratio:.2f}",
-                             xy=(bl_val, i), xytext=(bl_val, i + 0.28),
-                             fontsize=7, color=COLORS["baseline_gauss"],
-                             ha="center", va="bottom", zorder=5)
 
         ax3.set_yticks(range(len(gauge_items)))
         ax3.set_yticklabels([g[0] for g in gauge_items], fontsize=8)
         ax3.invert_yaxis()
+        ax3.set_xlim(0, gauge_text_x + 0.70)
 
         collapsed = div_metrics.get("Collapsed", 0)
         total = div_metrics.get("Total Types", 69)
@@ -626,6 +634,11 @@ def plot_metrics_summary(
                  f"Collapsed: {collapsed}/{total} | Near-copies: {copies}",
                  transform=ax3.transAxes, ha="right", va="bottom",
                  fontsize=8, color=COLORS["neutral"])
+        if gauss_div_ratio is not None:
+            ax3.text(0.98, 0.15,
+                     f"v Gaussian baseline: {gauss_div_ratio:.2f}",
+                     transform=ax3.transAxes, ha="right", va="bottom",
+                     fontsize=7.5, color=COLORS["baseline_gauss"])
         ax3.set_title("Diversity Health", fontsize=11)
         ax3.set_xlabel("Score")
         from matplotlib.ticker import MaxNLocator as _MNL3
@@ -635,7 +648,7 @@ def plot_metrics_summary(
         ax3.text(0.5, 0.5, "No diversity data", ha="center", va="center",
                  transform=ax3.transAxes)
         ax3.set_title("Diversity Health")
-    add_panel_label(ax3, 'c', x=0.02, y=0.98)
+    add_panel_label(ax3, 'c', x=-0.10, y=1.05)
 
     # ── D4: Expression fidelity + config ──
     ax4 = fig.add_subplot(gs[1, 1])
@@ -664,9 +677,11 @@ def plot_metrics_summary(
         # Add reference line at r = 0.9999 for context
         ax4.axvline(x=0.9999, color=COLORS["warn"], linewidth=1.0,
                     linestyle="--", alpha=0.6, zorder=1)
-        ax4.text(0.9999, len(expr_items) - 0.1, "r=0.9999",
-                 fontsize=7, color=COLORS["warn"], alpha=0.8,
-                 ha="center", va="top", rotation=90)
+        ax4.annotate("ref r=0.9999", xy=(0.9999, 0.98),
+                 xycoords=("data", "axes fraction"),
+                 xytext=(6, -2), textcoords="offset points",
+                 fontsize=7, color=COLORS["warn"], alpha=0.85,
+                 ha="left", va="top")
 
         from matplotlib.ticker import MaxNLocator as _MNL4
         ax4.xaxis.set_major_locator(_MNL4(nbins=5, prune="both"))
@@ -683,31 +698,14 @@ def plot_metrics_summary(
         if n_types:
             headline_parts.append(f"{n_types} cell types")
         headline_text = " | ".join(headline_parts)
-        ax4.text(0.5, 0.97, headline_text,
-                 transform=ax4.transAxes, ha="center", va="top",
-                 fontsize=7, fontweight="bold", color=COLORS["good"],
-                 bbox=dict(boxstyle="round,pad=0.3", fc="#E8F0FE",
-                           ec=COLORS["good"], alpha=0.85, linewidth=0.6))
-
-        cfg_text_parts = []
-        if cfg_meta:
-            cfg_text_parts.append(f"{cfg_meta.get('condition_mode', '?')}")
-            cfg_text_parts.append(f"CFG={cfg_meta.get('cfg_scale', '?')}")
-            eps = cfg_meta.get("noise_scale", 0)
-            if eps:
-                cfg_text_parts.append(f"\u03b5={eps}")
-            cfg_text_parts.append(f"N={cfg_meta.get('total_cells', '?')}")
-        if n_genes:
-            cfg_text_parts.append(f"G={int(n_genes)}")
-        if cfg_text_parts:
-            ax4.text(0.98, 0.01, " | ".join(cfg_text_parts),
-                     transform=ax4.transAxes, ha="right", va="bottom",
-                     fontsize=7, color=COLORS["neutral"], alpha=0.8)
+        ax4.text(0.98, 0.97, headline_text,
+                 transform=ax4.transAxes, ha="right", va="top",
+                 fontsize=7, color=COLORS["good"])
     else:
         ax4.text(0.5, 0.5, "No expression data", ha="center", va="center",
                  transform=ax4.transAxes)
         ax4.set_title("Expression Fidelity")
-    add_panel_label(ax4, 'd', x=0.02, y=0.98)
+    add_panel_label(ax4, 'd', x=-0.10, y=1.05)
 
     if save:
         viz_io.save_to_dir(fig, "panel_d_metrics_summary", output_dir, dpi, save_panel_fn)

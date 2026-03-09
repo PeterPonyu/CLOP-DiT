@@ -190,7 +190,7 @@ def plot_real_vs_generated(
             label="Generated", rasterized=True,
         )
     ax.legend(markerscale=3, fontsize=FONT_LEGEND, frameon=False, loc="upper right")
-    ax.set_title("Type-Coloured Overlay", fontsize=11)
+    ax.set_title("Type-Colored Overlay", fontsize=11)
     ax.set_xlabel("UMAP 1", fontsize=10)
     ax.set_ylabel("UMAP 2", fontsize=10)
 

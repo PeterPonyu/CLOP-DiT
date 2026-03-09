@@ -111,7 +111,7 @@ def plot_baseline_comparison(
 
     # ── O1: Grouped bar chart ──
     ax = fig.add_subplot(gs[0])
-    add_panel_label(ax, 'a')
+    add_panel_label(ax, 'a', x=-0.10, y=1.05)
     x = np.arange(len(metric_labels))
     w = 0.8 / n_methods
     for i, mname in enumerate(method_names):
@@ -123,6 +123,7 @@ def plot_baseline_comparison(
     ax.set_xticks(x)
     ax.set_xticklabels(metric_labels, fontsize=9, rotation=0, ha="center")
     ax.legend(fontsize=8, loc="upper left", bbox_to_anchor=(1.02, 1.0), frameon=False)
+    fig._clop_layout_rect = (0.02, 0.03, 0.85, 0.95)
     style_axes(ax, "bar", title="Key Metrics Comparison", ylabel="Value")
 
     # ── O2: Radar chart ──
@@ -143,7 +144,7 @@ def plot_baseline_comparison(
     angles += angles[:1]
     ax_placeholder.remove()
     ax_radar = fig.add_subplot(gs[1], polar=True)
-    add_panel_label(ax_radar, 'b')
+    add_panel_label(ax_radar, 'b', x=-0.10, y=1.05)
     ax_radar.set_theta_offset(np.pi / 2)
     ax_radar.set_theta_direction(-1)
     ax_radar.set_thetagrids(np.degrees(angles[:-1]), metric_labels, fontsize=10)
@@ -157,11 +158,12 @@ def plot_baseline_comparison(
                       color=METHOD_COLORS[i % len(METHOD_COLORS)])
     ax_radar.legend(loc="lower center", bbox_to_anchor=(0.5, -0.22), fontsize=8,
                     frameon=False, ncol=3)
+    fig._clop_layout_rect = (0.02, 0.12, 0.98, 0.95)
     ax_radar.set_title("Normalized Radar", pad=8)
 
     # ── O3: Relative improvement strip (graphical — replaces table) ──
     ax3 = fig.add_subplot(gs[2])
-    add_panel_label(ax3, 'c')
+    add_panel_label(ax3, 'c', x=-0.10, y=1.05)
     # For each baseline, compute % improvement of CLOP-DiT vs that baseline
     clop_vals = methods["CLOP-DiT"]
     improvement_data = {}

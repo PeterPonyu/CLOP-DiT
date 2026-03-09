@@ -146,7 +146,7 @@ def plot_classifier_panel(
     # suptitle and stats banner removed per revision; title information moved to LaTeX caption
 
     ax = fig.add_subplot(gs[0])
-    add_panel_label(ax, 'a')
+    add_panel_label(ax, 'a', x=-0.10, y=1.05)
     cm_norm = cm.astype(float) / (cm.sum(axis=1, keepdims=True) + 1e-8)
     im = ax.imshow(cm_norm, cmap="Blues", aspect="auto", vmin=0, vmax=1)
 
@@ -189,7 +189,7 @@ def plot_classifier_panel(
                xlabel="Predicted", ylabel="True Type")
 
     ax2 = fig.add_subplot(gs[1])
-    add_panel_label(ax2, 'b', x=-0.15, y=1.08)
+    add_panel_label(ax2, 'b', x=-0.10, y=1.05)
     if per_type_acc:
         summary = _plot_classifier_metric_heatmap(fig, ax2, cm, class_names)
         f1 = summary["f1"]
@@ -203,7 +203,7 @@ def plot_classifier_panel(
             va="top",
             fontsize=8,
             color="#444",
-            bbox=dict(boxstyle="round,pad=0.18", fc="white", ec="#DDDDDD", alpha=0.92),
+            bbox=dict(boxstyle="round,pad=0.18", fc="white", ec=COLORS["border_light"], alpha=0.92),
         )
     else:
         ax2.text(0.5, 0.5, "No per-type data", ha="center", va="center",
@@ -211,7 +211,7 @@ def plot_classifier_panel(
         ax2.set_title("Per-Type Summary")
 
     ax3 = fig.add_subplot(gs[2])
-    add_panel_label(ax3, 'c', x=-0.15, y=1.02)
+    add_panel_label(ax3, 'c', x=-0.10, y=1.05)
     disc_proba = classifier_data.get("_disc_proba")
     disc_y = classifier_data.get("_disc_y")
 

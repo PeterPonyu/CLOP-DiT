@@ -821,6 +821,75 @@ def _actions_whitespace_excess(issue: dict) -> list[Action]:
     return actions
 
 
+def _actions_cross_axes_text_overlap(issue: dict) -> list[Action]:
+    """Generate actions for ``cross_axes_text_overlap`` issues.
+
+    When text from different axes overlaps (e.g. xlabel of top panel
+    collides with title of bottom panel due to small hspace), the
+    primary fix is to increase inter-panel spacing.
+    """
+    return [
+        Action(
+            action_type="increase_hspace",
+            target="figure",
+            params={"delta": 0.08},
+            priority=1,
+            description=(
+                "Increase vertical spacing (hspace) between subplot rows "
+                "to prevent text from adjacent panels from overlapping "
+                "(e.g. xlabel vs title between rows)."
+            ),
+        ),
+        Action(
+            action_type="increase_wspace",
+            target="figure",
+            params={"delta": 0.05},
+            priority=2,
+            description=(
+                "Increase horizontal spacing (wspace) between subplot "
+                "columns to prevent text from adjacent panels from "
+                "overlapping (e.g. ylabel vs ylabel between columns)."
+            ),
+        ),
+        Action(
+            action_type="increase_figsize",
+            target="figure",
+            params={"delta_width": 0.5, "delta_height": 0.5},
+            priority=3,
+            description=(
+                "Enlarge the overall figure to give inter-panel text "
+                "elements more room."
+            ),
+        ),
+    ]
+
+
+def _actions_panel_label_inside_axes(issue: dict) -> list[Action]:
+    """Generate actions for ``panel_label_inside_axes`` issues.
+
+    Panel labels (a)(b)(c) placed inside axes compete with data content.
+    The fix is to reposition them outside the axes bounds.
+    """
+    return [
+        Action(
+            action_type="reposition_panel_labels",
+            target="panel_labels",
+            params={
+                "placement": "outside_top_left",
+                "offset_x": -0.05,
+                "offset_y": 1.05,
+                "transform": "axes_fraction",
+            },
+            priority=2,
+            description=(
+                "Reposition panel labels (a)(b)(c) to outside the axes "
+                "area (top-left corner, slightly above and to the left) "
+                "so they do not compete with data content."
+            ),
+        ),
+    ]
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Issue-type -> action-generator registry
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -855,6 +924,9 @@ ISSUE_TO_ACTIONS: dict[str, Callable[[dict], list[Action]]] = {
     # Complexity / whitespace (pass 31 + compaction)
     "panel_complexity_excess": _actions_panel_complexity_excess,
     "whitespace_excess":       _actions_whitespace_excess,
+    # Layout (passes 32-33)
+    "cross_axes_text_overlap": _actions_cross_axes_text_overlap,
+    "panel_label_inside_axes": _actions_panel_label_inside_axes,
 }
 
 
@@ -949,6 +1021,8 @@ _ACTION_CATEGORY: dict[str, str] = {
     # compaction
     "reduce_hspace":             "spacing",
     "reduce_figsize_height":     "density",
+    # panel label repositioning
+    "reposition_panel_labels":   "typography",
 }
 
 

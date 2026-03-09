@@ -15,6 +15,7 @@ import numpy as np
 
 from .style import (
     add_panel_label,
+    COLORS,
     set_figure_suptitle,
     TYPE_PALETTE,
     quality_color,
@@ -56,7 +57,7 @@ def plot_clustering_panel(
     # suptitle removed per revision; title information moved to LaTeX caption
 
     ax = fig.add_subplot(gs[0])
-    add_panel_label(ax, 'a')
+    add_panel_label(ax, 'a', x=-0.10, y=1.05)
     unique_types = np.unique(cell_type)
     ct_colors = {}
     for i, ct in enumerate(sorted(unique_types)):
@@ -79,12 +80,12 @@ def plot_clustering_panel(
     ax.scatter([], [], c="gray", s=15, marker="o", label="Real")
     ax.scatter([], [], c="gray", s=15, marker="^", edgecolors="black",
                linewidths=0.3, label="Generated")
-    ax.legend(fontsize=9, loc="upper left", markerscale=2)
+    ax.legend(fontsize=9, loc="upper left", markerscale=2, frameon=False)
     style_axes(ax, "umap", title="UMAP Overlay",
                xlabel="UMAP 1", ylabel="UMAP 2")
 
     ax2 = fig.add_subplot(gs[1])
-    add_panel_label(ax2, 'b')
+    add_panel_label(ax2, 'b', x=-0.10, y=1.05)
     mixing = clustering_data.get("per_type_mixing", {})
     if mixing:
         sorted_types = sorted(mixing.keys(), key=lambda k: mixing[k])
@@ -98,7 +99,7 @@ def plot_clustering_panel(
         ax2.set_yticklabels(short_names, fontsize=8)
         set_dense_tick_labels(ax2, axis="y", max_labels=18, fontsize=8, rotation=0)
         ax2.axvline(x=clustering_data.get("mean_mixing_score", 0),
-                     color="#D32F2F", linestyle="--", alpha=0.7, linewidth=1.5,
+                     color=COLORS["error_red"], linestyle="--", alpha=0.7, linewidth=1.5,
                      label=f"mean={clustering_data.get('mean_mixing_score', 0):.3f}")
         ax2.set_xlim(0, max(max(vals) * 1.1, 0.5))
         ax2.legend(fontsize=9, loc="upper left", frameon=False)
@@ -110,7 +111,7 @@ def plot_clustering_panel(
         ax2.set_title("kNN Mixing Score")
 
     ax3 = fig.add_subplot(gs[2])
-    add_panel_label(ax3, 'c')
+    add_panel_label(ax3, 'c', x=-0.10, y=1.05)
     ax3.axis("off")
 
     gauge_items = [
@@ -125,7 +126,7 @@ def plot_clustering_panel(
         y = 0.90 - i * (0.82 / max(n_items - 1, 1))
         color = quality_color(val, thresh)
         ax3.text(0.55, y, f"{val:.3f}", fontsize=9,
-                 color="#222222", ha="center", va="center",
+                 color=COLORS["annotation_light"], ha="center", va="center",
                  bbox=dict(boxstyle="round,pad=0.20", fc="white", ec=color,
                            alpha=1.0, linewidth=2.0),
                  transform=ax3.transAxes)

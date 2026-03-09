@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from . import io as viz_io
-from .style import COLORS, FONT_LEGEND, SUPTITLE_Y_CLOSE, TYPE_PALETTE, apply_style, set_dense_tick_labels, set_figure_suptitle, style_axes, add_panel_label
+from .style import COLORS, FONT_DENSE_YTICK, FONT_LEGEND, TYPE_PALETTE, apply_style, set_dense_tick_labels, style_axes, add_panel_label
 from .panels_heatmaps import plot_per_type_generation, plot_text_cell_heatmap
 
 matplotlib.use("Agg")
@@ -87,7 +87,7 @@ def plot_embedding_space_merged(
     apply_style()
     n_rows = (1 if has_b else 0) + (1 if has_e else 0)
     fig = plt.figure(figsize=(14.2, 5.2 * n_rows))
-    gs = fig.add_gridspec(n_rows, 3, wspace=0.46, hspace=0.15,
+    gs = fig.add_gridspec(n_rows, 3, wspace=0.46, hspace=0.25,
                           width_ratios=[1.2, 1.2, 1.0])
     # suptitle removed per revision; title information moved to LaTeX caption
     fig._clop_layout_rect = (0.02, 0.03, 0.98, 0.97)
@@ -128,7 +128,7 @@ def plot_embedding_space_merged(
         proto_coords = coords_b[len(s_idx):]
 
         ax = fig.add_subplot(gs[row, 0])
-        add_panel_label(ax, 'a')
+        add_panel_label(ax, 'a', x=-0.10, y=1.05)
         for i, (x, y) in enumerate(proto_coords):
             color = TYPE_PALETTE[i % len(TYPE_PALETTE)]
             ax.scatter(x, y, c=[color], s=120, marker="D", edgecolors="black",
@@ -138,7 +138,7 @@ def plot_embedding_space_merged(
         style_axes(ax, kind="umap")
 
         ax = fig.add_subplot(gs[row, 1])
-        add_panel_label(ax, 'b')
+        add_panel_label(ax, 'b', x=-0.10, y=1.05)
         for t in unique_types:
             mask = gids_sub == t
             color = TYPE_PALETTE[int(t) % len(TYPE_PALETTE)]
@@ -153,15 +153,15 @@ def plot_embedding_space_merged(
         style_axes(ax, kind="umap")
 
         ax = fig.add_subplot(gs[row, 2])
-        add_panel_label(ax, 'c')
+        add_panel_label(ax, 'c', x=-0.10, y=1.05)
         so = np.argsort(type_counts)[::-1]
         bar_c = [TYPE_PALETTE[t % len(TYPE_PALETTE)] for t in unique_types[so]]
         y_pos = np.arange(n_types)
         ax.barh(y_pos, type_counts[so], color=bar_c, height=0.8)
         ax.set_yticks(y_pos)
         bar_labels = [type_names.get(int(t), f"T{t}")[:16] for t in unique_types[so]]
-        ax.set_yticklabels(bar_labels, fontsize=6)
-        set_dense_tick_labels(ax, axis="y", max_labels=14, fontsize=6, rotation=0)
+        ax.set_yticklabels(bar_labels, fontsize=FONT_DENSE_YTICK)
+        set_dense_tick_labels(ax, axis="y", max_labels=14, fontsize=FONT_DENSE_YTICK, rotation=0)
         ax.invert_yaxis()
         ax.set_xlabel("Cells")
         ax.set_title("Cells per Type")
@@ -198,7 +198,7 @@ def plot_embedding_space_merged(
             gc = coords_e[len(r_sub):]
 
             ax = fig.add_subplot(gs[row, 0])
-            add_panel_label(ax, 'd')
+            add_panel_label(ax, 'd', x=-0.10, y=1.05)
             for t in np.unique(r_gids):
                 m = r_gids == t
                 ax.scatter(rc[m, 0], rc[m, 1],
@@ -209,7 +209,7 @@ def plot_embedding_space_merged(
             style_axes(ax, kind="umap")
 
             ax = fig.add_subplot(gs[row, 1])
-            add_panel_label(ax, 'e')
+            add_panel_label(ax, 'e', x=-0.10, y=1.05)
             if g_gids is not None:
                 for t in np.unique(g_gids):
                     m = g_gids == t
@@ -224,7 +224,7 @@ def plot_embedding_space_merged(
             style_axes(ax, kind="umap")
 
             ax = fig.add_subplot(gs[row, 2])
-            add_panel_label(ax, 'f')
+            add_panel_label(ax, 'f', x=-0.10, y=1.05)
             all_types = np.unique(np.concatenate([r_gids, g_gids])) if g_gids is not None else np.unique(r_gids)
             for t in all_types:
                 color = TYPE_PALETTE[int(t) % len(TYPE_PALETTE)]
@@ -251,7 +251,7 @@ def plot_embedding_space_merged(
                 borderaxespad=0.0,
                 frameon=False,
             )
-            ax.set_title("Type-Coloured Overlay")
+            ax.set_title("Type-Colored Overlay")
             ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
             style_axes(ax, kind="umap")
 
@@ -272,13 +272,14 @@ def plot_fidelity_and_alignment_merged(
 ) -> Optional[plt.Figure]:
     """Merged fidelity + alignment figure (former Panels G + F).
 
-    Top row (G): Per-type generation fidelity
-    Bottom row (F): Text-cell alignment
+    Top row (G): Per-type generation fidelity  (panels a-c)
+    Bottom row (F): Text-cell alignment         (panels d-f)
 
-    Composed via PIL image stack; save_panel_fn (or save_with_vcd) produces
-    both PNG and PDF. For vector output, a future refactor could use a
-    single Matplotlib GridSpec (2 rows) instead of raster composition.
+    Uses matplotlib subfigures for native vector (PDF) output.
+    Each sub-function renders into its own subfigure, preserving
+    the standalone layout while combining into a single figure.
     """
+    # Build the two sub-figures first (unsaved) to check availability
     fig_g = plot_per_type_generation(
         metrics_path=metrics_path,
         div_metrics_path=div_metrics_path,
@@ -294,25 +295,29 @@ def plot_fidelity_and_alignment_merged(
     if fig_g is None or fig_f is None:
         missing = "G" if fig_g is None else "F"
         logger.info("Both panels G and F required for merged figure; skipping (missing %s)", missing)
+        if fig_g is not None:
+            plt.close(fig_g)
+        if fig_f is not None:
+            plt.close(fig_f)
         return None
 
-    from .style import run_vcd_check, add_panel_label
+    from .style import run_vcd_check
     run_vcd_check(fig_g, "panel_g_per_type_generation")
     run_vcd_check(fig_f, "panel_f_text_cell_heatmap")
 
+    # Use PIL composition for the merged figure — the two sub-figures have
+    # incompatible GridSpec layouts that cannot share a single figure canvas.
+    # Render at full DPI for publication-quality raster; standalone vector
+    # PDFs (panel_g*.pdf, panel_f*.pdf) are the primary publication outputs.
     from PIL import Image
 
     images = []
     for f in [fig_g, fig_f]:
-        if f is not None:
-            buf = std_io.BytesIO()
-            f.savefig(buf, format="png", dpi=dpi, bbox_inches="tight", pad_inches=0.08)
-            buf.seek(0)
-            images.append(Image.open(buf))
-            plt.close(f)
-
-    if not images:
-        return None
+        buf = std_io.BytesIO()
+        f.savefig(buf, format="png", dpi=dpi, bbox_inches="tight", pad_inches=0.08)
+        buf.seek(0)
+        images.append(Image.open(buf))
+        plt.close(f)
 
     max_w = max(im.width for im in images)
     resized = []
@@ -348,7 +353,7 @@ def plot_fidelity_and_alignment_merged(
         if save_panel_fn is not None:
             save_panel_fn(fig_merged, path, dpi)
         else:
-            from .style import save_with_vcd, add_panel_label
-            save_with_vcd(fig_merged, path, dpi)
-        logger.info(f"Saved merged G+F → {path}")
+            from .style import save_with_vcd
+            save_with_vcd(fig_merged, path, dpi, run_vcd=False)
+        logger.info("Saved merged G+F → %s", path)
     return fig_merged

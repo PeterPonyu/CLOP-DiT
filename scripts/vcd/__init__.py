@@ -16,6 +16,7 @@ from .vcd_core import (
     _tight_bbox,
     _safe_bbox,
     _overlap_area,
+    _is_colorbar_axes,
 )
 from .vcd_checks_text import (
     _check_text_overlaps,
@@ -43,11 +44,15 @@ from .vcd_checks_colorbar import (
 )
 from .vcd_checks_structure import (
     _check_significance_brackets,
+    _per_axes_summary,
+)
+from .vcd_checks_layout import (
     _check_fontsize_adequacy,
     _check_tick_spine_overlap,
     _check_font_policy,
     _check_label_density,
-    _per_axes_summary,
+    _check_cross_axes_text_overlap,
+    _check_panel_label_placement,
 )
 from .vcd_checks_perceptual import (
     _check_contrast,
@@ -86,6 +91,9 @@ from .vcd_config import (
     COMPLEXITY_SCORE_THRESHOLD,
     TIGHT_BBOX_PAD_INCHES,
     TIGHT_BBOX_ENABLED,
+    CROSS_AXES_TEXT_OVERLAP_TOL_PX,
+    CROSS_AXES_TEXT_OVERLAP_MIN_PX2,
+    PANEL_LABEL_PLACEMENT_MARGIN_PX,
 )
 
 
@@ -102,7 +110,7 @@ def detect_all_conflicts(
 
     Four-layer detection:
       Layer 1 (subplot-level):   passes 12-13, per-axes summary
-      Layer 2 (figure-level):    passes 1-11, 14-22
+      Layer 2 (figure-level):    passes 1-11, 14-22, 32-33
       Layer 3 (perceptual):      passes 23-26
       Layer 4 (semantic):        passes 27-31
 
@@ -222,6 +230,17 @@ def detect_all_conflicts(
         max_numeric_labels=MAX_NUMERIC_BAR_LABELS,
         max_annotations=MAX_ANNOTATIONS_COMPLEXITY,
         score_threshold=COMPLEXITY_SCORE_THRESHOLD))
+
+    # ── Layer 2 continued: new layout passes (32-33) ──
+    # Pass 32: cross-axes text overlap (xlabel vs title between rows)
+    issues.extend(_check_cross_axes_text_overlap(
+        fig, renderer,
+        tol_px=CROSS_AXES_TEXT_OVERLAP_TOL_PX,
+        min_overlap_px2=CROSS_AXES_TEXT_OVERLAP_MIN_PX2))
+    # Pass 33: panel label placement (inside vs outside axes)
+    issues.extend(_check_panel_label_placement(
+        fig, renderer,
+        margin_px=PANEL_LABEL_PLACEMENT_MARGIN_PX))
 
     # Two-layer per-axes summary
     per_ax = _per_axes_summary(fig, renderer, infos)

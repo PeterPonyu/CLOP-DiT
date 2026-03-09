@@ -16,7 +16,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from . import io as viz_io
-from .style import COLORS, FONT_LEGEND, add_colorbar_safe, quality_color, set_adaptive_ytick_labels, set_dense_tick_labels, set_figure_suptitle, add_panel_label
+from .style import (
+    COLORS, FONT_HEATMAP_CELL, FONT_LEGEND, FONT_SMALL, FONT_TITLE,
+    abbreviate_cell_type, add_colorbar_safe, add_panel_label,
+    quality_color, set_adaptive_ytick_labels, style_axes,
+)
 from src.utils.paths import FIG_DIR
 
 logger = logging.getLogger(__name__)
@@ -41,7 +45,6 @@ def plot_text_cell_heatmap(
         Mann-Whitney U p-value, Cohen's d effect size, median markers, and
         bootstrap CI annotation
     """
-    from matplotlib.patches import Rectangle, FancyBboxPatch  # noqa: F401
     from matplotlib.ticker import MaxNLocator
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
     import matplotlib.patheffects as mpe
@@ -71,6 +74,17 @@ def plot_text_cell_heatmap(
     else:
         text_group_ids = group_ids
 
+    # Auto-load type names from deduplicated captions if not provided
+    if not type_names:
+        cap_path = cache / "text_captions_deduplicated.json"
+        if cap_path.exists():
+            with open(cap_path) as _cf:
+                _raw_caps = json.load(_cf)
+            type_names = {}
+            for k, v in _raw_caps.items():
+                name = v.split(" are ")[0] if " are " in v else v[:50]
+                type_names[int(k)] = name
+
     unique_types = np.sort(np.unique(group_ids))
     n_types = len(unique_types)
 
@@ -87,7 +101,7 @@ def plot_text_cell_heatmap(
 
     sim_matrix = text_centroids @ cell_centroids.T
 
-    labels = [type_names.get(int(t), f"T{t}")[:18] for t in unique_types]
+    labels = [abbreviate_cell_type(type_names.get(int(t), f"T{t}"), max_len=22) for t in unique_types]
     diag = np.diag(sim_matrix)
     mean_diag = diag.mean()
     std_diag = diag.std()
@@ -118,12 +132,11 @@ def plot_text_cell_heatmap(
     # Try to load bootstrap CIs for centroid cosine
     bootstrap_ci = None
     try:
-        import json as _json
         from src.utils.paths import RESULTS_DIR as _RESULTS_DIR
         ci_path = _RESULTS_DIR / "bootstrap_cis.json"
         if ci_path.exists():
             with open(ci_path) as _f:
-                ci_data = _json.load(_f)
+                ci_data = json.load(_f)
             cc_ci = ci_data.get("metrics", {}).get("centroid_cosine", {})
             if cc_ci:
                 bootstrap_ci = {
@@ -139,13 +152,13 @@ def plot_text_cell_heatmap(
     sim_sorted = sim_matrix[sort_order][:, sort_order]
     labels_sorted = [labels[i] for i in sort_order]
 
-    fig = plt.figure(figsize=(15.5, 10.0))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.5, 0.7, 0.55], wspace=0.50)
+    fig = plt.figure(figsize=(15.5, 9.5))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.25, 0.80, 0.68], wspace=0.52)
     # Title moved to LaTeX caption
 
     # ── F1: Clustered heatmap with annotations ──
     ax1 = fig.add_subplot(gs[0])
-    add_panel_label(ax1, chr(ord('a') + label_offset))
+    add_panel_label(ax1, chr(ord('a') + label_offset), x=-0.10, y=1.05)
     cmap = mcolors.LinearSegmentedColormap.from_list(
         "custom_heat",
         [
@@ -158,7 +171,7 @@ def plot_text_cell_heatmap(
         sim_sorted, cmap=cmap, vmin=-0.1, vmax=1.0,
         aspect="auto", interpolation="nearest",
     )
-    step = 7
+    step = 3
     _xtl = [labels_sorted[i] if i % step == 0 else "" for i in range(n_types)]
     _ytl = [labels_sorted[i] if i % step == 0 else "" for i in range(n_types)]
     ax1.set_xticks(range(n_types))
@@ -178,78 +191,78 @@ def plot_text_cell_heatmap(
     off_diag_matrix = sim_sorted.copy()
     np.fill_diagonal(off_diag_matrix, -1)
     confusion_pairs = []
+    _confusion_positions = []  # track positions for collision avoidance
     for _ in range(min(3, n_types)):
         idx = np.unravel_index(off_diag_matrix.argmax(), off_diag_matrix.shape)
         val = off_diag_matrix[idx]
         if val < 0.3:
             break
         ax1.plot(
-            idx[1], idx[0], "x", color="lime",
+            idx[1], idx[0], "x", color=COLORS["confusion_marker"],
             markersize=7, markeredgewidth=1.8, zorder=4,
         )
+        # Compute annotation offset; shift further if close to a previous label
+        ann_offset_x, ann_offset_y = 6, -6
+        for px, py in _confusion_positions:
+            if abs(idx[1] - px) < 3 and abs(idx[0] - py) < 3:
+                # Shift up if near bottom edge, down otherwise
+                if idx[0] > n_types * 0.7:
+                    ann_offset_y += 14
+                else:
+                    ann_offset_y -= 14
+        _confusion_positions.append((idx[1], idx[0]))
         # Annotate with the similarity value
         ax1.annotate(
             f"{val:.2f}",
             xy=(idx[1], idx[0]),
-            xytext=(6, -6),
+            xytext=(ann_offset_x, ann_offset_y),
             textcoords="offset points",
-            fontsize=7,
-            fontweight="bold",
-            color="lime",
-            path_effects=[
-                mpe.withStroke(linewidth=2.0, foreground="black"),
-            ],
+            fontsize=FONT_SMALL,
+            color=COLORS["confusion_marker"],
+            fontweight="normal",
+            bbox=dict(boxstyle="round,pad=0.15", facecolor="black", alpha=0.6,
+                      edgecolor="none"),
             zorder=5,
         )
         confusion_pairs.append(
-            (labels_sorted[idx[0]][:12], labels_sorted[idx[1]][:12], val)
+            (abbreviate_cell_type(labels_sorted[idx[0]], max_len=12),
+             abbreviate_cell_type(labels_sorted[idx[1]], max_len=12), val)
         )
         off_diag_matrix[idx] = -1
 
-    cbar = add_colorbar_safe(im, ax=ax1, label="Cosine similarity", shrink=0.52, pad=0.12)
+    try:
+        cbar = add_colorbar_safe(im, ax=ax1, label="Cosine similarity", shrink=0.52, pad=0.08)
+    except Exception:
+        cbar = fig.colorbar(im, ax=ax1, shrink=0.52, pad=0.08)
+        cbar.set_label("Cosine similarity", fontsize=10)
     cbar.ax.tick_params(labelsize=8)
+    cbar.ax.yaxis.set_major_locator(MaxNLocator(nbins=6))
     cbar.ax.axhline(y=mean_diag, color="white", linewidth=1.5, linestyle="--")
     cbar.ax.axhline(y=mean_off, color="black", linewidth=1, linestyle=":")
     # Add text labels on colorbar reference lines
     cbar.ax.text(
-        1.1, mean_diag, f"\u03bc diag={mean_diag:.3f}",
+        1.1, mean_diag, f"diag={mean_diag:.3f}",
         transform=cbar.ax.get_yaxis_transform(),
-        fontsize=6.5, color="white", va="center",
-        path_effects=[mpe.withStroke(linewidth=2, foreground="black")],
+        fontsize=8, color="#333333", va="bottom", ha="left",
+        fontweight="normal",
+        bbox=dict(boxstyle="round,pad=0.12", facecolor="white", alpha=0.85,
+                  edgecolor="none"),
     )
     cbar.ax.text(
-        1.1, mean_off, f"\u03bc off={mean_off:.3f}",
+        1.1, mean_off, f"off={mean_off:.3f}",
         transform=cbar.ax.get_yaxis_transform(),
-        fontsize=6.5, color="black", va="center",
+        fontsize=8, color="#333333", va="top", ha="left",
+        fontweight="normal",
+        bbox=dict(boxstyle="round,pad=0.12", facecolor="white", alpha=0.85,
+                  edgecolor="none"),
     )
 
-    # Statistical summary text box on heatmap
-    stats_text = (
-        f"$n$ = {n_types} types\n"
-        f"Diag: \u03bc={mean_diag:.3f}, \u03c3={std_diag:.3f}\n"
-        f"Off-diag: \u03bc={mean_off:.3f}, \u03c3={std_off:.3f}\n"
-        f"Cohen's $d$ = {cohens_d:.1f}\n"
-        f"Sep. ratio = {separation_ratio:.1f}x"
-    )
-    if p_value is not None:
-        if p_value < 1e-10:
-            stats_text += f"\nMW-U $p$ < 1e-10"
-        else:
-            stats_text += f"\nMW-U $p$ = {p_value:.2e}"
-    ax1.text(
-        0.98, 0.02, stats_text,
-        transform=ax1.transAxes, fontsize=7, va="bottom", ha="right",
-        bbox=dict(
-            boxstyle="round,pad=0.4", facecolor="white",
-            edgecolor="#bdbdbd", alpha=0.92,
-        ),
-        zorder=10,
-    )
+    # Statistical summary moved to LaTeX caption for cleaner in-panel appearance
 
     # Inset: zoomed view of top-left diagonal corner (best-aligned types)
     n_inset = min(12, n_types)
     ax_inset = inset_axes(ax1, width="28%", height="28%", loc="upper right",
-                          borderpad=1.5)
+                          borderpad=2.5)
     ax_inset.imshow(
         sim_sorted[:n_inset, :n_inset], cmap=cmap, vmin=-0.1, vmax=1.0,
         aspect="auto", interpolation="nearest",
@@ -259,25 +272,22 @@ def plot_text_cell_heatmap(
         val_ii = sim_sorted[ii, ii]
         ax_inset.text(
             ii, ii, f"{val_ii:.2f}", ha="center", va="center",
-            fontsize=5, color="white" if val_ii > 0.5 else "black",
-            fontweight="bold",
-            path_effects=[
-                mpe.withStroke(
-                    linewidth=1.2,
-                    foreground="black" if val_ii > 0.5 else "white",
-                ),
-            ],
+            fontsize=FONT_HEATMAP_CELL, color="white" if val_ii > 0.5 else "black",
+            fontweight="normal",
         )
     ax_inset.set_xticks([])
     ax_inset.set_yticks([])
-    ax_inset.set_title(f"Top {n_inset} (zoom)", fontsize=7, pad=2)
+    ax_inset.set_title(f"Top {n_inset} (zoom)", fontsize=FONT_SMALL, pad=2)
     for spine in ax_inset.spines.values():
         spine.set_edgecolor("white")
         spine.set_linewidth(1.5)
+    ax_inset._clop_styled = True  # prevent save_with_vcd from overriding inset styling
+
+    style_axes(ax1, kind="heatmap")
 
     # ── F2: Per-type alignment bars with threshold bands ──
     ax2 = fig.add_subplot(gs[1])
-    add_panel_label(ax2, chr(ord('a') + label_offset + 1))
+    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.10, y=1.05)
     sorted_idx_asc = np.argsort(diag)
     d_asc = diag[sorted_idx_asc]
     labels_asc = [labels[i] for i in sorted_idx_asc]
@@ -289,27 +299,32 @@ def plot_text_cell_heatmap(
 
     # Thresholds (0.9, 0.7): alignment quality bands per FIGURE_PRESENTATION_POLICY
     color_map = [quality_color(v, (0.9, 0.7)) for v in d_asc]
-    bars = ax2.barh(range(n_types), d_asc, color=color_map, height=0.8,
-                    edgecolor="white", linewidth=0.3)
-    ax2.set_yticks(range(n_types))
-    step = max(1, int(np.ceil(n_types / 14)))
-    _ytl2 = [labels_asc[i] if i % step == 0 else "" for i in range(n_types)]
-    ax2.set_yticklabels(_ytl2, fontsize=7, ha="right")
+    ax2.barh(range(n_types), d_asc, color=color_map, height=0.8,
+             edgecolor="white", linewidth=0.3)
+    set_adaptive_ytick_labels(ax2, labels_asc, max_visible=22, fontsize=6)
     ax2.set_xlabel("Cosine Similarity", fontsize=10)
 
-    # Annotate values on the worst 3 and best 3 bars
-    for idx_bar in list(range(min(3, n_types))) + list(range(max(0, n_types - 3), n_types)):
+    # Annotate values on the worst 3 and best 3 bars (with collision avoidance)
+    _ann_indices = list(range(min(3, n_types))) + list(range(max(0, n_types - 3), n_types))
+    _ann_indices = sorted(set(_ann_indices))  # deduplicate if n_types <= 6
+    _prev_y = -999
+    for idx_bar in _ann_indices:
         val_bar = d_asc[idx_bar]
+        # Skip if too close to previous annotation vertically
+        if abs(idx_bar - _prev_y) < 1.5 and idx_bar != _ann_indices[0] and idx_bar < n_types - 3:
+            continue
+        _prev_y = idx_bar
         ax2.text(
             val_bar + 0.01, idx_bar, f"{val_bar:.3f}",
-            va="center", ha="left", fontsize=6, color="#424242",
+            va="center", ha="left", fontsize=FONT_HEATMAP_CELL, color=COLORS["annotation_medium"],
         )
 
     # Reference lines with annotations
     ax2.axvline(x=mean_diag, color=COLORS["bad"], linestyle="--", alpha=0.7, linewidth=1.5)
     ax2.text(
-        mean_diag, n_types + 0.5, f"\u03bc={mean_diag:.3f}",
-        ha="center", va="bottom", fontsize=7, color=COLORS["bad"],
+        mean_diag, n_types + 1.5, f"\u03bc={mean_diag:.3f}",
+        ha="center", va="bottom", fontsize=FONT_SMALL, color=COLORS["bad"],
+        clip_on=False,
     )
     ax2.axvline(x=0.9, color=COLORS["good"], linestyle=":", alpha=0.5, linewidth=1.0)
     ax2.axvline(x=0.7, color=COLORS["warn"], linestyle=":", alpha=0.5, linewidth=1.0)
@@ -318,36 +333,37 @@ def plot_text_cell_heatmap(
     ax2.set_title(
         f"Per-Type Alignment\n"
         f"[{n_excellent} excellent / {n_good} good / {n_poor} poor]",
-        fontsize=10,
+        fontsize=FONT_TITLE,
     )
     ax2.set_xlim(0, 1.08)
 
-    # Add median marker
+    # Add median marker (offset from mean label to avoid overlap)
     ax2.axvline(
-        x=median_diag, color="#6A1B9A", linestyle="-.", alpha=0.6, linewidth=1.0,
+        x=median_diag, color=COLORS["heatmap_purple"], linestyle="-.", alpha=0.6, linewidth=1.0,
     )
+    # Place median label below the bar area to avoid colliding with the mean label
     ax2.text(
-        median_diag, -1.5, f"med={median_diag:.3f}",
-        ha="center", va="top", fontsize=6.5, color="#6A1B9A",
+        median_diag, -2.0, f"med={median_diag:.3f}",
+        ha="center", va="top", fontsize=FONT_HEATMAP_CELL, color=COLORS["heatmap_purple"],
+        clip_on=False,
     )
 
-    # Add gridlines for readability
-    ax2.grid(True, axis="x", alpha=0.2, linewidth=0.5, zorder=0)
+    style_axes(ax2, kind="bar")
 
     # ── F3: Distribution comparison with statistics ──
     ax3 = fig.add_subplot(gs[2])
-    add_panel_label(ax3, chr(ord('a') + label_offset + 2))
+    add_panel_label(ax3, chr(ord('a') + label_offset + 2), x=-0.10, y=1.05)
 
-    # Histograms with detailed legend entries
+    # Histograms with concise legend entries
     ax3.hist(
         diag, bins=12, alpha=0.7, color=COLORS["real"], edgecolor="white",
-        label=f"Diag (\u03bc={mean_diag:.3f}, \u03c3={std_diag:.3f})",
+        label=f"Diagonal (n={len(diag)})",
         density=True,
         orientation="horizontal",
     )
     ax3.hist(
         off_diag, bins=25, alpha=0.45, color=COLORS["generated"], edgecolor="white",
-        label=f"Off-diag (\u03bc={mean_off:.3f}, \u03c3={std_off:.3f})",
+        label=f"Off-diagonal (n={len(off_diag)})",
         density=True,
         orientation="horizontal",
     )
@@ -371,10 +387,8 @@ def plot_text_cell_heatmap(
         pass  # scipy not available, skip KDE
 
     # Mean lines
-    ax3.axhline(y=mean_diag, color=COLORS["real"], linestyle="--", linewidth=1.5,
-                label=f"\u03bc diag = {mean_diag:.3f}")
-    ax3.axhline(y=mean_off, color=COLORS["generated"], linestyle=":", linewidth=1.5,
-                label=f"\u03bc off = {mean_off:.3f}")
+    ax3.axhline(y=mean_diag, color=COLORS["real"], linestyle="--", linewidth=1.5)
+    ax3.axhline(y=mean_off, color=COLORS["generated"], linestyle=":", linewidth=1.5)
     # Median lines
     ax3.axhline(y=median_diag, color=COLORS["real"], linestyle="-.",
                 linewidth=1.0, alpha=0.6)
@@ -383,64 +397,78 @@ def plot_text_cell_heatmap(
 
     ax3.set_ylabel("Cosine Similarity", fontsize=10)
     ax3.set_xlabel("Density", fontsize=10)
-    ax3.set_title("Diag vs Off-Diag", fontsize=11)
-    ax3.legend(fontsize=7, frameon=True, fancybox=True, framealpha=0.85,
-               edgecolor="#bdbdbd", loc="upper left")
-    ax3.set_ylim(min(off_diag.min() * 1.05, -0.1), 1.05)
-    ax3.yaxis.set_major_locator(MaxNLocator(nbins=6, prune="both"))
+    ax3.set_title("Diag vs Off-Diag", fontsize=FONT_TITLE)
+
+    # Tighter y-axis: avoid wasting space on empty negative range
+    _ylim_lo = max(off_diag.min() - 0.08, -0.15)
+    ax3.set_ylim(_ylim_lo, 1.05)
+    ax3.yaxis.set_major_locator(MaxNLocator(nbins=8, prune="both"))
+    ax3.xaxis.set_major_locator(MaxNLocator(nbins=5, prune="both"))
+    ax3.tick_params(axis="both", labelsize=8)
+
+    # Legend — place in empty region with background for visibility
+    ax3.legend(fontsize=8, frameon=True, loc="center left",
+               facecolor="white", edgecolor="#cccccc", framealpha=0.9)
 
     # Add gridlines for readability
     ax3.grid(True, axis="both", alpha=0.2, linewidth=0.4)
 
-    # Statistical annotation text box
-    stat_anno = f"Cohen's $d$ = {cohens_d:.1f}"
+    # Statistical annotation text box (compact single-line format)
+    stat_anno = f"$d$={cohens_d:.1f}"
     if p_value is not None:
         if p_value < 1e-10:
-            stat_anno += "\n$p$ < 1e-10 ***"
+            stat_anno += ",  $p$<1e-10***"
         elif p_value < 0.001:
-            stat_anno += f"\n$p$ = {p_value:.1e} ***"
+            stat_anno += f",  $p$={p_value:.1e}***"
         elif p_value < 0.01:
-            stat_anno += f"\n$p$ = {p_value:.3f} **"
+            stat_anno += f",  $p$={p_value:.3f}**"
         elif p_value < 0.05:
-            stat_anno += f"\n$p$ = {p_value:.3f} *"
+            stat_anno += f",  $p$={p_value:.3f}*"
         else:
-            stat_anno += f"\n$p$ = {p_value:.3f} n.s."
+            stat_anno += f",  $p$={p_value:.3f} n.s."
     # Bootstrap CI for centroid cosine if available
     if bootstrap_ci and bootstrap_ci.get("lower") is not None:
         stat_anno += (
-            f"\nBootstrap 95% CI:\n"
-            f"  [{bootstrap_ci['lower']:.3f}, {bootstrap_ci['upper']:.3f}]"
+            f"\n95% CI [{bootstrap_ci['lower']:.3f}, {bootstrap_ci['upper']:.3f}]"
         )
-    stat_anno += f"\nSep. ratio = {separation_ratio:.1f}x"
+    stat_anno += f"\nSep.={separation_ratio:.1f}x"
     ax3.text(
-        0.97, 0.48, stat_anno,
-        transform=ax3.transAxes, fontsize=7, va="top", ha="right",
+        0.97, 0.03, stat_anno,
+        transform=ax3.transAxes, fontsize=FONT_SMALL, va="bottom", ha="right",
+        fontweight="normal",
+        color=COLORS["annotation_dark"],
         bbox=dict(
-            boxstyle="round,pad=0.4", facecolor="#FFFDE7",
-            edgecolor="#FBC02D", alpha=0.92,
+            boxstyle="round,pad=0.3", facecolor="white", alpha=0.85,
+            edgecolor="#cccccc", linewidth=0.5,
         ),
         zorder=10,
     )
 
     # Bracket showing the separation between mean diagonal and mean off-diagonal
-    ax3_xlim = ax3.get_xlim()
-    bracket_x = ax3_xlim[1] * 0.85
+    bracket_x_ax = 0.75
     ax3.annotate(
         "",
-        xy=(bracket_x, mean_diag), xytext=(bracket_x, mean_off),
+        xy=(bracket_x_ax, mean_diag),
+        xycoords=("axes fraction", "data"),
+        xytext=(bracket_x_ax, mean_off),
+        textcoords=("axes fraction", "data"),
         arrowprops=dict(
-            arrowstyle="<->", color="#424242", lw=1.2,
+            arrowstyle="<->", color=COLORS["annotation_medium"], lw=1.0,
             connectionstyle="arc3,rad=0",
         ),
     )
     mid_y = (mean_diag + mean_off) / 2
     ax3.text(
-        bracket_x * 1.03, mid_y, f"\u0394={mean_diag - mean_off:.3f}",
-        fontsize=6.5, ha="left", va="center", color="#424242",
-        rotation=90,
+        bracket_x_ax - 0.02, mid_y, f"\u0394={mean_diag - mean_off:.3f}",
+        transform=ax3.get_yaxis_transform(),
+        fontsize=FONT_SMALL, ha="right", va="center",
+        fontweight="normal",
+        color=COLORS["annotation_medium"],
     )
 
-    fig.subplots_adjust(bottom=0.16, top=0.94)
+    style_axes(ax3, kind="default")
+
+    fig._clop_layout_rect = (0.02, 0.06, 0.98, 0.95)
 
     if save:
         viz_io.save_to_dir(fig, "panel_f_text_cell_heatmap", output_dir, dpi, save_panel_fn)
@@ -460,7 +488,7 @@ def plot_per_type_generation(
 
     G1: Centroid cosine per type (sorted, hardest types highlighted)
     G2: Frechet outlier profile (sorted, mean-anchored)
-    G3: Fidelity vs abundance with FD bubble size and diversity-ratio colour
+    G3: Fidelity vs abundance with FD bubble size and diversity-ratio color
     """
     if output_dir is None:
         output_dir = str(FIG_DIR)
@@ -483,7 +511,6 @@ def plot_per_type_generation(
 
     diversity_by_type_id = {}
     collapsed_type_ids = set()
-    collapsed_summary_text = ""
     div_path = Path(div_metrics_path)
     if div_path.exists():
         try:
@@ -499,19 +526,12 @@ def plot_per_type_generation(
                 diversity_by_type_id[int(t_id)] = float(ratio)
                 if ratio < 0.5:
                     collapsed_type_ids.add(int(t_id))
-            summary = t1.get("summary", {})
-            n_collapsed = summary.get("n_collapsed")
-            n_healthy = summary.get("n_healthy")
-            if n_collapsed is not None and n_healthy is not None:
-                total = n_collapsed + n_healthy
-                collapsed_summary_text = f" (collapsed types={n_collapsed}/{total}, DivR<0.5)"
         except Exception:
             diversity_by_type_id = {}
             collapsed_type_ids = set()
-            collapsed_summary_text = ""
 
     type_ids = [per_type[n].get("type_id") for n in names]
-    short_names = [n[:25] for n in names]
+    short_names = [abbreviate_cell_type(n, max_len=22) for n in names]
 
     div_ratios = []
     for t_id in type_ids:
@@ -527,17 +547,16 @@ def plot_per_type_generation(
     fd_valid = np.isfinite(fd_array)
     fd_mean = float(np.nanmean(fd_array)) if fd_valid.any() else float("nan")
 
-    fig = plt.figure(figsize=(12.8, 7.2))
-    gs_g = fig.add_gridspec(1, 3, wspace=0.55, width_ratios=[1.3, 1.1, 1.0])
+    fig = plt.figure(figsize=(14.0, 7.2))
+    gs_g = fig.add_gridspec(1, 3, wspace=0.72, width_ratios=[1.2, 1.2, 1.0])
+    fig._clop_layout_rect = (0.02, 0.06, 0.98, 0.95)
     summary = data.get("summary", {})
-    overall = data.get("overall", {})
     # Title moved to LaTeX caption
-    # set_figure_suptitle(fig, "Per-Type Generation Fidelity", fontsize=11)
 
     # G1: Centroid cosine (sorted)
-    from matplotlib.ticker import FixedLocator, MaxNLocator
+    from matplotlib.ticker import MaxNLocator
     ax = fig.add_subplot(gs_g[0])
-    add_panel_label(ax, chr(ord('a') + label_offset))
+    add_panel_label(ax, chr(ord('a') + label_offset), x=-0.10, y=1.05)
     sorted_idx = np.argsort(cosines)
     sorted_cos = [cosines[i] for i in sorted_idx]
     sorted_names_cos = [short_names[i] for i in sorted_idx]
@@ -550,13 +569,7 @@ def plot_per_type_generation(
         else:
             colors.append(quality_color(v, (0.9, 0.7)))
     ax.barh(range(len(sorted_cos)), sorted_cos, color=colors, height=0.8)
-    ax.set_yticks(range(len(sorted_cos)))
-    step = max(1, int(np.ceil(len(sorted_cos) / 14)))
-    _ytlg = [
-        sorted_names_cos[i] if i % step == 0 else ""
-        for i in range(len(sorted_cos))
-    ]
-    ax.set_yticklabels(_ytlg, fontsize=7, ha="right")
+    set_adaptive_ytick_labels(ax, sorted_names_cos, max_visible=25, fontsize=FONT_HEATMAP_CELL)
     ax.set_xlabel("Centroid Cosine Similarity")
     ax.set_title("Real\u2194Gen Centroid Cosine", fontsize=11)
     ax.axvline(
@@ -567,11 +580,11 @@ def plot_per_type_generation(
     ax.set_xlim(0, 1.05)
     ax.xaxis.set_major_locator(MaxNLocator(nbins=5, prune="upper"))
     ax.legend(fontsize=FONT_LEGEND, frameon=False, loc="lower right")
-    ax.grid(axis='x', alpha=0.15, linestyle='--')
+    style_axes(ax, kind="bar")
 
-    # G2: Fréchet outlier profile
+    # G2: Fr\u00e9chet outlier profile
     ax = fig.add_subplot(gs_g[1])
-    add_panel_label(ax, chr(ord('a') + label_offset + 1))
+    add_panel_label(ax, chr(ord('a') + label_offset + 1), x=-0.10, y=1.05)
     if fd_valid.any():
         fd_idx = np.where(fd_valid)[0][np.argsort(fd_array[fd_valid])]
         fd_vals = fd_array[fd_idx]
@@ -585,24 +598,22 @@ def plot_per_type_generation(
         ax.scatter(fd_vals, y_pos, s=28 + 70 * fd_norm, color=colors_fd, edgecolors="white", linewidths=0.4, zorder=3)
         if np.isfinite(fd_mean):
             ax.axvline(fd_mean, color=COLORS["bad"], linestyle="--", alpha=0.7, linewidth=1.5, label="mean (see caption)")
-        ax.set_yticks(y_pos)
-        fd_step = max(1, int(np.ceil(len(fd_vals) / 14)))
-        ax.set_yticklabels([fd_names[i] if i % fd_step == 0 else "" for i in range(len(fd_vals))], fontsize=7, ha="right")
+        set_adaptive_ytick_labels(ax, fd_names, max_visible=25, fontsize=FONT_HEATMAP_CELL)
         ax.set_xlabel("Fr\u00e9chet Distance (lower = better)")
         ax.set_title("Fr\u00e9chet Outlier Profile")
         ax.legend(fontsize=FONT_LEGEND, frameon=False, loc="lower right")
         ax.set_xlim(0, float(np.nanmax(fd_vals)) * 1.12)
         ax.xaxis.set_major_locator(MaxNLocator(nbins=5, prune="lower"))
-        ax.grid(axis='x', alpha=0.15, linestyle='--')
+        style_axes(ax, kind="bar")
     else:
         ax.text(
             0.5, 0.5, "No valid FD values",
             ha="center", va="center", transform=ax.transAxes,
         )
 
-    # G3: Cosine vs abundance with FD bubble size and diversity colouring
+    # G3: Cosine vs abundance with FD bubble size and diversity color
     ax = fig.add_subplot(gs_g[2])
-    add_panel_label(ax, chr(ord('a') + label_offset + 2))
+    add_panel_label(ax, chr(ord('a') + label_offset + 2), x=-0.10, y=1.05)
     fd_for_size = np.where(fd_valid, fd_array, np.nanmedian(fd_array[fd_valid]) if fd_valid.any() else 1.0)
     fd_min = float(np.nanmin(fd_for_size)) if np.isfinite(fd_for_size).any() else 0.0
     fd_ptp = float(np.nanmax(fd_for_size) - fd_min) if np.isfinite(fd_for_size).any() else 1.0
@@ -625,7 +636,11 @@ def plot_per_type_generation(
             linewidth=0.6,
             clip_on=False,
         )
-        cbar = add_colorbar_safe(sc, ax=ax, label="Diversity ratio", shrink=0.65, pad=0.10)
+        try:
+            cbar = add_colorbar_safe(sc, ax=ax, label="Diversity ratio", shrink=0.65, pad=0.10)
+        except Exception:
+            cbar = fig.colorbar(sc, ax=ax, shrink=0.65, pad=0.10)
+            cbar.set_label("Diversity ratio", fontsize=10)
         cbar.ax.tick_params(labelsize=8)
     else:
         ax.scatter(
@@ -642,26 +657,36 @@ def plot_per_type_generation(
     if len(x_vals) > 1:
         slope, intercept = np.polyfit(x_vals, cos_array, deg=1)
         x_line = np.linspace(x_vals.min(), x_vals.max(), 100)
-        ax.plot(x_line, slope * x_line + intercept, color="#263238", linestyle="--", linewidth=1.3, label="Trend")
+        ax.plot(x_line, slope * x_line + intercept, color=COLORS["trend_dark"], linestyle="--", linewidth=1.3, label="Trend")
 
-    worst_idx = np.argsort(cos_array)[:2]
-    for i in worst_idx:
-        if cos_array[i] < 0.9:
-            x_offset = -28 if x_vals[i] > np.median(x_vals) else 5
+    worst_idx = np.argsort(cos_array)[:5]
+    label_offsets = [(-34, -12), (10, -10), (-30, 10), (12, 10), (16, -18)]
+    for rank, i in enumerate(worst_idx):
+        if cos_array[i] < 0.94:
+            x_offset, y_offset = label_offsets[rank % len(label_offsets)]
+            if x_vals[i] > np.median(x_vals):
+                x_offset = min(x_offset, -10)
+            else:
+                x_offset = max(x_offset, 10)
             ax.annotate(
-                short_names[i][:12], (x_vals[i], cos_array[i]),
-                fontsize=8, xytext=(x_offset, -5), textcoords="offset points",
+                abbreviate_cell_type(short_names[i], max_len=14),
+                (x_vals[i], cos_array[i]),
+                fontsize=7,
+                xytext=(x_offset, y_offset),
+                textcoords="offset points",
+                arrowprops=dict(arrowstyle="-", color="gray", lw=0.5),
+                bbox=dict(boxstyle="round,pad=0.16", facecolor="white",
+                          edgecolor="none", alpha=0.75),
             )
     ax.set_xlabel("log10(Number of Real Cells)")
     ax.set_ylabel("Centroid Cosine Similarity")
     ax.set_title("Fidelity vs Abundance")
     ax.axhline(y=0.9, color=COLORS["good"], linestyle=":", alpha=0.4, label="Target (0.9)")
     ax.legend(fontsize=FONT_LEGEND, frameon=False, loc="upper left")
-    ax.xaxis.set_major_locator(FixedLocator([2.0, 2.5, 3.0, 3.5, 4.0]))
+    ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
     ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
-    ax.tick_params(axis='x', rotation=0)
     ax.set_xlim(x_vals.min() - 0.10, x_vals.max() + 0.10)
-    ax.grid(axis='both', alpha=0.15, linestyle='--')
+    style_axes(ax, kind="scatter")
 
     if save:
         viz_io.save_to_dir(fig, "panel_g_per_type_generation", output_dir, dpi, save_panel_fn)

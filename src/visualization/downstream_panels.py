@@ -23,6 +23,7 @@ from .panels_de_concordance import plot_de_concordance_panel
 from .style import (
     COLORS,
     TYPE_PALETTE,
+    abbreviate_cell_type,
     add_colorbar_safe,
     add_panel_label,
     apply_style,
@@ -103,7 +104,7 @@ def plot_clustering_and_classifier_merged(
     if mixing:
         sorted_types = sorted(mixing.keys(), key=lambda k: mixing[k])
         vals = [mixing[t] for t in sorted_types]
-        short_names = [t[:20] for t in sorted_types]
+        short_names = [abbreviate_cell_type(t, 20) for t in sorted_types]
         bar_colors = [quality_color(v, (0.3, 0.15)) for v in vals]
         y_pos = np.arange(len(sorted_types))
         ax_p2.barh(y_pos, vals, color=bar_colors, height=0.7,
@@ -136,7 +137,7 @@ def plot_clustering_and_classifier_merged(
     y_pos = np.arange(len(summary_items))
     # Background reference bars
     ax_ps.barh(y_pos, [1.0] * len(summary_items), height=0.6,
-               color="#E0E0E0", edgecolor="none", zorder=1)
+               color=COLORS["bg_gauge"], edgecolor="none", zorder=1)
     # Foreground quality-colored bars
     bar_colors = [quality_color(v, t) for v, t in zip(metric_vals, thresholds)]
     ax_ps.barh(y_pos, metric_vals, height=0.6, color=bar_colors,
@@ -208,7 +209,7 @@ def plot_clustering_and_classifier_merged(
             va="top",
             fontsize=8,
             color=COLORS["neutral"],
-            bbox=dict(boxstyle="round,pad=0.22", fc="white", ec="#DDDDDD", alpha=0.92),
+            bbox=dict(boxstyle="round,pad=0.22", fc="white", ec=COLORS["border_light"], alpha=0.92),
         )
     else:
         ax_q2.text(0.5, 0.5, "No per-type data", ha="center", va="center",

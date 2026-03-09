@@ -15,6 +15,7 @@ from typing import Callable, Dict, Optional
 import math
 
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as pe
 import numpy as np
 from matplotlib.ticker import FixedLocator, MaxNLocator
 
@@ -32,9 +33,15 @@ def _add_training_phase_bands(ax: plt.Axes, max_epoch: int) -> None:
     ax.axvspan(1, p1_end, color=COLORS["accent"], alpha=0.08, lw=0)
     ax.axvspan(p1_end, p2_end, color=COLORS["neutral"], alpha=0.05, lw=0)
     ax.axvspan(p2_end, max_epoch, color=COLORS["baseline_gauss"], alpha=0.07, lw=0)
-    ax.text(0.03, 0.97, "Phase I: rapid\nPhase II: refine\nPhase III: converge",
-            transform=ax.transAxes, va="top", ha="left", fontsize=8,
-            bbox=dict(boxstyle="round,pad=0.2", facecolor="white", edgecolor="none", alpha=0.75))
+    ax.text(
+        0.03, 0.97,
+        "Phase I: rapid\nPhase II: refine\nPhase III: converge",
+        transform=ax.transAxes,
+        va="top",
+        ha="left",
+        fontsize=8,
+        path_effects=[pe.withStroke(linewidth=2.0, foreground="white", alpha=0.9)],
+    )
 
 
 # ──────────────────────────────────────────────────────────────
@@ -101,7 +108,7 @@ def plot_clop_training(
     ax_a1.set_xlim(0, max(epochs) * 1.08)
     ax_a1.locator_params(axis='x', nbins=3)
     ax_a1.yaxis.set_major_locator(MaxNLocator(nbins=4, prune='both'))
-    add_panel_label(ax_a1, 'a', x=0.02, y=0.98)
+    add_panel_label(ax_a1, 'a', x=-0.10, y=1.05)
 
     # ── A2: Temperature stability ──
     ax_a2 = fig.add_subplot(gs[0, 1])
@@ -115,7 +122,7 @@ def plot_clop_training(
     ax_a2.set_xlim(0, max(epochs) * 1.08)
     ax_a2.locator_params(axis='x', nbins=4)
     ax_a2.locator_params(axis='y', nbins=4)
-    add_panel_label(ax_a2, 'b', x=0.02, y=0.98)
+    add_panel_label(ax_a2, 'b', x=-0.10, y=1.05)
 
     # ── A3: Prototype accuracy ──
     ax_a3 = fig.add_subplot(gs[1, 0])
@@ -145,7 +152,7 @@ def plot_clop_training(
     ax_a3.set_xlim(0, max(epochs) * 1.08)
     ax_a3.locator_params(axis='x', nbins=4)
     ax_a3.locator_params(axis='y', nbins=4)
-    add_panel_label(ax_a3, 'c', x=0.02, y=0.98)
+    add_panel_label(ax_a3, 'c', x=-0.10, y=1.05)
 
     # ── A4: Embedding quality metrics ──
     ax_a4 = fig.add_subplot(gs[1, 1])
@@ -165,7 +172,7 @@ def plot_clop_training(
     ax_a4.set_xlim(0, max(epochs) * 1.08)
     ax_a4.locator_params(axis='x', nbins=4)
     ax_a4.locator_params(axis='y', nbins=4)
-    add_panel_label(ax_a4, 'd', x=0.02, y=0.98)
+    add_panel_label(ax_a4, 'd', x=-0.10, y=1.05)
 
     # ── Save ──
     if save:
@@ -225,7 +232,7 @@ def plot_dit_training(
 
     fig = plt.figure(figsize=(9.8, 6.9))
     gs_c = fig.add_gridspec(2, 2, wspace=0.45, hspace=0.50)
-    fig.subplots_adjust(top=0.92, bottom=0.10, left=0.11, right=0.95)
+    fig._clop_layout_rect = (0.11, 0.10, 0.95, 0.92)
     # Note: Figure-level title removed per revision requirements; panel labels added below
 
     # ── C1: Loss ──
@@ -252,7 +259,7 @@ def plot_dit_training(
     _decade_ticks = [10**e for e in range(_lo_exp, _hi_exp + 1)]
     if _decade_ticks:
         ax_c1.yaxis.set_major_locator(FixedLocator(_decade_ticks))
-    add_panel_label(ax_c1, 'e', x=0.02, y=0.98)
+    add_panel_label(ax_c1, 'e', x=-0.10, y=1.05)
 
     # ── C2: Cosine similarity ──
     ax_c2 = fig.add_subplot(gs_c[0, 1])
@@ -265,7 +272,7 @@ def plot_dit_training(
     ax_c2.set_xlim(0, max(epochs) * 1.05)
     ax_c2.xaxis.set_major_locator(MaxNLocator(nbins=2, integer=True, prune="both"))
     ax_c2.locator_params(axis='y', nbins=4)
-    add_panel_label(ax_c2, 'f', x=0.02, y=0.98)
+    add_panel_label(ax_c2, 'f', x=-0.10, y=1.05)
 
     # ── C3: Learning rate ──
     ax_c3 = fig.add_subplot(gs_c[1, 0])
@@ -276,7 +283,7 @@ def plot_dit_training(
     set_scientific_tickformat(ax_c3, axis="y", scilimits=(-4, -4))
     ax_c3.set_xlim(0, max(epochs) * 1.05)
     ax_c3.xaxis.set_major_locator(MaxNLocator(nbins=2, integer=True, prune="both"))
-    add_panel_label(ax_c3, 'g', x=0.02, y=0.98)
+    add_panel_label(ax_c3, 'g', x=-0.10, y=1.05)
 
     # ── C4: Convergence rate (train vs val) ──
     ax_c4 = fig.add_subplot(gs_c[1, 1])
@@ -301,7 +308,7 @@ def plot_dit_training(
     ax_c4.legend(fontsize=FONT_LEGEND_DENSE, loc="upper right", frameon=False)
     ax_c4.locator_params(axis='x', nbins=4)
     ax_c4.locator_params(axis='y', nbins=4)
-    add_panel_label(ax_c4, 'h', x=0.02, y=0.98)
+    add_panel_label(ax_c4, 'h', x=-0.10, y=1.05)
 
     # ── Save ──
     if save:
@@ -376,7 +383,7 @@ def plot_training_dynamics_combined(
         ax_a1.locator_params(axis='x', nbins=3)
         ax_a1.yaxis.set_major_locator(MaxNLocator(nbins=4, prune='both'))
         _add_training_phase_bands(ax_a1, int(max(epochs)))
-        add_panel_label(ax_a1, 'a', x=-0.18, y=1.06)
+        add_panel_label(ax_a1, 'a', x=-0.10, y=1.05)
 
         # A2: Temperature
         ax_a2 = fig.add_subplot(gs[0, 1])
@@ -390,7 +397,7 @@ def plot_training_dynamics_combined(
         ax_a2.set_xlim(0, max(epochs) * 1.08)
         ax_a2.locator_params(axis='x', nbins=4)
         ax_a2.locator_params(axis='y', nbins=4)
-        add_panel_label(ax_a2, 'b', x=0.02, y=0.98)
+        add_panel_label(ax_a2, 'b', x=-0.10, y=1.05)
 
         # A3: Accuracy
         ax_a3 = fig.add_subplot(gs[0, 2])
@@ -412,7 +419,7 @@ def plot_training_dynamics_combined(
         ax_a3.set_xlim(0, max(epochs) * 1.08)
         ax_a3.locator_params(axis='x', nbins=4)
         ax_a3.locator_params(axis='y', nbins=4)
-        add_panel_label(ax_a3, 'c', x=0.02, y=0.98)
+        add_panel_label(ax_a3, 'c', x=-0.10, y=1.05)
 
         # A4: Embedding quality
         ax_a4 = fig.add_subplot(gs[0, 3])
@@ -432,7 +439,7 @@ def plot_training_dynamics_combined(
         ax_a4.set_xlim(0, max(epochs) * 1.08)
         ax_a4.locator_params(axis='x', nbins=4)
         ax_a4.locator_params(axis='y', nbins=4)
-        add_panel_label(ax_a4, 'd', x=0.02, y=0.98)
+        add_panel_label(ax_a4, 'd', x=-0.10, y=1.05)
 
     # ════════════════════════════════════════════════════════════
     # Bottom row: DiT (3 plots + 1 summary, columns 0-3)
@@ -463,7 +470,7 @@ def plot_training_dynamics_combined(
         if _decade_ticks:
             ax_c1.yaxis.set_major_locator(FixedLocator(_decade_ticks))
         _add_training_phase_bands(ax_c1, int(max(epochs)))
-        add_panel_label(ax_c1, 'e', x=-0.15, y=1.02)
+        add_panel_label(ax_c1, 'e', x=-0.10, y=1.05)
 
         # C2: Cosine similarity
         ax_c2 = fig.add_subplot(gs[1, 1])
@@ -476,7 +483,7 @@ def plot_training_dynamics_combined(
         ax_c2.set_xlim(0, max(epochs) * 1.05)
         ax_c2.xaxis.set_major_locator(MaxNLocator(nbins=4, integer=True, prune="both"))
         ax_c2.locator_params(axis='y', nbins=4)
-        add_panel_label(ax_c2, 'f', x=0.02, y=0.98)
+        add_panel_label(ax_c2, 'f', x=-0.10, y=1.05)
 
         # C3: Learning rate
         ax_c3 = fig.add_subplot(gs[1, 2])
@@ -487,7 +494,7 @@ def plot_training_dynamics_combined(
         set_scientific_tickformat(ax_c3, axis="y", scilimits=(-4, -4))
         ax_c3.set_xlim(0, max(epochs) * 1.05)
         ax_c3.xaxis.set_major_locator(MaxNLocator(nbins=4, integer=True, prune="both"))
-        add_panel_label(ax_c3, 'g', x=0.02, y=0.98)
+        add_panel_label(ax_c3, 'g', x=-0.10, y=1.05)
 
         # C4: Normalized convergence comparison (CLOP + DiT)
         ax_c4 = fig.add_subplot(gs[1, 3])
@@ -524,7 +531,7 @@ def plot_training_dynamics_combined(
         ax_c4.legend(fontsize=FONT_LEGEND_DENSE, loc="upper right", frameon=False)
         ax_c4.locator_params(axis='x', nbins=4)
         ax_c4.locator_params(axis='y', nbins=4)
-        add_panel_label(ax_c4, 'h', x=0.02, y=0.98)
+        add_panel_label(ax_c4, 'h', x=-0.10, y=1.05)
 
     if save:
         if save_panel_fn:

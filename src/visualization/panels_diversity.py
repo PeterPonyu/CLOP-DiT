@@ -8,13 +8,13 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import COLORS, apply_style, save_with_vcd, set_figure_suptitle, add_panel_label
+from .style import COLORS, apply_style, save_with_vcd, set_figure_suptitle, add_panel_label, abbreviate_cell_type
 
 matplotlib.use("Agg")
 logger = logging.getLogger(__name__)
@@ -24,21 +24,44 @@ def plot_diagnostics(
     all_results: Dict,
     output_dir: str = "results/figures",
     dpi: int = 300,
+    type_names: Optional[Dict[int, str]] = None,
 ) -> List[Path]:
     """Generate Panel J (diversity diagnostics) and Panel K (expression diversity) from test results."""
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     saved: List[Path] = []
 
+    # Auto-load type names from captions file if not provided
+    if type_names is None:
+        import json as _json
+        _cap_candidates = [
+            Path("data/cached_latents_v5.2/text_captions_deduplicated.json"),
+            Path("data/cached_latents/text_captions_deduplicated.json"),
+        ]
+        for _cp in _cap_candidates:
+            if _cp.exists():
+                try:
+                    with open(_cp) as _cf:
+                        _raw = _json.load(_cf)
+                    type_names = {}
+                    for k, v in _raw.items():
+                        name = v.split(" are ")[0] if " are " in v else v[:40]
+                        type_names[int(k)] = name
+                except Exception:
+                    type_names = {}
+                break
+        if type_names is None:
+            type_names = {}
+
     apply_style()
 
     # ── Panel J: Diversity Diagnostics (4 subplots) ──
     fig, axes = plt.subplots(2, 2, figsize=(9.0, 7.5),
                              gridspec_kw={"hspace": 0.60, "wspace": 0.55})
-    add_panel_label(axes[0, 0], 'a')
-    add_panel_label(axes[0, 1], 'b')
-    add_panel_label(axes[1, 0], 'c')
-    add_panel_label(axes[1, 1], 'd')
+    add_panel_label(axes[0, 0], 'a', x=-0.10, y=1.05)
+    add_panel_label(axes[0, 1], 'b', x=-0.10, y=1.05)
+    add_panel_label(axes[1, 0], 'c', x=-0.10, y=1.05)
+    add_panel_label(axes[1, 1], 'd', x=-0.10, y=1.05)
 
     ax = axes[0, 0]
     t1 = all_results.get("test1_intratype_diversity", {}).get("per_type", {})
@@ -46,14 +69,14 @@ def plot_diagnostics(
         names = list(t1.keys())
         div_ratios = [t1[n]["diversity_ratio"] for n in names]
         sorted_idx = np.argsort(div_ratios)
-        sorted_names = [names[i][:25] for i in sorted_idx]
+        sorted_names = [abbreviate_cell_type(names[i], 22) for i in sorted_idx]
         sorted_divs = [div_ratios[i] for i in sorted_idx]
 
         colors = [COLORS["bad"] if d < 0.5 else COLORS["warn"] if d < 0.8 else COLORS["good"] if d < 1.2 else COLORS["real"]
                   for d in sorted_divs]
         ax.barh(range(len(sorted_divs)), sorted_divs, color=colors, height=0.8)
         ax.set_yticks(range(len(sorted_divs)))
-        _step_j1 = max(1, len(sorted_divs) // 18)
+        _step_j1 = max(1, len(sorted_divs) // 14)
         _ytl_j1 = [n if i % _step_j1 == 0 else "" for i, n in enumerate(sorted_names)]
         ax.set_yticklabels(_ytl_j1, fontsize=7)
         ax.axvline(x=1.0, color="black", ls="--", lw=1, alpha=0.5, label="ratio=1 (equal)")
@@ -121,8 +144,10 @@ def plot_diagnostics(
         ax.bar(x - w / 2, cent_divs, w, label="Centroid Cond", color=COLORS["real"], alpha=0.8)
         ax.bar(x + w / 2, noise_divs, w, label="Centroid + Noise", color=COLORS["generated"], alpha=0.8)
         ax.set_xticks(x)
-        ax.set_xticklabels([str(k) for k in type_ids], fontsize=8)
-        ax.set_xlabel("Type ID")
+        _type_labels_d = [abbreviate_cell_type(type_names.get(int(k), f"Type {k}"), 18)
+                          for k in type_ids]
+        ax.set_xticklabels(_type_labels_d, fontsize=7, rotation=30, ha="right")
+        ax.set_xlabel("Cell Type")
         ax.set_ylabel("Intra-Type Diversity (1 - mean cosine)")
         gain = t5["summary"]["mean_diversity_gain"]
         eps = t5["summary"].get("noise_scale", "?")
@@ -184,8 +209,8 @@ def plot_expression_diversity_panel(
 
     o = t6_data["overall"]
     fig, axes = plt.subplots(1, 2, figsize=(6.5, 4.0))
-    add_panel_label(axes[0], chr(ord('a') + label_offset))
-    add_panel_label(axes[1], chr(ord('a') + label_offset + 1))
+    add_panel_label(axes[0], chr(ord('a') + label_offset), x=-0.10, y=1.05)
+    add_panel_label(axes[1], chr(ord('a') + label_offset + 1), x=-0.10, y=1.05)
 
     ax = axes[0]
     labels = ["Cell Std\n(across genes)", "Gene Std\n(across cells)"]
@@ -213,6 +238,10 @@ def plot_expression_diversity_panel(
         ax.set_ylabel("Gene Std Ratio (gen / real)")
         ax.set_title("Per-Type Gene Std Ratio")
         ax.legend(fontsize=8, frameon=False)
+    else:
+        ax.text(0.5, 0.5, "No per-type data", ha="center", va="center",
+                transform=ax.transAxes, fontsize=10, color=COLORS["neutral"])
+        ax.set_title("Per-Type Gene Std Ratio")
 
     if save:
         path = out / "panel_k_expression_diversity.png"

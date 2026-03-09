@@ -77,6 +77,29 @@ COLORS = {
     "neutral": "#455A64",
     "accent": "#FF8F00",
     "bg_light": "#F5F5F5",
+    # Annotation and UI colors (centralized from panel files)
+    "annotation_dark": "#333333",
+    "annotation_medium": "#424242",
+    "annotation_light": "#222222",
+    "median_dark": "#1E1E1E",
+    "border_light": "#DDDDDD",
+    "border_medium": "#bdbdbd",
+    "bg_gauge": "#E0E0E0",
+    "bg_infobox": "#E8F0FE",
+    "bg_yellow": "#FFFDE7",
+    "border_amber": "#FBC02D",
+    "heatmap_purple": "#6A1B9A",
+    "error_red": "#D32F2F",
+    "trend_dark": "#263238",
+    "confusion_marker": "#00E5FF",  # Cyan — colorblind-safe on blue-red heatmaps
+}
+
+# Marker-gene category colors for expression panels
+MARKER_CATEGORY_COLORS = {
+    "CD8+ T": "#1565C0",
+    "Myeloid": "#C62828",
+    "Epithelial": "#2E7D32",
+    "Stromal": "#6A1B9A",
 }
 
 # ──────────────────────────────────────────────────────────────
@@ -112,6 +135,9 @@ FONT_TICK = 10
 FONT_TICK_DENSE = 8
 FONT_ANNOTATION = 8
 FONT_SMALL = 7
+# Minimum-size fonts for dense contexts (replaces illegal sub-7pt values)
+FONT_HEATMAP_CELL = 7      # Heatmap cell annotations (was 5-6.5pt)
+FONT_DENSE_YTICK = 7       # Dense y-axis tick labels (was 6pt)
 _FONTS_REGISTERED = False
 
 
@@ -216,21 +242,21 @@ def set_figure_suptitle(
 def add_panel_label(
     ax: plt.Axes,
     label: str,
-    x: float = 0.02,
-    y: float = 0.98,
+    x: float = -0.10,
+    y: float = 1.05,
     *,
-    fontsize: int = 12,
+    fontsize: int = 14,
     fontweight: str = "bold",
     color: str = "black",
-    bbox_alpha: float = 0.85,
-    bbox_pad: float = 0.3,
-    stroke_linewidth: float = 2.5,
+    stroke_linewidth: float = 3.0,
     stroke_foreground: str = "white",
+    **kwargs,
 ) -> None:
-    """Add a panel label (a, b, c, etc.) to a subplot.
+    """Add a panel label (a, b, c, etc.) outside the top-left corner of a subplot.
 
-    Uses a white outline stroke (path_effects) instead of a background
-    box so the label never occludes figure content.
+    The label is placed outside the axes border (default x=-0.10, y=1.05
+    in axes coordinates) so it never overlaps with plot content.  A white
+    outline stroke (path_effects) ensures readability over any background.
 
     Parameters
     ----------
@@ -239,36 +265,36 @@ def add_panel_label(
     label : str
         The label text (e.g., 'a', 'b', 'c').
     x, y : float
-        Position in axes coordinates (0-1).
+        Position in axes coordinates.  Defaults place the label just
+        outside the top-left corner of the axes.
     fontsize : int
         Font size for the label.
     fontweight : str
         Font weight (e.g., 'bold', 'normal').
     color : str
         Text color.
-    bbox_alpha : float
-        Deprecated; kept for backward compatibility but ignored.
-    bbox_pad : float
-        Deprecated; kept for backward compatibility but ignored.
     stroke_linewidth : float
         Width of the white outline stroke for readability.
     stroke_foreground : str
         Color of the outline stroke.
+    **kwargs
+        Additional keyword arguments passed to ``ax.text()``.
     """
-    txt = ax.text(
+    ax.text(
         x, y, f"({label})",
         transform=ax.transAxes,
         fontsize=fontsize,
         fontweight=fontweight,
         color=color,
-        va="top",
+        va="bottom",
         ha="left",
-        zorder=100,  # Ensure label is on top
+        zorder=100,
+        path_effects=[
+            pe.withStroke(linewidth=stroke_linewidth, foreground=stroke_foreground),
+            pe.Normal(),
+        ],
+        **kwargs,
     )
-    txt.set_path_effects([
-        pe.withStroke(linewidth=stroke_linewidth, foreground=stroke_foreground),
-        pe.Normal(),
-    ])
 
 
 def add_panel_labels_to_axes(
@@ -311,6 +337,14 @@ def add_colorbar_safe(
         mappable, ax=ax, shrink=shrink, pad=pad,
         orientation=orientation, aspect=aspect, **kwargs,
     )
+    if getattr(cbar, "solids", None) is not None:
+        try:
+            cbar.solids.set_edgecolor("face")
+            cbar.solids.set_rasterized(True)
+        except Exception:
+            pass
+    if getattr(cbar, "outline", None) is not None:
+        cbar.outline.set_linewidth(0.6)
     if label:
         cbar.set_label(label, fontsize=VIS_STYLE.get("axes.labelsize", 10))
     cbar.ax.tick_params(labelsize=VIS_STYLE.get("xtick.labelsize", 10))
@@ -542,3 +576,34 @@ def set_adaptive_ytick_labels(
         thinned[0] = labels[0]
         thinned[-1] = labels[-1]
     ax.set_yticklabels(thinned, fontsize=fontsize, ha="right")
+
+
+def abbreviate_cell_type(name: str, max_len: int = 20) -> str:
+    """Intelligently abbreviate cell type names for figure labels.
+
+    Uses biology-aware abbreviations before falling back to truncation.
+    Replaces hard-coded ``[:20]`` slicing throughout the codebase.
+    """
+    if len(name) <= max_len:
+        return name
+    abbrevs = [
+        ("lymphocytes", "lymph."),
+        ("macrophages", "mac."),
+        ("fibroblasts", "fibro."),
+        ("progenitors", "prog."),
+        ("endothelial", "endo."),
+        ("mesenchymal", "mesen."),
+        ("epithelial", "epith."),
+        ("regulatory", "reg."),
+        ("inflammatory", "inflam."),
+        (" cells", ""),
+        (" cell", ""),
+    ]
+    result = name
+    for full, short in abbrevs:
+        if len(result) <= max_len:
+            break
+        result = result.replace(full, short)
+    if len(result) > max_len:
+        result = result[:max_len - 1] + "\u2026"
+    return result
