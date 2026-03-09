@@ -21,7 +21,7 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import COLORS, MARKER_CATEGORY_COLORS, abbreviate_cell_type, add_colorbar_safe, add_panel_label, quality_color, save_with_vcd, set_figure_suptitle, style_axes
+from .style import COLORS, abbreviate_cell_type, add_colorbar_safe, add_panel_label, quality_color, save_with_vcd, set_figure_suptitle, style_axes
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +111,7 @@ def plot_expression_correlation(
     ax1 = fig.add_subplot(gs[0, 0])
     abs_res = np.abs(residuals)
     sc = ax1.scatter(real_means, gen_means, c=abs_res, cmap="magma_r",
-                     s=12, alpha=0.7, edgecolors="none",
+                     s=18, alpha=0.7, edgecolors="none",
                      vmin=0, vmax=np.percentile(abs_res, 95))
     lo = min(real_means.min(), gen_means.min()) - 0.2
     hi = max(real_means.max(), gen_means.max()) + 0.2
@@ -132,12 +132,12 @@ def plot_expression_correlation(
     add_panel_label(ax1, 'a', x=-0.10, y=1.05)
 
     # Annotate outlier genes (top 4 residuals) with staggered offsets
-    outlier_idx = np.argsort(abs_res)[-4:]
-    _offsets = [(-40, -18), (5, 10), (-50, 5), (5, -15)]
+    outlier_idx = np.argsort(abs_res)[-6:]
+    _offsets = [(-45, -20), (8, 12), (-55, 8), (8, -18), (-40, 25), (15, -25)]
     for j, i in enumerate(outlier_idx):
         if i < len(gene_names):
             ax1.annotate(gene_names[i], (real_means[i], gen_means[i]),
-                         fontsize=9, xytext=_offsets[j % len(_offsets)],
+                         fontsize=10, xytext=_offsets[j % len(_offsets)],
                          textcoords="offset points",
                          arrowprops=dict(arrowstyle="->", lw=0.5, color="#555"),
                          color="#333")
@@ -192,7 +192,6 @@ def plot_expression_correlation(
     ax2.xaxis.get_major_formatter().set_useOffset(False)
     ax2.xaxis.get_major_formatter().set_scientific(False)
     ax2.ticklabel_format(axis='x', useOffset=False, style='plain')
-    ax2.yaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
     add_panel_label(ax2, 'b', x=-0.10, y=1.05)
 
     # -- H3: Marker gene expression with error bars --
@@ -245,7 +244,7 @@ def plot_expression_correlation(
             fontsize=9, rotation=90, ha="center",
         )
         ax3.set_ylabel("Expression (mean \u00b1 0.5\u00d7std)", fontsize=10)
-        ax3.legend(fontsize=8, loc="upper right", ncol=1, frameon=False)
+        ax3.legend(fontsize=8, loc="lower right", ncol=1, frameon=False)
     else:
         ax3.text(0.5, 0.5, "No marker genes found", ha="center", va="center",
                  transform=ax3.transAxes)
@@ -356,12 +355,12 @@ def plot_expression_analysis(
     add_colorbar_safe(sc, ax=ax1, label="|\u0394CV|", shrink=0.8, pad=0.02)
 
     # Annotate top 4 divergent genes with staggered offsets
-    top_cv_idx = np.argsort(cv_diff)[-4:]
-    _offsets_cv = [(-45, -15), (5, 10), (-50, 5), (5, -15)]
+    top_cv_idx = np.argsort(cv_diff)[-6:]
+    _offsets_cv = [(-50, -20), (10, 14), (-55, 10), (10, -20), (-45, 28), (18, -28)]
     for j, i in enumerate(top_cv_idx):
         if i < len(gene_names):
             ax1.annotate(gene_names[i], (real_cv[i], gen_cv[i]),
-                         fontsize=9, xytext=_offsets_cv[j % len(_offsets_cv)],
+                         fontsize=10, xytext=_offsets_cv[j % len(_offsets_cv)],
                          textcoords="offset points",
                          arrowprops=dict(arrowstyle="->", lw=0.5, color="#555"),
                          color="#333")
@@ -419,17 +418,18 @@ def plot_expression_analysis(
         80,
     )
     ax3.hist(real_cell_std, bins=bins3, alpha=0.5, color=COLORS["real"],
-             label=f"Real (\u03bc={real_cell_std.mean():.4f})",
+             label=f"Real (\u03bc={real_cell_std.mean():.3f})",
              edgecolor="white", linewidth=0.3, density=True)
     ax3.hist(gen_cell_std, bins=bins3, alpha=0.5, color=COLORS["generated"],
-             label=f"Gen (\u03bc={gen_cell_std.mean():.4f})",
+             label=f"Gen (\u03bc={gen_cell_std.mean():.3f})",
              edgecolor="white", linewidth=0.3, density=True)
     ax3.axvline(x=real_cell_std.mean(), color=COLORS["real"], linestyle="--", lw=1.5)
     ax3.axvline(x=gen_cell_std.mean(), color=COLORS["generated"], linestyle="--", lw=1.5)
     ax3.set_xlabel("Per-Cell Std Dev", fontsize=10)
     ax3.set_ylabel("Density", fontsize=10)
     ax3.set_title("Per-Cell Variability Distribution", fontsize=11)
-    ax3.legend(fontsize=8, loc='upper right', ncol=1, frameon=False)
+    ax3.legend(fontsize=8, loc='upper right', bbox_to_anchor=(1.0, 1.0),
+               frameon=True, facecolor='white', edgecolor='none', framealpha=0.85)
     ax3.locator_params(axis='x', nbins=4)
     add_panel_label(ax3, 'c', x=-0.10, y=1.05)
 
@@ -474,7 +474,7 @@ def plot_expression_analysis(
                         for pr, pi in placed_annotations)
         if not too_close:
             ax4.text(r + 0.02, i, f"{r:.2f}\u00d7", va="center", fontsize=8,
-                     fontweight="bold" if abs(r - 1.0) > 0.3 else "normal")
+                     fontweight="normal")
             placed_annotations.append((r, i))
 
     if save:
@@ -502,12 +502,12 @@ def plot_marker_gene_comparison(
     save: bool = True,
     save_panel_fn: Optional[Callable] = None,
 ) -> Optional[plt.Figure]:
-    """Rich marker-gene comparison with violin plots and annotated heatmaps.
+    """Rich marker-gene comparison with grouped bars and annotated heatmaps.
 
-    N1: Violin + strip plot -- per-marker expression distribution (real vs gen)
+    N1: Grouped horizontal bar chart -- mean expression per marker (real vs gen)
     N2: Dual heatmap with cell-value annotations and row-normalized coloring
     N3: Difference heatmap with statistical significance indicators
-    N4: Fold-change waterfall for all markers
+    N4: Log2 fold-change diverging horizontal bar chart for all markers
 
     Parameters
     ----------
@@ -552,6 +552,8 @@ def plot_marker_gene_comparison(
         return None
 
     gene_idx = [gene_names.index(g) for g in all_marker_genes]
+    real_marker_means = real[:, gene_idx].mean(axis=0)
+    gen_marker_means = gen[:, gene_idx].mean(axis=0)
 
     selected_type_ids: List[int] = []
     selected_type_names: List[str] = []
@@ -573,46 +575,35 @@ def plot_marker_gene_comparison(
     n_markers = len(all_marker_genes)
     n_sel_types = len(selected_type_ids)
 
-    fig = plt.figure(figsize=(11.0, 7.5))
-    gs = fig.add_gridspec(2, 2, wspace=0.60, hspace=0.50)
+    fig = plt.figure(figsize=(10.4, 7.3))
+    gs = fig.add_gridspec(2, 2, wspace=0.52, hspace=0.44)
+    fig._clop_layout_rect = (0.03, 0.04, 0.98, 0.96)
     # Note: Figure-level title removed per revision requirements
 
-    # -- N1: Paired bars with error whiskers and category coloring --
+    # -- N1: Grouped horizontal bar chart -- mean expression per marker (real vs gen) --
     ax1 = fig.add_subplot(gs[0, 0])
-    real_marker_means = np.array([real[:, gi].mean() for gi in gene_idx])
-    gen_marker_means = np.array([gen[:, gi].mean() for gi in gene_idx])
-    real_marker_stds = np.array([real[:, gi].std() for gi in gene_idx])
-    gen_marker_stds = np.array([gen[:, gi].std() for gi in gene_idx])
+    r_means = np.array([real[:, gi].mean() for gi in gene_idx])
+    g_means = np.array([gen[:, gi].mean() for gi in gene_idx])
+    r_stds = np.array([real[:, gi].std() for gi in gene_idx])
+    g_stds = np.array([gen[:, gi].std() for gi in gene_idx])
 
-    cat_colors = MARKER_CATEGORY_COLORS
-    x = np.arange(n_markers)
-    w = 0.35
-    for i, (g, c) in enumerate(zip(all_marker_genes, marker_cats)):
-        bc = cat_colors.get(c, "#666")
-        ax1.bar(i - w / 2, real_marker_means[i], w, yerr=real_marker_stds[i] * 0.3,
-                color=bc, alpha=0.75, edgecolor="white", capsize=3,
-                error_kw=dict(lw=0.8))
-        ax1.bar(i + w / 2, gen_marker_means[i], w, yerr=gen_marker_stds[i] * 0.3,
-                color=bc, alpha=0.4, edgecolor=bc, linewidth=1.5,
-                capsize=3, error_kw=dict(lw=0.8), hatch="///")
-        fc = gen_marker_means[i] / (real_marker_means[i] + 1e-8)
-        # Only annotate fc when noticeably different from 1.0
-        if abs(fc - 1.0) > 0.02:
-            color_fc = COLORS["good"] if 0.95 <= fc <= 1.05 else COLORS["bad"]
-            ax1.text(i, max(real_marker_means[i], gen_marker_means[i]) +
-                     max(real_marker_stds[i], gen_marker_stds[i]) * 0.3 + 0.005,
-                     f"{fc:.3f}\u00d7", ha="center", fontsize=8, color=color_fc)
+    y_pos = np.arange(n_markers)
+    width = 0.35
+    ax1.barh(y_pos - width / 2, r_means, width, xerr=r_stds * 0.5,
+             label="Real", color=COLORS["real"], alpha=0.85, edgecolor="white",
+             capsize=3, error_kw=dict(lw=0.8))
+    ax1.barh(y_pos + width / 2, g_means, width, xerr=g_stds * 0.5,
+             label="Gen", color=COLORS["generated"], alpha=0.85, edgecolor="white",
+             capsize=3, error_kw=dict(lw=0.8))
 
-    ax1.set_xticks(x)
-    ax1.set_xticklabels([f"{g[:15]}" for g, c in zip(all_marker_genes, marker_cats)],
-                        fontsize=10, rotation=90, ha="center")
-    ax1.set_ylabel("Expression", fontsize=10)
+    ax1.set_yticks(y_pos)
+    ax1.set_yticklabels([f"{g[:15]}" for g in all_marker_genes], fontsize=9)
+    ax1.set_xlabel("Mean Expression", fontsize=10)
     ax1.set_title("Marker Expression by Lineage", fontsize=11)
-    from matplotlib.patches import Patch
-    legend_elements = [Patch(facecolor=COLORS["real"], alpha=0.85, label="Real"),
-                       Patch(facecolor=COLORS["generated"], alpha=0.85, hatch="///", label="Gen")]
-    ax1.legend(handles=legend_elements, fontsize=8, loc="upper right",
-               bbox_to_anchor=(1.0, 1.0), frameon=False)
+    ax1.grid(axis="x", linestyle=":", linewidth=0.7, alpha=0.35)
+    ax1.set_axisbelow(True)
+    ax1.legend(fontsize=8, loc="lower right", frameon=True,
+               facecolor="white", edgecolor="none", framealpha=0.9)
     add_panel_label(ax1, 'a', x=-0.10, y=1.05)
 
     # -- N2 & N3: Heatmaps (if per-type labels) --
@@ -648,8 +639,9 @@ def plot_marker_gene_comparison(
         xtick_labels = all_marker_genes + all_marker_genes
         ax2.set_xticks(xtick_pos)
         ax2.set_xticklabels(xtick_labels, fontsize=8, rotation=90, ha="center")
-        # Draw a thin vertical line to separate Real and Generated halves
-        ax2.axvline(x=n_markers - 0.5 + 0.5, color="#999", linewidth=1.2, linestyle="-")
+        # Use an explicit center band so the Real|Generated split survives print and downscaling.
+        ax2.axvspan(n_markers - 0.5, n_markers + 0.5, color="#f3f3f3", zorder=0)
+        ax2.axvline(x=n_markers, color="#666", linewidth=1.6, linestyle="-")
         ax2.set_title("Per-Type \u00d7 Marker (Real | Gen)", fontsize=10, pad=8)
         ax2.text(n_markers / 2 - 0.5, -1.2, "Real", ha="center",
              fontsize=10, color=COLORS["real"])
@@ -684,33 +676,33 @@ def plot_marker_gene_comparison(
                              ha="center", va="center", fontsize=8, color=txt_color,
                              fontweight="normal")
 
-        # N4: Fold-change waterfall
+        # N4: Log2 fold-change diverging horizontal bar chart
         ax4 = fig.add_subplot(gs[1, 1])
         fc_all = gen_marker_means / (real_marker_means + 1e-8)
-        sort_fc = np.argsort(fc_all)
-        fc_sorted = fc_all[sort_fc]
+        log2fc = np.log2(fc_all + 1e-12)
+        sort_fc = np.argsort(log2fc)
+        log2fc_sorted = log2fc[sort_fc]
         names_sorted = [all_marker_genes[i] for i in sort_fc]
-        cats_sorted = [marker_cats[i] for i in sort_fc]
-        fc_colors = [cat_colors.get(c, "#666") for c in cats_sorted]
 
-        bars = ax4.barh(range(n_markers), fc_sorted - 1.0, left=1.0,
-                        color=fc_colors, height=0.6, edgecolor="white")
-        ax4.axvline(x=1.0, color="#333", linewidth=1.5, linestyle="-")
-        ax4.axvspan(0.95, 1.05, alpha=0.1, color=COLORS["good"])
+        bar_colors = [COLORS.get("good", "#4CAF50") if v >= 0
+                      else COLORS.get("bad", "#E53935") for v in log2fc_sorted]
+
+        ax4.barh(range(n_markers), log2fc_sorted,
+                 color=bar_colors, height=0.6, edgecolor="white",
+                 alpha=0.85)
+        ax4.axvline(x=0, color="#333", linewidth=1.5, linestyle="-")
         ax4.set_yticks(range(n_markers))
-        ax4.set_yticklabels([f"{n}" for n, c in zip(names_sorted, cats_sorted)],
-                            fontsize=8)
-        ax4.set_xlabel("Fold Change (Gen / Real)", fontsize=10)
+        ax4.set_yticklabels(names_sorted, fontsize=8)
+        ax4.set_xlabel("log$_2$ Fold Change (Gen / Real)", fontsize=10)
         ax4.set_title("Marker Fold Change", fontsize=11)
         add_panel_label(ax4, 'd', x=-0.10, y=1.05)
-        for i, fc in enumerate(fc_sorted):
-            # Skip annotations where fold change is negligibly close to 1.0
-            if abs(fc - 1.0) < 0.01:
+        for i, lfc in enumerate(log2fc_sorted):
+            if abs(lfc) < 0.005:
                 continue
-            ax4.text(fc + 0.002 if fc >= 1.0 else fc - 0.002, i,
-                     f"{fc:.3f}\u00d7", va="center", fontsize=8,
-                     ha="left" if fc >= 1.0 else "right",
-                     fontweight="bold" if abs(fc - 1.0) > 0.05 else "normal")
+            ax4.text(lfc + 0.002 if lfc >= 0 else lfc - 0.002, i,
+                     f"{lfc:+.3f}", va="center", fontsize=8,
+                     ha="left" if lfc >= 0 else "right",
+                     fontweight="bold" if abs(lfc) > 0.07 else "normal")
     else:
         ax_fallback = fig.add_subplot(gs[0, 1])
         add_panel_label(ax_fallback, 'b')

@@ -34,7 +34,7 @@ from matplotlib.ticker import ScalarFormatter
 # → min body text ~10pt, titles ~12pt, ticks ~10pt, legends ~10pt.
 VIS_STYLE: dict = {
     "font.family": "sans-serif",
-    "font.sans-serif": ["Helvetica", "DejaVu Sans", "Arial"],
+    "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
     "font.size": 10,
     "axes.titlesize": 11,
     "axes.titleweight": "normal",

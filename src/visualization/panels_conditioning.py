@@ -41,7 +41,7 @@ def plot_panel_l(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     apply_style()
-    fig, ax1 = plt.subplots(figsize=(6.8, 4.8))
+    fig, ax1 = plt.subplots(figsize=(7.5, 4.8))
     # Title moved to LaTeX caption
     # set_figure_suptitle(fig, "Noise-Scale Trade-off (CFG=1.5)", fontsize=11)
     add_panel_label(ax1, 'a', x=-0.10, y=1.05)
@@ -90,11 +90,14 @@ def plot_panel_l(
     ax1.legend(
         lines1 + lines2,
         labels1 + labels2,
-        loc="upper center",
-        bbox_to_anchor=(0.5, -0.16),
-        ncol=3,
+        loc="upper right",
+        bbox_to_anchor=(1.0, 1.0),
+        ncol=1,
         fontsize=8,
-        frameon=False,
+        frameon=True,
+        facecolor="white",
+        edgecolor="none",
+        framealpha=0.88,
     )
 
     best_idx = np.argmin(fds)
@@ -149,8 +152,7 @@ def plot_panel_m(
 
     # Panel labels: placed with enough clearance for single-line titles
     _panel_label_y = 1.12
-    for i, ax in enumerate(axes):
-        add_panel_label(ax, chr(ord('a') + i), x=-0.12, y=_panel_label_y)
+    add_panel_label(axes[0], 'a', x=-0.12, y=_panel_label_y)
 
     type_to_color = {tid: TYPE_PALETTE[i % len(TYPE_PALETTE)] for i, tid in enumerate(selected_types)}
     type_to_name = {
@@ -203,11 +205,11 @@ def plot_panel_m(
     # ── Row 2: Quantitative summaries ──
     gs_bottom = outer[1].subgridspec(1, 3, wspace=0.42)
     ax_b1 = fig.add_subplot(gs_bottom[0, 0])
-    add_panel_label(ax_b1, chr(ord('a') + n_modes), x=-0.12, y=_panel_label_y)
+    add_panel_label(ax_b1, 'b', x=-0.12, y=_panel_label_y)
     ax_b2 = fig.add_subplot(gs_bottom[0, 1])
-    add_panel_label(ax_b2, chr(ord('a') + n_modes + 1), x=-0.12, y=_panel_label_y)
+    add_panel_label(ax_b2, 'c', x=-0.12, y=_panel_label_y)
     ax_b3 = fig.add_subplot(gs_bottom[0, 2])
-    add_panel_label(ax_b3, chr(ord('a') + n_modes + 2), x=-0.12, y=_panel_label_y)
+    add_panel_label(ax_b3, 'd', x=-0.12, y=_panel_label_y)
 
     # Build per-type real centroids in 2D for shift summaries.
     real_centroids = {}
@@ -295,11 +297,11 @@ def plot_panel_m(
 
         gs_row3 = outer[2].subgridspec(1, 3, wspace=0.48)
         ax_c1 = fig.add_subplot(gs_row3[0, 0])
-        add_panel_label(ax_c1, chr(ord('a') + n_modes + 3), x=-0.12, y=_panel_label_y)
+        add_panel_label(ax_c1, 'e', x=-0.12, y=_panel_label_y)
         ax_c2 = fig.add_subplot(gs_row3[0, 1])
-        add_panel_label(ax_c2, chr(ord('a') + n_modes + 4), x=-0.12, y=_panel_label_y)
+        add_panel_label(ax_c2, 'f', x=-0.12, y=_panel_label_y)
         ax_c3 = fig.add_subplot(gs_row3[0, 2])
-        add_panel_label(ax_c3, chr(ord('a') + n_modes + 5), x=-0.12, y=_panel_label_y)
+        add_panel_label(ax_c3, 'g', x=-0.12, y=_panel_label_y)
 
         # PCA reduce full-dim data for KNN
         pca_full = _PCA(n_components=30, random_state=42)
@@ -434,11 +436,11 @@ def plot_panel_m(
         ncol=n_legend_cols, fontsize=FONT_TICK_DENSE,
         markerscale=1.8, frameon=False,
         columnspacing=1.0, handletextpad=0.4,
-        bbox_to_anchor=(0.5, -0.01),
+        bbox_to_anchor=(0.5, 0.02),
     )
 
     # Layout rect: no extra top margin needed; legend is at the bottom
-    fig._clop_layout_rect = (0.02, 0.04, 0.98, 0.98)
+    fig._clop_layout_rect = (0.02, 0.08, 0.98, 0.98)
 
     path = output_dir / "panel_m_conditioning_umap.png"
     save_with_vcd(fig, path, dpi)

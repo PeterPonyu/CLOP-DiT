@@ -231,9 +231,9 @@ def plot_text_cell_heatmap(
         off_diag_matrix[idx] = -1
 
     try:
-        cbar = add_colorbar_safe(im, ax=ax1, label="Cosine similarity", shrink=0.52, pad=0.08)
+        cbar = add_colorbar_safe(im, ax=ax1, label="Cosine similarity", shrink=0.72, pad=0.04)
     except Exception:
-        cbar = fig.colorbar(im, ax=ax1, shrink=0.52, pad=0.08)
+        cbar = fig.colorbar(im, ax=ax1, shrink=0.72, pad=0.04)
         cbar.set_label("Cosine similarity", fontsize=10)
     cbar.ax.tick_params(labelsize=8)
     cbar.ax.yaxis.set_major_locator(MaxNLocator(nbins=6))
@@ -548,7 +548,7 @@ def plot_per_type_generation(
     fd_mean = float(np.nanmean(fd_array)) if fd_valid.any() else float("nan")
 
     fig = plt.figure(figsize=(14.0, 7.2))
-    gs_g = fig.add_gridspec(1, 3, wspace=0.72, width_ratios=[1.2, 1.2, 1.0])
+    gs_g = fig.add_gridspec(1, 3, wspace=0.50, width_ratios=[1.2, 1.2, 1.0])
     fig._clop_layout_rect = (0.02, 0.06, 0.98, 0.95)
     summary = data.get("summary", {})
     # Title moved to LaTeX caption

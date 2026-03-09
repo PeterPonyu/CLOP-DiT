@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 class TestArticleFigureManifest:
-    """Canonical list of 15 article figures."""
+    """Canonical list of 17 article figures."""
 
     @staticmethod
     def _article_tex_basenames() -> set[str]:
@@ -20,22 +20,28 @@ class TestArticleFigureManifest:
 
     def test_manifest_length(self):
         from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
-        assert len(ARTICLE_FIGURE_BASENAMES) == 15
+        assert len(ARTICLE_FIGURE_BASENAMES) == 17
 
     def test_manifest_contains_expected_basenames(self):
         from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
         expected = {
-            "fig_architecture",
-            "fig_training_dynamics",
-            "fig_embedding_space",
-            "fig_fidelity_alignment",
-            "fig_diversity_tradeoff",
-            "fig_downstream_pq",
-            "panel_d_metrics_summary",
-            "panel_n_marker_gene_comparison",
-            "panel_j_diversity_diagnostics",
-            "panel_s_benchmark",
-            "panel_r_de_concordance",
+            "fig01_architecture",
+            "fig02_training_dynamics",
+            "fig03_embedding_space",
+            "fig04_metrics_summary",
+            "fig05_per_type_generation",
+            "fig06_text_cell_heatmap",
+            "fig07_marker_gene_comparison",
+            "fig08_expression_correlation",
+            "fig09_expression_analysis",
+            "fig10_conditioning_umap",
+            "fig11_diversity_diagnostics",
+            "fig12_noise_tradeoff",
+            "fig13_expression_diversity",
+            "fig14_baseline_comparison",
+            "fig15_benchmark",
+            "fig16_downstream_pq",
+            "fig17_de_concordance",
         }
         for name in expected:
             assert name in ARTICLE_FIGURE_BASENAMES, f"Missing basename: {name}"
@@ -58,10 +64,10 @@ class TestDeliverFigures:
 
     def test_check_only_all_present(self, tmp_path):
         from src.visualization.article_delivery import (
-            ARTICLE_FIGURE_BASENAMES,
+            _SOURCE_BASENAMES,
             deliver_figures,
         )
-        for base in ARTICLE_FIGURE_BASENAMES:
+        for base in _SOURCE_BASENAMES:
             (tmp_path / f"{base}.pdf").write_bytes(b"%PDF-1.0 dummy\n")
         ok = deliver_figures(tmp_path, tmp_path / "out", symlink=True, check_only=True)
         assert ok is True
@@ -69,11 +75,11 @@ class TestDeliverFigures:
 
     def test_check_only_missing_returns_false(self, tmp_path):
         from src.visualization.article_delivery import (
-            ARTICLE_FIGURE_BASENAMES,
+            _SOURCE_BASENAMES,
             deliver_figures,
         )
-        # Create only 14 of 15
-        for base in ARTICLE_FIGURE_BASENAMES[:-1]:
+        # Create only 16 of 17
+        for base in _SOURCE_BASENAMES[:-1]:
             (tmp_path / f"{base}.pdf").write_bytes(b"%PDF-1.0 dummy\n")
         ok = deliver_figures(tmp_path, tmp_path / "out", symlink=True, check_only=True)
         assert ok is False
@@ -81,9 +87,10 @@ class TestDeliverFigures:
     def test_deliver_symlink(self, tmp_path):
         from src.visualization.article_delivery import (
             ARTICLE_FIGURE_BASENAMES,
+            _SOURCE_BASENAMES,
             deliver_figures,
         )
-        for base in ARTICLE_FIGURE_BASENAMES:
+        for base in _SOURCE_BASENAMES:
             (tmp_path / f"{base}.pdf").write_bytes(b"%PDF-1.0 dummy\n")
         target = tmp_path / "article_figures"
         ok = deliver_figures(tmp_path, target, symlink=True, check_only=False)
@@ -98,9 +105,10 @@ class TestDeliverFigures:
     def test_deliver_copy(self, tmp_path):
         from src.visualization.article_delivery import (
             ARTICLE_FIGURE_BASENAMES,
+            _SOURCE_BASENAMES,
             deliver_figures,
         )
-        for base in ARTICLE_FIGURE_BASENAMES:
+        for base in _SOURCE_BASENAMES:
             (tmp_path / f"{base}.pdf").write_bytes(b"%PDF-1.0 dummy\n")
         target = tmp_path / "article_figures"
         ok = deliver_figures(tmp_path, target, symlink=False, check_only=False)

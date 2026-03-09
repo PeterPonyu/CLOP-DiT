@@ -26,10 +26,10 @@ from src.utils.paths import RESULTS_DIR, FIG_DIR
 logger = logging.getLogger(__name__)
 
 METHOD_COLORS = {
-    "CLOP-DiT": COLORS["real"],
-    "Gaussian N(μ,σ²I)": COLORS["generated"],
+    "CLOP-DiT": "#1565C0",
+    "Gaussian N(μ,σ²I)": "#4A148C",
     "Shuffled Labels": COLORS["baseline_gauss"],
-    "Random N(0,I)": COLORS["baseline_shuffle"],
+    "Random N(0,I)": "#795548",
     "Mean-only (collapse)": COLORS["accent"],
 }
 

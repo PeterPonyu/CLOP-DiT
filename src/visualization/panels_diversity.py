@@ -58,6 +58,7 @@ def plot_diagnostics(
     # ── Panel J: Diversity Diagnostics (4 subplots) ──
     fig, axes = plt.subplots(2, 2, figsize=(9.0, 7.5),
                              gridspec_kw={"hspace": 0.60, "wspace": 0.55})
+    fig._clop_layout_rect = (0.02, 0.03, 0.82, 0.95)
     add_panel_label(axes[0, 0], 'a', x=-0.10, y=1.05)
     add_panel_label(axes[0, 1], 'b', x=-0.10, y=1.05)
     add_panel_label(axes[1, 0], 'c', x=-0.10, y=1.05)
@@ -82,7 +83,6 @@ def plot_diagnostics(
         ax.axvline(x=1.0, color="black", ls="--", lw=1, alpha=0.5, label="ratio=1 (equal)")
         ax.axvline(x=0.5, color="red", ls=":", lw=1, alpha=0.5, label="ratio=0.5 (collapse)")
         ax.set_xlabel("Diversity Ratio (gen / real)")
-        ax.legend(fontsize=8, loc="upper right", frameon=False)
         summary = all_results["test1_intratype_diversity"]["summary"]
         ax.set_title("Intra-Type Diversity Ratio")
     else:
@@ -99,7 +99,6 @@ def plot_diagnostics(
                alpha=0.8, edgecolor="white")
         ax.set_ylabel("Cosine Distance to Nearest Real Cell")
         ax.axhline(y=0.01, color="red", ls=":", alpha=0.5, label="memorization threshold")
-        ax.legend(fontsize=8, frameon=False)
         ax.set_title("Nearest-Neighbour Distance")
     else:
         ax.set_title("Nearest-Neighbour Distance")
@@ -127,7 +126,7 @@ def plot_diagnostics(
         ax.set_title("CFG Scale vs Diversity & Norm")
         lines1, labels1 = ax.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
-        ax.legend(lines1 + lines2, labels1 + labels2, fontsize=8, loc="upper right", frameon=False)
+        # Labels will be collected into the figure-level legend below
     else:
         ax.set_title("CFG Scale vs Diversity")
 
@@ -152,9 +151,22 @@ def plot_diagnostics(
         gain = t5["summary"]["mean_diversity_gain"]
         eps = t5["summary"].get("noise_scale", "?")
         ax.set_title("Centroid vs Noisy Conditioning")
-        ax.legend(fontsize=8, frameon=False)
     else:
         ax.set_title("Centroid vs Noisy Conditioning")
+
+    # Collect unique legend handles from all axes (including twinx) into a single figure legend
+    _seen_labels = set()
+    _handles, _labels = [], []
+    for _ax in fig.axes:
+        for _h, _l in zip(*_ax.get_legend_handles_labels()):
+            if _l not in _seen_labels:
+                _seen_labels.add(_l)
+                _handles.append(_h)
+                _labels.append(_l)
+    if _handles:
+        fig.legend(_handles, _labels, loc='center right',
+                   bbox_to_anchor=(0.99, 0.5), fontsize=8, frameon=False, ncol=1)
+        fig.subplots_adjust(right=0.83)
 
     path = out / "panel_j_diversity_diagnostics.png"
     save_with_vcd(fig, path, dpi)
@@ -220,6 +232,13 @@ def plot_expression_diversity_panel(
     w = 0.35
     ax.bar(x - w / 2, real_vals, w, label="Real", color=COLORS["real"], alpha=0.8)
     ax.bar(x + w / 2, gen_vals, w, label="Generated", color=COLORS["generated"], alpha=0.8)
+    # Add gen/real ratio annotations above each bar pair
+    for _bi in range(len(real_vals)):
+        if real_vals[_bi] > 0:
+            ratio = gen_vals[_bi] / real_vals[_bi]
+            max_h = max(real_vals[_bi], gen_vals[_bi])
+            ax.text(_bi, max_h * 1.05, f"ratio={ratio:.2f}",
+                    ha="center", fontsize=8, color=COLORS["neutral"])
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
     ax.set_ylabel("Standard Deviation")

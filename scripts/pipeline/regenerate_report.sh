@@ -3,7 +3,7 @@
 #
 # Prerequisites: trained CLOP (clop_best.pth) + DiT (dit_best.pth) + scGPT decoder.
 # All intermediate outputs (embeddings, metrics, figures) are regenerated.
-# After step 7 (visualization), step 8 verifies all 15 article figures and
+# After step 7 (visualization), step 8 verifies all 17 article figures and
 # creates symlinks in articles/figures/ so the LaTeX article builds correctly.
 #
 # Paths come from configs/pipeline.yaml and src.utils.paths; override via env:
@@ -117,7 +117,7 @@ echo "    results/figures/fig_diversity_tradeoff.{png,pdf}    (L+K)"
 echo "    results/figures/fig_downstream_pq.{png,pdf}         (P+Q)"
 echo ""
 echo "  Combined:    results/figures/clop_dit_full_report.pdf"
-echo "  Symlinks:    articles/figures/ (15 PDFs → results/figures/)"
+echo "  Symlinks:    articles/figures/ (17 PDFs → results/figures/)"
 echo ""
 echo "  Metrics:     results/generation_metrics.json"
 echo "               results/generation_metadata.json"

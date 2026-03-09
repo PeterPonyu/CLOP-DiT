@@ -18,7 +18,7 @@ Stages (in order):
   downstream      — downstream_biology
   benchmark       — model_benchmarking
   figures         — generate_architecture_figure + results_visualizer
-  article_delivery — verify + symlink 15 PDFs to articles/figures
+  article_delivery — verify + symlink 17 PDFs to articles/figures
   build_article   — latexmk -pdf (optional)
 
 Usage:

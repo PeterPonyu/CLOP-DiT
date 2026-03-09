@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # build_article.sh — Verify article figures and build the LaTeX PDF.
 #
-# 1. Runs scripts/pipeline/verify_article_figures.sh so all 15 PDFs are in articles/figures/
+# 1. Runs scripts/pipeline/verify_article_figures.sh so all 17 PDFs are in articles/figures/
 # 2. Runs latexmk -pdf in the articles directory
 #
 # Paths respect configs/pipeline.yaml and env (CLOPDIT_FIG_DIR, CLOPDIT_ARTICLE_FIGURES_DIR).

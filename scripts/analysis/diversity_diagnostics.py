@@ -555,7 +555,24 @@ def main():
                         default=[1.0, 1.5, 2.0, 3.0, 5.0, 7.0])
     parser.add_argument("--output-dir", default=None)
     parser.add_argument("--dpi", type=int, default=300)
+    parser.add_argument("--from-cache", default=None, metavar="PATH",
+                        help="Re-plot panels J+K from a previously saved diversity_diagnostics.json (no models needed)")
     args = parser.parse_args()
+
+    # ── Fast path: re-plot from cached JSON ──
+    if args.from_cache:
+        cache_path = Path(args.from_cache)
+        if not cache_path.exists():
+            print(f"Cache file not found: {cache_path}", file=sys.stderr)
+            sys.exit(1)
+        with open(cache_path) as f:
+            all_results = json.load(f)
+        fig_dir = Path(args.output_dir or str(RESULTS_DIR)) / "figures"
+        fig_dir.mkdir(parents=True, exist_ok=True)
+        print(f"Re-plotting panels J+K from {cache_path}...")
+        saved = plot_diagnostics(all_results, output_dir=str(fig_dir), dpi=args.dpi)
+        print(f"Done — {len(saved)} figures saved to {fig_dir}/")
+        return
 
     args.cache_dir = args.cache_dir or str(CACHE_DIR)
     args.dit_checkpoint = args.dit_checkpoint or str(CHECKPOINT_DIR / "dit_best.pth")

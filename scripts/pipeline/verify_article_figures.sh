@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify_article_figures.sh — Verify all 15 article figures exist and (re)create symlinks.
+# verify_article_figures.sh — Verify all 17 article figures exist and (re)create symlinks.
 #
 # Delegates to the Python delivery module (single source of truth for the figure list).
 #
@@ -8,7 +8,7 @@
 #   bash scripts/pipeline/verify_article_figures.sh --check   # verify only (no symlink changes)
 set -euo pipefail
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 
 # Run the delivery script by path so we don't load the rest of src.visualization (e.g. torch)
 if [[ "${1:-}" == "--check" ]]; then

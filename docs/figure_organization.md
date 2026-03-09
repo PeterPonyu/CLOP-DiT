@@ -8,7 +8,7 @@ All current figures are produced by the report pipeline and live under **`result
 bash scripts/pipeline/regenerate_report.sh
 ```
 
-Outputs: 19 panels (A-S) as PNG and PDF, plus `fig_architecture.{png,pdf}` and 5 merged figures, plus `clop_dit_full_report.pdf`.
+Outputs: 19 panels (A-S) as PNG and PDF, plus `fig_architecture.{png,pdf}` and 3 merged figures (`fig_training_dynamics`, `fig_embedding_space`, `fig_downstream_pq`), plus 2 legacy merged figures (`fig_fidelity_alignment`, `fig_diversity_tradeoff`) for the full report, plus `clop_dit_full_report.pdf`.
 
 ## Panel list (A-S) and merged figures
 
@@ -22,27 +22,27 @@ Outputs: 19 panels (A-S) as PNG and PDF, plus `fig_architecture.{png,pdf}` and 5
 | C | `panel_c_dit_training` | DiT flow matching loss and velocity cosine | (standalone, legacy) |
 | D | `panel_d_metrics_summary` | KNN, steering, diversity, metrics dashboard | Fig 4 (metrics dashboard) |
 | E | `panel_e_real_vs_generated` | Real vs generated cells (PCA/embedding) | (standalone, legacy) |
-| G+F | `fig_fidelity_alignment` | **Merged**: Per-type fidelity + text-cell heatmap | Fig 5 (fidelity & alignment) |
-| F | `panel_f_text_cell_heatmap` | Text-cell similarity heatmap | (standalone, legacy) |
-| G | `panel_g_per_type_generation` | Per-type generation overview | (standalone, legacy) |
-| N | `panel_n_marker_gene_comparison` | Marker gene comparison | Fig 6 (marker genes) |
-| H | `panel_h_expression_correlation` | Expression/dimension correlation | Fig 7 (expression correlation) |
-| I | `panel_i_expression_analysis` | Expression analysis | Fig 8 (expression analysis) |
-| M | `panel_m_conditioning_umap` | Conditioning UMAP | Fig 9 (conditioning landscape) |
-| J | `panel_j_diversity_diagnostics` | Diversity diagnostics | Fig 10 (diversity diagnostics) |
-| L+K | `fig_diversity_tradeoff` | **Merged**: Noise tradeoff + expression diversity | Fig 11 (diversity & tradeoff) |
-| K | `panel_k_expression_diversity` | Expression diversity | (standalone, legacy) |
-| L | `panel_l_noise_tradeoff` | CFG/noise trade-off, ODE steps | (standalone, legacy) |
-| O | `panel_o_baseline_comparison` | Baseline/decoder comparison | Fig 12 (baselines) |
-| S | `panel_s_benchmark` | Composite benchmark (0.844) | Fig 13 (benchmark) |
-| P+Q | `fig_downstream_pq` | **Merged**: Clustering + Classifier alignment | Fig 14 (downstream P+Q) |
+| G+F | `fig_fidelity_alignment` | **Merged**: Per-type fidelity + text-cell heatmap | (legacy merged; article uses G and F separately) |
+| G | `panel_g_per_type_generation` | Per-type generation overview | Fig 5 (per-type fidelity) |
+| F | `panel_f_text_cell_heatmap` | Text-cell similarity heatmap | Fig 6 (text-cell alignment) |
+| N | `panel_n_marker_gene_comparison` | Marker gene comparison | Fig 7 (marker genes) |
+| H | `panel_h_expression_correlation` | Expression/dimension correlation | Fig 8 (expression correlation) |
+| I | `panel_i_expression_analysis` | Expression analysis | Fig 9 (expression analysis) |
+| M | `panel_m_conditioning_umap` | Conditioning UMAP | Fig 10 (conditioning landscape) |
+| J | `panel_j_diversity_diagnostics` | Diversity diagnostics | Fig 11 (diversity diagnostics) |
+| L+K | `fig_diversity_tradeoff` | **Merged**: Noise tradeoff + expression diversity | (legacy merged; article uses L and K separately) |
+| L | `panel_l_noise_tradeoff` | CFG/noise trade-off, ODE steps | Fig 12 (noise trade-off) |
+| K | `panel_k_expression_diversity` | Expression diversity | Fig 13 (expression diversity) |
+| O | `panel_o_baseline_comparison` | Baseline/decoder comparison | Fig 14 (baselines) |
+| S | `panel_s_benchmark` | Composite benchmark (0.844) | Fig 15 (benchmark) |
+| P+Q | `fig_downstream_pq` | **Merged**: Clustering + Classifier alignment | Fig 16 (downstream P+Q) |
 | P | `panel_p_clustering_mixing` | Clustering/mixing | (standalone, legacy) |
 | Q | `panel_q_classifier_alignment` | Classifier alignment | (standalone, legacy) |
-| R | `panel_r_de_concordance` | DE concordance | Fig 15 (DE concordance) |
+| R | `panel_r_de_concordance` | DE concordance | Fig 17 (DE concordance) |
 
 ## MDPI Biology article figure map
 
-All 15 figures are included in `articles/clop_dit_biology.tex`. Each figure is a **standalone full-width** `\includegraphics[width=\textwidth]` — no `\subfloat` or multi-panel LaTeX composition. All layout is handled inside Matplotlib. Only the panels used in the article have symlinks in `articles/figures/`; legacy standalone panels are generated for the full report only.
+All 17 figures are included in `articles/clop_dit_biology.tex`. Each figure is a **standalone full-width** `\includegraphics[width=\textwidth]` — no `\subfloat` or multi-panel LaTeX composition. All layout is handled inside Matplotlib. Only the panels used in the article have symlinks in `articles/figures/`; legacy standalone panels are generated for the full report only.
 
 | Article Figure | Panel(s) | Layout | Section |
 |----------------|----------|--------|---------|
@@ -50,22 +50,26 @@ All 15 figures are included in `articles/clop_dit_biology.tex`. Each figure is a
 | Fig 2 | A+C | Full-width merged | Training Dynamics (CLOP top, DiT bottom) |
 | Fig 3 | B+E | Full-width merged | Embedding Space (CLOP alignment top, Real vs Gen bottom) |
 | Fig 4 | D | Full-width | Core Evaluation Metrics |
-| Fig 5 | G+F | Full-width merged | Per-Type Fidelity & Text-Cell Alignment |
-| Fig 6 | N | Full-width | Marker Gene Comparison |
-| Fig 7 | H | Full-width | Expression Correlation |
-| Fig 8 | I | Full-width | Expression Analysis |
-| Fig 9 | M | Full-width | Conditioning Landscape |
-| Fig 10 | J | Full-width | Diversity Diagnostics |
-| Fig 11 | L+K | Full-width merged | Noise Trade-Off & Expression Diversity |
-| Fig 12 | O | Full-width | Baselines |
-| Fig 13 | S | Full-width | Benchmark |
-| Fig 14 | P+Q | Full-width merged | Downstream: Clustering + Classifier |
-| Fig 15 | R | Full-width | Downstream: DE Concordance |
+| Fig 5 | G | Full-width | Per-Type Generation Fidelity |
+| Fig 6 | F | Full-width | Text-Cell Alignment Heatmap |
+| Fig 7 | N | Full-width | Marker Gene Comparison |
+| Fig 8 | H | Full-width | Expression Correlation |
+| Fig 9 | I | Full-width | Expression Analysis |
+| Fig 10 | M | Full-width | Conditioning Landscape |
+| Fig 11 | J | Full-width | Diversity Diagnostics |
+| Fig 12 | L | Full-width | Noise Trade-Off |
+| Fig 13 | K | Full-width | Expression Diversity |
+| Fig 14 | O | Full-width | Baselines |
+| Fig 15 | S | Full-width | Benchmark |
+| Fig 16 | P+Q | Full-width merged | Downstream: Clustering + Classifier |
+| Fig 17 | R | Full-width | Downstream: DE Concordance |
 | Table 1 | -- | 7 rows | Core evaluation results |
 | Table A1 | -- | Architecture specs | Appendix A |
 | Table A2 | -- | CFG sweep (8 scales) | Appendix B |
 
-## JBHI markdown mapping
+## JBHI markdown mapping (historical — deprecated)
+
+The mapping below is from an earlier JBHI manuscript draft and does **not** reflect the current MDPI Biology article numbering.
 
 `docs/CLOP_DiT_JBHI_Article.md` uses `../results/figures/panel_*.png`:
 
@@ -81,8 +85,8 @@ All 15 figures are included in `articles/clop_dit_biology.tex`. Each figure is a
 
 ## Folder contents
 
-- **`results/figures/`**: All pipeline outputs — `fig_architecture`, 5 merged figures (`fig_training_dynamics`, etc.), 19 standalone panels (`panel_a_*` … `panel_s_*`), and `clop_dit_full_report.pdf`. Legacy panels (A, B, C, E, F, G, K, L, P, Q) are used only in the full report; the article uses the 15 listed in the table above. **Outdated files** (from old scripts): `fig1_training_dynamics.*`, `fig2_embedding_space.*`, `fig3_metrics_dashboard.*`, `fig4_biological_validation.*`, `fig5_dimension_sampling.*`, `visual_conflict_report.json` — remove with `bash scripts/pipeline/remove_outdated_figures.sh`.
-- **`articles/figures/`**: Only the **15 article figure PDFs** (symlinks to `results/figures/`). No other figures belong here; the LaTeX build includes only these 15.
+- **`results/figures/`**: All pipeline outputs — `fig_architecture`, 3 article merged figures (`fig_training_dynamics`, `fig_embedding_space`, `fig_downstream_pq`), 2 legacy merged figures (`fig_fidelity_alignment`, `fig_diversity_tradeoff`), 19 standalone panels (`panel_a_*` … `panel_s_*`), and `clop_dit_full_report.pdf`. Legacy panels (A, B, C, E, P, Q) and legacy merged figures (G+F, L+K) are used only in the full report; the article uses the 17 listed in the table above. **Outdated files** (from old scripts): `fig1_training_dynamics.*`, `fig2_embedding_space.*`, `fig3_metrics_dashboard.*`, `fig4_biological_validation.*`, `fig5_dimension_sampling.*`, `visual_conflict_report.json` — remove with `bash scripts/pipeline/remove_outdated_figures.sh`.
+- **`articles/figures/`**: Only the **17 article figure PDFs** (symlinks to `results/figures/`). No other figures belong here; the LaTeX build includes only these 17.
 - **`results/figures/biological_validation/`** (optional): Figure set from `scripts/08_biological_validation.py` (`figure1_text2cell_multi`, `figure2_cell2cell`, `figure3_celltypist`, `figure4_summary`) used for supplementary biological QA and reviewer support.
 
 ## Naming convention
@@ -91,7 +95,9 @@ All 15 figures are included in `articles/clop_dit_biology.tex`. Each figure is a
 - `fig_{descriptive_name}.png` / `.pdf` — merged figures used in the article
 - `fig_architecture.png` / `.pdf` for the architecture diagram
 - Letter order A-S matches the full report layout
-- Article symlinks: `articles/figures/{panel,fig}_*.pdf` -> `../../results/figures/*.pdf` (only for the 15 figures used in the article)
+- Article symlinks: `articles/figures/fig{NN}_{name}.pdf` -> `../../results/figures/*.pdf` (only for the 17 figures used in the article)
+  - The `figNN_` prefix makes the article figure number immediately obvious (e.g., `fig04_metrics_summary.pdf` = Figure 4)
+  - Mapping from article names to source names is defined in `src/visualization/article_delivery.py` (`_SOURCE_MAP`)
 
 ## Figure generation policy
 
@@ -100,11 +106,11 @@ Each panel is a **standalone full-width figure** in the LaTeX article. LaTeX doe
 **Save and presentation policy:**
 - **Single save path:** All figure saves go through `style.save_with_vcd()` (or the caller’s `save_panel_fn` that ultimately uses it). No raw `fig.savefig()` for article figures.
 - **Auxiliary figure policy:** Biological validation figures use the same central style and `save_with_vcd()` path as article/report figures.
-- **Merged figures:** Composited figures (G+F, B+E, L+K, P+Q) either call `save_panel_fn(fig, path, dpi)` when invoked from the visualizer, or `save_with_vcd(fig, path, dpi)` when run standalone. This keeps VCD and PNG+PDF behaviour consistent.
+- **Merged figures:** Composited figures (B+E, P+Q) either call `save_panel_fn(fig, path, dpi)` when invoked from the visualizer, or `save_with_vcd(fig, path, dpi)` when run standalone. Legacy merged figures (G+F, L+K) are still generated for the full report. This keeps VCD and PNG+PDF behaviour consistent.
 - **Default output:** Standalone panel and figure helpers resolve `output_dir=None` to `FIG_DIR`, so direct runs and pipeline runs share the same central path configuration.
 
 1. **Standalone figures**: Every `\begin{figure}` in LaTeX contains exactly one `\includegraphics[width=\textwidth]`. No `\subfloat` or side-by-side arrangement.
-2. **No panel labels in content**: Subplot titles use descriptive text only (e.g. "Loss Convergence"). **Figure numbers (Figure 1–15) and subpanel labels (\textbf{a}, \textbf{b}) appear only in the LaTeX caption**, not in the figure image. The pipeline uses internal names (panels A–S) for code and the full report; the same 15 PDFs are referenced in the article as Figure 1–15.
+2. **No panel labels in content**: Subplot titles use descriptive text only (e.g. "Loss Convergence"). **Figure numbers (Figure 1–17) and subpanel labels (\textbf{a}, \textbf{b}) appear only in the LaTeX caption**, not in the figure image. The pipeline uses internal names (panels A–S) for code and the full report; the same 17 PDFs are referenced in the article as Figure 1–17.
 3. **Legend vs. caption**: Legends contain only series/keys (what each curve or color means). Statistical summaries (r, p, CIs, sign agreement, etc.) go in the figure caption or in a short in-figure annotation, not in legend titles. See [LEGEND_CAPTION_POLICY.md](LEGEND_CAPTION_POLICY.md). If a legend has many entries (>6–8), use smaller font, `ncol`, or "key types only; full list in caption".
 4. **Layout-aware long labels**: When y-labels are long (cell type names > 20 chars), panel code automatically reduces subplots per row (from 3 → 2 or 1×3 → 2×2) for readability.
 5. **Font sizes**: Base font sizes in `style.py` are calibrated for LaTeX full-width figures. Minimum effective size is 5.5pt per VCD policy.
@@ -116,7 +122,7 @@ Each panel is a **standalone full-width figure** in the LaTeX article. LaTeX doe
 7. **Tighter layout**: `GRIDSPEC_TIGHT` in `src/visualization/style.py` is the compact multi-row spacing preset. Final margins are applied by `save_with_vcd()`, including extra bottom space for figure-level legends when needed.
 8. **Architecture figure**: Generated by `scripts/analysis/generate_architecture_figure.py`. Placed as Figure 1 in the article.
 9. **Report vs article (presentation)**: Article-facing panels optimize for print clarity and minimal annotation; report-only panels may carry more diagnostics.
-10. **Figures 9–15**: Regenerated by `bash scripts/pipeline/regenerate_report.sh`.
+10. **Figures 9–17**: Regenerated by `bash scripts/pipeline/regenerate_report.sh`.
 
 ## Legacy/outdated figure outputs (do not use; remove if present)
 
@@ -131,31 +137,33 @@ Run `bash scripts/pipeline/remove_outdated_figures.sh` to delete these from `res
 
 ## Report vs article
 
-The full report produces all 19 standalone panels + 5 merged figures. The article uses the 5 merged figures plus selected standalone panels (D, H, I, J, M, N, O, R, S) — 15 figures total. Only these 15 files are symlinked in `articles/figures/`. Legacy standalone panels (A, B, C, E, F, G, K, L, P, Q) are still generated for the full report PDF but are not referenced by the LaTeX article.
+The full report produces all 19 standalone panels + 5 merged figures. The article uses 3 merged figures (A+C, B+E, P+Q) plus 14 standalone panels (D, F, G, H, I, J, K, L, M, N, O, R, S) — 17 figures total. Only these 17 files are symlinked in `articles/figures/`. Legacy standalone panels (A, B, C, E, P, Q) and legacy merged figures (G+F, L+K) are still generated for the full report PDF but are not referenced by the LaTeX article.
 
 ## Canonical producers
 
 Each article figure has exactly one canonical producer. No duplicate logic writes the same filename from two code paths.
 
-| Article Fig | Output filename | Producer | Pipeline step |
-|-------------|----------------|----------|---------------|
-| Fig 1 | `fig_architecture` | `scripts/generate_architecture_figure.py` | Step 0 |
-| Fig 2 | `fig_training_dynamics` | `training_panels.plot_training_dynamics_combined()` | Step 7 |
-| Fig 3 | `fig_embedding_space` | `panels_quality.plot_embedding_space_merged()` | Step 7 |
-| Fig 4 | `panel_d_metrics_summary` | `panels_quality.plot_metrics_summary()` | Step 7 |
-| Fig 5 | `fig_fidelity_alignment` | `panels_quality.plot_fidelity_and_alignment_merged()` | Step 7 |
-| Fig 6 | `panel_n_marker_gene_comparison` | `panels_expression.plot_marker_gene_comparison()` | Step 7 |
-| Fig 7 | `panel_h_expression_correlation` | `panels_expression.plot_expression_correlation()` | Step 7 |
-| Fig 8 | `panel_i_expression_analysis` | `panels_expression.plot_expression_analysis()` | Step 7 |
-| Fig 9 | `panel_m_conditioning_umap` | `scripts/conditioning_analysis.py` | Step 4 |
-| Fig 10 | `panel_j_diversity_diagnostics` | `scripts/diversity_diagnostics.py` | Step 3 |
-| Fig 11 | `fig_diversity_tradeoff` | `ResultsVisualizer._compose_diversity_tradeoff()` (tiles L+K) | Step 7 |
-| Fig 12 | `panel_o_baseline_comparison` | `baseline_panels.plot_baseline_comparison()` | Step 7 |
-| Fig 13 | `panel_s_benchmark` | `benchmark_panels.plot_benchmark_panel()` | Step 7 |
-| Fig 14 | `fig_downstream_pq` | `downstream_panels.plot_clustering_and_classifier_merged()` | Step 7 |
-| Fig 15 | `panel_r_de_concordance` | `downstream_panels.plot_de_concordance_panel()` | Step 7 |
+| Article Fig | Source filename | Article symlink | Producer | Pipeline step |
+|-------------|----------------|-----------------|----------|---------------|
+| Fig 1 | `fig_architecture` | `fig01_architecture` | `scripts/generate_architecture_figure.py` | Step 0 |
+| Fig 2 | `fig_training_dynamics` | `fig02_training_dynamics` | `training_panels.plot_training_dynamics_combined()` | Step 7 |
+| Fig 3 | `fig_embedding_space` | `fig03_embedding_space` | `panels_quality.plot_embedding_space_merged()` | Step 7 |
+| Fig 4 | `panel_d_metrics_summary` | `fig04_metrics_summary` | `panels_quality.plot_metrics_summary()` | Step 7 |
+| Fig 5 | `panel_g_per_type_generation` | `fig05_per_type_generation` | `results_visualizer` | Step 7 |
+| Fig 6 | `panel_f_text_cell_heatmap` | `fig06_text_cell_heatmap` | `results_visualizer` | Step 7 |
+| Fig 7 | `panel_n_marker_gene_comparison` | `fig07_marker_gene_comparison` | `panels_expression.plot_marker_gene_comparison()` | Step 7 |
+| Fig 8 | `panel_h_expression_correlation` | `fig08_expression_correlation` | `panels_expression.plot_expression_correlation()` | Step 7 |
+| Fig 9 | `panel_i_expression_analysis` | `fig09_expression_analysis` | `panels_expression.plot_expression_analysis()` | Step 7 |
+| Fig 10 | `panel_m_conditioning_umap` | `fig10_conditioning_umap` | `scripts/conditioning_analysis.py` | Step 4 |
+| Fig 11 | `panel_j_diversity_diagnostics` | `fig11_diversity_diagnostics` | `scripts/diversity_diagnostics.py` | Step 3 |
+| Fig 12 | `panel_l_noise_tradeoff` | `fig12_noise_tradeoff` | `scripts/diversity_diagnostics.py` | Step 3 |
+| Fig 13 | `panel_k_expression_diversity` | `fig13_expression_diversity` | `scripts/diversity_diagnostics.py` | Step 3 |
+| Fig 14 | `panel_o_baseline_comparison` | `fig14_baseline_comparison` | `baseline_panels.plot_baseline_comparison()` | Step 7 |
+| Fig 15 | `panel_s_benchmark` | `fig15_benchmark` | `benchmark_panels.plot_benchmark_panel()` | Step 7 |
+| Fig 16 | `fig_downstream_pq` | `fig16_downstream_pq` | `downstream_panels.plot_clustering_and_classifier_merged()` | Step 7 |
+| Fig 17 | `panel_r_de_concordance` | `fig17_de_concordance` | `downstream_panels.plot_de_concordance_panel()` | Step 7 |
 
-After regeneration, run `bash scripts/pipeline/verify_article_figures.sh` to confirm all 15 PDFs exist and update symlinks in `articles/figures/`. The script delegates to the Python delivery module; the **canonical list** of 15 article figure basenames lives in `src/visualization/article_delivery.py` (`ARTICLE_FIGURE_BASENAMES`). To add a new article figure, update that list, ensure one producer writes the PDF to `results/figures/`, and re-run the pipeline and delivery.
+After regeneration, run `bash scripts/pipeline/verify_article_figures.sh` to confirm all 17 PDFs exist and update symlinks in `articles/figures/`. The script delegates to the Python delivery module; the **canonical list** of 17 article figure basenames lives in `src/visualization/article_delivery.py` (`ARTICLE_FIGURE_BASENAMES`). To add a new article figure, update that list, ensure one producer writes the PDF to `results/figures/`, and re-run the pipeline and delivery.
 
 ## Figure logic and limitations
 
@@ -164,13 +172,13 @@ This section states how figures are produced, where they live, and what is fixed
 ### Data flow (logic)
 
 - **Pipeline:** `scripts/pipeline/regenerate_report.sh` runs steps 0–8. Scripts and `src/visualization/` (e.g. `training_panels`, `panels_quality`, `panels_expression`, `downstream_panels`, `benchmark_panels`, `conditioning_analysis.py`, `diversity_diagnostics.py`) write outputs to `results/figures/`.
-- **Single producer per figure:** Each of the 15 article figures has exactly one canonical producer (table above). No duplicate code path writes the same filename.
-- **Symlinks:** `scripts/pipeline/verify_article_figures.sh` calls `python -m src.visualization.article_delivery`, which reads the manifest in `src/visualization/article_delivery.py`, expects the 15 PDFs in `results/figures/` (or `FIG_DIR`), and (re)creates symlinks in `articles/figures/` (or `ARTICLE_FIGURES_DIR`). LaTeX includes only from `articles/figures/`; that directory is for consumption only (no hand-edited figures there).
+- **Single producer per figure:** Each of the 17 article figures has exactly one canonical producer (table above). No duplicate code path writes the same filename.
+- **Symlinks:** `scripts/pipeline/verify_article_figures.sh` calls `python -m src.visualization.article_delivery`, which reads the manifest in `src/visualization/article_delivery.py`, expects the 17 PDFs in `results/figures/` (or `FIG_DIR`), and (re)creates symlinks in `articles/figures/` (or `ARTICLE_FIGURES_DIR`). LaTeX includes only from `articles/figures/`; that directory is for consumption only (no hand-edited figures there).
 
 ### Paths
 
 - **Default output:** Panel and figure generators resolve `output_dir=None` to `FIG_DIR` in `src/utils/paths.py`, which respects `CLOPDIT_FIG_DIR` (and `CLOPDIT_RESULTS_DIR`) so the output directory can be overridden at runtime.
-- **Article figures:** `articles/figures/` contains only symlinks (or copies) to `results/figures/` for the 15 article figures. Do not edit PDFs in `articles/figures/`; regenerate and re-run `scripts/pipeline/verify_article_figures.sh` instead.
+- **Article figures:** `articles/figures/` contains only symlinks (or copies) to `results/figures/` for the 17 article figures. Do not edit PDFs in `articles/figures/`; regenerate and re-run `scripts/pipeline/verify_article_figures.sh` instead.
 
 ### Explicit limitations
 
@@ -180,44 +188,45 @@ This section states how figures are produced, where they live, and what is fixed
 | **Pipeline order** | Steps must run in order; some figures depend on earlier steps (e.g. Fig 11 is composed from panels L and K produced in steps 4 and 3, plus a diversity-tail violin that requires `diversity_diagnostics.json`, dedup caches, and generated embeddings; see [FIGURES_9-12_POLICY.md](FIGURES_9-12_POLICY.md)). |
 | **Layout** | All multi-panel layout is done in Matplotlib. LaTeX uses a single `\includegraphics[width=\textwidth]` per figure — no `\subfloat` or LaTeX-composed subpanels. |
 | **Symlinks** | Article build assumes `articles/figures/*.pdf` resolve (symlinks or copies). `scripts/pipeline/verify_article_figures.sh` is the single place that creates/updates them. |
-| **Legacy panels** | Standalone panels A, B, C, E, F, G, K, L, P, Q are still generated for the full report PDF but are not used in the LaTeX article. |
+| **Legacy panels** | Standalone panels A, B, C, E, P, Q and legacy merged figures (G+F, L+K) are still generated for the full report PDF but are not used in the LaTeX article. |
 
 ### Figure 1 (architecture) policy
 
 - **Dependencies:** None. Fig 1 has no data dependencies; it can be generated without cache, metrics, or embeddings.
 - **Producer:** Step 0 in `regenerate_report.sh`; `scripts/generate_architecture_figure.py` → `create_architecture_figure()`.
 - **Output:** Full vector PDF (and PNG) via `save_with_vcd`. VCD runs on the figure before save.
-- **LaTeX inclusion:** Uses `width=\textwidth` (same as Figs 2–15). Figure aspect is determined by script figsize (7.8×3.8 in).
+- **LaTeX inclusion:** Uses `width=\textwidth` (same as Figs 2–17). Figure aspect is determined by script figsize (7.8×3.8 in).
 
-### Figure 5 (fidelity & alignment) policy
+### Figures 5–6 (fidelity & alignment) policy
 
-- **Requirement:** Fig 5 is produced only when **both** panels G and F have data. If either is missing, the merged figure is skipped (no one-row fallback).
-- **Top row (G):** Per-type generation fidelity from `generation_metrics.json` — centroid cosine, Fréchet outlier profile, abundance–fidelity scatter. Uses the evaluation set (100 cell types).
-- **Bottom row (F):** Text–cell alignment from CLOP projection cache — 69×69 cosine similarity heatmap (69 deduplicated text-group centroids), per-type alignment bars, diagonal vs off-diagonal distribution.
-- **Implementation:** Current composition uses PIL raster stack (G and F rendered to PNG, then vertically stacked with width padding). VCD runs on G and F before compositing. Target for future refactor: single GridSpec (2 rows) for full vector output, matching Fig 2 (B+E) and Fig 14 (P+Q).
+The article now uses panels G and F as separate figures (Fig 5 and Fig 6). The legacy merged figure `fig_fidelity_alignment` (G+F) is still generated for the full report but is not included in the article.
 
-### Figure 11 (diversity trade-off) policy
+- **Fig 5 (G):** Per-type generation fidelity from `generation_metrics.json` — centroid cosine, Frechet outlier profile, abundance-fidelity scatter. Uses the evaluation set (100 cell types).
+- **Fig 6 (F):** Text-cell alignment from CLOP projection cache — 69x69 cosine similarity heatmap (69 deduplicated text-group centroids), per-type alignment bars, diagonal vs off-diagonal distribution.
 
-- **Requirement:** Fig 11 is produced only when **all three** components are available: panels L and K (PNG files), and the diversity-tail violin. If any is missing, the merged figure is skipped.
-- **Top left (L):** Noise-scale vs fidelity/diversity tradeoff from Step 4 (`conditioning_analysis.py` → `plot_panel_l`).
-- **Top right (K):** Gene-expression-level diversity from Step 3 (`diversity_diagnostics.py` → `plot_diagnostics`).
-- **Bottom (violin):** Pairwise cosine distributions (Real–Real, Gen–Gen, Real–Gen) for the six cell types with largest intra-type cosine shift. Requires `diversity_diagnostics.json`, dedup caches, and generated embeddings.
-- **Implementation:** Current composition loads L and K from PNG (raster top row), draws violin directly into GridSpec (vector bottom row). L and K are VCD-checked at generation time. Target for future refactor: single GridSpec with L and K drawn directly for full vector output.
+### Figures 12–13 (diversity trade-off) policy
+
+The article now uses panels L and K as separate figures (Fig 12 and Fig 13). The legacy merged figure `fig_diversity_tradeoff` (L+K) is still generated for the full report but is not included in the article.
+
+- **Fig 12 (L):** Noise-scale vs fidelity/diversity tradeoff from Step 4 (`conditioning_analysis.py` -> `plot_panel_l`).
+- **Fig 13 (K):** Gene-expression-level diversity from Step 3 (`diversity_diagnostics.py` -> `plot_diagnostics`).
 
 ## How figures support the claims
 
-- **Fig 1**: Pipeline overview (CLOP → DiT → Decoder).
+- **Fig 1**: Pipeline overview (CLOP -> DiT -> Decoder).
 - **Fig 2**: Training convergence for both stages (CLOP top row, DiT bottom row) — merged A+C.
 - **Fig 3**: Embedding space analysis (CLOP alignment top, real vs generated bottom) — merged B+E.
 - **Fig 4**: Metrics dashboard (KNN, steering, diversity, expression fidelity).
-- **Fig 5**: Per-type fidelity and text–cell alignment — merged G+F.
-- **Fig 6–8**: Biological and expression validation (marker genes, expression correlation, expression analysis).
-- **Fig 9**: Conditioning landscape (UMAP of condition modes) — establishes context for the diversity analysis.
-- **Fig 10**: Diversity diagnostics (intra-type ratio, memorization, CFG sweep, condition sensitivity).
-- **Fig 11**: Noise trade-off and expression diversity — merged L+K.
-- **Fig 12–13**: Baselines and composite benchmark (CLOP-DiT vs baselines, composite score 0.844).
-- **Fig 14**: Downstream biology: clustering + classifier — merged P+Q.
-- **Fig 15**: Downstream biology: DE concordance.
+- **Fig 5**: Per-type generation fidelity (centroid cosine, Frechet, abundance-fidelity) — panel G.
+- **Fig 6**: Text-cell alignment (69x69 heatmap, per-type bars, distribution) — panel F.
+- **Fig 7–9**: Biological and expression validation (marker genes, expression correlation, expression analysis).
+- **Fig 10**: Conditioning landscape (UMAP of condition modes) — establishes context for the diversity analysis.
+- **Fig 11**: Diversity diagnostics (intra-type ratio, memorization, CFG sweep, condition sensitivity).
+- **Fig 12**: Noise trade-off (FD, cosine, diversity vs noise scale) — panel L.
+- **Fig 13**: Expression diversity (gene-level variance, per-type SD ratio) — panel K.
+- **Fig 14–15**: Baselines and composite benchmark (CLOP-DiT vs baselines, composite score 0.844).
+- **Fig 16**: Downstream biology: clustering + classifier — merged P+Q.
+- **Fig 17**: Downstream biology: DE concordance.
 
 Together they support: (1) two-stage training, (2) text-conditioned generation quality (KNN 37× random, steering 81%), (3) biological fidelity (marker genes, expression, DE), (4) advantage over baselines, (5) utility in downstream workflows.
 

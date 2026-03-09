@@ -85,6 +85,10 @@ def plot_de_concordance_panel(
             significance = effect_size
             cbar_label   = "Effect size"
 
+        # Density shading behind the scatter
+        ax.hexbin(real_logfc, gen_logfc, gridsize=30, cmap="Blues", alpha=0.25,
+                  mincnt=1, linewidths=0, zorder=1)
+
         sc = ax.scatter(
             real_logfc, gen_logfc,
             c=significance, cmap="magma",
@@ -113,10 +117,10 @@ def plot_de_concordance_panel(
 
         # ── Gene name labels: top-6 by weighted residual, staggered to avoid pileup ──
         residuals = np.abs(gen_logfc - real_logfc) * np.maximum(effect_size, 1e-6)
-        n_label   = min(6, len(residuals))
+        n_label   = min(8, len(residuals))
         top_idx   = np.argsort(residuals)[-n_label:]
         # Staggered offsets: alternate quadrants so labels fan out from the origin
-        _offsets = [(28, 20), (-30, 28), (28, -22), (-30, -24), (40, 8), (-42, 8)]
+        _offsets = [(35, 25), (-38, 30), (35, -28), (-38, -30), (48, 12), (-50, 12), (30, -35), (-35, 35)]
         for _k, idx in enumerate(top_idx):
             if idx < len(shared_genes):
                 ox, oy = _offsets[_k % len(_offsets)]

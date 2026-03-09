@@ -43,7 +43,7 @@ Each `panels_*.py` file renders one or more manuscript panels:
 
 ## Article Delivery
 
-`article_delivery.py` verifies that rendered PDFs exist in `results/figures/` and symlinks (or copies) them into `articles/figures/` for LaTeX inclusion. The 15 article figure basenames are defined as the canonical manifest inside this module.
+`article_delivery.py` verifies that rendered PDFs exist in `results/figures/` and symlinks (or copies) them into `articles/figures/` for LaTeX inclusion. The 17 article figure basenames are defined as the canonical manifest inside this module.
 
 ## Utilities
 

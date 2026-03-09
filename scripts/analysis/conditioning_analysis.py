@@ -69,10 +69,60 @@ def compute_diversity_ratio(real, real_labels, gen, gen_labels):
     return float(np.mean(ratios)) if ratios else 0.0
 
 
+def _save_panel_l_cache(cache_dir, noise_scales, fds, centroids, div_ratios, cfg_scale):
+    """Save Panel L computed data to JSON for model-free re-plotting."""
+    cache_dir = Path(cache_dir)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    data = {
+        "noise_scales": list(noise_scales),
+        "fds": [float(x) for x in fds],
+        "centroids": [float(x) for x in centroids],
+        "div_ratios": [float(x) for x in div_ratios],
+        "cfg_scale": float(cfg_scale),
+    }
+    path = cache_dir / "panel_l_data.json"
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
+    logger.info(f"Panel L data cached to {path}")
+
+
+def _save_panel_m_cache(
+    cache_dir, coords, combined_labels, combined_source,
+    selected_types, mode_diversity, real_diversity, type_names,
+    cfg_scale, n_real, mode_counts, full_dim_data, full_dim_labels, full_dim_source,
+):
+    """Save Panel M computed data to NPZ + JSON for model-free re-plotting."""
+    cache_dir = Path(cache_dir)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(
+        cache_dir / "panel_m_arrays.npz",
+        coords=coords,
+        combined_labels=combined_labels,
+        full_dim_data=full_dim_data,
+        full_dim_labels=full_dim_labels,
+    )
+    # combined_source and full_dim_source are string arrays, save separately
+    np.save(cache_dir / "panel_m_combined_source.npy", np.array(combined_source))
+    np.save(cache_dir / "panel_m_full_dim_source.npy", np.array(full_dim_source))
+    meta = {
+        "selected_types": [int(t) for t in selected_types],
+        "mode_diversity": {str(k): float(v) for k, v in mode_diversity.items()},
+        "real_diversity": float(real_diversity),
+        "type_names": {str(k): v for k, v in type_names.items()},
+        "cfg_scale": float(cfg_scale),
+        "n_real": int(n_real),
+        "mode_counts": {str(k): int(v) for k, v in mode_counts.items()},
+    }
+    path = cache_dir / "panel_m_meta.json"
+    with open(path, "w") as f:
+        json.dump(meta, f, indent=2)
+    logger.info(f"Panel M data cached to {cache_dir}/panel_m_*")
+
+
 def panel_l_noise_tradeoff(
     model, projected_text, group_ids, real_cells,
     noise_scales, cfg_scale, num_per_type, num_steps,
-    device, output_dir, dpi,
+    device, output_dir, dpi, data_cache_dir=None,
 ):
     """Panel L: Noise-scale vs fidelity/diversity tradeoff (compute data, then plot)."""
     logger.info("Generating Panel L: noise-scale tradeoff...")
@@ -113,6 +163,9 @@ def panel_l_noise_tradeoff(
         div_ratios.append(dr)
         logger.info(f"  ε={eps:.3f}: FD={fd:.4f}, cos={centroid_cos:.4f}, div_ratio={dr:.4f}")
 
+    if data_cache_dir:
+        _save_panel_l_cache(data_cache_dir, noise_scales, fds, centroids, div_ratios, cfg_scale)
+
     return plot_panel_l(noise_scales, fds, centroids, div_ratios, output_dir, dpi, cfg_scale)
 
 
@@ -121,7 +174,7 @@ def panel_m_conditioning_umap(
     variant_conditions, selected_types,
     cfg_scale, noise_scale, variant_blend,
     num_per_type, num_steps, device, output_dir, dpi,
-    type_names=None,
+    type_names=None, data_cache_dir=None,
 ):
     """Panel M: Side-by-side UMAP of 3 conditioning modes (compute data, then plot)."""
     logger.info(f"Generating Panel M: conditioning UMAP for types {selected_types}...")
@@ -201,6 +254,15 @@ def panel_m_conditioning_umap(
     real_diversity = np.mean(real_divs) if real_divs else 0.0
 
     mode_counts = {k: v[0].shape[0] for k, (v, _) in results.items()}
+
+    if data_cache_dir:
+        _save_panel_m_cache(
+            data_cache_dir, coords, combined_labels, combined_source,
+            selected_types, mode_diversity, real_diversity, type_names,
+            cfg_scale, real_sub.shape[0], mode_counts,
+            combined, combined_labels, combined_source,
+        )
+
     return plot_panel_m(
         coords, combined_labels, combined_source,
         selected_types, mode_diversity, real_diversity, type_names,
@@ -210,6 +272,54 @@ def panel_m_conditioning_umap(
         full_dim_labels=combined_labels,
         full_dim_source=combined_source,
     )
+
+
+def _replot_from_cache(cache_dir, output_dir, dpi):
+    """Re-generate panels L and M from previously cached data (no models needed)."""
+    cache_dir = Path(cache_dir)
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Panel L
+    l_path = cache_dir / "panel_l_data.json"
+    if not l_path.exists():
+        logger.error(f"Panel L cache not found: {l_path}")
+        return False
+    with open(l_path) as f:
+        ld = json.load(f)
+    plot_panel_l(ld["noise_scales"], ld["fds"], ld["centroids"], ld["div_ratios"],
+                 output_dir, dpi, ld["cfg_scale"])
+    logger.info("Panel L re-plotted from cache.")
+
+    # Panel M
+    m_meta_path = cache_dir / "panel_m_meta.json"
+    m_arr_path = cache_dir / "panel_m_arrays.npz"
+    m_src_path = cache_dir / "panel_m_combined_source.npy"
+    m_fds_path = cache_dir / "panel_m_full_dim_source.npy"
+    for p in [m_meta_path, m_arr_path, m_src_path, m_fds_path]:
+        if not p.exists():
+            logger.error(f"Panel M cache not found: {p}")
+            return False
+    with open(m_meta_path) as f:
+        mm = json.load(f)
+    arrs = np.load(m_arr_path)
+    combined_source = np.load(m_src_path, allow_pickle=True)
+    full_dim_source = np.load(m_fds_path, allow_pickle=True)
+    type_names = {int(k): v for k, v in mm["type_names"].items()}
+    mode_counts = {k: int(v) for k, v in mm["mode_counts"].items()}
+    plot_panel_m(
+        arrs["coords"], arrs["combined_labels"], combined_source,
+        mm["selected_types"],
+        {k: float(v) for k, v in mm["mode_diversity"].items()},
+        mm["real_diversity"], type_names,
+        output_dir, dpi, mm["cfg_scale"],
+        n_real=mm["n_real"], mode_counts=mode_counts,
+        full_dim_data=arrs["full_dim_data"],
+        full_dim_labels=arrs["full_dim_labels"],
+        full_dim_source=full_dim_source,
+    )
+    logger.info("Panel M re-plotted from cache.")
+    return True
 
 
 def main():
@@ -232,13 +342,28 @@ def main():
     parser.add_argument("--types", nargs="+", type=int, default=None,
                         help="Type IDs for Panel M (default: 5 evenly spaced)")
     parser.add_argument("--dpi", type=int, default=300)
+    parser.add_argument("--save-cache", default=None, metavar="DIR",
+                        help="Save intermediate data to DIR for model-free re-plotting")
+    parser.add_argument("--from-cache", default=None, metavar="DIR",
+                        help="Re-plot panels from cached data in DIR (no models needed)")
     args = parser.parse_args()
+
+    out = Path(args.output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+
+    # ── Fast path: re-plot from cache (no models, no data loading) ──
+    if args.from_cache:
+        logger.info(f"Re-plotting panels L+M from cache: {args.from_cache}")
+        ok = _replot_from_cache(args.from_cache, out, args.dpi)
+        if ok:
+            print(f"\nDone — Panels L+M re-plotted from cache to {out}/")
+            return
+        else:
+            logger.error("Cache re-plot failed; falling through to full generation.")
 
     seed_everything(42)
     device = get_device()
     cache = Path(args.cache_dir)
-    out = Path(args.output_dir)
-    out.mkdir(parents=True, exist_ok=True)
 
     # Load data
     projected_text = np.load(cache / "projected_text.npy")
@@ -264,6 +389,8 @@ def main():
     del clop
     torch.cuda.empty_cache()
 
+    data_cache_dir = args.save_cache
+
     # ── Panel L: Noise-scale tradeoff ──
     noise_scales = [0.0, 0.01, 0.02, 0.03, 0.05, 0.08]
     panel_l_noise_tradeoff(
@@ -275,6 +402,7 @@ def main():
         device=device,
         output_dir=str(out),
         dpi=args.dpi,
+        data_cache_dir=data_cache_dir,
     )
 
     # ── Panel M: Conditioning comparison UMAP ──
@@ -300,6 +428,7 @@ def main():
         output_dir=str(out),
         dpi=args.dpi,
         type_names=type_names,
+        data_cache_dir=data_cache_dir,
     )
 
     print(f"\nDone — Panels L+M saved to {out}/")

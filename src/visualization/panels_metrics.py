@@ -616,11 +616,6 @@ def plot_metrics_summary(
             ax3.text(gauge_text_x, i, ann_text,
                      va="center", fontsize=8, zorder=3)
 
-            # Add Gaussian baseline reference marker for Diversity Ratio
-            if label == "Diversity\nRatio" and gauss_div_ratio is not None:
-                bl_val = min(gauss_div_ratio, max_val)
-                ax3.plot(bl_val, i, marker="v", color=COLORS["baseline_gauss"],
-                         markersize=8, zorder=5, clip_on=True)
 
         ax3.set_yticks(range(len(gauge_items)))
         ax3.set_yticklabels([g[0] for g in gauge_items], fontsize=8)
@@ -634,11 +629,6 @@ def plot_metrics_summary(
                  f"Collapsed: {collapsed}/{total} | Near-copies: {copies}",
                  transform=ax3.transAxes, ha="right", va="bottom",
                  fontsize=8, color=COLORS["neutral"])
-        if gauss_div_ratio is not None:
-            ax3.text(0.98, 0.15,
-                     f"v Gaussian baseline: {gauss_div_ratio:.2f}",
-                     transform=ax3.transAxes, ha="right", va="bottom",
-                     fontsize=7.5, color=COLORS["baseline_gauss"])
         ax3.set_title("Diversity Health", fontsize=11)
         ax3.set_xlabel("Score")
         from matplotlib.ticker import MaxNLocator as _MNL3
@@ -688,19 +678,6 @@ def plot_metrics_summary(
         ax4.set_title("Expression Fidelity", fontsize=11)
         ax4.grid(axis='both', alpha=0.15, linestyle='--')
 
-        # Headline summary box with key numbers
-        n_genes = expr_metrics.get("Genes", 0)
-        headline_parts = []
-        if n_genes:
-            headline_parts.append(f"{int(n_genes)} genes")
-        headline_parts.append(f"min r = {min(vals):.6f}")
-        n_types = expr_data.get("per_type_summary", {}).get("n_types", 0) if expr_path.exists() else 0
-        if n_types:
-            headline_parts.append(f"{n_types} cell types")
-        headline_text = " | ".join(headline_parts)
-        ax4.text(0.98, 0.97, headline_text,
-                 transform=ax4.transAxes, ha="right", va="top",
-                 fontsize=7, color=COLORS["good"])
     else:
         ax4.text(0.5, 0.5, "No expression data", ha="center", va="center",
                  transform=ax4.transAxes)

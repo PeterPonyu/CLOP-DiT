@@ -90,6 +90,13 @@ def _plot_classifier_metric_heatmap(
         display_mode = "worst+best"
 
     im = ax.imshow(display_matrix, cmap="inferno", aspect="auto", vmin=0, vmax=1)
+    # Add numeric annotations on heatmap cells
+    for _ri in range(display_matrix.shape[0]):
+        for _ci in range(display_matrix.shape[1]):
+            _val = display_matrix[_ri, _ci]
+            _color = "white" if _val < 0.5 else "black"
+            ax.text(_ci, _ri, f"{_val:.2f}", ha="center", va="center",
+                    fontsize=7, color=_color, fontweight="normal")
     ax.set_xticks(range(3))
     ax.set_xticklabels(["Precision", "Recall", "F1"], fontsize=9)
     ax.set_yticks(range(len(display_names)))

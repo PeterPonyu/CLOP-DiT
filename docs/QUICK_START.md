@@ -24,7 +24,7 @@ python scripts/pipeline/run_pipeline.py --stage all --build-article   # full pip
 
 Paths are controlled by `configs/pipeline.yaml` and env vars (`CLOPDIT_CACHE_DIR`, etc.).
 
-The pipeline automatically verifies all 15 article figures and creates symlinks in `articles/figures/`. To verify without regenerating:
+The pipeline automatically verifies all 17 article figures and creates symlinks in `articles/figures/`. To verify without regenerating:
 
 ```bash
 bash scripts/pipeline/verify_article_figures.sh --check   # verify only
@@ -45,7 +45,7 @@ bash scripts/pipeline/verify_article_figures.sh            # verify + recreate s
 7. **Visualization** (all 19 panels + 5 merged figures) → `python -m src.visualization.results_visualizer`
 8. **Verify + symlink** (article figures) → `scripts/pipeline/verify_article_figures.sh`
 
-**Output:** `results/figures/panel_a_*.png` through `panel_s_*.png`, 5 merged `fig_*.pdf`, `clop_dit_full_report.pdf`, and 15 symlinks in `articles/figures/`.
+**Output:** `results/figures/panel_a_*.png` through `panel_s_*.png`, 5 merged `fig_*.pdf`, `clop_dit_full_report.pdf`, and 17 symlinks in `articles/figures/`.
 
 ## Manual Steps (If Not Using Pipeline Script)
 
