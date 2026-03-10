@@ -85,7 +85,7 @@ def plot_per_type_generation(
             collapsed_type_ids = set()
 
     type_ids = [per_type[n].get("type_id") for n in names]
-    short_names = [abbreviate_cell_type(n, max_len=22) for n in names]
+    short_names = [abbreviate_cell_type(n, max_len=26) for n in names]
 
     div_ratios = []
     for t_id in type_ids:
@@ -125,7 +125,7 @@ def plot_per_type_generation(
     ax.barh(range(len(sorted_cos)), sorted_cos, color=colors, height=0.8)
     set_adaptive_ytick_labels(ax, sorted_names_cos, max_visible=25, fontsize=FONT_HEATMAP_CELL)
     ax.set_xlabel("Centroid Cosine Similarity")
-    ax.set_title("Real\u2194Gen Centroid Cosine", fontsize=11)
+    ax.set_title("Real\u2194Gen Centroid Cosine", fontsize=12)
     ax.axvline(
         x=summary.get("mean_centroid_cosine", 0), color=COLORS["bad"],
         linestyle="--", alpha=0.5,
@@ -191,11 +191,11 @@ def plot_per_type_generation(
             clip_on=False,
         )
         try:
-            cbar = add_colorbar_safe(sc, ax=ax, label="Diversity ratio", shrink=0.65, pad=0.10)
+            cbar = add_colorbar_safe(sc, ax=ax, label="Diversity ratio", shrink=0.8, pad=0.10)
         except Exception:
-            cbar = fig.colorbar(sc, ax=ax, shrink=0.65, pad=0.10)
-            cbar.set_label("Diversity ratio", fontsize=10)
-        cbar.ax.tick_params(labelsize=8)
+            cbar = fig.colorbar(sc, ax=ax, shrink=0.8, pad=0.10)
+            cbar.set_label("Diversity ratio", fontsize=11)
+        cbar.ax.tick_params(labelsize=10)
     else:
         ax.scatter(
             x_vals,
@@ -223,7 +223,7 @@ def plot_per_type_generation(
             else:
                 x_offset = max(x_offset, 10)
             ax.annotate(
-                abbreviate_cell_type(short_names[i], max_len=14),
+                abbreviate_cell_type(short_names[i], max_len=20),
                 (x_vals[i], cos_array[i]),
                 fontsize=FONT_SMALL,
                 xytext=(x_offset, y_offset),

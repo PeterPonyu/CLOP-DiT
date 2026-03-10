@@ -454,7 +454,7 @@ class ResultsVisualizer:
         clust_data = None
         classif_data = None
 
-        # Panel P: Clustering
+        # Panel P: Clustering — load data only (standalone save skipped)
         clust_path = ds_dir / "clustering_alignment.json"
         if clust_path.exists():
             with open(clust_path) as f:
@@ -466,12 +466,8 @@ class ResultsVisualizer:
                 arr_path = ds_dir / fname
                 if arr_path.exists():
                     clust_data[key] = np.load(arr_path, allow_pickle=True)
-            fig_p = plot_clustering_panel(clust_data, self.type_names, self.output, self.dpi)
-            if fig_p:
-                saved.append(self.output / "fig17_clustering_mixing.pdf")
-                plt.close(fig_p)
 
-        # Panel Q: Classifier
+        # Panel Q: Classifier — load data only (standalone save skipped)
         classif_path = ds_dir / "classifier_alignment.json"
         if classif_path.exists():
             with open(classif_path) as f:
@@ -482,10 +478,6 @@ class ResultsVisualizer:
             if "disc_proba" in classif_data:
                 classif_data["_disc_proba"] = classif_data["disc_proba"]
                 classif_data["_disc_y"] = classif_data["disc_y"]
-            fig_q = plot_classifier_panel(classif_data, self.output, self.dpi)
-            if fig_q:
-                saved.append(self.output / "fig17_classifier_alignment.pdf")
-                plt.close(fig_q)
 
         # Merged P+Q: Clustering & Classifier
         if clust_data is not None and classif_data is not None:
@@ -652,23 +644,8 @@ class ResultsVisualizer:
         logger.info("=" * 60)
 
         # ── Part I: Training ──
-        fig_a = self.plot_clop_training()
-        if fig_a:
-            saved.append(self.output / "fig03_clop_training.pdf")
-            plt.close(fig_a)
-
-        if include_umap:
-            fig_b = self.plot_clop_embedding_space()
-            if fig_b:
-                saved.append(self.output / "fig04_clop_embedding_umap.pdf")
-                plt.close(fig_b)
-        else:
-            logger.info("Skipping Panel B (UMAP) — use --include-umap to enable")
-
-        fig_c = self.plot_dit_training()
-        if fig_c:
-            saved.append(self.output / "fig03_dit_training.pdf")
-            plt.close(fig_c)
+        # NOTE: Standalone A/C panels are NOT saved — only the merged A+C is
+        # needed for the article (fig03_training_dynamics).
 
         # ── Merged: A+C Training Dynamics ──
         try:
@@ -693,10 +670,8 @@ class ResultsVisualizer:
             saved.append(self.output / "fig05_metrics_summary.pdf")
             plt.close(fig_d)
 
-        fig_e = self.plot_real_vs_generated()
-        if fig_e:
-            saved.append(self.output / "fig04_real_vs_generated.pdf")
-            plt.close(fig_e)
+        # NOTE: Standalone B/E panels are NOT saved — only the merged B+E is
+        # needed for the article (fig04_embedding_space).
 
         fig_f = self.plot_text_cell_heatmap()
         if fig_f:
@@ -728,22 +703,7 @@ class ResultsVisualizer:
                 logger.warning(f"Merged B+E figure failed: {exc}")
 
         # ── Merged: G+F Fidelity & Alignment ──
-        try:
-            from .fig04_embedding import plot_fidelity_and_alignment_merged
-            fig_gf = plot_fidelity_and_alignment_merged(
-                cache_dir=str(self.cache),
-                metrics_path=str(RESULTS_DIR / "generation_metrics.json"),
-                type_names=self.type_names,
-                output_dir=str(self.output),
-                dpi=self.dpi,
-                save=True,
-                save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "fig_fidelity_alignment"),
-            )
-            if fig_gf:
-                saved.append(self.output / "fig_fidelity_alignment.pdf")
-                plt.close(fig_gf)
-        except Exception as exc:
-            logger.warning(f"Merged G+F figure failed: {exc}")
+        # NOTE: Legacy composite not in article manifest — skipped.
 
         # ── Part III: Expression & biological validation ──
         fig_h = self.plot_expression_correlation()
@@ -801,9 +761,7 @@ class ResultsVisualizer:
                 logger.info(f"Found {panel_name}.png but no PDF — including PNG")
 
         # ── Merged: L+K Diversity & Trade-off ──
-        merged_lk = self._compose_diversity_tradeoff()
-        if merged_lk:
-            saved.append(merged_lk)
+        # NOTE: Legacy composite not in article manifest — skipped.
 
         # ── Combine into multi-page PDF ──
         if saved:

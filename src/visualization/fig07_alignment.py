@@ -179,15 +179,15 @@ def plot_text_cell_heatmap(
         sim_sorted, cmap=cmap, vmin=-0.1, vmax=1.0,
         aspect="auto", interpolation="nearest",
     )
-    step = 3
+    step = 4
     _xtl = [labels_sorted[i] if i % step == 0 else "" for i in range(n_types)]
     _ytl = [labels_sorted[i] if i % step == 0 else "" for i in range(n_types)]
     ax1.set_xticks(range(n_types))
     ax1.set_yticks(range(n_types))
-    ax1.set_xticklabels(_xtl, rotation=90, fontsize=8, ha="center")
-    ax1.set_yticklabels(_ytl, fontsize=8, ha="right")
-    ax1.set_ylabel("Cell Type (text prototypes)", fontsize=10)
-    ax1.set_title("Cosine Similarity (sorted by diagonal)", fontsize=11)
+    ax1.set_xticklabels(_xtl, rotation=75, fontsize=9, ha="right")
+    ax1.set_yticklabels(_ytl, fontsize=10, ha="right")
+    ax1.set_ylabel("Cell Type (text prototypes)", fontsize=11)
+    ax1.set_title("Cosine Similarity (sorted by diagonal)", fontsize=12)
 
     # Draw diagonal guide line
     ax1.plot(
@@ -195,82 +195,23 @@ def plot_text_cell_heatmap(
         color="white", linewidth=0.8, linestyle=":", alpha=0.6, zorder=3,
     )
 
-    # Mark top off-diagonal confusions with value annotations
-    off_diag_matrix = sim_sorted.copy()
-    np.fill_diagonal(off_diag_matrix, -1)
-    confusion_pairs = []
-    _confusion_positions = []  # track positions for collision avoidance
-    for _ in range(min(3, n_types)):
-        idx = np.unravel_index(off_diag_matrix.argmax(), off_diag_matrix.shape)
-        val = off_diag_matrix[idx]
-        if val < 0.3:
-            break
-        ax1.plot(
-            idx[1], idx[0], "x", color=COLORS["confusion_marker"],
-            markersize=7, markeredgewidth=1.8, zorder=4,
-        )
-        # Compute annotation offset; shift further if close to a previous label
-        ann_offset_x, ann_offset_y = 6, -6
-        for px, py in _confusion_positions:
-            if abs(idx[1] - px) < 3 and abs(idx[0] - py) < 3:
-                # Shift up if near bottom edge, down otherwise
-                if idx[0] > n_types * 0.7:
-                    ann_offset_y += 14
-                else:
-                    ann_offset_y -= 14
-        _confusion_positions.append((idx[1], idx[0]))
-        # Annotate with the similarity value
-        ax1.annotate(
-            f"{val:.2f}",
-            xy=(idx[1], idx[0]),
-            xytext=(ann_offset_x, ann_offset_y),
-            textcoords="offset points",
-            fontsize=FONT_SMALL,
-            color=COLORS["confusion_marker"],
-            fontweight="normal",
-            bbox=dict(boxstyle="round,pad=0.15", facecolor="black", alpha=0.6,
-                      edgecolor="none"),
-            zorder=5,
-        )
-        confusion_pairs.append(
-            (abbreviate_cell_type(labels_sorted[idx[0]], max_len=12),
-             abbreviate_cell_type(labels_sorted[idx[1]], max_len=12), val)
-        )
-        off_diag_matrix[idx] = -1
+    # Off-diagonal confusion details moved to LaTeX caption for cleaner panel
 
     try:
-        cbar = add_colorbar_safe(im, ax=ax1, label="Cosine similarity", shrink=0.72, pad=0.04)
+        cbar = add_colorbar_safe(im, ax=ax1, label="Cosine similarity",
+                                 shrink=0.55, pad=0.03, aspect=18)
     except Exception:
-        cbar = fig.colorbar(im, ax=ax1, shrink=0.72, pad=0.04)
-        cbar.set_label("Cosine similarity", fontsize=10)
-    cbar.ax.tick_params(labelsize=8)
+        cbar = fig.colorbar(im, ax=ax1, shrink=0.55, pad=0.03)
+        cbar.set_label("Cosine similarity", fontsize=11)
+    cbar.ax.tick_params(labelsize=10)
     cbar.ax.yaxis.set_major_locator(MaxNLocator(nbins=6))
-    cbar.ax.axhline(y=mean_diag, color="white", linewidth=1.5, linestyle="--")
-    cbar.ax.axhline(y=mean_off, color="black", linewidth=1, linestyle=":")
-    # Add text labels on colorbar reference lines
-    cbar.ax.text(
-        1.1, mean_diag, f"diag={mean_diag:.3f}",
-        transform=cbar.ax.get_yaxis_transform(),
-        fontsize=8, color="#333333", va="bottom", ha="left",
-        fontweight="normal",
-        bbox=dict(boxstyle="round,pad=0.12", facecolor="white", alpha=0.85,
-                  edgecolor="none"),
-    )
-    cbar.ax.text(
-        1.1, mean_off, f"off={mean_off:.3f}",
-        transform=cbar.ax.get_yaxis_transform(),
-        fontsize=8, color="#333333", va="top", ha="left",
-        fontweight="normal",
-        bbox=dict(boxstyle="round,pad=0.12", facecolor="white", alpha=0.85,
-                  edgecolor="none"),
-    )
 
     # Statistical summary moved to LaTeX caption for cleaner in-panel appearance
 
     # Inset: zoomed view of top-left diagonal corner (best-aligned types)
-    n_inset = min(12, n_types)
-    ax_inset = inset_axes(ax1, width="28%", height="28%", loc="upper right",
-                          borderpad=2.5)
+    n_inset = min(8, n_types)
+    ax_inset = inset_axes(ax1, width="24%", height="24%", loc="upper right",
+                          borderpad=1.5)
     ax_inset.imshow(
         sim_sorted[:n_inset, :n_inset], cmap=cmap, vmin=-0.1, vmax=1.0,
         aspect="auto", interpolation="nearest",
@@ -285,7 +226,7 @@ def plot_text_cell_heatmap(
         )
     ax_inset.set_xticks([])
     ax_inset.set_yticks([])
-    ax_inset.set_title(f"Top {n_inset} (zoom)", fontsize=FONT_SMALL, pad=2)
+    ax_inset.set_title(f"Top {n_inset}", fontsize=FONT_SMALL, pad=2)
     for spine in ax_inset.spines.values():
         spine.set_edgecolor("white")
         spine.set_linewidth(1.5)
@@ -309,8 +250,8 @@ def plot_text_cell_heatmap(
     color_map = [quality_color(v, (0.9, 0.7)) for v in d_asc]
     ax2.barh(range(n_types), d_asc, color=color_map, height=0.8,
              edgecolor="white", linewidth=0.3)
-    set_adaptive_ytick_labels(ax2, labels_asc, max_visible=22, fontsize=FONT_SMALL)
-    ax2.set_xlabel("Cosine Similarity", fontsize=10)
+    set_adaptive_ytick_labels(ax2, labels_asc, max_visible=18, fontsize=10)
+    ax2.set_xlabel("Cosine Similarity", fontsize=11)
 
     # Annotate values on the worst 3 and best 3 bars (with collision avoidance)
     _ann_indices = list(range(min(3, n_types))) + list(range(max(0, n_types - 3), n_types))
@@ -324,7 +265,7 @@ def plot_text_cell_heatmap(
         _prev_y = idx_bar
         ax2.text(
             val_bar + 0.01, idx_bar, f"{val_bar:.3f}",
-            va="center", ha="left", fontsize=FONT_HEATMAP_CELL, color=COLORS["annotation_medium"],
+            va="center", ha="left", fontsize=10, color=COLORS["annotation_medium"],
         )
 
     # Reference lines with annotations
@@ -352,7 +293,7 @@ def plot_text_cell_heatmap(
     # Place median label below the bar area to avoid colliding with the mean label
     ax2.text(
         median_diag, -2.0, f"med={median_diag:.3f}",
-        ha="center", va="top", fontsize=FONT_HEATMAP_CELL, color=COLORS["heatmap_purple"],
+        ha="center", va="top", fontsize=10, color=COLORS["heatmap_purple"],
         clip_on=False,
     )
 
@@ -403,8 +344,8 @@ def plot_text_cell_heatmap(
     ax3.axhline(y=median_off, color=COLORS["generated"], linestyle="-.",
                 linewidth=1.0, alpha=0.6)
 
-    ax3.set_ylabel("Cosine Similarity", fontsize=10)
-    ax3.set_xlabel("Density", fontsize=10)
+    ax3.set_ylabel("Cosine Similarity", fontsize=11)
+    ax3.set_xlabel("Density", fontsize=11)
     ax3.set_title("Diag vs Off-Diag", fontsize=FONT_TITLE)
 
     # Tighter y-axis: avoid wasting space on empty negative range
@@ -412,17 +353,17 @@ def plot_text_cell_heatmap(
     ax3.set_ylim(_ylim_lo, 1.05)
     ax3.yaxis.set_major_locator(MaxNLocator(nbins=8, prune="both"))
     ax3.xaxis.set_major_locator(MaxNLocator(nbins=5, prune="both"))
-    ax3.tick_params(axis="both", labelsize=8)
+    ax3.tick_params(axis="both", labelsize=10)
 
-    # Legend — place in empty region with background for visibility
-    ax3.legend(fontsize=8, frameon=True, loc="center left",
-               facecolor="white", edgecolor="#cccccc", framealpha=0.9)
+    # Legend — place in empty region without frame
+    ax3.legend(fontsize=10, frameon=False, loc="upper left")
 
     # Add gridlines for readability
     ax3.grid(True, axis="both", alpha=0.2, linewidth=0.4)
 
-    # Statistical annotation text box (compact single-line format)
-    stat_anno = f"$d$={cohens_d:.1f}"
+    # Statistical annotation — compact format (detailed stats in caption)
+    stat_anno = "Mann\u2013Whitney U test\n"
+    stat_anno += f"$d$={cohens_d:.1f}"
     if p_value is not None:
         if p_value < 1e-10:
             stat_anno += ",  $p$<1e-10***"
@@ -434,49 +375,21 @@ def plot_text_cell_heatmap(
             stat_anno += f",  $p$={p_value:.3f}*"
         else:
             stat_anno += f",  $p$={p_value:.3f} n.s."
-    # Bootstrap CI for centroid cosine if available
-    if bootstrap_ci and bootstrap_ci.get("lower") is not None:
-        stat_anno += (
-            f"\n95% CI [{bootstrap_ci['lower']:.3f}, {bootstrap_ci['upper']:.3f}]"
-        )
-    stat_anno += f"\nSep.={separation_ratio:.1f}x"
     ax3.text(
         0.97, 0.03, stat_anno,
-        transform=ax3.transAxes, fontsize=FONT_SMALL, va="bottom", ha="right",
+        transform=ax3.transAxes, fontsize=10, va="bottom", ha="right",
         fontweight="normal",
         color=COLORS["annotation_dark"],
         bbox=dict(
-            boxstyle="round,pad=0.3", facecolor="white", alpha=0.85,
-            edgecolor="#cccccc", linewidth=0.5,
+            boxstyle="round,pad=0.3", facecolor="white", alpha=0.92,
+            edgecolor=COLORS["border_light"], linewidth=0.5,
         ),
         zorder=10,
     )
 
-    # Bracket showing the separation between mean diagonal and mean off-diagonal
-    bracket_x_ax = 0.75
-    ax3.annotate(
-        "",
-        xy=(bracket_x_ax, mean_diag),
-        xycoords=("axes fraction", "data"),
-        xytext=(bracket_x_ax, mean_off),
-        textcoords=("axes fraction", "data"),
-        arrowprops=dict(
-            arrowstyle="<->", color=COLORS["annotation_medium"], lw=1.0,
-            connectionstyle="arc3,rad=0",
-        ),
-    )
-    mid_y = (mean_diag + mean_off) / 2
-    ax3.text(
-        bracket_x_ax - 0.02, mid_y, f"\u0394={mean_diag - mean_off:.3f}",
-        transform=ax3.get_yaxis_transform(),
-        fontsize=FONT_SMALL, ha="right", va="center",
-        fontweight="normal",
-        color=COLORS["annotation_medium"],
-    )
-
     style_axes(ax3, kind="default")
 
-    fig._clop_layout_rect = (0.02, 0.06, 0.98, 0.95)
+    fig._clop_layout_rect = (0.02, 0.10, 0.98, 0.95)
 
     if save:
         path = Path(output_dir) / "fig07_text_cell_alignment.png"

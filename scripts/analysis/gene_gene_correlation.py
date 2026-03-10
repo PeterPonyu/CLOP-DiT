@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from src.visualization.style import apply_style, COLORS, FONT_TITLE, FONT_LABEL
+from src.visualization.style import apply_style, COLORS, FONT_TITLE, FONT_LABEL, add_panel_label, add_colorbar_safe, save_with_vcd
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "results"
@@ -141,74 +141,211 @@ def analyse():
 
 def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
                  gene_subset, types):
-    fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+    from src.visualization.style import (
+        abbreviate_cell_type, FONT_TITLE, FONT_LABEL, FONT_TICK,
+        FONT_ANNOTATION, FONT_SMALL, FONT_HEATMAP_CELL, style_axes,
+    )
+    from scipy import stats as scipy_stats
+
+    # Load captions for cell-type names
+    captions_path = ROOT / "data" / "cached_latents_v5.2" / "text_captions_deduplicated.json"
+    _type_names = {}
+    if captions_path.exists():
+        with open(captions_path) as f:
+            _cap = json.load(f)
+        for k, v in _cap.items():
+            short = v.split(",")[0][:50] if isinstance(v, str) else str(v)[:50]
+            _type_names[int(k)] = short
 
     mantel_vals = [v["mantel_r"] for v in per_type_results.values()]
 
-    # (a) Distribution of per-type Mantel correlations
-    ax = axes[0, 0]
-    ax.hist(mantel_vals, bins=20, color=COLORS["real"], edgecolor="white", alpha=0.85)
-    ax.axvline(np.median(mantel_vals), color=COLORS["generated"], ls="--", lw=1.5,
-               label=f"median = {np.median(mantel_vals):.3f}")
-    ax.axvline(np.mean(mantel_vals), color=COLORS["annotation_dark"], ls="-", lw=1.5,
-               label=f"mean = {np.mean(mantel_vals):.3f}")
-    ax.set_xlabel("Mantel correlation (upper-tri r)")
-    ax.set_ylabel("Number of cell types")
-    ax.set_title("(a) Gene-gene correlation preservation")
-    ax.legend(fontsize=8, frameon=False)
+    fig = plt.figure(figsize=(14, 10.5))
+    gs = fig.add_gridspec(2, 2, wspace=0.50, hspace=0.50)
 
-    # (b) Example: best-preserved cell type - side-by-side heatmaps
+    # ── Panel (a): Distribution with null baseline ──
+    ax = fig.add_subplot(gs[0, 0])
+    add_panel_label(ax, 'a', x=-0.10, y=1.05)
+
+    # Compute null baseline: permuted gene labels within each type
+    rng = np.random.default_rng(42)
+    null_mantels = []
+    n_perm = 50
+    for _ in range(n_perm):
+        for t in per_type_results:
+            r_mask = real_labels == t
+            g_mask = gen_labels == t
+            rs = real_sub[r_mask][:, :50]
+            gs_sub = gen_sub[g_mask][:, :50]
+            if rs.shape[0] < 10 or gs_sub.shape[0] < 10:
+                continue
+            # Permute gene order in generated to break real structure
+            perm_idx = rng.permutation(gs_sub.shape[1])
+            gs_perm = gs_sub[:, perm_idx]
+            R_real = _corr_matrix(rs)
+            R_perm = _corr_matrix(gs_perm)
+            ut_r = _upper_tri(R_real)
+            ut_p = _upper_tri(R_perm)
+            valid = np.isfinite(ut_r) & np.isfinite(ut_p)
+            if valid.sum() > 10:
+                null_mantels.append(np.corrcoef(ut_r[valid], ut_p[valid])[0, 1])
+
+    # Plot histograms
+    bins = np.linspace(min(min(mantel_vals), min(null_mantels) if null_mantels else 0) - 0.05,
+                       max(max(mantel_vals), max(null_mantels) if null_mantels else 0.5) + 0.05, 30)
+    if null_mantels:
+        ax.hist(null_mantels, bins=bins, color="#BDBDBD", alpha=0.5, edgecolor="white",
+                density=True, label=f"Permuted null (n={len(null_mantels)})")
+    ax.hist(mantel_vals, bins=bins, color=COLORS["real"], edgecolor="white", alpha=0.8,
+            density=True, label=f"Observed (n={len(mantel_vals)})")
+
+    ax.axvline(np.median(mantel_vals), color=COLORS["generated"], ls="--", lw=1.5,
+               label=f"Median = {np.median(mantel_vals):.3f}")
+    ax.axvline(np.mean(mantel_vals), color=COLORS["annotation_dark"], ls="-", lw=1.5,
+               label=f"Mean = {np.mean(mantel_vals):.3f}")
+
+    # Bootstrap 95% CI for mean
+    boot_means = [np.mean(rng.choice(mantel_vals, len(mantel_vals), replace=True))
+                  for _ in range(1000)]
+    ci_lo, ci_hi = np.percentile(boot_means, [2.5, 97.5])
+
+    null_mean = np.mean(null_mantels) if null_mantels else 0
+    ax.text(0.97, 0.97,
+            f"Mean 95% CI: [{ci_lo:.3f}, {ci_hi:.3f}]\n"
+            f"Null mean: {null_mean:.3f}\n"
+            f"All {len(mantel_vals)} types > null mean"
+            if all(m > null_mean for m in mantel_vals)
+            else f"Mean 95% CI: [{ci_lo:.3f}, {ci_hi:.3f}]\n"
+                 f"Null mean: {null_mean:.3f}",
+            transform=ax.transAxes, ha="right", va="top",
+            fontsize=FONT_SMALL, color=COLORS["neutral"],
+            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="none", alpha=0.88))
+
+    ax.legend(fontsize=FONT_ANNOTATION, frameon=True, framealpha=0.9, edgecolor="none",
+              loc="upper left")
+    style_axes(ax, "default",
+               xlabel="Upper-triangle Pearson r (real vs. gen corr. matrix)",
+               ylabel="Density",
+               title="Gene-Gene Correlation Preservation")
+
+    # ── Panel (b): Best-preserved cell type ──
     best_type = max(per_type_results, key=lambda k: per_type_results[k]["mantel_r"])
+    best_name = abbreviate_cell_type(_type_names.get(best_type, f"Type {best_type}"), max_len=35)
+    best_r = per_type_results[best_type]["mantel_r"]
+    best_rmse = per_type_results[best_type]["rmse"]
+
     r_mask = real_labels == best_type
     g_mask = gen_labels == best_type
     R_real = _corr_matrix(real_sub[r_mask][:, :50])
     R_gen = _corr_matrix(gen_sub[g_mask][:, :50])
-    ax = axes[0, 1]
-    diff = R_gen - R_real
-    im = ax.imshow(diff, cmap="RdBu_r", vmin=-0.5, vmax=0.5, aspect="auto")
-    ax.set_title(f"(b) Corr diff (type {best_type}, best)")
-    ax.set_xlabel("Gene index (top 50 HVG)")
-    ax.set_ylabel("Gene index")
-    plt.colorbar(im, ax=ax, shrink=0.8, label="Gen - Real")
 
-    # (c) Example: worst-preserved cell type
+    ax2 = fig.add_subplot(gs[0, 1])
+    add_panel_label(ax2, 'b', x=-0.10, y=1.05)
+    diff = R_gen - R_real
+    im = ax2.imshow(diff, cmap="RdBu_r", vmin=-0.5, vmax=0.5, aspect="auto")
+    ax2.set_title(f"Best: {best_name}", fontsize=FONT_TITLE)
+    ax2.set_xlabel("Gene index (top 50 HVG)", fontsize=FONT_LABEL)
+    ax2.set_ylabel("Gene index", fontsize=FONT_LABEL)
+
+    # Summary annotation
+    mad = np.nanmean(np.abs(diff))
+    ax2.text(0.97, 0.03,
+             f"r = {best_r:.3f}\nMAD = {mad:.3f}\nRMSE = {best_rmse:.3f}",
+             transform=ax2.transAxes, ha="right", va="bottom",
+             fontsize=FONT_ANNOTATION, color="white",
+             bbox=dict(boxstyle="round,pad=0.25", fc="black", ec="none", alpha=0.6))
+    add_colorbar_safe(im, ax=ax2, shrink=0.75, label="\u0394 corr (gen \u2212 real)")
+
+    # ── Panel (c): Worst-preserved cell type ──
     worst_type = min(per_type_results, key=lambda k: per_type_results[k]["mantel_r"])
+    worst_name = abbreviate_cell_type(_type_names.get(worst_type, f"Type {worst_type}"), max_len=35)
+    worst_r = per_type_results[worst_type]["mantel_r"]
+    worst_rmse = per_type_results[worst_type]["rmse"]
+
     r_mask = real_labels == worst_type
     g_mask = gen_labels == worst_type
     R_real_w = _corr_matrix(real_sub[r_mask][:, :50])
     R_gen_w = _corr_matrix(gen_sub[g_mask][:, :50])
-    ax = axes[1, 0]
+
+    ax3 = fig.add_subplot(gs[1, 0])
+    add_panel_label(ax3, 'c', x=-0.10, y=1.05)
     diff_w = R_gen_w - R_real_w
-    im2 = ax.imshow(diff_w, cmap="RdBu_r", vmin=-0.5, vmax=0.5, aspect="auto")
-    ax.set_title(f"(c) Corr diff (type {worst_type}, worst)")
-    ax.set_xlabel("Gene index (top 50 HVG)")
-    ax.set_ylabel("Gene index")
-    plt.colorbar(im2, ax=ax, shrink=0.8, label="Gen - Real")
+    im2 = ax3.imshow(diff_w, cmap="RdBu_r", vmin=-0.5, vmax=0.5, aspect="auto")
+    ax3.set_title(f"Worst: {worst_name}", fontsize=FONT_TITLE)
+    ax3.set_xlabel("Gene index (top 50 HVG)", fontsize=FONT_LABEL)
+    ax3.set_ylabel("Gene index", fontsize=FONT_LABEL)
 
-    # (d) Mantel r vs cell count scatter
-    ax = axes[1, 1]
-    n_cells = [per_type_results[t]["n_real"] for t in per_type_results]
-    ax.scatter(n_cells, mantel_vals, s=20, alpha=0.7, c=COLORS["real"], edgecolors="none")
-    if len(n_cells) > 2:
-        r_corr = np.corrcoef(n_cells, mantel_vals)[0, 1]
-        if np.isnan(r_corr):
-            ax.set_title("(d) Mantel r vs cell count (r=N/A)")
-            ax.annotate("Zero variance in cell counts",
-                        xy=(0.5, 0.95), xycoords="axes fraction",
-                        ha="center", fontsize=8, color=COLORS["error_red"])
-        else:
-            ax.set_title(f"(d) Mantel r vs cell count (r={r_corr:.3f})")
+    mad_w = np.nanmean(np.abs(diff_w))
+    ax3.text(0.97, 0.03,
+             f"r = {worst_r:.3f}\nMAD = {mad_w:.3f}\nRMSE = {worst_rmse:.3f}",
+             transform=ax3.transAxes, ha="right", va="bottom",
+             fontsize=FONT_ANNOTATION, color="white",
+             bbox=dict(boxstyle="round,pad=0.25", fc="black", ec="none", alpha=0.6))
+    add_colorbar_safe(im2, ax=ax3, shrink=0.75, label="\u0394 corr (gen \u2212 real)")
+
+    # ── Panel (d): Replace non-informative cell-count panel ──
+    # Use Mantel r vs per-type mean expression variance (biological heterogeneity)
+    ax4 = fig.add_subplot(gs[1, 1])
+    add_panel_label(ax4, 'd', x=-0.10, y=1.05)
+
+    # Compute mean expression variance per type as a proxy for heterogeneity
+    type_het = []
+    type_mantel = []
+    type_labels_d = []
+    for t in per_type_results:
+        r_mask = real_labels == t
+        if r_mask.sum() < 10:
+            continue
+        expr_var = np.mean(np.var(real_sub[r_mask], axis=0))
+        type_het.append(expr_var)
+        type_mantel.append(per_type_results[t]["mantel_r"])
+        type_labels_d.append(t)
+
+    type_het = np.array(type_het)
+    type_mantel = np.array(type_mantel)
+
+    ax4.scatter(type_het, type_mantel, s=35, alpha=0.6, c=COLORS["real"],
+                edgecolors="white", linewidth=0.4, zorder=3)
+
+    if len(type_het) >= 3 and np.std(type_het) > 0:
+        spearman_r, spearman_p = scipy_stats.spearmanr(type_het, type_mantel)
+        pearson_r, pearson_p = scipy_stats.pearsonr(type_het, type_mantel)
+
+        # Regression line
+        slope, intercept, _, _, _ = scipy_stats.linregress(type_het, type_mantel)
+        x_fit = np.linspace(type_het.min(), type_het.max(), 100)
+        ax4.plot(x_fit, slope * x_fit + intercept, color=COLORS["generated"],
+                 linewidth=1.5, alpha=0.7, label="OLS fit")
+
+        stat_text = (f"Spearman \u03c1 = {spearman_r:.3f} (p = {spearman_p:.2e})\n"
+                     f"Pearson r = {pearson_r:.3f} (p = {pearson_p:.2e})\n"
+                     f"n = {len(type_het)} cell types")
+
+        # Label top 3 outliers by residual
+        residuals = np.abs(type_mantel - (slope * type_het + intercept))
+        top3 = np.argsort(residuals)[-3:]
+        for idx in top3:
+            t_id = type_labels_d[idx]
+            lbl = abbreviate_cell_type(_type_names.get(t_id, f"Type {t_id}"), max_len=18)
+            ax4.annotate(lbl, (type_het[idx], type_mantel[idx]),
+                         fontsize=7, xytext=(8, 6), textcoords="offset points",
+                         arrowprops=dict(arrowstyle="->", lw=0.5, color="#888"),
+                         color=COLORS["annotation_dark"])
     else:
-        ax.set_title("(d) Mantel r vs cell count")
-    ax.set_xlabel("Number of real cells")
-    ax.set_ylabel("Mantel correlation")
+        stat_text = "Insufficient variance for correlation"
 
-    fig.tight_layout(rect=[0, 0, 1, 0.96])
-    fig.suptitle("Gene-Gene Correlation Structure: Real vs Generated", fontsize=12)
+    ax4.text(0.03, 0.03, stat_text,
+             transform=ax4.transAxes, ha="left", va="bottom",
+             fontsize=FONT_SMALL, color=COLORS["neutral"],
+             bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="none", alpha=0.88))
 
-    out_path = FIG_DIR / "fig20_gene_gene_correlation.pdf"
-    fig.savefig(out_path, dpi=300, bbox_inches="tight")
-    fig.savefig(out_path.with_suffix(".png"), dpi=300, bbox_inches="tight")
+    ax4.legend(fontsize=FONT_ANNOTATION, frameon=False)
+    style_axes(ax4, "scatter",
+               xlabel="Mean Gene Expression Variance",
+               ylabel="Upper-Tri Pearson r",
+               title="Preservation vs. Expression Heterogeneity")
+
+    out_path = FIG_DIR / "fig20_gene_gene_correlation.png"
+    save_with_vcd(fig, out_path, dpi=300, layout_rect=(0.02, 0.04, 0.98, 0.96))
     plt.close(fig)
     print(f"Saved figure to {out_path}")
 

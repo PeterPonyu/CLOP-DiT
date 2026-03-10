@@ -26,7 +26,7 @@ FIG_DIR = ROOT / "results" / "figures"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def _rounded_box(ax, xy, w, h, text, fc="#E8F4FD", ec="#2C3E50", fontsize=8,
+def _rounded_box(ax, xy, w, h, text, fc="#E8F4FD", ec="#2C3E50", fontsize=11,
                  lw=1.2, text_color="#2C3E50", bold=False):
     """Draw a rounded rectangle with centered text."""
     box = mpatches.FancyBboxPatch(
@@ -54,7 +54,7 @@ def make_figure():
     ax.axis("off")
 
     # Title
-    ax.text(5.0, 7.1, "Evaluation Pipeline Schematic", fontsize=13,
+    ax.text(5.0, 7.1, "Evaluation Pipeline Schematic", fontsize=15,
             ha="center", va="center", weight="bold", color="#2C3E50")
 
     # ── Row 1: Data Sources ──
@@ -160,7 +160,7 @@ def make_figure():
 
     # ── Row 6: Bootstrap ──
     ax.text(9.5, y5 + 0.35, "Bootstrap\n95% CI\n(B=1000)",
-            ha="center", va="center", fontsize=8, style="italic",
+            ha="center", va="center", fontsize=11, style="italic",
             color="#7F8C8D",
             bbox=dict(boxstyle="round,pad=0.3", fc="#F9F9F9", ec="#BDC3C7", lw=0.8))
 
@@ -180,13 +180,13 @@ def make_figure():
                                      boxstyle="round,pad=0.03",
                                      facecolor=color, edgecolor="#666", lw=0.5)
         ax.add_patch(p)
-        ax.text(x + 0.4, -0.25, label, fontsize=8, va="center", color="#333")
+        ax.text(x + 0.4, -0.25, label, fontsize=11, va="center", color="#333")
 
-    out = FIG_DIR / "fig_evaluation_pipeline.pdf"
-    fig.savefig(out, dpi=300, bbox_inches="tight")
-    fig.savefig(out.with_suffix(".png"), dpi=300, bbox_inches="tight")
+    out_png = FIG_DIR / "fig_evaluation_pipeline.png"
+    from src.visualization.style import save_with_vcd
+    save_with_vcd(fig, out_png, dpi=300)
     plt.close(fig)
-    print(f"Saved evaluation pipeline figure to {out}")
+    print(f"Saved evaluation pipeline figure to {out_png}")
 
 
 if __name__ == "__main__":

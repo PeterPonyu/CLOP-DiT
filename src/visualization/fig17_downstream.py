@@ -82,7 +82,7 @@ def _plot_classifier_metric_heatmap(
     ax: plt.Axes,
     cm: np.ndarray,
     class_names: List[str],
-    max_rows: Optional[int] = 24,
+    max_rows: Optional[int] = 18,
     title: Optional[str] = None,
 ) -> Dict[str, np.ndarray]:
     """Render a per-type precision/recall/F1 heatmap sorted by hardest classes."""
@@ -402,8 +402,8 @@ def plot_clustering_and_classifier_merged(
     """Merged figure: clustering + classifier alignment (former P + Q)."""
     apply_style()
 
-    fig = plt.figure(figsize=(15.2, 10.6))
-    gs = fig.add_gridspec(2, 3, wspace=0.55, hspace=0.55,
+    fig = plt.figure(figsize=(16.0, 11.2))
+    gs = fig.add_gridspec(2, 3, wspace=0.58, hspace=0.58,
                           height_ratios=[1, 1.05],
                           width_ratios=[1.5, 1.2, 1.0])
     # Title moved to LaTeX caption
@@ -420,7 +420,7 @@ def plot_clustering_and_classifier_merged(
         source = np.asarray(source)
         cell_type = np.asarray(cell_type)
         plot_umap_overlay(ax_p1, umap_coords, source, cell_type,
-                          legend_loc="lower left", legend_fontsize=8)
+                          legend_loc="lower left", legend_fontsize=9)
     else:
         ax_p1.text(0.5, 0.5, "No UMAP data", ha="center", va="center",
                    transform=ax_p1.transAxes)
@@ -443,8 +443,8 @@ def plot_clustering_and_classifier_merged(
                        color=COLORS["bad"], linestyle="--", alpha=0.7, linewidth=1.5,
                        label=f"mean={clustering_data.get('mean_mixing_score', 0):.3f}")
         ax_p2.set_xlim(0, max(max(vals) * 1.1, 0.5))
-        ax_p2.legend(fontsize=8, frameon=False, loc="lower right")
-        style_axes(ax_p2, "bar", title="Sorted kNN Mixing",
+        ax_p2.legend(fontsize=9, frameon=False, loc="lower right")
+        style_axes(ax_p2, "bar", title="Sorted kNN Mixing Score",
                    xlabel="Fraction Real Neighbours")
     else:
         ax_p2.text(0.5, 0.5, "No mixing data", ha="center", va="center",
@@ -471,14 +471,14 @@ def plot_clustering_and_classifier_merged(
                edgecolor="white", linewidth=0.8, zorder=2)
     for i, val in enumerate(metric_vals):
         ax_ps.text(min(val + 0.03, 0.98), i, f"{val:.3f}",
-                   va="center", fontsize=8, zorder=3)
+                   va="center", fontsize=9, zorder=3)
     ax_ps.set_yticks(y_pos)
-    ax_ps.set_yticklabels(metric_names, fontsize=9)
+    ax_ps.set_yticklabels(metric_names, fontsize=10)
     ax_ps.set_xlim(0, 1.15)
     ax_ps.invert_yaxis()
     n_cl = clustering_data.get("n_leiden_clusters", "?")
-    ax_ps.set_xlabel(f"Leiden clusters: {n_cl}", fontsize=8)
-    style_axes(ax_ps, "bar", title="Cluster Metrics")
+    ax_ps.set_xlabel(f"Leiden clusters: {n_cl}", fontsize=9)
+    style_axes(ax_ps, "bar", title="Clustering Metrics")
 
     cm = classifier_data.get("_confusion_matrix")
     class_names = classifier_data.get("class_names", [])
@@ -510,11 +510,11 @@ def plot_clustering_and_classifier_merged(
         ax_q2.text(
             0.96,
             0.96,
-            f"Acc {gen_acc:.3f}  |  Median per-type F1 {np.median(summary['f1']):.3f}",
+            f"Acc {gen_acc:.3f}  |  Median F1 {np.median(summary['f1']):.3f}",
             transform=ax_q2.transAxes,
             ha="right",
             va="top",
-            fontsize=8,
+            fontsize=9,
             color=COLORS["neutral"],
             bbox=dict(boxstyle="round,pad=0.22", fc="white", ec=COLORS["border_light"], alpha=0.92),
         )
@@ -537,9 +537,9 @@ def plot_clustering_and_classifier_merged(
             fig,
             output_dir / "fig17_downstream_pq.png",
             dpi,
-            layout_rect=(0.02, 0.04, 0.98, 0.94),
+            layout_rect=(0.02, 0.03, 0.98, 0.95),
         )
-        logger.info(f"Saved merged P+Q → {path}")
+        logger.info(f"Saved merged P+Q \u2192 {path}")
     return fig
 
 

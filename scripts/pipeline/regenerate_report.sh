@@ -31,10 +31,14 @@ for arg in "$@"; do
     esac
 done
 
-# ── Step 0: Generate architecture figure ──
+# ── Step 0: Generate architecture figure + evaluation pipeline ──
 echo ""
-echo "▶ Step 0/8: Generating architecture figure..."
+echo "▶ Step 0/10: Generating architecture figure (Fig 1)..."
 python scripts/analysis/generate_architecture_figure.py
+
+echo ""
+echo "▶ Step 0b/10: Generating evaluation pipeline figure (Fig 2)..."
+python scripts/analysis/evaluation_pipeline_figure.py
 
 # ── Step 1: Generate embeddings (condition_noise ε=0.03, CFG=1.5) ──
 if [ "$SKIP_GEN" = false ]; then
@@ -94,6 +98,11 @@ python scripts/analysis/gene_gene_correlation.py
 echo ""
 echo "▶ Step 9/10: Verifying article figures + creating symlinks..."
 bash scripts/pipeline/verify_article_figures.sh
+
+# ── Step 10: Rebuild LaTeX article PDF ──
+echo ""
+echo "▶ Step 10/10: Rebuilding LaTeX article PDF..."
+bash scripts/pipeline/build_article.sh
 
 # ── Summary ──
 echo ""

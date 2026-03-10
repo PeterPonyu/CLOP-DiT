@@ -16,7 +16,7 @@ from pathlib import Path
 import numpy as np
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from src.visualization.style import apply_style, COLORS
+from src.visualization.style import apply_style, COLORS, add_panel_label, save_with_vcd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -166,71 +166,191 @@ def main():
 
     # ── Generate figure ──
     apply_style()
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+    from src.visualization.style import (
+        abbreviate_cell_type, FONT_TITLE, FONT_LABEL, FONT_TICK,
+        FONT_ANNOTATION, FONT_SMALL, style_axes,
+    )
+    from scipy import stats as scipy_stats
 
-    # Panel A: SWD per type (sorted)
+    fig = plt.figure(figsize=(18, 11))
+    gs = fig.add_gridspec(2, 2, width_ratios=[1.2, 1.0], wspace=0.50, hspace=0.45)
+
+    # ── Panel (a): SWD per Cell Type (sorted bar chart) ──
     sorted_results = sorted(results, key=lambda r: r["swd"], reverse=True)
-    names = [r["name"][:25] for r in sorted_results]
+    names = [abbreviate_cell_type(r["name"], max_len=24) for r in sorted_results]
     swds = [r["swd"] for r in sorted_results]
-    ax = axes[0, 0]
-    colors = [COLORS["generated"] if s > np.mean(swds) + np.std(swds) else COLORS["real"] for s in swds]
-    ax.barh(range(len(names)), swds, color=colors, height=0.7)
-    ax.set_yticks(range(len(names)))
-    ax.set_yticklabels(names, fontsize=8)
-    ax.set_xlabel("Sliced Wasserstein Distance")
-    ax.set_title("(a) SWD per Cell Type (latent space)")
+    n_reals_sorted = [r["n_real"] for r in sorted_results]
+    swd_mean = np.mean(swds)
+    swd_std = np.std(swds)
+
+    ax = fig.add_subplot(gs[0, 0])
+    add_panel_label(ax, 'a', x=-0.10, y=1.05)
+
+    # Color: orange for outliers (>mean+1σ), blue otherwise; add legend
+    colors = [COLORS["generated"] if s > swd_mean + swd_std else COLORS["real"] for s in swds]
+    bars = ax.barh(range(len(names)), swds, color=colors, height=0.7, edgecolor="white", linewidth=0.3)
+
+    # Full cell-type labels, adaptively thinned
+    n_types = len(names)
+    step = max(1, n_types // 22)
+    thin_labels = []
+    for i in range(n_types):
+        if i % step == 0 or i == n_types - 1:
+            thin_labels.append(names[i])
+        else:
+            thin_labels.append("")
+    ax.set_yticks(range(n_types))
+    ax.set_yticklabels(thin_labels, fontsize=8)
     ax.invert_yaxis()
-    ax.axvline(np.mean(swds), color="gray", linestyle="--", alpha=0.7, label=f"mean={np.mean(swds):.3f}")
-    ax.legend(fontsize=8)
 
-    # Panel B: Variance ratio distribution
-    ax = axes[0, 1]
-    ax.hist(var_ratios, bins=25, color=COLORS["real"], alpha=0.8, edgecolor="white")
-    ax.axvline(1.0, color=COLORS["generated"], linestyle="--", linewidth=2, label="Ideal (1.0)")
-    ax.axvline(np.mean(var_ratios), color=COLORS["accent"], linestyle="-.", linewidth=2,
-               label=f"Mean={np.mean(var_ratios):.3f}")
-    ax.set_xlabel("Variance Ratio (gen/real)")
-    ax.set_ylabel("Count")
-    ax.set_title("(b) Per-Type Latent Variance Ratio")
-    ax.legend()
+    # Mean + 1σ threshold lines
+    ax.axvline(swd_mean, color="#555", linestyle="--", alpha=0.7, linewidth=1.2,
+               label=f"Mean = {swd_mean:.4f}")
+    ax.axvline(swd_mean + swd_std, color=COLORS["accent"], linestyle=":", alpha=0.6,
+               linewidth=1.0, label=f"+1\u03c3 = {swd_mean + swd_std:.4f}")
 
-    # Panel C: Variance correlation distribution
-    ax = axes[1, 0]
-    ax.hist(var_corrs, bins=25, color=COLORS["good"], alpha=0.8, edgecolor="white")
-    ax.axvline(np.mean(var_corrs), color=COLORS["accent"], linestyle="-.", linewidth=2,
-               label=f"Mean={np.mean(var_corrs):.3f}")
-    ax.set_xlabel("Per-Dimension Variance Correlation")
-    ax.set_ylabel("Count")
-    ax.set_title("(c) Latent Variance Correlation (per dimension)")
-    ax.legend()
+    # Sample size annotation on right side for top outliers
+    for i, r in enumerate(sorted_results):
+        if r["swd"] > swd_mean + swd_std:
+            ax.text(r["swd"] + 0.0003, i, f"n={r['n_real']:,}",
+                    fontsize=7, va="center", color="#666")
 
-    # Panel D: SWD vs. cell count
-    ax = axes[1, 1]
-    n_reals = [r["n_real"] for r in results]
-    ax.scatter(n_reals, swd_values, c=COLORS["real"], alpha=0.6, s=30, edgecolors="white", linewidth=0.5)
-    ax.set_xlabel("Number of Real Cells")
-    ax.set_ylabel("Sliced Wasserstein Distance")
-    ax.set_title("(d) SWD vs. Training Cell Count")
-    ax.set_xscale("log")
+    ax.legend(fontsize=FONT_ANNOTATION, frameon=True, framealpha=0.9, edgecolor="none",
+              loc="lower right")
+    style_axes(ax, "bar", xlabel="SWD (lower is better)", title="Latent SWD per Cell Type")
 
-    # Add correlation annotation (with NaN guard)
-    log_n = np.log10(np.array(n_reals) + 1)
+    # ── Panel (b): Variance Ratio — strip + box plot ──
+    ax2 = fig.add_subplot(gs[0, 1])
+    add_panel_label(ax2, 'b', x=-0.10, y=1.05)
+
+    vr_arr = np.array(var_ratios)
+    vr_median = np.median(vr_arr)
+    vr_q25, vr_q75 = np.percentile(vr_arr, [25, 75])
+    pct_in_band = 100 * np.mean((vr_arr >= 0.9) & (vr_arr <= 1.1))
+
+    # Horizontal box + jitter
+    bp = ax2.boxplot(vr_arr, vert=False, widths=0.5, positions=[0],
+                     patch_artist=True, showfliers=False,
+                     boxprops=dict(facecolor=COLORS["real"], alpha=0.25, linewidth=1.0),
+                     medianprops=dict(color=COLORS["generated"], linewidth=2),
+                     whiskerprops=dict(linewidth=1.0), capprops=dict(linewidth=1.0))
+    jitter_y = np.random.default_rng(42).uniform(-0.18, 0.18, len(vr_arr))
+    ax2.scatter(vr_arr, jitter_y, s=22, alpha=0.6, c=COLORS["real"],
+                edgecolors="white", linewidth=0.3, zorder=3)
+
+    # Reference line + tolerance band
+    ax2.axvline(1.0, color=COLORS["generated"], linestyle="--", linewidth=1.5, label="Ideal (1.0)")
+    ax2.axvspan(0.9, 1.1, alpha=0.08, color=COLORS["good"], label="0.9\u20131.1 band")
+
+    ax2.text(0.97, 0.97,
+             f"Median = {vr_median:.3f}\n"
+             f"IQR = [{vr_q25:.3f}, {vr_q75:.3f}]\n"
+             f"{pct_in_band:.0f}% within \u00b10.1",
+             transform=ax2.transAxes, ha="right", va="top",
+             fontsize=FONT_ANNOTATION, color=COLORS["neutral"],
+             bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="none", alpha=0.88))
+
+    ax2.set_yticks([])
+    ax2.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="lower left")
+    style_axes(ax2, "default",
+               xlabel="Variance Ratio (gen/real); <1 = under-dispersed",
+               title="Per-Type Latent Variance Ratio")
+
+    # ── Panel (c): Per-Dimension Variance Correlation — ECDF + box ──
+    ax3 = fig.add_subplot(gs[1, 0])
+    add_panel_label(ax3, 'c', x=-0.10, y=1.05)
+
+    vc_arr = np.array(var_corrs)
+    vc_sorted = np.sort(vc_arr)
+    ecdf_y = np.arange(1, len(vc_sorted) + 1) / len(vc_sorted)
+
+    ax3.plot(vc_sorted, ecdf_y, color=COLORS["real"], linewidth=2, label="Observed ECDF")
+    ax3.axvline(0, color="#999", linestyle=":", linewidth=1.0, alpha=0.6)
+
+    vc_mean = np.mean(vc_arr)
+    vc_median = np.median(vc_arr)
+    pct_positive = 100 * np.mean(vc_arr > 0)
+
+    ax3.axvline(vc_median, color=COLORS["generated"], linestyle="--", linewidth=1.5,
+                label=f"Median = {vc_median:.3f}")
+
+    ax3.text(0.97, 0.03,
+             f"Mean = {vc_mean:.3f}\n"
+             f"Median = {vc_median:.3f}\n"
+             f"{pct_positive:.0f}% positive\n"
+             f"Note: global variance ratio \u2248 1\n"
+             f"but per-dim structure is weak",
+             transform=ax3.transAxes, ha="right", va="bottom",
+             fontsize=FONT_SMALL, color=COLORS["neutral"],
+             bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="none", alpha=0.88))
+
+    ax3.set_ylim(0, 1.05)
+    ax3.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="upper left")
+    style_axes(ax3, "default",
+               xlabel="Per-Dimension Variance Correlation (real vs. gen)",
+               ylabel="Cumulative Proportion",
+               title="Dimension-Wise Variance Correlation")
+
+    # ── Panel (d): SWD vs. Training Cell Count ──
+    ax4 = fig.add_subplot(gs[1, 1])
+    add_panel_label(ax4, 'd', x=-0.10, y=1.05)
+
+    n_reals = np.array([r["n_real"] for r in results])
     swd_arr = np.array(swd_values)
-    valid = np.isfinite(log_n) & np.isfinite(swd_arr)
-    if valid.sum() >= 3:
-        corr = np.corrcoef(log_n[valid], swd_arr[valid])[0, 1]
-        if np.isnan(corr):
-            corr = 0.0
-    else:
-        corr = 0.0
-    ax.annotate(f"r(log N, SWD) = {corr:.3f}", xy=(0.05, 0.95), xycoords="axes fraction",
-                fontsize=9, ha="left", va="top",
-                bbox=dict(boxstyle="round,pad=0.3", facecolor="wheat", alpha=0.8))
 
-    plt.tight_layout()
-    fig_path = output_dir / "variance_matching_pilot.pdf"
-    plt.savefig(fig_path, dpi=300, bbox_inches="tight")
-    plt.savefig(str(fig_path).replace(".pdf", ".png"), dpi=300, bbox_inches="tight")
+    ax4.scatter(n_reals, swd_arr, c=COLORS["real"], alpha=0.55, s=35,
+                edgecolors="white", linewidth=0.4, zorder=3)
+    ax4.set_xscale("log")
+
+    # Regression line + stats
+    log_n = np.log10(n_reals + 1)
+    valid = np.isfinite(log_n) & np.isfinite(swd_arr)
+
+    if valid.sum() >= 3:
+        slope, intercept, r_val, p_val, _ = scipy_stats.linregress(log_n[valid], swd_arr[valid])
+        spearman_r, spearman_p = scipy_stats.spearmanr(log_n[valid], swd_arr[valid])
+
+        # Regression smoother
+        x_fit = np.linspace(log_n[valid].min(), log_n[valid].max(), 100)
+        y_fit = slope * x_fit + intercept
+        ax4.plot(10 ** x_fit, y_fit, color=COLORS["generated"], linewidth=1.5,
+                 linestyle="-", alpha=0.7, label="OLS fit")
+
+        # Confidence band (approx)
+        n_pts = valid.sum()
+        se = np.sqrt(np.sum((swd_arr[valid] - (slope * log_n[valid] + intercept)) ** 2) / (n_pts - 2))
+        y_ci = 1.96 * se
+        ax4.fill_between(10 ** x_fit, y_fit - y_ci, y_fit + y_ci,
+                         alpha=0.08, color=COLORS["generated"])
+
+        stat_text = (f"Pearson r = {r_val:.3f} (p = {p_val:.1e})\n"
+                     f"Spearman \u03c1 = {spearman_r:.3f} (p = {spearman_p:.1e})\n"
+                     f"n = {n_pts} cell types")
+    else:
+        stat_text = "Insufficient data for correlation"
+
+    ax4.text(0.97, 0.97, stat_text,
+             transform=ax4.transAxes, ha="right", va="top",
+             fontsize=FONT_ANNOTATION, color=COLORS["neutral"],
+             bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="none", alpha=0.88))
+
+    # Label top 3 outliers
+    top3 = np.argsort(swd_arr)[-3:]
+    for idx in top3:
+        lbl = abbreviate_cell_type(results[idx]["name"], max_len=18)
+        ax4.annotate(lbl, (n_reals[idx], swd_arr[idx]),
+                     fontsize=7, xytext=(8, 6), textcoords="offset points",
+                     arrowprops=dict(arrowstyle="->", lw=0.5, color="#888"),
+                     color=COLORS["annotation_dark"])
+
+    ax4.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="upper right")
+    style_axes(ax4, "scatter",
+               xlabel="Training Cell Count (log scale)",
+               ylabel="Sliced Wasserstein Distance",
+               title="SWD vs. Training Cell Count")
+
+    fig_path = output_dir / "variance_matching_pilot.png"
+    save_with_vcd(fig, fig_path, dpi=300, layout_rect=(0.08, 0.04, 0.98, 0.96))
     print(f"\n[var_pilot] Figure saved to {fig_path}")
 
     # Also save to results/figures/ with the article-delivery basename
@@ -240,7 +360,8 @@ def main():
     for suffix in (".pdf", ".png"):
         src = output_dir / f"variance_matching_pilot{suffix}"
         dst = fig_dir / f"fig19_variance_matching_pilot{suffix}"
-        shutil.copy(src, dst)
+        if src.exists():
+            shutil.copy(src, dst)
     print(f"[var_pilot] Copied to {fig_dir / 'fig19_variance_matching_pilot.pdf'}")
     plt.close()
 

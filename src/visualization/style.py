@@ -31,18 +31,18 @@ from matplotlib.ticker import ScalarFormatter
 # Calibrated for MDPI column: half-width panels at figsize=(4.5,3.2) scale ~0.71x
 # at 0.48\linewidth (3.21" print on A4 170mm text width).
 # With composed_scale=0.70, sizes must satisfy: size * 0.70 >= 7pt.
-# → min body text ~10pt, titles ~12pt, ticks ~10pt, legends ~10pt.
+# → min body text ~11pt, titles ~14pt, ticks ~11pt, legends ~11pt.
 VIS_STYLE: dict = {
     "font.family": "sans-serif",
     "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
-    "font.size": 11,
-    "axes.titlesize": 13,
-    "axes.titleweight": "bold",
+    "font.size": 12,
+    "axes.titlesize": 14,
+    "axes.titleweight": "normal",
     "axes.titlepad": 8,
-    "axes.labelsize": 11,
-    "xtick.labelsize": 10,
-    "ytick.labelsize": 10,
-    "legend.fontsize": 10,
+    "axes.labelsize": 12,
+    "xtick.labelsize": 11,
+    "ytick.labelsize": 11,
+    "legend.fontsize": 11,
     "legend.frameon": False,
     "legend.edgecolor": "0.8",
     "axes.linewidth": 1.0,
@@ -133,23 +133,23 @@ TYPE_PALETTE = _build_type_palette(69)
 SUPTITLE_Y = 0.96
 SUPTITLE_Y_CLOSE = SUPTITLE_Y  # Deprecated alias — identical to SUPTITLE_Y
 # Standard legend font size (matches VIS_STYLE legend.fontsize)
-FONT_LEGEND = 10
-# Dense multi-panel figures where 10pt legends would crowd the layout
-FONT_LEGEND_DENSE = 9
+FONT_LEGEND = 11
+# Dense multi-panel figures where 11pt legends would crowd the layout
+FONT_LEGEND_DENSE = 10
 # Architecture diagram (Fig 1) — diagram-specific labels (min 5.5pt per VCD)
-FONT_ARCH_LABEL = 10
-FONT_ARCH_SUBLABEL = 9
+FONT_ARCH_LABEL = 11
+FONT_ARCH_SUBLABEL = 10
 # Centralized font sizes for publication figures
-FONT_SUPTITLE = 14
-FONT_TITLE = 13
-FONT_LABEL = 11
-FONT_TICK = 10
-FONT_TICK_DENSE = 9
-FONT_ANNOTATION = 9
-FONT_SMALL = 8
+FONT_SUPTITLE = 15
+FONT_TITLE = 14
+FONT_LABEL = 12
+FONT_TICK = 11
+FONT_TICK_DENSE = 10
+FONT_ANNOTATION = 10
+FONT_SMALL = 9
 # Minimum-size fonts for dense contexts (replaces illegal sub-7pt values)
-FONT_HEATMAP_CELL = 8      # Heatmap cell annotations (was 7pt)
-FONT_DENSE_YTICK = 8       # Dense y-axis tick labels (was 7pt)
+FONT_HEATMAP_CELL = 9      # Heatmap cell annotations
+FONT_DENSE_YTICK = 9       # Dense y-axis tick labels
 _FONTS_REGISTERED = False
 
 
@@ -210,13 +210,13 @@ def style_axes(
         Adjusts font sizes and grid visibility to suit the subplot type.
     """
     style_map = {
-        "default":  {"title": 13, "label": 11, "tick": 10, "grid": True},
-        "bar":      {"title": 13, "label": 11, "tick": 10, "grid": True},
-        "heatmap":  {"title": 13, "label": 11, "tick": 9,  "grid": False},
-        "scatter":  {"title": 13, "label": 11, "tick": 10, "grid": True},
-        "umap":     {"title": 13, "label": 11, "tick": 10, "grid": False},
-        "polar":    {"title": 13, "label": 11, "tick": 10, "grid": True},
-        "table":    {"title": 13, "label": 11, "tick": 10, "grid": False},
+        "default":  {"title": 14, "label": 12, "tick": 11, "grid": True},
+        "bar":      {"title": 14, "label": 12, "tick": 11, "grid": True},
+        "heatmap":  {"title": 14, "label": 12, "tick": 10, "grid": False},
+        "scatter":  {"title": 14, "label": 12, "tick": 11, "grid": True},
+        "umap":     {"title": 14, "label": 12, "tick": 11, "grid": False},
+        "polar":    {"title": 14, "label": 12, "tick": 11, "grid": True},
+        "table":    {"title": 14, "label": 12, "tick": 11, "grid": False},
     }
     s = style_map.get(kind, style_map["default"])
 
@@ -446,9 +446,15 @@ def save_with_vcd(
         except Exception:
             pass
 
-    # 4) Save PNG + PDF with consistent settings
-    save_kw = dict(dpi=dpi, bbox_inches="tight", pad_inches=0.08)
-    fig.savefig(path, **save_kw)
+    # 4) Save JPEG + PDF with identical settings.
+    #    bbox_inches="tight" recomputes the bounding box each time, which
+    #    is the most reliable way to ensure colorbars/legends are never
+    #    truncated.  Using identical pad_inches ensures the crops match.
+    #    JPEG is used instead of PNG for smaller file sizes while retaining
+    #    sufficient quality for preview / VCD checks.
+    save_kw = dict(dpi=dpi, bbox_inches="tight", pad_inches=0.10)
+    jpg_path = path.with_suffix(".jpg")
+    fig.savefig(jpg_path, **save_kw)
     fig.savefig(path.with_suffix(".pdf"), **save_kw)
 
     if close:

@@ -90,26 +90,26 @@ def plot_expression_analysis(
     hi = max(real_cv.max(), gen_cv.max()) * 1.05
     ax1.plot([lo, hi], [lo, hi], color=COLORS["bad"], linestyle="--", lw=1.5,
              alpha=0.6, label="y = x")
-    ax1.set_xlabel("Real CV (std/|mean|)", fontsize=10)
-    ax1.set_ylabel("Generated CV", fontsize=10)
-    ax1.set_title("Per-Gene Variability (CV)", fontsize=11)
-    add_colorbar_safe(sc, ax=ax1, label="|\u0394CV|", shrink=0.8, pad=0.02)
+    ax1.set_xlabel("Real CV (std/|mean|)", fontsize=11)
+    ax1.set_ylabel("Generated CV", fontsize=11)
+    ax1.set_title("Per-Gene Variability (CV)", fontsize=12)
+    add_colorbar_safe(sc, ax=ax1, label="|\u0394CV|", shrink=0.50, pad=0.03, aspect=16)
 
-    # Annotate top 4 divergent genes with staggered offsets
-    top_cv_idx = np.argsort(cv_diff)[-6:]
-    _offsets_cv = [(-50, -20), (10, 14), (-55, 10), (10, -20), (-45, 28), (18, -28)]
+    # Annotate top 3 divergent genes with staggered offsets
+    top_cv_idx = np.argsort(cv_diff)[-3:]
+    _offsets_cv = [(-70, -30), (20, 22), (-75, 20)]
     for j, i in enumerate(top_cv_idx):
         if i < len(gene_names):
             ax1.annotate(gene_names[i], (real_cv[i], gen_cv[i]),
-                         fontsize=10, xytext=_offsets_cv[j % len(_offsets_cv)],
+                         fontsize=11, xytext=_offsets_cv[j % len(_offsets_cv)],
                          textcoords="offset points",
                          arrowprops=dict(arrowstyle="->", lw=0.5, color="#555"),
                          color="#333")
 
     cv_corr = np.corrcoef(real_cv, gen_cv)[0, 1]
-    ax1.legend(fontsize=8, frameon=False)
-    ax1.text(0.98, 0.02, f"CV corr = {cv_corr:.4f}", transform=ax1.transAxes,
-             ha="right", va="bottom", fontsize=8,
+    ax1.legend(fontsize=10, frameon=False)
+    ax1.text(0.98, 0.02, f"r = {cv_corr:.3f}", transform=ax1.transAxes,
+             ha="right", va="bottom", fontsize=10,
              bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="none", alpha=0.9))
     from matplotlib.ticker import MaxNLocator
     ax1.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
@@ -140,10 +140,10 @@ def plot_expression_analysis(
     ax2.plot(real_means[sort_idx], color=COLORS["real"], lw=1.2, label="Real mean", zorder=3)
     ax2.plot(gen_means[sort_idx], color=COLORS["generated"], lw=1.2, ls="--",
              label="Gen mean", zorder=3)
-    ax2.set_xlabel("Gene index (sorted by real mean)", fontsize=10)
-    ax2.set_ylabel("Expression", fontsize=10)
-    ax2.set_title("Expression Range", fontsize=11)
-    ax2.legend(fontsize=8, loc="upper left", ncol=2, frameon=False)
+    ax2.set_xlabel("Gene index (sorted by real mean)", fontsize=11)
+    ax2.set_ylabel("Expression", fontsize=11)
+    ax2.set_title("Expression Range", fontsize=12)
+    ax2.legend(fontsize=10, loc="upper left", ncol=2, frameon=False)
     add_panel_label(ax2, 'b', x=-0.10, y=1.05)
 
     # -- I3: Per-cell std as overlaid smooth histograms --
@@ -166,10 +166,10 @@ def plot_expression_analysis(
              edgecolor="white", linewidth=0.3, density=True)
     ax3.axvline(x=real_cell_std.mean(), color=COLORS["real"], linestyle="--", lw=1.5)
     ax3.axvline(x=gen_cell_std.mean(), color=COLORS["generated"], linestyle="--", lw=1.5)
-    ax3.set_xlabel("Per-Cell Std Dev", fontsize=10)
-    ax3.set_ylabel("Density", fontsize=10)
-    ax3.set_title("Per-Cell Variability Distribution", fontsize=11)
-    ax3.legend(fontsize=8, loc='upper right', bbox_to_anchor=(1.0, 1.0),
+    ax3.set_xlabel("Per-Cell Std Dev", fontsize=11)
+    ax3.set_ylabel("Density", fontsize=11)
+    ax3.set_title("Per-Cell Variability Distribution", fontsize=12)
+    ax3.legend(fontsize=10, loc='upper right', bbox_to_anchor=(1.0, 1.0),
                frameon=True, facecolor='white', edgecolor='none', framealpha=0.85)
     ax3.locator_params(axis='x', nbins=4)
     add_panel_label(ax3, 'c', x=-0.10, y=1.05)
@@ -177,7 +177,7 @@ def plot_expression_analysis(
     std_ratio = gen_cell_std.mean() / (real_cell_std.mean() + 1e-8)
     ax3.text(0.02, 0.95,
              f"Std ratio: {std_ratio:.3f}",
-             transform=ax3.transAxes, ha="left", va="top", fontsize=8,
+             transform=ax3.transAxes, ha="left", va="top", fontsize=10,
              bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="none", alpha=0.9))
 
     # -- I4: Top variable genes ranked bar chart --
@@ -204,17 +204,17 @@ def plot_expression_analysis(
     ax4.axvline(x=1.0, color="#333", linestyle="-", linewidth=1.5)
     ax4.axvspan(0.9, 1.1, alpha=0.08, color=COLORS["good"])
     ax4.set_yticks(range(n_show))
-    ax4.set_yticklabels(names_show, fontsize=9, ha="right")
-    ax4.set_xlabel("Std Ratio (Gen / Real, clipped at 5\u00d7)", fontsize=10)
-    ax4.set_title("Top Variable Genes (std gen/real)", fontsize=11)
-    add_panel_label(ax4, 'd', x=-0.10, y=1.05)
+    ax4.set_yticklabels(names_show, fontsize=10, ha="right")
+    ax4.set_xlabel("Std Ratio (Gen / Real, clipped at 5\u00d7)", fontsize=11)
+    ax4.set_title("Most Divergent Genes\n(over- & under-dispersed)", fontsize=11, pad=10)
+    add_panel_label(ax4, 'd', x=-0.12, y=1.12)
     placed_annotations: list = []
     for i, r in enumerate(ratios_show):
         # Skip annotations within 0.05 of an already-placed one to avoid overlap
         too_close = any(abs(r - pr) < 0.05 and abs(i - pi) <= 1
                         for pr, pi in placed_annotations)
         if not too_close:
-            ax4.text(r + 0.02, i, f"{r:.2f}\u00d7", va="center", fontsize=8,
+            ax4.text(r + 0.02, i, f"{r:.2f}\u00d7", va="center", fontsize=10,
                      fontweight="normal")
             placed_annotations.append((r, i))
 

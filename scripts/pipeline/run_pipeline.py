@@ -18,8 +18,8 @@ Stages (in order):
   downstream      — downstream_biology
   benchmark       — model_benchmarking
   figures         — generate_architecture_figure + results_visualizer
-  article_delivery — verify + symlink 17 PDFs to articles/figures
-  build_article   — latexmk -pdf (optional)
+  article_delivery — verify + symlink 20 PDFs to articles/figures
+  build_article   — latexmk -g -pdf (optional)
 
 Usage:
   python scripts/pipeline/run_pipeline.py --stage all
@@ -159,7 +159,7 @@ def main() -> int:
 
     if args.build_article:
         print("\n▶ Building article PDF...")
-        code = run(["latexmk", "-pdf", ARTICLE_TEX], cwd=ARTICLE_DIR)
+        code = run(["latexmk", "-g", "-pdf", ARTICLE_TEX], cwd=ARTICLE_DIR)
         if code != 0:
             print("latexmk failed", file=sys.stderr)
             return code

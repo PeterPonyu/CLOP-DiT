@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 class TestArticleFigureManifest:
-    """Canonical list of 17 article figures."""
+    """Canonical list of 20 article figures."""
 
     @staticmethod
     def _article_tex_basenames() -> set[str]:
@@ -20,28 +20,31 @@ class TestArticleFigureManifest:
 
     def test_manifest_length(self):
         from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
-        assert len(ARTICLE_FIGURE_BASENAMES) == 17
+        assert len(ARTICLE_FIGURE_BASENAMES) == 20
 
     def test_manifest_contains_expected_basenames(self):
         from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
         expected = {
             "fig01_architecture",
-            "fig02_training_dynamics",
-            "fig03_embedding_space",
-            "fig04_metrics_summary",
-            "fig05_per_type_generation",
-            "fig06_text_cell_heatmap",
-            "fig07_marker_gene_comparison",
-            "fig08_expression_correlation",
-            "fig09_expression_analysis",
-            "fig10_conditioning_umap",
-            "fig11_diversity_diagnostics",
-            "fig12_noise_tradeoff",
-            "fig13_expression_diversity",
-            "fig14_baseline_comparison",
-            "fig15_benchmark",
-            "fig16_downstream_pq",
-            "fig17_de_concordance",
+            "fig02_evaluation_pipeline",
+            "fig03_training_dynamics",
+            "fig04_embedding_space",
+            "fig05_metrics_summary",
+            "fig06_per_type_fidelity",
+            "fig07_text_cell_alignment",
+            "fig08_marker_genes",
+            "fig09_expression_correlation",
+            "fig10_expression_analysis",
+            "fig11_conditioning_umap",
+            "fig12_diversity_diagnostics",
+            "fig13_noise_tradeoff",
+            "fig14_expression_diversity",
+            "fig15_baseline_comparison",
+            "fig16_benchmark",
+            "fig17_downstream_pq",
+            "fig18_de_concordance",
+            "fig19_variance_matching_pilot",
+            "fig20_gene_gene_correlation",
         }
         for name in expected:
             assert name in ARTICLE_FIGURE_BASENAMES, f"Missing basename: {name}"
@@ -78,7 +81,7 @@ class TestDeliverFigures:
             _SOURCE_BASENAMES,
             deliver_figures,
         )
-        # Create only 16 of 17
+        # Create only 19 of 20
         for base in _SOURCE_BASENAMES[:-1]:
             (tmp_path / f"{base}.pdf").write_bytes(b"%PDF-1.0 dummy\n")
         ok = deliver_figures(tmp_path, tmp_path / "out", symlink=True, check_only=True)

@@ -80,8 +80,8 @@ def plot_expression_correlation(
     pearson_r = metrics["gene_correlation"]["pearson_r"]
     spearman_rho = metrics["gene_correlation"]["spearman_rho"]
 
-    fig = plt.figure(figsize=(11.2, 7.8))
-    gs = fig.add_gridspec(2, 2, wspace=0.62, hspace=0.56)
+    fig = plt.figure(figsize=(12.0, 7.8))
+    gs = fig.add_gridspec(2, 2, wspace=0.70, hspace=0.56)
     # Note: Figure-level title removed per revision requirements; stats moved to caption
     fig._clop_layout_rect = (0.02, 0.03, 0.98, 0.95)
 
@@ -97,25 +97,26 @@ def plot_expression_correlation(
              alpha=0.7, label="y = x", zorder=1)
     ax1.fill_between([lo, hi], [lo - 0.1, hi - 0.1], [lo + 0.1, hi + 0.1],
                      alpha=0.06, color=COLORS["good"], zorder=0)
-    ax1.set_xlabel("Real Mean Expression", fontsize=10)
-    ax1.set_ylabel("Generated Mean Expression", fontsize=10)
-    ax1.set_title("Per-Gene Correlation", fontsize=11)
-    ax1.legend(fontsize=8, loc="upper left", frameon=False)
+    ax1.set_xlabel("Real Mean Expression", fontsize=11)
+    ax1.set_ylabel("Generated Mean Expression", fontsize=11)
+    ax1.set_title("Per-Gene Correlation", fontsize=12)
+    ax1.legend(fontsize=10, loc="upper left", frameon=False)
     from matplotlib.ticker import MaxNLocator as _MaxNLoc
     ax1.xaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
     ax1.yaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
-    cbar = add_colorbar_safe(sc, ax=ax1, label="|Resid|", shrink=0.78, pad=0.03, aspect=24)
-    cbar.ax.tick_params(labelsize=6, length=2)
-    cbar.ax.set_xticks([])
+    cbar = add_colorbar_safe(sc, ax=ax1, label="|Resid|", shrink=0.50, pad=0.03, aspect=16)
+    cbar.ax.tick_params(labelsize=9, length=2)
+    from .style import set_scientific_tickformat
+    set_scientific_tickformat(cbar.ax, axis="y", scilimits=(-2, 2))
     add_panel_label(ax1, 'a', x=-0.10, y=1.05)
 
-    # Annotate outlier genes (top 4 residuals) with staggered offsets
-    outlier_idx = np.argsort(abs_res)[-6:]
-    _offsets = [(-45, -20), (8, 12), (-55, 8), (8, -18), (-40, 25), (15, -25)]
+    # Annotate outlier genes (top 3 residuals) with staggered offsets
+    outlier_idx = np.argsort(abs_res)[-3:]
+    _offsets = [(-60, -25), (15, 18), (-65, 15)]
     for j, i in enumerate(outlier_idx):
         if i < len(gene_names):
             ax1.annotate(gene_names[i], (real_means[i], gen_means[i]),
-                         fontsize=10, xytext=_offsets[j % len(_offsets)],
+                         fontsize=11, xytext=_offsets[j % len(_offsets)],
                          textcoords="offset points",
                          arrowprops=dict(arrowstyle="->", lw=0.5, color="#555"),
                          color="#333")
@@ -134,7 +135,7 @@ def plot_expression_correlation(
             show_idx = list(range(n_show_each)) + list(range(len(type_rs) - n_show_each, len(type_rs)))
             type_names_sorted = [type_names_sorted[i] for i in show_idx]
             type_rs = [type_rs[i] for i in show_idx]
-        short_names = [abbreviate_cell_type(n, 20) for n in type_names_sorted]
+        short_names = [abbreviate_cell_type(n, 24) for n in type_names_sorted]
 
         mean_r = metrics.get("per_type_summary", {}).get("mean_pearson_r", 0)
         min_r = min(type_rs)
@@ -155,16 +156,16 @@ def plot_expression_correlation(
         ax2.axvline(x=mean_r, color=COLORS["bad"], linestyle="--", alpha=0.6, linewidth=1.5,
                     label="mean (see caption)")
         ax2.set_xlim(min_r - 0.0005, 1.00005)
-        ax2.set_xlabel("Pearson r", fontsize=10)
+        ax2.set_xlabel("Pearson r", fontsize=11)
         ax2.legend(
-            fontsize=8,
+            fontsize=10,
             loc="lower right",
             frameon=False,
         )
     else:
         ax2.text(0.5, 0.5, "No per-type data", ha="center", va="center",
                  transform=ax2.transAxes)
-    ax2.set_title("Per-Type Expression Fidelity", fontsize=11)
+    ax2.set_title("Per-Type Expression Fidelity", fontsize=12)
     ax2.xaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
     # Disable scientific/offset notation so Pearson r values near 1.0 display cleanly
     ax2.xaxis.get_major_formatter().set_useOffset(False)
@@ -216,19 +217,20 @@ def plot_expression_correlation(
             if abs(fc - 1.0) > 0.10:
                 color = COLORS["good"] if 0.95 <= fc <= 1.05 else COLORS["bad"]
                 ax3.text(i, max(rm, gm) + max(r_stds[i], g_stds[i]) * 0.5 + 0.01,
-                         f"{fc:.2f}\u00d7", ha="center", fontsize=8, color=color)
+                         f"{fc:.2f}\u00d7", ha="center", fontsize=10, color=color)
 
         ax3.set_xticks(x)
         ax3.set_xticklabels(
             [g for g in all_marker_genes],
-            fontsize=9, rotation=90, ha="center",
+            fontsize=10, rotation=90, ha="center",
         )
-        ax3.set_ylabel("Expression (mean \u00b1 SEM)", fontsize=10)
-        ax3.legend(fontsize=8, loc="lower right", ncol=1, frameon=False)
+        ax3.set_ylabel("Expression (mean \u00b1 SEM)", fontsize=11)
+        ax3.legend(fontsize=10, loc="lower right", ncol=1, frameon=False,
+                   bbox_to_anchor=(1.02, 0.0))
     else:
         ax3.text(0.5, 0.5, "No marker genes found", ha="center", va="center",
                  transform=ax3.transAxes)
-    ax3.set_title("Marker Gene Expression", fontsize=11)
+    ax3.set_title("Marker Gene Expression", fontsize=12)
     # Note: do NOT set xaxis MaxNLocator here -- it would override the explicit
     # gene-name tick labels set above (set_xticks / set_xticklabels).
     ax3.yaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
@@ -238,14 +240,14 @@ def plot_expression_correlation(
     ax4 = fig.add_subplot(gs[1, 1])
     ax4.hist(residuals, bins=60, color=COLORS["real"], alpha=0.7, edgecolor="white",
              density=True)
-    ax4.tick_params(axis='x', labelsize=9, rotation=30)
+    ax4.tick_params(axis='x', labelsize=10, rotation=30)
     ax4.axvline(x=0, color=COLORS["bad"], linestyle="--", linewidth=1.5, label="Zero")
     ax4.axvline(x=residuals.mean(), color=COLORS["warn"], linestyle="-", linewidth=1.5,
-                label=f"Mean={residuals.mean():.4f}")
-    ax4.set_xlabel("Residual (Gen \u2212 Real)", fontsize=10)
-    ax4.set_ylabel("Density", fontsize=10)
-    ax4.set_title("Per-Gene Residual Distribution", fontsize=11)
-    ax4.legend(fontsize=8, frameon=False)
+                label=f"Mean={residuals.mean():.3f}")
+    ax4.set_xlabel("Residual (Gen \u2212 Real)", fontsize=11)
+    ax4.set_ylabel("Density", fontsize=11)
+    ax4.set_title("Per-Gene Residual Distribution", fontsize=12)
+    ax4.legend(fontsize=10, frameon=False)
     ax4.xaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
     ax4.yaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
     add_panel_label(ax4, 'd', x=-0.10, y=1.05)
@@ -254,7 +256,7 @@ def plot_expression_correlation(
     pct_within_001 = (np.abs(residuals) < 0.01).mean() * 100
     ax4.text(0.95, 0.95,
              f"|\u0394|<0.01: {pct_within_001:.0f}%\n|\u0394|<0.10: {pct_within_01:.0f}%",
-             transform=ax4.transAxes, ha="right", va="top", fontsize=8,
+             transform=ax4.transAxes, ha="right", va="top", fontsize=10,
              bbox=dict(boxstyle="round,pad=0.4", fc="white", ec="none", alpha=0.9))
 
     if save:

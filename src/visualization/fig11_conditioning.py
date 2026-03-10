@@ -280,7 +280,7 @@ def plot_panel_m(
         type_short_names = [
             abbreviate_cell_type(
                 type_names.get(int(tid), f"T{tid}") if type_names else f"T{tid}",
-                max_len=18,
+                max_len=22,
             )
             for tid in selected_types
         ]
@@ -338,19 +338,24 @@ def plot_panel_m(
         ax_c3.set_ylabel("Pairwise Cosine Similarity", fontsize=FONT_LABEL)
         ax_c3.set_title("Cluster Tightness", fontsize=FONT_TITLE)
 
-    # ── Legend: cell-type keys, anchored at bottom of figure ──
+    # ── Legend: cell-type keys — place as a figure-level legend below row 1 ──
     handles, labels = axes[0].get_legend_handles_labels()
-    n_legend_cols = min(len(handles), 5)
+    # Remove any subplot-level legend that may have been auto-added
+    for _ax in axes:
+        leg = _ax.get_legend()
+        if leg is not None:
+            leg.remove()
+    n_legend_cols = min(len(handles), 6)
     fig.legend(
         handles, labels, loc="upper center",
+        bbox_to_anchor=(0.5, 0.67 if has_row3 else 0.56),
         ncol=n_legend_cols, fontsize=FONT_TICK_DENSE,
-        markerscale=1.8, frameon=False,
-        columnspacing=1.0, handletextpad=0.4,
-        bbox_to_anchor=(0.5, 0.02),
+        markerscale=1.5, frameon=False,
+        columnspacing=0.6, handletextpad=0.4,
     )
 
-    # Layout rect: no extra top margin needed; legend is at the bottom
-    fig._clop_layout_rect = (0.02, 0.08, 0.98, 0.98)
+    # Layout rect: legend is inside axes, no bottom space needed
+    fig._clop_layout_rect = (0.02, 0.03, 0.98, 0.98)
 
     path = output_dir / "fig11_conditioning_umap.png"
     save_with_vcd(fig, path, dpi)

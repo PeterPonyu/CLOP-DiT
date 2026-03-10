@@ -127,13 +127,13 @@ def plot_marker_gene_comparison(
                 if target_name.lower() in tname.lower():
                     if tid in np.unique(real_labels):
                         selected_type_ids.append(tid)
-                        selected_type_names.append(abbreviate_cell_type(tname, 30))
+                        selected_type_names.append(abbreviate_cell_type(tname, 24))
                         break
     if len(selected_type_ids) < 3 and real_labels is not None:
         unique, counts = np.unique(real_labels, return_counts=True)
         top4 = unique[np.argsort(counts)[-4:]]
         selected_type_ids = top4.tolist()
-        selected_type_names = [abbreviate_cell_type(type_names.get(int(t), f"Type_{t}"), 30)
+        selected_type_names = [abbreviate_cell_type(type_names.get(int(t), f"Type_{t}"), 24)
                                for t in selected_type_ids]
 
     n_markers = len(all_marker_genes)
@@ -163,12 +163,12 @@ def plot_marker_gene_comparison(
              capsize=3, error_kw=dict(lw=0.8))
 
     ax1.set_yticks(y_pos)
-    ax1.set_yticklabels([f"{g[:15]}" for g in all_marker_genes], fontsize=9)
-    ax1.set_xlabel("Mean Expression", fontsize=10)
-    ax1.set_title("Marker Expression by Lineage", fontsize=11)
+    ax1.set_yticklabels([f"{g[:15]}" for g in all_marker_genes], fontsize=10)
+    ax1.set_xlabel("Mean Expression", fontsize=11)
+    ax1.set_title("Marker Expression by Lineage", fontsize=12)
     ax1.grid(axis="x", linestyle=":", linewidth=0.7, alpha=0.35)
     ax1.set_axisbelow(True)
-    ax1.legend(fontsize=8, loc="lower right", frameon=True,
+    ax1.legend(fontsize=10, loc="lower right", frameon=True,
                facecolor="white", edgecolor="none", framealpha=0.9)
     add_panel_label(ax1, 'a', x=-0.10, y=1.05)
 
@@ -200,19 +200,20 @@ def plot_marker_gene_comparison(
             "expr_heat", ["#fff3e0", "#ffcc80", "#ff9800", "#e65100", "#bf360c"], N=256)
         im = ax2.imshow(display, cmap=cmap_n2, aspect="auto", vmin=vmin, vmax=vmax)
         ax2.set_yticks(range(n_sel_types))
-        ax2.set_yticklabels([abbreviate_cell_type(n, 20) for n in selected_type_names], fontsize=8)
+        ax2.set_yticklabels([abbreviate_cell_type(n, 20) for n in selected_type_names], fontsize=10)
         xtick_pos = list(range(n_markers)) + list(range(n_markers + 1, 2 * n_markers + 1))
         xtick_labels = all_marker_genes + all_marker_genes
         ax2.set_xticks(xtick_pos)
-        ax2.set_xticklabels(xtick_labels, fontsize=8, rotation=90, ha="center")
+        ax2.set_xticklabels(xtick_labels, fontsize=10, rotation=90, ha="center")
         # Use an explicit center band so the Real|Generated split survives print and downscaling.
         ax2.axvspan(n_markers - 0.5, n_markers + 0.5, color="#f3f3f3", zorder=0)
         ax2.axvline(x=n_markers, color="#666", linewidth=1.6, linestyle="-")
-        ax2.set_title("Per-Type \u00d7 Marker (Real | Gen)", fontsize=10, pad=8)
+        ax2.axvline(x=n_markers - 0.5, color='black', linewidth=1.5, zorder=5)
+        ax2.set_title("Per-Type \u00d7 Marker (Real | Gen)", fontsize=11, pad=8)
         ax2.text(n_markers / 2 - 0.5, -1.2, "Real", ha="center",
-             fontsize=10, color=COLORS["real"])
+             fontsize=11, color=COLORS["real"])
         ax2.text(n_markers + 0.5 + n_markers / 2 - 0.5, -1.2, "Generated",
-             ha="center", fontsize=10, color=COLORS["generated"])
+             ha="center", fontsize=11, color=COLORS["generated"])
 
         add_colorbar_safe(im, ax=ax2, label="Expr.", shrink=0.6, pad=0.05)
         add_panel_label(ax2, 'b', x=-0.10, y=1.05)
@@ -227,10 +228,10 @@ def plot_marker_gene_comparison(
                  vmin=-max_abs, vmax=max_abs)
         im3.set_rasterized(True)
         ax3.set_yticks(range(n_sel_types))
-        ax3.set_yticklabels([abbreviate_cell_type(n, 20) for n in selected_type_names], fontsize=8)
+        ax3.set_yticklabels([abbreviate_cell_type(n, 20) for n in selected_type_names], fontsize=10)
         ax3.set_xticks(range(n_markers))
-        ax3.set_xticklabels(all_marker_genes, fontsize=10, rotation=90, ha="center")
-        ax3.set_title("\u0394 Expression (Gen \u2212 Real)", fontsize=10)
+        ax3.set_xticklabels(all_marker_genes, fontsize=11, rotation=90, ha="center")
+        ax3.set_title("\u0394 Expression (Gen \u2212 Real)", fontsize=11)
         add_colorbar_safe(im3, ax=ax3, label="\u0394", shrink=0.72, pad=0.06, aspect=14)
         add_panel_label(ax3, 'c', x=-0.10, y=1.05)
         # Only annotate cells with large differences
@@ -239,7 +240,7 @@ def plot_marker_gene_comparison(
                 if abs(diff[i, j]) > max_abs * 0.3:
                     txt_color = "white" if abs(diff[i, j]) > max_abs * 0.5 else "black"
                     ax3.text(j, i, f"{diff[i, j]:+.2f}",
-                             ha="center", va="center", fontsize=8, color=txt_color,
+                             ha="center", va="center", fontsize=10, color=txt_color,
                              fontweight="normal")
 
         # N4: Log2 fold-change diverging horizontal bar chart
@@ -258,15 +259,15 @@ def plot_marker_gene_comparison(
                  alpha=0.85)
         ax4.axvline(x=0, color="#333", linewidth=1.5, linestyle="-")
         ax4.set_yticks(range(n_markers))
-        ax4.set_yticklabels(names_sorted, fontsize=8)
-        ax4.set_xlabel("log$_2$ Fold Change (Gen / Real)", fontsize=10)
-        ax4.set_title("Marker Fold Change", fontsize=11)
+        ax4.set_yticklabels(names_sorted, fontsize=10)
+        ax4.set_xlabel("log$_2$ Fold Change (Gen / Real)", fontsize=11)
+        ax4.set_title("Marker Fold Change", fontsize=12)
         add_panel_label(ax4, 'd', x=-0.10, y=1.05)
         for i, lfc in enumerate(log2fc_sorted):
             if abs(lfc) < 0.005:
                 continue
             ax4.text(lfc + 0.002 if lfc >= 0 else lfc - 0.002, i,
-                     f"{lfc:+.3f}", va="center", fontsize=8,
+                     f"{lfc:+.2f}", va="center", fontsize=10,
                      ha="left" if lfc >= 0 else "right",
                      fontweight="bold" if abs(lfc) > 0.07 else "normal")
     else:

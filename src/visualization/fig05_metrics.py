@@ -132,7 +132,7 @@ def plot_diversity_distributions_violin(
             mean_points_c.append(colors[label])
 
         xtick_positions.append(base)
-        short_name = abbreviate_cell_type(name, 20)
+        short_name = abbreviate_cell_type(name, 24)
         xtick_labels.append(short_name)
 
     if not violin_data:
@@ -167,7 +167,7 @@ def plot_diversity_distributions_violin(
         clip_on=True,
     )
     ax.set_xticks(xtick_positions)
-    ax.set_xticklabels(xtick_labels, rotation=25, ha="right", fontsize=8)
+    ax.set_xticklabels(xtick_labels, rotation=25, ha="right", fontsize=10)
     ax.set_ylabel("Pairwise Cosine Similarity")
     ax.set_title("Diversity Distribution Tails (most shifted cell types)")
     ax.grid(True, axis="y", alpha=0.22)
@@ -183,7 +183,7 @@ def plot_diversity_distributions_violin(
         transform=ax.transAxes,
         ha="left",
         va="top",
-        fontsize=8,
+        fontsize=10,
         color=COLORS["neutral"],
     )
     for label, color in colors.items():
@@ -374,8 +374,8 @@ def plot_metrics_summary(
     if not train_metrics and not gen_metrics:
         return None
 
-    fig = plt.figure(figsize=(13.0, 8.4))
-    gs = fig.add_gridspec(2, 2, wspace=0.44, hspace=0.56, width_ratios=[1.02, 1.0])
+    fig = plt.figure(figsize=(14.0, 8.4))
+    gs = fig.add_gridspec(2, 2, wspace=0.56, hspace=0.56, width_ratios=[1.1, 1.0])
     fig._clop_layout_rect = (0.03, 0.04, 0.97, 0.95)
     # Note: Figure-level title removed per revision requirements
 
@@ -411,7 +411,7 @@ def plot_metrics_summary(
         bars = ax1.barh(y_pos, display_vals, color=colors_d1, height=0.6,
                         edgecolor="white", linewidth=0.8)
         ax1.set_yticks(y_pos)
-        ax1.set_yticklabels(names, fontsize=8)
+        ax1.set_yticklabels(names, fontsize=10)
 
         # Add value labels and bootstrap CI whiskers
         for i, (bar, dv, n) in enumerate(zip(bars, display_vals, names)):
@@ -443,7 +443,7 @@ def plot_metrics_summary(
             ax1.text(bar.get_width() + 0.5, bar.get_y() + bar.get_height() / 2,
                      fmt + ci_text, va="center", fontsize=FONT_SMALL)
         ax1.set_xlabel("Value (accuracy shown as %)")
-        ax1.set_title("Training Convergence", fontsize=11)
+        ax1.set_title("Training Convergence", fontsize=12)
         ax1.invert_yaxis()
         from matplotlib.ticker import MaxNLocator as _MNL
         ax1.xaxis.set_major_locator(_MNL(nbins=5, prune="both"))
@@ -452,8 +452,8 @@ def plot_metrics_summary(
     else:
         ax1.text(0.5, 0.5, "No training history available",
                  ha="center", va="center", transform=ax1.transAxes,
-                 fontsize=9, color=COLORS["neutral"])
-        ax1.set_title("Training Convergence", fontsize=11)
+                 fontsize=10, color=COLORS["neutral"])
+        ax1.set_title("Training Convergence", fontsize=12)
     add_panel_label(ax1, 'a', x=-0.10, y=1.05)
 
     # ── D2: Generation quality bar chart (replaces radar for clarity) ──
@@ -490,13 +490,13 @@ def plot_metrics_summary(
             ax2.set_xticklabels(bar_labels, fontsize=FONT_TICK_DENSE)
             ax2.set_ylim(0, 1.15)
             ax2.set_ylabel("Score", fontsize=FONT_LABEL)
-            # Add value annotations on bars
+            # Add value annotations on bars (above scatter)
             for bar, val in zip(bars, bar_vals):
                 ax2.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.02,
                          f"{val:.3f}", ha="center", va="bottom",
                          fontsize=FONT_ANNOTATION, fontweight="bold",
-                         color=COLORS["real"])
-            # Overlay Gaussian baseline
+                         color=COLORS["real"], zorder=8)
+            # Overlay Gaussian baseline (lower zorder so it doesn't mask annotations)
             gauss_bl = baseline_data.get("Gaussian N(\u03bc,\u03c3\u00b2I)", {})
             if not gauss_bl:
                 gauss_bl = bench_baselines.get("Gaussian N(\u03bc,\u03c3\u00b2I)", {})
@@ -516,7 +516,7 @@ def plot_metrics_summary(
                         bl_vals.append(0)
                     else:
                         bl_vals.append(0)
-                ax2.scatter(x_pos, bl_vals, marker="D", s=60, zorder=5,
+                ax2.scatter(x_pos, bl_vals, marker="o", s=80, zorder=4,
                             color=COLORS["baseline_gauss"], edgecolors="white",
                             linewidth=0.8, label="Gaussian")
                 ax2.legend(fontsize=FONT_LEGEND_DENSE, frameon=False, loc="upper right")
@@ -552,7 +552,7 @@ def plot_metrics_summary(
             gauss_bl_d3 = bench_baselines.get("Gaussian N(\u03bc,\u03c3\u00b2I)", {})
         gauss_div_ratio = gauss_bl_d3.get("diversity_ratio", None)
 
-        gauge_text_x = max(item[2] for item in gauge_items) + 0.18
+        gauge_text_x = max(item[2] for item in gauge_items) + 0.22
         for i, (label, val, max_val, color, bci_key) in enumerate(gauge_items):
             ax3.barh(i, max_val, height=0.5, color=COLORS["bg_gauge"],
                      edgecolor="none", zorder=1)
@@ -561,26 +561,22 @@ def plot_metrics_summary(
 
             # Build annotation text with CI if available
             ci_text = ""
+            display_val = val
             if bci_key and bci_key in bootstrap_cis:
                 ci = bootstrap_cis[bci_key]
                 ci_lo = ci.get("ci_95_lower", 0)
                 ci_hi = ci.get("ci_95_upper", 0)
-                # Draw CI whisker on the gauge
-                ax3.plot([ci_lo, ci_hi], [i, i],
-                         color=COLORS["annotation_dark"], linewidth=1.5, zorder=4)
-                ax3.plot([ci_lo, ci_lo], [i - 0.1, i + 0.1],
-                         color=COLORS["annotation_dark"], linewidth=1.0, zorder=4)
-                ax3.plot([ci_hi, ci_hi], [i - 0.1, i + 0.1],
-                         color=COLORS["annotation_dark"], linewidth=1.0, zorder=4)
+                # Use bootstrap point estimate for consistency with CI bounds
+                display_val = ci.get("mean", ci.get("point_estimate", val))
                 ci_text = f"  [{ci_lo:.3f}, {ci_hi:.3f}]"
 
-            ann_text = f"{val:.3f}" + ci_text
+            ann_text = f"{display_val:.3f}" + ci_text
             ax3.text(gauge_text_x, i, ann_text,
-                     va="center", fontsize=8, zorder=3)
+                     va="center", fontsize=10, zorder=3)
 
 
         ax3.set_yticks(range(len(gauge_items)))
-        ax3.set_yticklabels([g[0] for g in gauge_items], fontsize=8)
+        ax3.set_yticklabels([g[0] for g in gauge_items], fontsize=10)
         ax3.invert_yaxis()
         ax3.set_xlim(0, gauge_text_x + 0.70)
 
@@ -590,8 +586,8 @@ def plot_metrics_summary(
         ax3.text(0.98, 0.02,
                  f"Collapsed: {collapsed}/{total} | Near-copies: {copies}",
                  transform=ax3.transAxes, ha="right", va="bottom",
-                 fontsize=8, color=COLORS["neutral"])
-        ax3.set_title("Diversity Health", fontsize=11)
+                 fontsize=10, color=COLORS["neutral"])
+        ax3.set_title("Diversity Health", fontsize=12)
         ax3.set_xlabel("Score")
         from matplotlib.ticker import MaxNLocator as _MNL3
         ax3.xaxis.set_major_locator(_MNL3(nbins=5, prune="both"))
@@ -618,10 +614,10 @@ def plot_metrics_summary(
         bars = ax4.barh(y_pos, vals, color=colors_d4, height=0.5,
                         edgecolor="white", linewidth=0.8)
         ax4.set_yticks(y_pos)
-        ax4.set_yticklabels([n for n, _ in expr_items], fontsize=8)
+        ax4.set_yticklabels([n for n, _ in expr_items], fontsize=10)
         for i, (bar, v) in enumerate(zip(bars, vals)):
             ax4.text(bar.get_width() + 0.0002, bar.get_y() + bar.get_height() / 2,
-                     f"{v:.6f}", va="center", fontsize=8)
+                     f"{v:.3f}", va="center", fontsize=10)
         ax4.invert_yaxis()
         min_val = min(vals) - 0.001
         ax4.set_xlim(min_val - 0.001, 1.015)
@@ -631,13 +627,13 @@ def plot_metrics_summary(
                     linestyle="--", alpha=0.6, zorder=1)
         ax4.annotate("ref r=0.9999", xy=(0.9999, 0.98),
                  xycoords=("data", "axes fraction"),
-                 xytext=(6, -2), textcoords="offset points",
-                 fontsize=FONT_SMALL, color=COLORS["warn"], alpha=0.85,
+                 xytext=(8, -2), textcoords="offset points",
+                 fontsize=FONT_SMALL, color=COLORS["annotation_dark"], alpha=0.85,
                  ha="left", va="top")
 
         from matplotlib.ticker import MaxNLocator as _MNL4
         ax4.xaxis.set_major_locator(_MNL4(nbins=5, prune="both"))
-        ax4.set_title("Expression Fidelity", fontsize=11)
+        ax4.set_title("Expression Fidelity", fontsize=12)
         ax4.grid(axis='both', alpha=0.15, linestyle='--')
 
     else:

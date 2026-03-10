@@ -56,9 +56,9 @@ def plot_diagnostics(
     apply_style()
 
     # ── Figure 12: Diversity Diagnostics (4 subplots) ──
-    fig, axes = plt.subplots(2, 2, figsize=(9.0, 7.5),
-                             gridspec_kw={"hspace": 0.60, "wspace": 0.55})
-    fig._clop_layout_rect = (0.02, 0.03, 0.82, 0.95)
+    fig, axes = plt.subplots(2, 2, figsize=(10.0, 8.2),
+                             gridspec_kw={"hspace": 0.65, "wspace": 0.62})
+    fig._clop_layout_rect = (0.02, 0.08, 0.98, 0.96)
     add_panel_label(axes[0, 0], 'a', x=-0.10, y=1.05)
     add_panel_label(axes[0, 1], 'b', x=-0.10, y=1.05)
     add_panel_label(axes[1, 0], 'c', x=-0.10, y=1.05)
@@ -143,9 +143,9 @@ def plot_diagnostics(
         ax.bar(x - w / 2, cent_divs, w, label="Centroid Cond", color=COLORS["real"], alpha=0.8)
         ax.bar(x + w / 2, noise_divs, w, label="Centroid + Noise", color=COLORS["generated"], alpha=0.8)
         ax.set_xticks(x)
-        _type_labels_d = [abbreviate_cell_type(type_names.get(int(k), f"Type {k}"), 18)
+        _type_labels_d = [abbreviate_cell_type(type_names.get(int(k), f"Type {k}"), 22)
                           for k in type_ids]
-        ax.set_xticklabels(_type_labels_d, fontsize=FONT_DENSE_YTICK, rotation=30, ha="right")
+        ax.set_xticklabels(_type_labels_d, fontsize=FONT_DENSE_YTICK, rotation=20, ha="right")
         ax.set_xlabel("Cell Type")
         ax.set_ylabel("Intra-Type Diversity (1 - mean cosine)")
         gain = t5["summary"]["mean_diversity_gain"]
@@ -164,8 +164,9 @@ def plot_diagnostics(
                 _handles.append(_h)
                 _labels.append(_l)
     if _handles:
-        fig.legend(_handles, _labels, loc='center right',
-                   bbox_to_anchor=(0.99, 0.5), fontsize=8, frameon=False, ncol=1)
+        fig.legend(_handles, _labels, loc='lower center',
+                   bbox_to_anchor=(0.5, -0.04), fontsize=10, frameon=False,
+                   ncol=min(len(_handles), 4))
 
     path = out / "fig12_diversity_diagnostics.png"
     save_with_vcd(fig, path, dpi)

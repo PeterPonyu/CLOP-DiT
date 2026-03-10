@@ -2,8 +2,8 @@
 fig16_benchmark.py — Fig 16: Comprehensive model benchmarking visualization.
 
   S1: Metrics heatmap (methods x metrics, colour-coded)
-  S2: Composite score bar chart with bootstrap CIs
-  S3: Per-metric ranking strip with rank badges
+  S2: Composite score bar chart with rank badges
+  S3: Key metrics comparison — grouped bar chart
   S4: FD & Centroid Cosine CI comparison (error-bar plot)
 """
 
@@ -19,7 +19,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .style import (
-    COLORS, FONT_SMALL, METHOD_COLORS, abbreviate_cell_type, add_colorbar_safe, add_panel_label, save_panel, save_with_vcd, set_figure_suptitle, style_axes
+    COLORS, FONT_SMALL, FONT_ANNOTATION, METHOD_COLORS, abbreviate_cell_type,
+    add_colorbar_safe, add_panel_label, save_panel, save_with_vcd,
+    set_figure_suptitle, style_axes
 )
 from src.utils.paths import RESULTS_DIR, FIG_DIR
 
@@ -36,8 +38,8 @@ def plot_benchmark_panel(
 
     S1: Metrics heatmap — methods x metrics, cell-coloured by normalised value
     S2: Composite score — horizontal bars with score labels
-    S3: Key metrics comparison — grouped bar chart for FD, Cosine, Diversity, Coverage
-    S4: Confidence interval comparison — error-bar plot for FD and Centroid Cosine
+    S3: Key metrics comparison — grouped bar chart
+    S4: Confidence interval comparison — error-bar plot
     """
     report_path = report_path or str(RESULTS_DIR / "benchmark_report.json")
     output_dir = output_dir or FIG_DIR
@@ -58,7 +60,7 @@ def plot_benchmark_panel(
         return None
 
     # Derive composite scores from normalised metrics when the report
-    # does not include pre-computed composite scores (avoids text-only S2).
+    # does not include pre-computed composite scores.
     if not composite and methods_data:
         _dir_map = {"lower": -1, "higher": 1}
         _hm = [
@@ -81,25 +83,23 @@ def plot_benchmark_panel(
     method_names = list(methods_data.keys())
     n_methods = len(method_names)
 
-    # Metrics to display in the heatmap
+    # Metrics to display in the heatmap — readable names with direction arrows
     heatmap_metrics = [
-        ("frechet_distance", "FD\u2193", "lower"),
-        ("mmd_rbf", "MMD\u2193", "lower"),
-        ("mean_kl", "KL\u2193", "lower"),
-        ("coverage", "Cov\u2191", "higher"),
-        ("density", "Den\u2191", "higher"),
-        ("mean_centroid_cosine", "Cos\u2191", "higher"),
-        ("min_centroid_cosine", "Min\u2191", "higher"),
-        ("diversity_ratio", "Div\u2191", "higher"),
-        ("fraction_collapsed", "Col\u2193", "lower"),
-        ("gene_pearson_r", "gPr\u2191", "higher"),
-        ("gene_spearman_rho", "gSp\u2191", "higher"),
+        ("frechet_distance",     "Fr\u00e9chet \u2193",     "lower"),
+        ("mmd_rbf",              "MMD \u2193",              "lower"),
+        ("mean_kl",              "KL \u2193",               "lower"),
+        ("coverage",             "Coverage \u2191",         "higher"),
+        ("density",              "Density \u2191",          "higher"),
+        ("mean_centroid_cosine", "Centroid Cos \u2191",     "higher"),
+        ("min_centroid_cosine",  "Min Cos \u2191",          "higher"),
+        ("diversity_ratio",      "Diversity \u2191",        "higher"),
+        ("fraction_collapsed",   "Collapsed \u2193",        "lower"),
+        ("gene_pearson_r",       "Gene r \u2191",           "higher"),
+        ("gene_spearman_rho",    "Gene \u03c1 \u2191",      "higher"),
     ]
 
-    fig = plt.figure(figsize=(15.0, 9.5))
+    fig = plt.figure(figsize=(16.0, 10.0))
     gs = fig.add_gridspec(2, 2, wspace=0.55, hspace=0.50, height_ratios=[1.0, 1.15])
-    # Title moved to LaTeX caption
-    # set_figure_suptitle(fig, "Model Benchmarking — CLOP-DiT vs Baselines", fontsize=11)
 
     # ── S1: Heatmap (methods x metrics) ──
     ax1 = fig.add_subplot(gs[0, 0])
@@ -108,7 +108,7 @@ def plot_benchmark_panel(
     metric_keys = [m[0] for m in heatmap_metrics]
     directions = [m[2] for m in heatmap_metrics]
 
-    # Build raw values matrix (None -> NaN for proper handling)
+    # Build raw values matrix
     raw = np.full((n_methods, len(metric_keys)), np.nan)
     for i, mname in enumerate(method_names):
         for j, mk in enumerate(metric_keys):
@@ -117,7 +117,6 @@ def plot_benchmark_panel(
                 raw[i, j] = v
 
     # Normalise each column to [0, 1] with direction awareness
-    # NaN (missing capability) -> normalised score 0.0 (worst)
     norm = np.zeros_like(raw)
     for j in range(len(metric_keys)):
         col = raw[:, j]
@@ -129,33 +128,31 @@ def plot_benchmark_panel(
         rng = max(mx - mn, 1e-8)
         for i in range(n_methods):
             if np.isnan(raw[i, j]):
-                norm[i, j] = 0.0  # penalise missing capability
+                norm[i, j] = 0.0
             elif directions[j] == "lower":
                 norm[i, j] = 1.0 - (raw[i, j] - mn) / rng
             else:
                 norm[i, j] = (raw[i, j] - mn) / rng
 
-    # Plot heatmap
     cmap = matplotlib.colormaps.get_cmap("PiYG")
     im = ax1.imshow(norm, cmap=cmap, aspect="auto", vmin=0, vmax=1)
 
-    # Labels
     short_method_names = [abbreviate_cell_type(n, 20) for n in method_names]
     ax1.set_xticks(range(len(metric_labels)))
     ax1.set_xticklabels(metric_labels, rotation=55, ha="right", fontsize=8)
     ax1.set_yticks(range(n_methods))
-    ax1.set_yticklabels(short_method_names, fontsize=8)
+    ax1.set_yticklabels(short_method_names, fontsize=9)
 
-    # Highlight best cell in each column (no cell text — colours tell the story)
+    # Highlight best cell in each column
     for j in range(len(metric_keys)):
         best_i = norm[:, j].argmax()
         ax1.add_patch(plt.Rectangle((j - 0.5, best_i - 0.5), 1, 1,
                                     fill=False, edgecolor=COLORS["good"], linewidth=2.5))
 
-    add_colorbar_safe(im, ax=ax1, label="Normalised Score (1=best)", shrink=0.6, pad=0.08)
+    add_colorbar_safe(im, ax=ax1, label="Normalised Score (1 = best)", shrink=0.6, pad=0.08)
     style_axes(ax1, "heatmap", title="Metrics Comparison Heatmap")
 
-    # ── S2: Composite score bars (full + common-metrics-only) ──
+    # ── S2: Composite score bars ──
     ax2 = fig.add_subplot(gs[0, 1])
     add_panel_label(ax2, 'b', x=-0.10, y=1.05)
     composite_common = report.get("composite_score_common_metrics_only", composite)
@@ -165,29 +162,28 @@ def plot_benchmark_panel(
     bar_colors = [METHOD_COLORS.get(m, COLORS["neutral"]) for m in sorted_methods]
     short_sorted = [abbreviate_cell_type(m, 20) for m in sorted_methods]
 
-    # Merge rank badges directly into ytick labels to avoid overlap
     ranked_labels = []
     for i, name in enumerate(short_sorted):
-        badge = "#1" if i == 0 else "#2" if i == 1 else "#3" if i == 2 else f"#{i+1}"
+        badge = f"#{i+1}"
         ranked_labels.append(f"{badge} {name}")
 
     y_pos = np.arange(len(sorted_methods))
     bar_height = 0.35
     bars_full = ax2.barh(y_pos + bar_height / 2, scores, color=bar_colors,
                          height=bar_height, edgecolor="white", linewidth=0.8,
-                         alpha=0.40, hatch="//", label="All 17 metrics (biased)")
+                         alpha=0.40, hatch="//", label="All metrics (full)")
     bars_common = ax2.barh(y_pos - bar_height / 2, scores_common, color=bar_colors,
                            height=bar_height, edgecolor="white", linewidth=0.8,
-                           alpha=0.90, label="Common metrics only (PRIMARY)")
+                           alpha=0.90, label="Common metrics (primary)")
     ax2.set_yticks(y_pos)
-    ax2.set_yticklabels(ranked_labels, fontsize=8)
+    ax2.set_yticklabels(ranked_labels, fontsize=9)
     ax2.invert_yaxis()
 
-    for i, (bar, score) in enumerate(zip(bars_full, scores)):
+    for bar, score in zip(bars_full, scores):
         ax2.text(bar.get_width() + 0.01, bar.get_y() + bar.get_height() / 2,
                  f"{score:.3f}", va="center", fontsize=FONT_SMALL,
                  color=COLORS["neutral"])
-    for i, (bar, score) in enumerate(zip(bars_common, scores_common)):
+    for bar, score in zip(bars_common, scores_common):
         ax2.text(bar.get_width() + 0.01, bar.get_y() + bar.get_height() / 2,
                  f"{score:.3f}", va="center", fontsize=FONT_SMALL, fontstyle="italic",
                  color=COLORS["neutral"])
@@ -201,11 +197,11 @@ def plot_benchmark_panel(
     ax3 = fig.add_subplot(gs[1, 0])
     add_panel_label(ax3, 'c', x=-0.10, y=1.05)
     key_metrics = [
-        ("frechet_distance", "FD \u2193"),
-        ("mean_centroid_cosine", "Cos \u2191"),
-        ("diversity_ratio", "Div \u2191"),
-        ("coverage", "Cov \u2191"),
-        ("gene_pearson_r", "Gene r \u2191"),
+        ("frechet_distance",     "Fr\u00e9chet Dist. \u2193"),
+        ("mean_centroid_cosine", "Centroid Cos. \u2191"),
+        ("diversity_ratio",      "Diversity \u2191"),
+        ("coverage",             "Coverage \u2191"),
+        ("gene_pearson_r",       "Gene r \u2191"),
     ]
 
     x = np.arange(len(key_metrics))
@@ -213,7 +209,6 @@ def plot_benchmark_panel(
 
     for i, mname in enumerate(method_names):
         vals = [methods_data[mname].get(km[0]) for km in key_metrics]
-        # Replace None with 0 for bar plotting
         vals_plot = [v if v is not None else 0.0 for v in vals]
         offset = (i - n_methods / 2 + 0.5) * w
         color = METHOD_COLORS.get(mname, f"C{i}")
@@ -221,8 +216,9 @@ def plot_benchmark_panel(
                 color=color, alpha=0.85, edgecolor="white")
 
     ax3.set_xticks(x)
-    ax3.set_xticklabels([km[1] for km in key_metrics], fontsize=10)
-    ax3.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.20), ncol=min(n_methods, 4), frameon=False, columnspacing=0.8)
+    ax3.set_xticklabels([km[1] for km in key_metrics], fontsize=9, rotation=20, ha="right")
+    ax3.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.15),
+               ncol=min(n_methods, 4), frameon=False, columnspacing=0.8)
     fig._clop_layout_rect = (0.02, 0.08, 0.98, 0.95)
     style_axes(ax3, "bar", title="Key Metrics Comparison", ylabel="Value")
 
@@ -230,9 +226,9 @@ def plot_benchmark_panel(
     ax4 = fig.add_subplot(gs[1, 1])
     add_panel_label(ax4, 'd', x=-0.10, y=1.05)
     ci_metrics = [
-        ("frechet_distance", "fd_ci", "FD"),
-        ("mean_centroid_cosine", "centroid_cosine_ci", "Centroid Cos"),
-        ("diversity_ratio", "diversity_ratio_ci", "Diversity"),
+        ("frechet_distance",     "fd_ci",              "Fr\u00e9chet Distance"),
+        ("mean_centroid_cosine", "centroid_cosine_ci",  "Centroid Cosine"),
+        ("diversity_ratio",      "diversity_ratio_ci",  "Diversity Ratio"),
     ]
 
     group_positions = []
@@ -240,6 +236,11 @@ def plot_benchmark_panel(
     all_y = 0
 
     for mi, (metric_key, ci_key, label) in enumerate(ci_metrics):
+        # Add metric group title
+        if mi > 0:
+            ax4.axhline(y=all_y - 0.8, color="#DDD", linewidth=1, linestyle="--")
+            all_y += 0.6
+
         for mname in method_names:
             val = methods_data[mname].get(metric_key, 0)
             ci = methods_data[mname].get(ci_key, None)
@@ -259,22 +260,16 @@ def plot_benchmark_panel(
             group_positions.append(all_y)
             group_labels.append(f"{mname[:14]}")
             all_y += 1.6
-        # Add metric group separator
-        if mi < len(ci_metrics) - 1:
-            ax4.axhline(y=all_y - 0.8, color="#DDD", linewidth=1, linestyle="--")
-            all_y += 1.2
 
     ax4.set_yticks(group_positions)
     ax4.set_yticklabels(group_labels, fontsize=8)
     ax4.invert_yaxis()
 
-    # Add metric group titles on the right — removed: y-labels already convey grouping
-
-    ax4.legend(fontsize=FONT_SMALL, loc="center left", bbox_to_anchor=(1.02, 0.5), ncol=1, frameon=False, borderaxespad=0.0)
+    ax4.legend(fontsize=FONT_SMALL, loc="lower right", ncol=1, frameon=False)
     style_axes(ax4, "default", title="95% Bootstrap CI Comparison",
                xlabel="Metric Value")
 
     if save:
         path = save_with_vcd(fig, output_dir / "fig16_benchmark.png", dpi, layout_rect=(0.02, 0.08, 0.98, 0.94))
-        logger.info(f"Saved Fig 16 → {path}")
+        logger.info(f"Saved Fig 16 \u2192 {path}")
     return fig

@@ -89,7 +89,7 @@ C_WHITE = "#FFFFFF"
 # ---------------------------------------------------------------------------
 
 def draw_box(ax, xy, w, h, label, sublabel=None, facecolor=C_WHITE,
-             edgecolor=C_GREY, fontsize=8, sublabel_size=7.0,
+             edgecolor=C_GREY, fontsize=10, sublabel_size=9.0,
              textcolor="black", bold=False, linewidth=1.0, zorder=3,
              boxstyle="round,pad=0.08"):
     """Draw a rounded box with centred label text."""
@@ -161,7 +161,7 @@ def draw_stage_bg(ax, xy, w, h, label, color, alpha=0.10, label_color=None):
         x + w / 2, y + h + 0.02,
         label,
         ha="center", va="bottom",
-        fontsize=8, fontweight="normal",
+        fontsize=10, fontweight="normal",
         color=lc,
         zorder=1,
     )
@@ -176,7 +176,7 @@ def create_architecture_figure(output_dir=None):
         from src.utils.paths import FIG_DIR
         output_dir = Path(FIG_DIR)
     output_dir = Path(output_dir)
-    fig, ax = plt.subplots(figsize=(8.8, 3.2))
+    fig, ax = plt.subplots(figsize=(10.0, 3.8))
     # Use non-equal aspect so we can fill the canvas properly
     ax.set_xlim(-0.20, 7.95)
     ax.set_ylim(-0.18, 3.15)
@@ -374,7 +374,7 @@ def create_architecture_figure(output_dir=None):
     # Labels inside DiT block
     cx_dit = dit_bx + dit_bw / 2
     ax.text(cx_dit, dit_by + dit_bh - 0.14, "DiT1D",
-            ha="center", va="center", fontsize=9,
+            ha="center", va="center", fontsize=10,
             color="black", zorder=5)
     ax.text(cx_dit, dit_by + dit_bh - 0.32, "8 AdaLN-Zero",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL,
@@ -419,8 +419,8 @@ def create_architecture_figure(output_dir=None):
                (cond_bx, cond_by + cond_bh / 2),
                color=C_SHARED, linewidth=1.0,
                connectionstyle="arc3,rad=-0.08")
-    cond_label_x = (shared_x + cond_bx) / 2 - 0.01
-    cond_label_y = shared_y - 0.18
+    cond_label_x = cond_bx + cond_bw / 2
+    cond_label_y = cond_by - 0.22
     cond_label = FancyBboxPatch(
         (cond_label_x - 0.26, cond_label_y - 0.07), 0.52, 0.16,
         boxstyle="round,pad=0.03",
@@ -437,8 +437,8 @@ def create_architecture_figure(output_dir=None):
     draw_arrow(ax, (cond_bx + cond_bw / 2, cond_by + cond_bh),
                (dit_bx + dit_bw * 0.35, dit_by),
                color=C_SHARED, linewidth=1.0)
-    adaln_box_x = dit_bx + dit_bw * 0.35 + 0.20
-    adaln_box_y = dit_by - 0.19
+    adaln_box_x = cond_bx + cond_bw / 2 + 0.35
+    adaln_box_y = cond_by + cond_bh + 0.04
     adaln_box = FancyBboxPatch(
         (adaln_box_x, adaln_box_y), 0.42, 0.17,
         boxstyle="round,pad=0.03",
@@ -494,18 +494,18 @@ def create_architecture_figure(output_dir=None):
                (dec_x0, dec_y_mid + SBH / 2),
                color=C_GEN_MID, linewidth=1.3)
     sampled_label_x = (ode_x + ode_w + dec_x0) / 2
-    sampled_label_y = dec_y_mid + SBH / 2 - 0.14
+    sampled_label_y = dec_y_mid + SBH / 2 + 0.32
     sampled_label = FancyBboxPatch(
         (sampled_label_x - 0.33, sampled_label_y - 0.07), 0.66, 0.16,
         boxstyle="round,pad=0.03",
         facecolor=C_WHITE,
         edgecolor=C_GEN_DARK,
         linewidth=0.8,
-        zorder=5,
+        zorder=8,
     )
     ax.add_patch(sampled_label)
     ax.text(sampled_label_x, sampled_label_y, "sampled latent",
-            ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=6)
+            ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=9)
 
     # scGPT Decoder
     dec_bx = dec_x0 + z1_w + 0.10

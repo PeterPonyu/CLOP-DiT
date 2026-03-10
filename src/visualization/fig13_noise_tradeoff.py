@@ -82,14 +82,14 @@ def plot_panel_l(
     ax1.legend(
         lines1 + lines2,
         labels1 + labels2,
-        loc="upper right",
-        bbox_to_anchor=(1.0, 1.0),
+        loc="upper left",
+        bbox_to_anchor=(0.0, 1.0),
         ncol=1,
-        fontsize=8,
+        fontsize=9,
         frameon=True,
         facecolor="white",
         edgecolor="none",
-        framealpha=0.88,
+        framealpha=0.92,
     )
 
     best_idx = np.argmin(fds)

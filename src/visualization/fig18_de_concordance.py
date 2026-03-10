@@ -54,9 +54,9 @@ def plot_de_concordance_panel(
     contrasts = list(de_data.keys())
     n_contrasts = len(contrasts)
 
-    fig = plt.figure(figsize=(15.0, 6.4))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.5, 1.0, 1.0], wspace=0.55)
-    fig._clop_layout_rect = (0.02, 0.08, 0.98, 0.96)
+    fig = plt.figure(figsize=(16.0, 7.0))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.5, 1.0, 1.0], wspace=0.60)
+    fig._clop_layout_rect = (0.02, 0.10, 0.98, 0.96)
 
     # ── Panel (a): effect-size weighted logFC scatter ──
     ax = fig.add_subplot(gs[0])
@@ -194,7 +194,7 @@ def plot_de_concordance_panel(
     im = ax2.imshow(heatmap_data, cmap="PiYG", aspect="auto", vmin=0, vmax=1)
     ax2.set_xticks(range(len(metric_names)))
     ax2.set_xticklabels(metric_names, fontsize=FONT_TICK_DENSE,
-                         rotation=40, ha="right")
+                         rotation=35, ha="right")
     ax2.set_yticks(range(n_contrasts))
     ax2.set_yticklabels(contrast_labels, fontsize=FONT_TICK_DENSE)
 
@@ -206,7 +206,7 @@ def plot_de_concordance_panel(
             ax2.text(j, i, f"{val:.2f}", ha="center", va="center",
                      fontsize=FONT_HEATMAP_CELL, fontweight="bold", color=color)
 
-    add_colorbar_safe(im, ax=ax2, shrink=0.55, pad=0.03)
+    add_colorbar_safe(im, ax=ax2, shrink=0.50, pad=0.04)
     style_axes(ax2, "heatmap", title="Concordance Across Contrasts")
 
     # ── Panel (c): grouped bar chart ──
@@ -224,11 +224,11 @@ def plot_de_concordance_panel(
         ax3.bar(x + offset, vals, w, label=mname,
                 color=bar_colors[j], alpha=0.85, edgecolor="white")
 
-    # Build short x-labels from contrast names (two-line, biology-aware)
+    # Build short x-labels from contrast names (biology-aware)
     xs_labels = [_abbrev_contrast(c, max_len=14) for c in contrasts]
     ax3.set_xticks(x)
     ax3.set_xticklabels(xs_labels, fontsize=FONT_TICK_DENSE,
-                         rotation=30, ha="right", multialignment="center")
+                         rotation=25, ha="right", multialignment="center")
     ax3.set_ylim(0, 1.12)
     ax3.legend(fontsize=FONT_ANNOTATION, ncol=2,
                loc="upper right", frameon=False)

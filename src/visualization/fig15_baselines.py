@@ -1,9 +1,9 @@
 """
-fig15_baselines.py — Fig 15: Baseline comparison with graphical O3.
+fig15_baselines.py — Fig 15: Baseline comparison (publication quality).
 
-  O1: Grouped bar chart — FD, centroid cosine, diversity ratio, coverage
-  O2: Polar radar chart with normalized metrics
-  O3: Relative improvement strip (graphical, no tables)
+  O1: Grouped bar chart — FD\u2193, Centroid Cosine\u2191, Diversity Ratio\u2191, Coverage\u2191
+  O2: Ranked dot plot showing normalised scores per method (replaces radar)
+  O3: Absolute delta bar chart vs CLOP-DiT (replaces % improvement strip)
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from typing import Dict, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import COLORS, FONT_SMALL, METHOD_COLORS, save_panel, style_axes, set_dense_tick_labels, set_figure_suptitle, add_panel_label
+from .style import COLORS, FONT_SMALL, FONT_ANNOTATION, METHOD_COLORS, save_panel, style_axes, add_panel_label
 from src.utils.paths import CACHE_DIR, RESULTS_DIR, FIG_DIR
 
 logger = logging.getLogger(__name__)
@@ -32,11 +32,11 @@ def plot_baseline_comparison(
     dpi: int = 300,
     save: bool = True,
 ) -> Optional[plt.Figure]:
-    """Fig 15: CLOP-DiT vs baselines with graphical O3 (no table).
+    """Fig 15: CLOP-DiT vs baselines (publication quality, 3-panel).
 
-    O1: Grouped bar chart
-    O2: Polar radar
-    O3: Relative improvement strip (horizontal bars showing % improvement)
+    O1: Grouped bar chart with full metric names and direction arrows
+    O2: Ranked dot plot (normalised [0,1], higher = better)
+    O3: Absolute delta bar chart (CLOP-DiT minus baseline)
     """
     gen_metrics_path = gen_metrics_path or str(RESULTS_DIR / "generation_metrics.json")
     div_metrics_path = div_metrics_path or str(RESULTS_DIR / "diversity_diagnostics.json")
@@ -94,13 +94,14 @@ def plot_baseline_comparison(
 
     method_names = list(methods.keys())
     n_methods = len(method_names)
-    metric_labels = ["FD", "Cos", "Div", "Cov"]
+    # Full metric names with direction arrows for axis labels
+    metric_labels = ["FD \u2193", "Cosine \u2191", "Diversity \u2191", "Coverage \u2191"]
     metric_keys = ["FD", "Centroid Cosine", "Diversity Ratio", "Coverage"]
+    # Direction: lower-is-better for FD, higher-is-better for others
+    directions = ["lower", "higher", "higher", "higher"]
 
-    fig = plt.figure(figsize=(13.8, 5.8))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.3, 1.1, 1.0], wspace=0.58)
-    # Title moved to LaTeX caption
-    # set_figure_suptitle(fig, "CLOP-DiT vs Baselines", fontsize=11)
+    fig = plt.figure(figsize=(15.0, 6.2))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.3, 1.1, 1.2], wspace=0.52)
 
     # ── O1: Grouped bar chart ──
     ax = fig.add_subplot(gs[0])
@@ -110,108 +111,113 @@ def plot_baseline_comparison(
     for i, mname in enumerate(method_names):
         vals = [methods[mname][k] for k in metric_keys]
         offset = (i - n_methods / 2 + 0.5) * w
-        bars = ax.bar(x + offset, vals, w, label=mname,
-                      color=METHOD_COLORS.get(mname, COLORS["neutral"]),
-                      alpha=0.85, edgecolor="white")
+        ax.bar(x + offset, vals, w, label=mname,
+               color=METHOD_COLORS.get(mname, COLORS["neutral"]),
+               alpha=0.85, edgecolor="white")
     ax.set_xticks(x)
-    ax.set_xticklabels(metric_labels, fontsize=9, rotation=0, ha="center")
-    ax.legend(fontsize=8, loc="upper left", bbox_to_anchor=(0.98, 1.0), frameon=False)
+    ax.set_xticklabels(metric_labels, fontsize=10, rotation=0, ha="center")
+    ax.legend(fontsize=8, loc="upper right", frameon=False)
     style_axes(ax, "bar", title="Key Metrics Comparison", ylabel="Value")
 
-    # ── O2: Radar chart ──
-    ax_placeholder = fig.add_subplot(gs[1])
-    # Panel label deferred to ax_radar below (ax_placeholder is removed for polar projection)
-    # Normalize metrics for radar [0,1]; FD inverted
+    # ── O2: Ranked dot plot (normalised scores) ──
+    ax2 = fig.add_subplot(gs[1])
+    add_panel_label(ax2, 'b', x=-0.10, y=1.05)
+
+    # Normalise each metric to [0,1] with direction awareness
     all_vals = {k: [methods[m][k] for m in method_names] for k in metric_keys}
     normalized = {}
-    for k in metric_keys:
+    for k, direction in zip(metric_keys, directions):
         mn, mx = min(all_vals[k]), max(all_vals[k])
         rng = mx - mn if mx > mn else 1
-        if k == "FD":
+        if direction == "lower":
             normalized[k] = [(mx - v) / rng for v in all_vals[k]]
         else:
             normalized[k] = [(v - mn) / rng for v in all_vals[k]]
 
-    angles = np.linspace(0, 2 * np.pi, len(metric_keys), endpoint=False).tolist()
-    angles += angles[:1]
-    ax_placeholder.remove()
-    ax_radar = fig.add_subplot(gs[1], polar=True)
-    add_panel_label(ax_radar, 'b', x=-0.10, y=1.05)
-    ax_radar.set_theta_offset(np.pi / 2)
-    ax_radar.set_theta_direction(-1)
-    ax_radar.set_thetagrids(np.degrees(angles[:-1]), metric_labels, fontsize=10)
-
+    # Compute aggregate normalised score per method
+    agg_scores = {}
     for i, mname in enumerate(method_names):
-        vals = [normalized[k][i] for k in metric_keys]
-        vals += vals[:1]
-        ax_radar.plot(angles, vals, "o-", linewidth=2, label=mname,
-                      color=METHOD_COLORS.get(mname, COLORS["neutral"]), markersize=6)
-        ax_radar.fill(angles, vals, alpha=0.1,
-                      color=METHOD_COLORS.get(mname, COLORS["neutral"]))
-    ax_radar.legend(loc="lower center", bbox_to_anchor=(0.5, -0.22), fontsize=8,
-                    frameon=False, ncol=3)
-    fig._clop_layout_rect = (0.02, 0.12, 0.98, 0.95)
-    ax_radar.set_title("Normalized Radar", pad=8)
+        agg_scores[mname] = np.mean([normalized[k][i] for k in metric_keys])
+    sorted_methods = sorted(method_names, key=lambda m: agg_scores[m], reverse=True)
 
-    # ── O3: Relative improvement strip (graphical — replaces table) ──
+    y_pos = np.arange(len(sorted_methods))
+    for j, mk in enumerate(metric_keys):
+        vals = [normalized[mk][method_names.index(m)] for m in sorted_methods]
+        ax2.scatter(vals, y_pos, s=80, marker="oDsv"[j],
+                    color=f"C{j}", alpha=0.85, zorder=3,
+                    label=metric_labels[j])
+    # Connect dots with lines for each method
+    for i, mname in enumerate(sorted_methods):
+        vals = [normalized[mk][method_names.index(mname)] for mk in metric_keys]
+        ax2.plot(vals, [i] * len(vals), color=METHOD_COLORS.get(mname, "#999"),
+                 linewidth=1.2, alpha=0.4, zorder=1)
+        # Annotate aggregate score
+        ax2.text(1.02, i, f"{agg_scores[mname]:.2f}", va="center",
+                 fontsize=FONT_SMALL, color=COLORS["neutral"],
+                 transform=ax2.get_yaxis_transform())
+
+    ax2.set_yticks(y_pos)
+    ax2.set_yticklabels(sorted_methods, fontsize=9)
+    ax2.set_xlim(-0.05, 1.15)
+    ax2.invert_yaxis()
+    ax2.legend(fontsize=7, loc="lower right", frameon=False, ncol=2,
+               handletextpad=0.3, columnspacing=0.6)
+    style_axes(ax2, "default", title="Normalised Scores (1 = best)",
+               xlabel="Normalised Value")
+
+    # ── O3: Absolute delta bar chart (CLOP-DiT minus baseline) ──
     ax3 = fig.add_subplot(gs[2])
     add_panel_label(ax3, 'c', x=-0.10, y=1.05)
-    # For each baseline, compute % improvement of CLOP-DiT vs that baseline
-    clop_vals = methods["CLOP-DiT"]
-    improvement_data = {}
-    for bl_name in baselines:
-        bl_vals = methods.get(bl_name, {})
-        improvements = {}
-        for mk in metric_keys:
-            cv = clop_vals.get(mk, 0)
-            bv = bl_vals.get(mk, 0)
-            if mk == "FD":  # lower is better: improvement = (bl - clop) / bl
-                if bv > 1e-8:
-                    improvements[mk] = (bv - cv) / bv
-                else:
-                    improvements[mk] = 0
-            else:  # higher is better: improvement = (clop - bl) / bl
-                if bv > 1e-8:
-                    improvements[mk] = (cv - bv) / max(bv, 1e-8)
-                else:
-                    improvements[mk] = 0
-        improvement_data[bl_name] = improvements
 
-    # Plot as grouped horizontal bars
+    clop_vals = methods["CLOP-DiT"]
+    bl_names = [bl for bl in baselines]
     y_labels = []
     y_vals = []
-    y_colors = []
-    bl_color_map = {name: METHOD_COLORS.get(name, COLORS["neutral"]) for name in baselines}
 
-    for bl_name, imps in improvement_data.items():
-        for mk in metric_keys:
-            y_labels.append(f"{mk[:3]}-{bl_name[:10]}"[:15])
-            y_vals.append(imps.get(mk, 0) * 100)  # as percentage
-            y_colors.append(bl_color_map.get(bl_name, COLORS["neutral"]))
+    for bl_name in bl_names:
+        bl_vals = methods.get(bl_name, {})
+        for mk, direction in zip(metric_keys, directions):
+            cv = clop_vals.get(mk, 0)
+            bv = bl_vals.get(mk, 0)
+            if direction == "lower":
+                # For FD, improvement = baseline - CLOP (positive = CLOP is better)
+                delta = bv - cv
+            else:
+                # For higher-is-better, improvement = CLOP - baseline
+                delta = cv - bv
+            short_bl = bl_name[:14]
+            y_labels.append(f"{mk[:3]} | {short_bl}")
+            y_vals.append(delta)
 
     y_pos = np.arange(len(y_labels))
-    y_vals_raw = list(y_vals)  # keep original values before capping
-    y_vals = list(np.clip(y_vals, -100, 300))
     bar_colors_final = [COLORS["good"] if v > 0 else COLORS["bad"] for v in y_vals]
     ax3.barh(y_pos, y_vals, color=bar_colors_final, height=0.6,
              edgecolor="white", linewidth=0.5, alpha=0.85)
-    # Annotate clipped bars with real (uncapped) value
-    for i, (raw, clipped) in enumerate(zip(y_vals_raw, y_vals)):
-        if raw > 300 or raw < -100:
-            ax3.text(clipped, i, f"({raw:.0f}%)", va="center", ha="left",
-                     fontsize=FONT_SMALL, color="#333", fontweight="bold")
+
+    # Annotate values at bar tips
+    for i, val in enumerate(y_vals):
+        ha = "left" if val >= 0 else "right"
+        ax3.text(val, i, f" {val:+.3f}", va="center", ha=ha,
+                 fontsize=FONT_ANNOTATION, color="#333")
+
     ax3.set_yticks(y_pos)
     ax3.set_yticklabels(y_labels, fontsize=8, ha="right")
-    set_dense_tick_labels(ax3, axis="y", max_labels=12, fontsize=8, rotation=0)
     ax3.axvline(x=0, color=COLORS["neutral"], linewidth=1.2)
     ax3.invert_yaxis()
 
-    style_axes(ax3, "bar", title="CLOP-DiT Relative Improvement",
-               xlabel="Improvement (%)")
+    # Add group separators between baselines
+    n_metrics = len(metric_keys)
+    for g in range(1, len(bl_names)):
+        sep_y = g * n_metrics - 0.5
+        ax3.axhline(y=sep_y, color="#DDD", linewidth=1, linestyle="--")
+
+    fig._clop_layout_rect = (0.02, 0.06, 0.98, 0.95)
+    style_axes(ax3, "bar", title="CLOP-DiT Advantage (\u0394 metric)",
+               xlabel="Absolute Improvement")
 
     if save:
         path = save_panel(fig, output_dir / "fig15_baseline_comparison.png", dpi)
-        logger.info(f"Saved Fig 15 → {path}")
+        logger.info(f"Saved Fig 15 \u2192 {path}")
     return fig
 
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# verify_article_figures.sh — Verify all 17 article figures exist and (re)create symlinks.
+# verify_article_figures.sh — Verify all 20 article figures exist and (re)create symlinks.
 #
 # Delegates to the Python delivery module (single source of truth for the figure list).
 #

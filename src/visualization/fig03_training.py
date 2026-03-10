@@ -34,13 +34,13 @@ def _add_training_phase_bands(ax: plt.Axes, max_epoch: int) -> None:
     ax.axvspan(p1_end, p2_end, color=COLORS["neutral"], alpha=0.05, lw=0)
     ax.axvspan(p2_end, max_epoch, color=COLORS["baseline_gauss"], alpha=0.07, lw=0)
     ax.text(
-        0.03, 0.97,
+        0.03, 0.55,
         "Phase I: rapid\nPhase II: refine\nPhase III: converge",
         transform=ax.transAxes,
         va="top",
         ha="left",
-        fontsize=8,
-        path_effects=[pe.withStroke(linewidth=2.0, foreground="white", alpha=0.9)],
+        fontsize=9,
+        path_effects=[pe.withStroke(linewidth=2.5, foreground="white", alpha=0.95)],
     )
 
 
@@ -101,9 +101,9 @@ def plot_clop_training(
     ax_a1 = fig.add_subplot(gs[0, 0])
     ax_a1.plot(epochs, h["train_loss"], label="Train", color=COLORS["real"])
     ax_a1.plot(epochs, h["val_loss"], label="Val", color=COLORS["generated"], linestyle="--")
-    ax_a1.set_xlabel("Epoch", fontsize=10)
-    ax_a1.set_ylabel("Contrastive Loss", fontsize=10)
-    ax_a1.set_title("Loss Convergence", fontsize=11)
+    ax_a1.set_xlabel("Epoch", fontsize=11)
+    ax_a1.set_ylabel("Contrastive Loss", fontsize=11)
+    ax_a1.set_title("Loss Convergence", fontsize=12)
     ax_a1.legend(loc="upper right", fontsize=FONT_LEGEND_DENSE, frameon=False)
     ax_a1.set_xlim(0, max(epochs) * 1.08)
     ax_a1.locator_params(axis='x', nbins=3)
@@ -144,9 +144,9 @@ def plot_clop_training(
             epochs, np.array(h["val_proto_top10"]) * 100,
             label="Top-10", color=COLORS["baseline_gauss"], linestyle="--",
         )
-    ax_a3.set_xlabel("Epoch", fontsize=10)
-    ax_a3.set_ylabel("Accuracy (%)", fontsize=10)
-    ax_a3.set_title("Classification Accuracy", fontsize=11)
+    ax_a3.set_xlabel("Epoch", fontsize=11)
+    ax_a3.set_ylabel("Accuracy (%)", fontsize=11)
+    ax_a3.set_title("Classification Accuracy", fontsize=12)
     ax_a3.set_ylim(0, 105)
     ax_a3.legend(loc="lower right", fontsize=FONT_LEGEND_DENSE, frameon=False, ncol=2)
     ax_a3.set_xlim(0, max(epochs) * 1.08)
@@ -164,9 +164,9 @@ def plot_clop_training(
     for key, label, color in quality_metrics:
         if key in h:
             ax_a4.plot(epochs, h[key], label=label, color=color)
-    ax_a4.set_xlabel("Epoch", fontsize=10)
-    ax_a4.set_ylabel("Score", fontsize=10)
-    ax_a4.set_title("Embedding Quality", fontsize=11)
+    ax_a4.set_xlabel("Epoch", fontsize=11)
+    ax_a4.set_ylabel("Score", fontsize=11)
+    ax_a4.set_title("Embedding Quality", fontsize=12)
     ax_a4.set_ylim(0, 1.05)
     ax_a4.legend(loc="center right", fontsize=FONT_LEGEND_DENSE, frameon=False)
     ax_a4.set_xlim(0, max(epochs) * 1.08)
@@ -239,9 +239,9 @@ def plot_dit_training(
     ax_c1 = fig.add_subplot(gs_c[0, 0])
     ax_c1.plot(epochs, h["train_loss"], label="Train MSE", color=COLORS["real"])
     ax_c1.plot(epochs, h["val_loss"], label="Val MSE", color=COLORS["generated"], linestyle="--")
-    ax_c1.set_xlabel("Epoch", fontsize=10)
-    ax_c1.set_ylabel("Flow-Matching Loss", fontsize=10)
-    ax_c1.set_title("Loss Convergence", fontsize=11)
+    ax_c1.set_xlabel("Epoch", fontsize=11)
+    ax_c1.set_ylabel("Flow-Matching Loss", fontsize=11)
+    ax_c1.set_title("Loss Convergence", fontsize=12)
     ax_c1.set_yscale("log")
     all_loss = list(h["train_loss"]) + list(h["val_loss"])
     _arr = [v for v in all_loss if v and v > 0]
@@ -264,9 +264,9 @@ def plot_dit_training(
     # ── C2: Cosine similarity ──
     ax_c2 = fig.add_subplot(gs_c[0, 1])
     ax_c2.plot(epochs, h["val_cosine_sim"], color=COLORS["baseline_gauss"], linewidth=2)
-    ax_c2.set_xlabel("Epoch", fontsize=10)
-    ax_c2.set_ylabel("Cosine Similarity", fontsize=10)
-    ax_c2.set_title("Fidelity (Cosine)", fontsize=11)
+    ax_c2.set_xlabel("Epoch", fontsize=11)
+    ax_c2.set_ylabel("Cosine Similarity", fontsize=11)
+    ax_c2.set_title("Fidelity (Cosine)", fontsize=12)
     ax_c2.set_ylim(0.6, 1.0)
     ax_c2.axhline(y=1.0, color="gray", linestyle=":", alpha=0.4)
     ax_c2.set_xlim(0, max(epochs) * 1.05)
@@ -277,9 +277,9 @@ def plot_dit_training(
     # ── C3: Learning rate ──
     ax_c3 = fig.add_subplot(gs_c[1, 0])
     ax_c3.plot(epochs, h["lr"], color=COLORS["baseline_shuffle"], linewidth=1.5)
-    ax_c3.set_xlabel("Epoch", fontsize=10)
-    ax_c3.set_ylabel("Learning Rate", fontsize=10)
-    ax_c3.set_title("LR Schedule", fontsize=11)
+    ax_c3.set_xlabel("Epoch", fontsize=11)
+    ax_c3.set_ylabel("Learning Rate", fontsize=11)
+    ax_c3.set_title("LR Schedule", fontsize=12)
     set_scientific_tickformat(ax_c3, axis="y", scilimits=(-4, -4))
     ax_c3.set_xlim(0, max(epochs) * 1.05)
     ax_c3.xaxis.set_major_locator(MaxNLocator(nbins=2, integer=True, prune="both"))
@@ -300,9 +300,9 @@ def plot_dit_training(
     ax_c4.plot(progress, val_norm, label="Val", color=COLORS["generated"],
                linewidth=1.5, linestyle="--")
     ax_c4.axhline(y=0.1, color="gray", linestyle=":", alpha=0.5, label="90% converged")
-    ax_c4.set_xlabel("Training Progress (%)", fontsize=10)
-    ax_c4.set_ylabel("Remaining Loss Gap", fontsize=10)
-    ax_c4.set_title("Convergence Rate", fontsize=11)
+    ax_c4.set_xlabel("Training Progress (%)", fontsize=11)
+    ax_c4.set_ylabel("Remaining Loss Gap", fontsize=11)
+    ax_c4.set_title("Convergence Rate", fontsize=12)
     ax_c4.set_xlim(0, 100)
     ax_c4.set_ylim(-0.05, 1.05)
     ax_c4.legend(fontsize=FONT_LEGEND_DENSE, loc="upper right", frameon=False)
@@ -375,9 +375,9 @@ def plot_training_dynamics_combined(
         ax_a1 = fig.add_subplot(gs[0, 0])
         ax_a1.plot(epochs, h["train_loss"], label="Train", color=COLORS["real"])
         ax_a1.plot(epochs, h["val_loss"], label="Val", color=COLORS["generated"], linestyle="--")
-        ax_a1.set_xlabel("Epoch", fontsize=10)
-        ax_a1.set_ylabel("Contrastive Loss", fontsize=10)
-        ax_a1.set_title("CLOP Loss", fontsize=11)
+        ax_a1.set_xlabel("Epoch", fontsize=11)
+        ax_a1.set_ylabel("Contrastive Loss", fontsize=11)
+        ax_a1.set_title("CLOP Loss", fontsize=12)
         ax_a1.legend(loc="upper right", fontsize=FONT_LEGEND_DENSE, frameon=False)
         ax_a1.set_xlim(0, max(epochs) * 1.08)
         ax_a1.locator_params(axis='x', nbins=3)
@@ -411,9 +411,9 @@ def plot_training_dynamics_combined(
         if "val_proto_top10" in h:
             ax_a3.plot(epochs, np.array(h["val_proto_top10"]) * 100,
                     label="Top-10", color=COLORS["baseline_gauss"], linestyle="--")
-        ax_a3.set_xlabel("Epoch", fontsize=10)
-        ax_a3.set_ylabel("Accuracy (%)", fontsize=10)
-        ax_a3.set_title("Classification Accuracy", fontsize=11)
+        ax_a3.set_xlabel("Epoch", fontsize=11)
+        ax_a3.set_ylabel("Accuracy (%)", fontsize=11)
+        ax_a3.set_title("Classification Accuracy", fontsize=12)
         ax_a3.set_ylim(0, 105)
         ax_a3.legend(loc="lower right", fontsize=FONT_LEGEND_DENSE, frameon=False, ncol=2)
         ax_a3.set_xlim(0, max(epochs) * 1.08)
@@ -431,9 +431,9 @@ def plot_training_dynamics_combined(
         for key, label, color in quality_metrics:
             if key in h:
                 ax_a4.plot(epochs, h[key], label=label, color=color)
-        ax_a4.set_xlabel("Epoch", fontsize=10)
-        ax_a4.set_ylabel("Score", fontsize=10)
-        ax_a4.set_title("Embedding Quality", fontsize=11)
+        ax_a4.set_xlabel("Epoch", fontsize=11)
+        ax_a4.set_ylabel("Score", fontsize=11)
+        ax_a4.set_title("Embedding Quality", fontsize=12)
         ax_a4.set_ylim(0, 1.05)
         ax_a4.legend(loc="center right", fontsize=FONT_LEGEND_DENSE, frameon=False)
         ax_a4.set_xlim(0, max(epochs) * 1.08)
@@ -452,9 +452,9 @@ def plot_training_dynamics_combined(
         ax_c1 = fig.add_subplot(gs[1, 0])
         ax_c1.plot(epochs, h["train_loss"], label="Train MSE", color=COLORS["real"])
         ax_c1.plot(epochs, h["val_loss"], label="Val MSE", color=COLORS["generated"], linestyle="--")
-        ax_c1.set_xlabel("Epoch", fontsize=10)
-        ax_c1.set_ylabel("Flow-Matching Loss", fontsize=10)
-        ax_c1.set_title("DiT Loss", fontsize=11)
+        ax_c1.set_xlabel("Epoch", fontsize=11)
+        ax_c1.set_ylabel("Flow-Matching Loss", fontsize=11)
+        ax_c1.set_title("DiT Loss", fontsize=12)
         ax_c1.set_yscale("log")
         all_loss = list(h["train_loss"]) + list(h["val_loss"])
         _arr = [v for v in all_loss if v and v > 0]
@@ -475,9 +475,9 @@ def plot_training_dynamics_combined(
         # C2: Cosine similarity
         ax_c2 = fig.add_subplot(gs[1, 1])
         ax_c2.plot(epochs, h["val_cosine_sim"], color=COLORS["baseline_gauss"], linewidth=2)
-        ax_c2.set_xlabel("Epoch", fontsize=10)
-        ax_c2.set_ylabel("Cosine Similarity", fontsize=10)
-        ax_c2.set_title("Fidelity (Cosine)", fontsize=11)
+        ax_c2.set_xlabel("Epoch", fontsize=11)
+        ax_c2.set_ylabel("Cosine Similarity", fontsize=11)
+        ax_c2.set_title("Fidelity (Cosine)", fontsize=12)
         ax_c2.set_ylim(0.6, 1.0)
         ax_c2.axhline(y=1.0, color="gray", linestyle=":", alpha=0.4)
         ax_c2.set_xlim(0, max(epochs) * 1.05)
@@ -488,9 +488,9 @@ def plot_training_dynamics_combined(
         # C3: Learning rate
         ax_c3 = fig.add_subplot(gs[1, 2])
         ax_c3.plot(epochs, h["lr"], color=COLORS["baseline_shuffle"], linewidth=1.5)
-        ax_c3.set_xlabel("Epoch", fontsize=10)
-        ax_c3.set_ylabel("Learning Rate", fontsize=10)
-        ax_c3.set_title("LR Schedule", fontsize=11)
+        ax_c3.set_xlabel("Epoch", fontsize=11)
+        ax_c3.set_ylabel("Learning Rate", fontsize=11)
+        ax_c3.set_title("LR Schedule", fontsize=12)
         set_scientific_tickformat(ax_c3, axis="y", scilimits=(-4, -4))
         ax_c3.set_xlim(0, max(epochs) * 1.05)
         ax_c3.xaxis.set_major_locator(MaxNLocator(nbins=4, integer=True, prune="both"))
@@ -523,9 +523,9 @@ def plot_training_dynamics_combined(
 
         ax_c4.axhline(y=0.1, color="gray", linestyle=":", alpha=0.5,
                        label="90% converged")
-        ax_c4.set_xlabel("Training Progress (%)", fontsize=10)
-        ax_c4.set_ylabel("Remaining Loss Gap", fontsize=10)
-        ax_c4.set_title("Convergence Comparison", fontsize=11)
+        ax_c4.set_xlabel("Training Progress (%)", fontsize=11)
+        ax_c4.set_ylabel("Remaining Loss Gap", fontsize=11)
+        ax_c4.set_title("Convergence Comparison", fontsize=12)
         ax_c4.set_xlim(0, 100)
         ax_c4.set_ylim(-0.05, 1.05)
         ax_c4.legend(fontsize=FONT_LEGEND_DENSE, loc="upper right", frameon=False)

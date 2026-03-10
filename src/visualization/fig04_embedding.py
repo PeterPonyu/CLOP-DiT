@@ -24,6 +24,7 @@ from .style import (
     FONT_DENSE_YTICK,
     FONT_LEGEND,
     TYPE_PALETTE,
+    abbreviate_cell_type,
     add_panel_label,
     apply_style,
     save_with_vcd,
@@ -104,9 +105,9 @@ def plot_embedding_space_merged(
 
     apply_style()
     n_rows = (1 if has_b else 0) + (1 if has_e else 0)
-    fig = plt.figure(figsize=(14.2, 5.2 * n_rows))
-    gs = fig.add_gridspec(n_rows, 3, wspace=0.46, hspace=0.25,
-                          width_ratios=[1.2, 1.2, 1.0])
+    fig = plt.figure(figsize=(14.8, 5.2 * n_rows))
+    gs = fig.add_gridspec(n_rows, 3, wspace=0.52, hspace=0.25,
+                          width_ratios=[1.2, 1.2, 1.1])
     # suptitle removed per revision; title information moved to LaTeX caption
     fig._clop_layout_rect = (0.02, 0.03, 0.98, 0.97)
     row = 0
@@ -166,7 +167,7 @@ def plot_embedding_space_merged(
             color = TYPE_PALETTE[int(unique_types[i]) % len(TYPE_PALETTE)]
             ax.scatter(x, y, c=[color], s=80, marker="*", edgecolors="black",
                        linewidths=0.5, zorder=6)
-        ax.set_title(f"Cells + \u2605 Proto ({len(s_idx)} cells)")
+        ax.set_title(f"Cell + Prototype Overlay ({len(s_idx)} cells)")
         ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
         style_axes(ax, kind="umap")
 
@@ -177,7 +178,7 @@ def plot_embedding_space_merged(
         y_pos = np.arange(n_types)
         ax.barh(y_pos, type_counts[so], color=bar_c, height=0.8)
         ax.set_yticks(y_pos)
-        bar_labels = [type_names.get(int(t), f"T{t}")[:16] for t in unique_types[so]]
+        bar_labels = [abbreviate_cell_type(type_names.get(int(t), f"T{t}"), 22) for t in unique_types[so]]
         ax.set_yticklabels(bar_labels, fontsize=FONT_DENSE_YTICK)
         set_dense_tick_labels(ax, axis="y", max_labels=14, fontsize=FONT_DENSE_YTICK, rotation=0)
         ax.invert_yaxis()
@@ -393,12 +394,12 @@ def plot_clop_embedding_space(
     add_panel_label(ax_b0, 'a', x=-0.18, y=1.02)
     sorted_order = np.argsort(type_counts)[::-1]
     bar_colors = [TYPE_PALETTE[t % len(TYPE_PALETTE)] for t in unique_types[sorted_order]]
-    bar_labels = [type_names.get(int(t), f"Type {t}")[:16] for t in unique_types[sorted_order]]
+    bar_labels = [abbreviate_cell_type(type_names.get(int(t), f"Type {t}"), 22) for t in unique_types[sorted_order]]
     y_pos = np.arange(n_types)
     ax_b0.barh(y_pos, type_counts[sorted_order], color=bar_colors, height=0.8)
     ax_b0.set_yticks(y_pos)
-    ax_b0.set_yticklabels(bar_labels, fontsize=8)
-    set_dense_tick_labels(ax_b0, axis="y", max_labels=10, fontsize=8, rotation=0)
+    ax_b0.set_yticklabels(bar_labels, fontsize=10)
+    set_dense_tick_labels(ax_b0, axis="y", max_labels=10, fontsize=10, rotation=0)
     ax_b0.invert_yaxis()
     ax_b0.set_xlabel("Cells")
     ax_b0.set_title("Cells per Type")
@@ -409,7 +410,7 @@ def plot_clop_embedding_space(
         alpha=0.5,
         label=f"median={int(np.median(type_counts))}",
     )
-    ax_b0.legend(fontsize=9, loc="lower right", frameon=False)
+    ax_b0.legend(fontsize=10, loc="lower right", frameon=False)
     ax_b0.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
 
     ax_b1 = fig.add_subplot(gs[1])
@@ -429,10 +430,10 @@ def plot_clop_embedding_space(
             if any(np.linalg.norm(point - prev) < min_dist for prev in labeled_points):
                 continue
             name = type_names.get(int(unique_types[i]), f"Type {i}")
-            short = name[:16] + "\u2026" if len(name) > 16 else name
+            short = abbreviate_cell_type(name, 22)
             dx, dy = label_offsets[len(labeled_points) % len(label_offsets)]
             ax_b1.annotate(
-                short, (x, y), fontsize=8, ha="center", va="bottom",
+                short, (x, y), fontsize=10, ha="center", va="bottom",
                 xytext=(dx, dy), textcoords="offset points",
             )
             labeled_points.append(point)
@@ -455,7 +456,7 @@ def plot_clop_embedding_space(
             x, y, c=[color], s=80, marker="*", edgecolors="black",
             linewidths=0.5, zorder=6,
         )
-    ax_b2.set_title("Cells + \u2605 Proto Overlay")
+    ax_b2.set_title("Cell + Prototype Overlay")
     ax_b2.set_xlabel("UMAP 1")
     ax_b2.set_ylabel("UMAP 2")
     ax_b2.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
@@ -633,8 +634,8 @@ def plot_real_vs_generated(
                     c=[color], s=6, alpha=0.35, marker="^", rasterized=True,
                 )
         # Dummy handles for legend
-        ax.scatter([], [], c=COLORS["real"], s=20, marker="o", label="Real")
-        ax.scatter([], [], c=COLORS["generated"], s=20, marker="^", label="Generated")
+        ax.scatter([], [], c=COLORS["real"], s=60, marker="o", linewidths=0.5, label="Real")
+        ax.scatter([], [], c=COLORS["generated"], s=60, marker="^", label="Generated")
     else:
         ax.scatter(
             real_c[:, 0], real_c[:, 1],
@@ -646,9 +647,9 @@ def plot_real_vs_generated(
             label="Generated", rasterized=True,
         )
     ax.legend(markerscale=3, fontsize=FONT_LEGEND, frameon=False, loc="upper right")
-    ax.set_title("Type-Colored Overlay", fontsize=11)
-    ax.set_xlabel("UMAP 1", fontsize=10)
-    ax.set_ylabel("UMAP 2", fontsize=10)
+    ax.set_title("Type-Colored Overlay", fontsize=12)
+    ax.set_xlabel("UMAP 1", fontsize=11)
+    ax.set_ylabel("UMAP 2", fontsize=11)
 
     # Reduce tick density on all UMAP axes
     for _ax in fig.get_axes():

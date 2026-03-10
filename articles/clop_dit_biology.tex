@@ -242,7 +242,12 @@ Together, these components form a reproducible pipeline for text-conditioned sin
 
 \subsection{Dataset}\label{sec:dataset}
 
-We curated 80 datasets from the Gene Expression Omnibus (GEO) spanning cancer and developmental biology, comprising 220,304 cells after quality control and highly variable gene selection~\cite{ref-seurat,ref-hvg} (2,000 highly variable genes per dataset, selected by mean expression and dispersion). Each cell was encoded into a 512-dimensional embedding by a pre-trained scGPT model. Cell-type annotations were organized into 1,088 unique text groups, each described by a structured text caption (not free-form natural language) incorporating cell type, marker genes, tissue of origin, organism, and disease context. Text descriptions were generated for each cell type using a structured template: \texttt{``\{cell type\}, tissue: \{tissue\}, organism: \{organism\}, markers: \{top 5 DE marker genes\}, context: \{disease/condition\}''}, where marker genes were identified per cell type by one-vs.-rest Wilcoxon rank-sum test~\cite{ref-wilcoxon} on the training set. As an independent check on marker gene circularity, we validated these training-set-derived markers against PanglaoDB~\cite{ref-panglao} and CellMarker~2.0~\cite{ref-cellmarker}; the high Jaccard overlap (0.39--0.45) indicates that the selected markers reflect biological consensus (see Discussion). The exact template and marker gene sources are available in \texttt{src/data\_pipeline/subcluster\_annotation.py} (caption generation) and \texttt{scripts/data\_prep/02b\_enrich\_descriptions.py} (evidence enrichment).
+We curated 80 datasets from the Gene Expression Omnibus (GEO) spanning cancer and developmental biology, comprising 220,304 cells after quality control and highly variable gene selection~\cite{ref-seurat,ref-hvg} (2,000 highly variable genes per dataset, selected by mean expression and dispersion). Each cell was encoded into a 512-dimensional embedding by a pre-trained scGPT model. Cell-type annotations were organized into 1,088 unique text groups, each described by a structured text caption (not free-form natural language) incorporating cell type, marker genes, tissue of origin, organism, and disease context. Text descriptions were generated for each cell type using a structured template:
+\begin{quote}\small\ttfamily
+\{cell type\}, tissue: \{tissue\}, organism: \{organism\},\\
+markers: \{top 5 DE marker genes\}, context: \{disease/condition\}
+\end{quote}
+\noindent where marker genes were identified per cell type by one-vs.-rest Wilcoxon rank-sum test~\cite{ref-wilcoxon} on the training set. As an independent check on marker gene circularity, we validated these training-set-derived markers against PanglaoDB~\cite{ref-panglao} and CellMarker~2.0~\cite{ref-cellmarker}; the high Jaccard overlap (0.39--0.45) indicates that the selected markers reflect biological consensus (see Discussion). The exact template and marker gene sources are available in {\small\texttt{src/data\_pipeline/\allowbreak{}subcluster\_annotation.py}} (caption generation) and {\small\texttt{scripts/data\_prep/\allowbreak{}02b\_enrich\_descriptions.py}} (evidence enrichment).
 
 The corpus was split into 72 training datasets (199,670 cells) and 8 held-out validation datasets (20,634 cells). The 8 validation datasets were selected by study (not by cell) to ensure no sample overlap between training and validation splits, and were chosen to span the major tissue and cancer categories in the corpus (lung, gastric, skin, liver, blood) via stratified selection across tissue types; the full list of GEO accession identifiers for all 80 datasets is provided in Supplementary Table~S1, and the validation study identifiers are in Supplementary Table~S2. Within the 72 training datasets, a cell-type-stratified split reserves $\sim$10\% of cells per type for training-time validation, ensuring that all 69 deduplicated cell types are represented in both partitions. This held-out design tests interpolation within the training distribution; the 8 held-out datasets share tissue types and cell populations with the training corpus and do not represent a stringent out-of-distribution generalization test.
 
@@ -561,7 +566,7 @@ Figure~\ref{fig:benchmark} aggregates these metrics into a composite benchmark s
 \FloatBarrier
 \vspace{-0.5em}
 
-Beyond distributional metrics, we evaluate whether generated cells are usable in standard single-cell analysis workflows. These analyses are implemented from matched real/generated AnnData objects with shared preprocessing in \texttt{src.evaluation.downstream\_biology}, using Scanpy~\cite{ref-scanpy} for single-cell analysis, ensuring that any downstream advantage is not caused by mismatched feature engineering. Three downstream tasks are assessed on real and generated cells jointly:
+Beyond distributional metrics, we evaluate whether generated cells are usable in standard single-cell analysis workflows. These analyses are implemented from matched real/generated AnnData objects with shared preprocessing in {\small\texttt{src.evaluation.downstream\_biology}}, using Scanpy~\cite{ref-scanpy} for single-cell analysis, ensuring that any downstream advantage is not caused by mismatched feature engineering. Three downstream tasks are assessed on real and generated cells jointly:
 
 \textbf{Clustering, mixing, and classifier alignment} (Figure~\ref{fig:downstream-pq}): We construct matched AnnData objects from real and generated expression matrices, select 2,000 shared highly variable genes, perform PCA and Leiden~\cite{ref-leiden} clustering on the combined dataset, and compute the Adjusted Rand Index (ARI), Normalized Mutual Information (NMI), cluster purity, and per-type $k$-NN mixing scores~\cite{ref-integration-benchmark}. High mixing scores indicate that generated cells partially co-localize with real cells of the same type in the joint embedding, though the discriminator AUC of 0.656 confirms that real and generated populations remain distinguishable. A logistic regression classifier is trained on real PCA embeddings to predict cell type, then evaluated on generated embeddings to measure transfer accuracy and macro-F1. The enhanced classifier panel reports a per-type precision/recall/F1 heatmap in addition to the confusion matrix and discriminator ROC, demonstrating that downstream performance exhibits strong heterogeneity across cell types. The real-vs.-generated discriminator AUC (0.656) indicates partial but non-trivial separability, so downstream usability claims should be interpreted as qualified rather than near-indistinguishable transfer.
 
@@ -1100,19 +1105,20 @@ CFG & Solver & Steps & KNN-1 & KNN-5 & Steer. & DivR & LinAcc & FD \\
 \centering
 \caption{The 5 biological validation datasets used for marker gene correlation, expression distribution fidelity, and Gene Ontology enrichment analysis (Section~\ref{sec:cross-dataset}). These datasets were selected to span diverse human cancer tissue types and immune cell populations. \textbf{Four of the five datasets are from the training split; only GSE183904 is held-out (Table~S2). This analysis therefore primarily evaluates in-distribution decoder-reconstructed fidelity, not out-of-distribution generalization.}}
 \label{tab:s4_biovalidation}
-\begin{tabular}{rlllcr}
+\small
+\begin{tabularx}{\textwidth}{rlllcr}
 \toprule
 \# & GEO Accession & Tissue & Description & Split & $n_{\text{cells}}$ \\
 \midrule
-  1 & GSE123902 & Lung & Lung adenocarcinoma tumor microenvironment & Train & 2,753 \\
-  2 & GSE183904 & Gastric & Gastric cancer tumor microenvironment & Val & 3,000 \\
-  3 & GSE123813 & Skin & Basal cell carcinoma of the skin & Train & 3,000 \\
-  4 & GSE98638 & Liver & T cell landscape of hepatocellular carcinoma & Train & 3,000 \\
-  5 & GSE132509 & Blood & Acute lymphoblastic leukemia bone marrow cells & Train & 2,984 \\
+  1 & GSE123902 & Lung & Lung adenocarcinoma TME & Train & 2,753 \\
+  2 & GSE183904 & Gastric & Gastric cancer TME & Val & 3,000 \\
+  3 & GSE123813 & Skin & Basal cell carcinoma & Train & 3,000 \\
+  4 & GSE98638 & Liver & HCC T cell landscape & Train & 3,000 \\
+  5 & GSE132509 & Blood & ALL bone marrow cells & Train & 2,984 \\
 \midrule
   & \textbf{Total} & & & & \textbf{14,737} \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 % Table S5: Bootstrap 95% Confidence Intervals
