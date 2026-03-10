@@ -341,7 +341,7 @@ def create_architecture_figure(output_dir=None):
                color="#F9A825", linewidth=0.8, style="<->")
 
     # scGPT latent annotation
-    ax.text(cx1 + BW / 2, cy + BH + 0.22,
+    ax.text(cx1 + BW / 2, cy + BH + 0.10,
             "scGPT latent =\nDiT training target",
             ha="center", va="bottom", fontsize=FONT_ARCH_SUBLABEL, color=C_MID_GREY,
             fontweight="normal", zorder=5)
@@ -422,7 +422,7 @@ def create_architecture_figure(output_dir=None):
     cond_label_x = cond_bx + cond_bw / 2
     cond_label_y = cond_by - 0.22
     cond_label = FancyBboxPatch(
-        (cond_label_x - 0.26, cond_label_y - 0.07), 0.52, 0.16,
+        (cond_label_x - 0.32, cond_label_y - 0.07), 0.64, 0.16,
         boxstyle="round,pad=0.03",
         facecolor=C_WHITE,
         edgecolor=C_SHARED,
@@ -437,8 +437,8 @@ def create_architecture_figure(output_dir=None):
     draw_arrow(ax, (cond_bx + cond_bw / 2, cond_by + cond_bh),
                (dit_bx + dit_bw * 0.35, dit_by),
                color=C_SHARED, linewidth=1.0)
-    adaln_box_x = cond_bx + cond_bw / 2 + 0.35
-    adaln_box_y = cond_by + cond_bh + 0.04
+    adaln_box_x = cond_bx + cond_bw / 2 + 0.45
+    adaln_box_y = cond_by + cond_bh + 0.10
     adaln_box = FancyBboxPatch(
         (adaln_box_x, adaln_box_y), 0.42, 0.17,
         boxstyle="round,pad=0.03",
@@ -494,9 +494,9 @@ def create_architecture_figure(output_dir=None):
                (dec_x0, dec_y_mid + SBH / 2),
                color=C_GEN_MID, linewidth=1.3)
     sampled_label_x = (ode_x + ode_w + dec_x0) / 2
-    sampled_label_y = dec_y_mid + SBH / 2 + 0.32
+    sampled_label_y = dec_y_mid + SBH / 2 + 0.42
     sampled_label = FancyBboxPatch(
-        (sampled_label_x - 0.33, sampled_label_y - 0.07), 0.66, 0.16,
+        (sampled_label_x - 0.41, sampled_label_y - 0.07), 0.82, 0.16,
         boxstyle="round,pad=0.03",
         facecolor=C_WHITE,
         edgecolor=C_GEN_DARK,

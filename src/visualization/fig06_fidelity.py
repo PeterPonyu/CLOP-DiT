@@ -102,7 +102,7 @@ def plot_per_type_generation(
     fd_mean = float(np.nanmean(fd_array)) if fd_valid.any() else float("nan")
 
     fig = plt.figure(figsize=(14.0, 7.2))
-    gs_g = fig.add_gridspec(1, 3, wspace=0.50, width_ratios=[1.2, 1.2, 1.0])
+    gs_g = fig.add_gridspec(1, 3, wspace=0.55, width_ratios=[1.1, 1.3, 1.0])
     fig._clop_layout_rect = (0.02, 0.06, 0.98, 0.95)
     summary = data.get("summary", {})
     # Title moved to LaTeX caption
@@ -191,7 +191,8 @@ def plot_per_type_generation(
             clip_on=False,
         )
         try:
-            cbar = add_colorbar_safe(sc, ax=ax, label="Diversity ratio", shrink=0.8, pad=0.10)
+            cbar = add_colorbar_safe(sc, ax=ax, label="Diversity ratio", shrink=0.45, pad=0.04, aspect=12)
+            cbar.ax.set_position([ax.get_position().x1 - 0.04, ax.get_position().y0 + 0.02, 0.008, ax.get_position().height * 0.35])
         except Exception:
             cbar = fig.colorbar(sc, ax=ax, shrink=0.8, pad=0.10)
             cbar.set_label("Diversity ratio", fontsize=11)

@@ -172,8 +172,8 @@ def main():
     )
     from scipy import stats as scipy_stats
 
-    fig = plt.figure(figsize=(18, 11))
-    gs = fig.add_gridspec(2, 2, width_ratios=[1.2, 1.0], wspace=0.50, hspace=0.45)
+    fig = plt.figure(figsize=(17, 12))
+    gs = fig.add_gridspec(2, 2, width_ratios=[1.2, 1.0], wspace=0.40, hspace=0.35)
 
     # ── Panel (a): SWD per Cell Type (sorted bar chart) ──
     sorted_results = sorted(results, key=lambda r: r["swd"], reverse=True)
@@ -357,7 +357,7 @@ def main():
     fig_dir = project_root / "results" / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
     import shutil
-    for suffix in (".pdf", ".png"):
+    for suffix in (".pdf", ".jpg"):
         src = output_dir / f"variance_matching_pilot{suffix}"
         dst = fig_dir / f"fig19_variance_matching_pilot{suffix}"
         if src.exists():

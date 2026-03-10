@@ -205,7 +205,7 @@ def plot_panel_m(
         from sklearn.decomposition import PCA as _PCA
         from sklearn.neighbors import KNeighborsClassifier
 
-        gs_row3 = outer[2].subgridspec(1, 3, wspace=0.48)
+        gs_row3 = outer[2].subgridspec(1, 3, wspace=0.55)
         ax_c1 = fig.add_subplot(gs_row3[0, 0])
         add_panel_label(ax_c1, 'e', x=-0.12, y=_panel_label_y)
         ax_c2 = fig.add_subplot(gs_row3[0, 1])
@@ -345,13 +345,13 @@ def plot_panel_m(
         leg = _ax.get_legend()
         if leg is not None:
             leg.remove()
-    n_legend_cols = min(len(handles), 6)
+    legend_y = 0.63 if has_row3 else 0.52
     fig.legend(
         handles, labels, loc="upper center",
-        bbox_to_anchor=(0.5, 0.67 if has_row3 else 0.56),
-        ncol=n_legend_cols, fontsize=FONT_TICK_DENSE,
+        bbox_to_anchor=(0.5, legend_y),
+        ncol=min(len(handles), 8), fontsize=FONT_TICK_DENSE,
         markerscale=1.5, frameon=False,
-        columnspacing=0.6, handletextpad=0.4,
+        columnspacing=0.4, handletextpad=0.3,
     )
 
     # Layout rect: legend is inside axes, no bottom space needed

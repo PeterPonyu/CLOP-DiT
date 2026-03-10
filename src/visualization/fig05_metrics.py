@@ -374,8 +374,8 @@ def plot_metrics_summary(
     if not train_metrics and not gen_metrics:
         return None
 
-    fig = plt.figure(figsize=(14.0, 8.4))
-    gs = fig.add_gridspec(2, 2, wspace=0.56, hspace=0.56, width_ratios=[1.1, 1.0])
+    fig = plt.figure(figsize=(15.5, 9.0))
+    gs = fig.add_gridspec(2, 2, wspace=0.60, hspace=0.50, width_ratios=[1.2, 1.0])
     fig._clop_layout_rect = (0.03, 0.04, 0.97, 0.95)
     # Note: Figure-level title removed per revision requirements
 
@@ -516,9 +516,9 @@ def plot_metrics_summary(
                         bl_vals.append(0)
                     else:
                         bl_vals.append(0)
-                ax2.scatter(x_pos, bl_vals, marker="o", s=80, zorder=4,
-                            color=COLORS["baseline_gauss"], edgecolors="white",
-                            linewidth=0.8, label="Gaussian")
+                ax2.scatter(x_pos, bl_vals, marker="x", s=60, zorder=4,
+                            color=COLORS["baseline_gauss"], linewidth=2.0,
+                            label="Gaussian baseline")
                 ax2.legend(fontsize=FONT_LEGEND_DENSE, frameon=False, loc="upper right")
         ax2.set_title("Quality Profile", fontsize=FONT_TITLE)
         add_panel_label(ax2, 'b', x=-0.10, y=1.05)

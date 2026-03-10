@@ -403,9 +403,9 @@ def plot_clustering_and_classifier_merged(
     apply_style()
 
     fig = plt.figure(figsize=(16.0, 11.2))
-    gs = fig.add_gridspec(2, 3, wspace=0.58, hspace=0.58,
+    gs = fig.add_gridspec(2, 3, wspace=0.62, hspace=0.42,
                           height_ratios=[1, 1.05],
-                          width_ratios=[1.5, 1.2, 1.0])
+                          width_ratios=[1.4, 1.3, 1.0])
     # Title moved to LaTeX caption
     # set_figure_suptitle(fig, "Downstream Validation: Clustering & Classifier Alignment", fontsize=11)
 
@@ -508,15 +508,14 @@ def plot_clustering_and_classifier_merged(
             max_rows=20,
         )
         ax_q2.text(
-            0.96,
-            0.96,
+            0.50,
+            -0.15,
             f"Acc {gen_acc:.3f}  |  Median F1 {np.median(summary['f1']):.3f}",
             transform=ax_q2.transAxes,
-            ha="right",
+            ha="center",
             va="top",
             fontsize=9,
             color=COLORS["neutral"],
-            bbox=dict(boxstyle="round,pad=0.22", fc="white", ec=COLORS["border_light"], alpha=0.92),
         )
     else:
         ax_q2.text(0.5, 0.5, "No per-type data", ha="center", va="center",

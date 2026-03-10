@@ -34,7 +34,7 @@ def _add_training_phase_bands(ax: plt.Axes, max_epoch: int) -> None:
     ax.axvspan(p1_end, p2_end, color=COLORS["neutral"], alpha=0.05, lw=0)
     ax.axvspan(p2_end, max_epoch, color=COLORS["baseline_gauss"], alpha=0.07, lw=0)
     ax.text(
-        0.03, 0.55,
+        0.03, 0.97,
         "Phase I: rapid\nPhase II: refine\nPhase III: converge",
         transform=ax.transAxes,
         va="top",

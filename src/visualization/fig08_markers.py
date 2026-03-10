@@ -168,8 +168,8 @@ def plot_marker_gene_comparison(
     ax1.set_title("Marker Expression by Lineage", fontsize=12)
     ax1.grid(axis="x", linestyle=":", linewidth=0.7, alpha=0.35)
     ax1.set_axisbelow(True)
-    ax1.legend(fontsize=10, loc="lower right", frameon=True,
-               facecolor="white", edgecolor="none", framealpha=0.9)
+    ax1.legend(fontsize=10, loc="upper right", frameon=False,
+               bbox_to_anchor=(1.0, 1.0))
     add_panel_label(ax1, 'a', x=-0.10, y=1.05)
 
     # -- N2 & N3: Heatmaps (if per-type labels) --

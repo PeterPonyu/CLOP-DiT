@@ -104,8 +104,10 @@ def plot_expression_correlation(
     from matplotlib.ticker import MaxNLocator as _MaxNLoc
     ax1.xaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
     ax1.yaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
-    cbar = add_colorbar_safe(sc, ax=ax1, label="|Resid|", shrink=0.50, pad=0.03, aspect=16)
-    cbar.ax.tick_params(labelsize=9, length=2)
+    cax = fig.add_axes([0.44, 0.58, 0.008, 0.12])
+    cbar = fig.colorbar(sc, cax=cax)
+    cbar.set_label("|Resid|", fontsize=9)
+    cbar.ax.tick_params(labelsize=8, length=2)
     from .style import set_scientific_tickformat
     set_scientific_tickformat(cbar.ax, axis="y", scilimits=(-2, 2))
     add_panel_label(ax1, 'a', x=-0.10, y=1.05)
@@ -225,8 +227,8 @@ def plot_expression_correlation(
             fontsize=10, rotation=90, ha="center",
         )
         ax3.set_ylabel("Expression (mean \u00b1 SEM)", fontsize=11)
-        ax3.legend(fontsize=10, loc="lower right", ncol=1, frameon=False,
-                   bbox_to_anchor=(1.02, 0.0))
+        ax3.legend(fontsize=10, loc="upper right", ncol=1, frameon=False,
+                   bbox_to_anchor=(1.0, 1.0))
     else:
         ax3.text(0.5, 0.5, "No marker genes found", ha="center", va="center",
                  transform=ax3.transAxes)

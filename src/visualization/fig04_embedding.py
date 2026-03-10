@@ -106,8 +106,8 @@ def plot_embedding_space_merged(
     apply_style()
     n_rows = (1 if has_b else 0) + (1 if has_e else 0)
     fig = plt.figure(figsize=(14.8, 5.2 * n_rows))
-    gs = fig.add_gridspec(n_rows, 3, wspace=0.52, hspace=0.25,
-                          width_ratios=[1.2, 1.2, 1.1])
+    gs = fig.add_gridspec(n_rows, 3, wspace=0.58, hspace=0.25,
+                          width_ratios=[1.1, 1.1, 1.2])
     # suptitle removed per revision; title information moved to LaTeX caption
     fig._clop_layout_rect = (0.02, 0.03, 0.98, 0.97)
     row = 0

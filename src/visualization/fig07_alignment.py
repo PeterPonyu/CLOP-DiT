@@ -161,7 +161,7 @@ def plot_text_cell_heatmap(
     labels_sorted = [labels[i] for i in sort_order]
 
     fig = plt.figure(figsize=(15.5, 9.5))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.25, 0.80, 0.68], wspace=0.52)
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.20, 0.85, 0.68], wspace=0.55)
     # Title moved to LaTeX caption
 
     # ── F1: Clustered heatmap with annotations ──

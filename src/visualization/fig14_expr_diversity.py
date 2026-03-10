@@ -71,8 +71,10 @@ def plot_expression_diversity_panel(
         if real_vals[_bi] > 0:
             ratio = gen_vals[_bi] / real_vals[_bi]
             max_h = max(real_vals[_bi], gen_vals[_bi])
-            ax.text(_bi, max_h * 1.05, f"ratio={ratio:.2f}",
-                    ha="center", fontsize=8, color=COLORS["neutral"])
+            y_offset = 1.03 if abs(ratio - 1.0) < 0.02 else 1.12
+            ax.text(_bi, max_h * y_offset, f"ratio={ratio:.2f}",
+                    ha="center", fontsize=10, fontweight="bold",
+                    color=COLORS["annotation_dark"])
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
     ax.set_ylabel("Standard Deviation")

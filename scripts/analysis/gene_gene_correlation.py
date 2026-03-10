@@ -160,7 +160,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     mantel_vals = [v["mantel_r"] for v in per_type_results.values()]
 
     fig = plt.figure(figsize=(14, 10.5))
-    gs = fig.add_gridspec(2, 2, wspace=0.50, hspace=0.50)
+    gs = fig.add_gridspec(2, 2, wspace=0.45, hspace=0.40)
 
     # ── Panel (a): Distribution with null baseline ──
     ax = fig.add_subplot(gs[0, 0])
@@ -217,8 +217,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
             else f"Mean 95% CI: [{ci_lo:.3f}, {ci_hi:.3f}]\n"
                  f"Null mean: {null_mean:.3f}",
             transform=ax.transAxes, ha="right", va="top",
-            fontsize=FONT_SMALL, color=COLORS["neutral"],
-            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="none", alpha=0.88))
+            fontsize=FONT_SMALL, color=COLORS["neutral"])
 
     ax.legend(fontsize=FONT_ANNOTATION, frameon=True, framealpha=0.9, edgecolor="none",
               loc="upper left")
@@ -251,8 +250,8 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     ax2.text(0.97, 0.03,
              f"r = {best_r:.3f}\nMAD = {mad:.3f}\nRMSE = {best_rmse:.3f}",
              transform=ax2.transAxes, ha="right", va="bottom",
-             fontsize=FONT_ANNOTATION, color="white",
-             bbox=dict(boxstyle="round,pad=0.25", fc="black", ec="none", alpha=0.6))
+             fontsize=FONT_ANNOTATION, color="black",
+             bbox=dict(boxstyle="round,pad=0.25", fc="white", ec="#999", alpha=0.85))
     add_colorbar_safe(im, ax=ax2, shrink=0.75, label="\u0394 corr (gen \u2212 real)")
 
     # ── Panel (c): Worst-preserved cell type ──
@@ -278,8 +277,8 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     ax3.text(0.97, 0.03,
              f"r = {worst_r:.3f}\nMAD = {mad_w:.3f}\nRMSE = {worst_rmse:.3f}",
              transform=ax3.transAxes, ha="right", va="bottom",
-             fontsize=FONT_ANNOTATION, color="white",
-             bbox=dict(boxstyle="round,pad=0.25", fc="black", ec="none", alpha=0.6))
+             fontsize=FONT_ANNOTATION, color="black",
+             bbox=dict(boxstyle="round,pad=0.25", fc="white", ec="#999", alpha=0.85))
     add_colorbar_safe(im2, ax=ax3, shrink=0.75, label="\u0394 corr (gen \u2212 real)")
 
     # ── Panel (d): Replace non-informative cell-count panel ──
@@ -335,8 +334,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
 
     ax4.text(0.03, 0.03, stat_text,
              transform=ax4.transAxes, ha="left", va="bottom",
-             fontsize=FONT_SMALL, color=COLORS["neutral"],
-             bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="none", alpha=0.88))
+             fontsize=FONT_SMALL, color=COLORS["neutral"])
 
     ax4.legend(fontsize=FONT_ANNOTATION, frameon=False)
     style_axes(ax4, "scatter",

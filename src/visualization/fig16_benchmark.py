@@ -99,7 +99,7 @@ def plot_benchmark_panel(
     ]
 
     fig = plt.figure(figsize=(16.0, 10.0))
-    gs = fig.add_gridspec(2, 2, wspace=0.55, hspace=0.50, height_ratios=[1.0, 1.15])
+    gs = fig.add_gridspec(2, 2, wspace=0.55, hspace=0.38, height_ratios=[1.0, 1.15])
 
     # ── S1: Heatmap (methods x metrics) ──
     ax1 = fig.add_subplot(gs[0, 0])

@@ -55,7 +55,7 @@ def plot_de_concordance_panel(
     n_contrasts = len(contrasts)
 
     fig = plt.figure(figsize=(16.0, 7.0))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.5, 1.0, 1.0], wspace=0.60)
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.4, 1.1, 1.1], wspace=0.65)
     fig._clop_layout_rect = (0.02, 0.10, 0.98, 0.96)
 
     # ── Panel (a): effect-size weighted logFC scatter ──
@@ -131,6 +131,7 @@ def plot_de_concordance_panel(
                                     connectionstyle="arc3,rad=0.15"),
                     color=COLORS["annotation_dark"],
                     ha="center",
+                    bbox=dict(boxstyle="round,pad=0.15", fc="none", ec="none"),
                 )
 
         # ── Minimal in-plot annotation: 2 key stats only ──
@@ -157,8 +158,7 @@ def plot_de_concordance_panel(
                           orientation="horizontal", aspect=22)
 
         # Small legend (sign-disagreement + y=x) inside lower-left; sparse there
-        ax.legend(fontsize=FONT_ANNOTATION, frameon=True,
-                  framealpha=0.85, edgecolor="none",
+        ax.legend(fontsize=FONT_ANNOTATION, frameon=False,
                   loc="lower left", bbox_to_anchor=(0.01, 0.01))
 
     # Contrast name embedded in title as a smaller second line — no in-axes text needed

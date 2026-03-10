@@ -82,15 +82,13 @@ def plot_panel_l(
     ax1.legend(
         lines1 + lines2,
         labels1 + labels2,
-        loc="upper left",
-        bbox_to_anchor=(0.0, 1.0),
-        ncol=1,
+        loc="lower left",
+        bbox_to_anchor=(0.0, -0.30),
+        ncol=3,
         fontsize=9,
-        frameon=True,
-        facecolor="white",
-        edgecolor="none",
-        framealpha=0.92,
+        frameon=False,
     )
+    fig._clop_layout_rect = (0.02, 0.12, 0.98, 0.95)
 
     best_idx = np.argmin(fds)
     if noise_scales[best_idx] != chosen_eps:

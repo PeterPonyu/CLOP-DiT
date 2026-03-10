@@ -97,14 +97,15 @@ def plot_expression_analysis(
 
     # Annotate top 3 divergent genes with staggered offsets
     top_cv_idx = np.argsort(cv_diff)[-3:]
-    _offsets_cv = [(-70, -30), (20, 22), (-75, 20)]
+    _offsets_cv = [(-85, -40), (30, 30), (-90, 30)]
     for j, i in enumerate(top_cv_idx):
         if i < len(gene_names):
             ax1.annotate(gene_names[i], (real_cv[i], gen_cv[i]),
-                         fontsize=11, xytext=_offsets_cv[j % len(_offsets_cv)],
+                         fontsize=10, xytext=_offsets_cv[j % len(_offsets_cv)],
                          textcoords="offset points",
                          arrowprops=dict(arrowstyle="->", lw=0.5, color="#555"),
-                         color="#333")
+                         color="#333",
+                         bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.8))
 
     cv_corr = np.corrcoef(real_cv, gen_cv)[0, 1]
     ax1.legend(fontsize=10, frameon=False)
@@ -169,8 +170,8 @@ def plot_expression_analysis(
     ax3.set_xlabel("Per-Cell Std Dev", fontsize=11)
     ax3.set_ylabel("Density", fontsize=11)
     ax3.set_title("Per-Cell Variability Distribution", fontsize=12)
-    ax3.legend(fontsize=10, loc='upper right', bbox_to_anchor=(1.0, 1.0),
-               frameon=True, facecolor='white', edgecolor='none', framealpha=0.85)
+    ax3.legend(fontsize=10, loc='upper left', bbox_to_anchor=(0.0, 1.0),
+               frameon=False)
     ax3.locator_params(axis='x', nbins=4)
     add_panel_label(ax3, 'c', x=-0.10, y=1.05)
 

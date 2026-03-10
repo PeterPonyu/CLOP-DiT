@@ -145,7 +145,7 @@ def plot_diagnostics(
         ax.set_xticks(x)
         _type_labels_d = [abbreviate_cell_type(type_names.get(int(k), f"Type {k}"), 22)
                           for k in type_ids]
-        ax.set_xticklabels(_type_labels_d, fontsize=FONT_DENSE_YTICK, rotation=20, ha="right")
+        ax.set_xticklabels(_type_labels_d, fontsize=FONT_DENSE_YTICK, rotation=45, ha="right")
         ax.set_xlabel("Cell Type")
         ax.set_ylabel("Intra-Type Diversity (1 - mean cosine)")
         gain = t5["summary"]["mean_diversity_gain"]
@@ -165,8 +165,8 @@ def plot_diagnostics(
                 _labels.append(_l)
     if _handles:
         fig.legend(_handles, _labels, loc='lower center',
-                   bbox_to_anchor=(0.5, -0.04), fontsize=10, frameon=False,
-                   ncol=min(len(_handles), 4))
+                   bbox_to_anchor=(0.35, -0.04), fontsize=9, frameon=False,
+                   ncol=min(len(_handles), 3))
 
     path = out / "fig12_diversity_diagnostics.png"
     save_with_vcd(fig, path, dpi)

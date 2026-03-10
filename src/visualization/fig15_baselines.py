@@ -101,7 +101,7 @@ def plot_baseline_comparison(
     directions = ["lower", "higher", "higher", "higher"]
 
     fig = plt.figure(figsize=(15.0, 6.2))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.3, 1.1, 1.2], wspace=0.52)
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.2, 1.0, 1.3], wspace=0.58)
 
     # ── O1: Grouped bar chart ──
     ax = fig.add_subplot(gs[0])
@@ -116,7 +116,7 @@ def plot_baseline_comparison(
                alpha=0.85, edgecolor="white")
     ax.set_xticks(x)
     ax.set_xticklabels(metric_labels, fontsize=10, rotation=0, ha="center")
-    ax.legend(fontsize=8, loc="upper right", frameon=False)
+    ax.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=min(n_methods, 3), frameon=False)
     style_axes(ax, "bar", title="Key Metrics Comparison", ylabel="Value")
 
     # ── O2: Ranked dot plot (normalised scores) ──
@@ -160,7 +160,7 @@ def plot_baseline_comparison(
     ax2.set_yticklabels(sorted_methods, fontsize=9)
     ax2.set_xlim(-0.05, 1.15)
     ax2.invert_yaxis()
-    ax2.legend(fontsize=7, loc="lower right", frameon=False, ncol=2,
+    ax2.legend(fontsize=7, loc="upper center", bbox_to_anchor=(0.5, -0.10), frameon=False, ncol=4,
                handletextpad=0.3, columnspacing=0.6)
     style_axes(ax2, "default", title="Normalised Scores (1 = best)",
                xlabel="Normalised Value")
