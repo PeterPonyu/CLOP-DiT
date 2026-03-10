@@ -21,6 +21,8 @@ from typing import Dict, List, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
+from .panel_geometry import apply_layout_rect
 from .style import (
     COLORS,
     FONT_DENSE_YTICK,
@@ -137,7 +139,16 @@ def _plot_classifier_metric_heatmap(
     ax.set_ylabel("Cell Type (sorted by F1)")
     # ax.set_xlabel("Metric")  # Removed to reduce label density
 
-    cbar = add_colorbar_safe(im, ax=ax, orientation="horizontal", shrink=0.55, pad=0.12, aspect=24)
+    cax = add_axes_next_to(
+        fig,
+        ax,
+        side="bottom",
+        width=ax.get_position().width * 0.42,
+        height=0.018,
+        pad=0.045,
+        align="right",
+    )
+    cbar = fig.colorbar(im, cax=cax, orientation="horizontal")
     cbar.set_label("Score", fontsize=10)
     cbar.ax.tick_params(labelsize=8)
     return summary
@@ -406,6 +417,7 @@ def plot_clustering_and_classifier_merged(
     gs = fig.add_gridspec(2, 3, wspace=0.62, hspace=0.42,
                           height_ratios=[1, 1.05],
                           width_ratios=[1.4, 1.3, 1.0])
+    apply_layout_rect(fig, (0.03, 0.08, 0.98, 0.96))
     # Title moved to LaTeX caption
     # set_figure_suptitle(fig, "Downstream Validation: Clustering & Classifier Alignment", fontsize=11)
 
@@ -507,13 +519,17 @@ def plot_clustering_and_classifier_merged(
             class_names or [f"C{i}" for i in range(np.array(cm).shape[0])],
             max_rows=20,
         )
-        ax_q2.text(
+        note_ax = add_shared_legend_axes(
+            fig,
+            (ax_q2.get_position().x0, ax_q2.get_position().y0 - 0.07, ax_q2.get_position().width, 0.05),
+        )
+        note_ax.text(
             0.50,
-            -0.15,
+            0.5,
             f"Acc {gen_acc:.3f}  |  Median F1 {np.median(summary['f1']):.3f}",
-            transform=ax_q2.transAxes,
+            transform=note_ax.transAxes,
             ha="center",
-            va="top",
+            va="center",
             fontsize=9,
             color=COLORS["neutral"],
         )

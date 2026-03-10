@@ -16,6 +16,8 @@ import numpy as np
 from matplotlib.colors import Normalize
 from matplotlib.ticker import MaxNLocator
 
+from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
+from .panel_geometry import apply_layout_rect
 from .style import (
     COLORS, TYPE_PALETTE, apply_style, save_with_vcd,
     add_panel_label, abbreviate_cell_type,
@@ -57,6 +59,7 @@ def plot_panel_m(
     else:
         fig = plt.figure(figsize=(_fw, 9.0))
         outer = fig.add_gridspec(2, 1, height_ratios=[2.2, 1.2], hspace=0.50)
+    apply_layout_rect(fig, (0.04, 0.04, 0.98, 0.97))
     gs_top = outer[0].subgridspec(1, n_modes, wspace=0.40)
     axes = [fig.add_subplot(gs_top[0, i]) for i in range(n_modes)]
 
@@ -301,7 +304,17 @@ def plot_panel_m(
                     ax_c2.text(j, i, f"{val:.2f}", ha="center", va="center",
                                fontsize=FONT_HEATMAP_CELL,
                                color="white" if val > np.nanmedian(div_matrix) else "black")
-        fig.colorbar(im, ax=ax_c2, shrink=0.7, pad=0.03)
+        cax = add_axes_next_to(
+            fig,
+            ax_c2,
+            side="right",
+            width=0.010,
+            height=ax_c2.get_position().height * 0.55,
+            pad=0.012,
+            align="bottom",
+            y_offset=0.01,
+        )
+        fig.colorbar(im, cax=cax)
 
         # ── C3: Pairwise cosine violin per source ──
         violin_data = []
@@ -345,17 +358,16 @@ def plot_panel_m(
         leg = _ax.get_legend()
         if leg is not None:
             leg.remove()
-    legend_y = 0.63 if has_row3 else 0.52
-    fig.legend(
+    legend_ax = add_shared_legend_axes(
+        fig,
+        (0.08, 0.60 if has_row3 else 0.49, 0.84, 0.055),
+    )
+    legend_ax.legend(
         handles, labels, loc="upper center",
-        bbox_to_anchor=(0.5, legend_y),
         ncol=min(len(handles), 8), fontsize=FONT_TICK_DENSE,
         markerscale=1.5, frameon=False,
         columnspacing=0.4, handletextpad=0.3,
     )
-
-    # Layout rect: legend is inside axes, no bottom space needed
-    fig._clop_layout_rect = (0.02, 0.03, 0.98, 0.98)
 
     path = output_dir / "fig11_conditioning_umap.png"
     save_with_vcd(fig, path, dpi)

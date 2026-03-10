@@ -14,6 +14,8 @@ from typing import Dict, List, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .explicit_positioning import add_shared_legend_axes
+from .panel_geometry import apply_layout_rect
 from .style import COLORS, FONT_DENSE_YTICK, apply_style, save_with_vcd, add_panel_label, abbreviate_cell_type
 from .fig14_expr_diversity import plot_expression_diversity_panel
 
@@ -58,7 +60,7 @@ def plot_diagnostics(
     # ── Figure 12: Diversity Diagnostics (4 subplots) ──
     fig, axes = plt.subplots(2, 2, figsize=(10.0, 8.2),
                              gridspec_kw={"hspace": 0.65, "wspace": 0.62})
-    fig._clop_layout_rect = (0.02, 0.08, 0.98, 0.96)
+    apply_layout_rect(fig, (0.02, 0.12, 0.98, 0.96))
     add_panel_label(axes[0, 0], 'a', x=-0.10, y=1.05)
     add_panel_label(axes[0, 1], 'b', x=-0.10, y=1.05)
     add_panel_label(axes[1, 0], 'c', x=-0.10, y=1.05)
@@ -164,9 +166,9 @@ def plot_diagnostics(
                 _handles.append(_h)
                 _labels.append(_l)
     if _handles:
-        fig.legend(_handles, _labels, loc='lower center',
-                   bbox_to_anchor=(0.35, -0.04), fontsize=9, frameon=False,
-                   ncol=min(len(_handles), 3))
+        legend_ax = add_shared_legend_axes(fig, (0.07, 0.02, 0.46, 0.08))
+        legend_ax.legend(_handles, _labels, loc='center', fontsize=9, frameon=False,
+                         ncol=min(len(_handles), 3))
 
     path = out / "fig12_diversity_diagnostics.png"
     save_with_vcd(fig, path, dpi)

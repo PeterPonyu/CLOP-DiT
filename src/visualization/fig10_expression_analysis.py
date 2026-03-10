@@ -20,6 +20,7 @@ from typing import Callable, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .panel_geometry import apply_layout_rect
 from .style import COLORS, add_colorbar_safe, add_panel_label, quality_color, save_with_vcd
 
 logger = logging.getLogger(__name__)
@@ -74,7 +75,7 @@ def plot_expression_analysis(
 
     fig = plt.figure(figsize=(9.8, 7.4))
     gs = fig.add_gridspec(2, 2, wspace=0.58, hspace=0.56)
-    fig._clop_layout_rect = (0.03, 0.04, 0.98, 0.96)
+    apply_layout_rect(fig, (0.03, 0.04, 0.98, 0.96))
     # Note: Figure-level title removed per revision requirements; stats moved to caption
 
     # -- I1: CV scatter (real vs gen) with gene labels --
@@ -170,7 +171,7 @@ def plot_expression_analysis(
     ax3.set_xlabel("Per-Cell Std Dev", fontsize=11)
     ax3.set_ylabel("Density", fontsize=11)
     ax3.set_title("Per-Cell Variability Distribution", fontsize=12)
-    ax3.legend(fontsize=10, loc='upper left', bbox_to_anchor=(0.0, 1.0),
+    ax3.legend(fontsize=10, loc='upper left', bbox_to_anchor=(1.02, 1.0),
                frameon=False)
     ax3.locator_params(axis='x', nbins=4)
     add_panel_label(ax3, 'c', x=-0.10, y=1.05)

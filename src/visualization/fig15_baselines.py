@@ -16,6 +16,8 @@ from typing import Dict, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .explicit_positioning import add_shared_legend_axes
+from .panel_geometry import apply_layout_rect
 from .style import COLORS, FONT_SMALL, FONT_ANNOTATION, METHOD_COLORS, save_panel, style_axes, add_panel_label
 from src.utils.paths import CACHE_DIR, RESULTS_DIR, FIG_DIR
 
@@ -102,6 +104,7 @@ def plot_baseline_comparison(
 
     fig = plt.figure(figsize=(15.0, 6.2))
     gs = fig.add_gridspec(1, 3, width_ratios=[1.2, 1.0, 1.3], wspace=0.58)
+    apply_layout_rect(fig, (0.04, 0.18, 0.98, 0.95))
 
     # ── O1: Grouped bar chart ──
     ax = fig.add_subplot(gs[0])
@@ -116,7 +119,7 @@ def plot_baseline_comparison(
                alpha=0.85, edgecolor="white")
     ax.set_xticks(x)
     ax.set_xticklabels(metric_labels, fontsize=10, rotation=0, ha="center")
-    ax.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=min(n_methods, 3), frameon=False)
+    handles_a, labels_a = ax.get_legend_handles_labels()
     style_axes(ax, "bar", title="Key Metrics Comparison", ylabel="Value")
 
     # ── O2: Ranked dot plot (normalised scores) ──
@@ -160,8 +163,7 @@ def plot_baseline_comparison(
     ax2.set_yticklabels(sorted_methods, fontsize=9)
     ax2.set_xlim(-0.05, 1.15)
     ax2.invert_yaxis()
-    ax2.legend(fontsize=7, loc="upper center", bbox_to_anchor=(0.5, -0.10), frameon=False, ncol=4,
-               handletextpad=0.3, columnspacing=0.6)
+    handles_b, labels_b = ax2.get_legend_handles_labels()
     style_axes(ax2, "default", title="Normalised Scores (1 = best)",
                xlabel="Normalised Value")
 
@@ -211,7 +213,14 @@ def plot_baseline_comparison(
         sep_y = g * n_metrics - 0.5
         ax3.axhline(y=sep_y, color="#DDD", linewidth=1, linestyle="--")
 
-    fig._clop_layout_rect = (0.02, 0.06, 0.98, 0.95)
+    legend_ax_a = add_shared_legend_axes(fig, (ax.get_position().x0, 0.04, ax.get_position().width, 0.08))
+    legend_ax_a.legend(handles_a, labels_a, fontsize=8, loc="center",
+                       ncol=min(n_methods, 3), frameon=False)
+
+    legend_ax_b = add_shared_legend_axes(fig, (ax2.get_position().x0, 0.04, ax2.get_position().width, 0.08))
+    legend_ax_b.legend(handles_b, labels_b, fontsize=7, loc="center",
+                       frameon=False, ncol=4, handletextpad=0.3, columnspacing=0.6)
+
     style_axes(ax3, "bar", title="CLOP-DiT Advantage (\u0394 metric)",
                xlabel="Absolute Improvement")
 

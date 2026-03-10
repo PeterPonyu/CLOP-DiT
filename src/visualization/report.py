@@ -13,6 +13,7 @@ from typing import List
 import matplotlib.pyplot as plt
 
 from . import baseline_panels, downstream_panels
+from .style import get_export_savefig_kwargs
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ def combine_panels_pdf(
             )
             ax_tmp.imshow(img)
             ax_tmp.axis("off")
-            pdf.savefig(fig_tmp, bbox_inches="tight", pad_inches=0.1)
+            pdf.savefig(fig_tmp, **get_export_savefig_kwargs(fig_tmp, dpi=100, pad_inches=0.02))
             plt.close(fig_tmp)
 
     logger.info(f"Combined report → {combined_path}")

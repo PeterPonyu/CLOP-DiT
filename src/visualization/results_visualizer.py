@@ -562,7 +562,8 @@ class ResultsVisualizer:
 
         # Render K figure to a PIL image
         buf_k = _io.BytesIO()
-        fig_k.savefig(buf_k, format="png", dpi=self.dpi, bbox_inches="tight", pad_inches=0.08)
+        from .style import get_export_savefig_kwargs
+        fig_k.savefig(buf_k, format="png", **get_export_savefig_kwargs(fig_k, dpi=self.dpi, pad_inches=0.08))
         buf_k.seek(0)
         k_image = Image.open(buf_k)
         plt.close(fig_k)

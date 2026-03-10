@@ -20,7 +20,9 @@ from typing import Callable, Dict, List, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import COLORS, FONT_DENSE_YTICK, abbreviate_cell_type, add_colorbar_safe, add_panel_label, quality_color, save_with_vcd
+from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
+from .panel_geometry import apply_layout_rect
+from .style import COLORS, FONT_DENSE_YTICK, abbreviate_cell_type, add_panel_label, quality_color, save_with_vcd
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +85,7 @@ def plot_expression_correlation(
     fig = plt.figure(figsize=(12.0, 7.8))
     gs = fig.add_gridspec(2, 2, wspace=0.70, hspace=0.56)
     # Note: Figure-level title removed per revision requirements; stats moved to caption
-    fig._clop_layout_rect = (0.02, 0.03, 0.98, 0.95)
+    apply_layout_rect(fig, (0.04, 0.10, 0.98, 0.95))
 
     # -- H1: Density scatter with residual coloring --
     ax1 = fig.add_subplot(gs[0, 0])
@@ -104,12 +106,20 @@ def plot_expression_correlation(
     from matplotlib.ticker import MaxNLocator as _MaxNLoc
     ax1.xaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
     ax1.yaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
-    cax = fig.add_axes([0.44, 0.58, 0.008, 0.12])
-    cbar = fig.colorbar(sc, cax=cax)
+    cax = add_axes_next_to(
+        fig,
+        ax1,
+        side="bottom",
+        width=ax1.get_position().width * 0.38,
+        height=0.018,
+        pad=0.045,
+        align="right",
+    )
+    cbar = fig.colorbar(sc, cax=cax, orientation="horizontal")
     cbar.set_label("|Resid|", fontsize=9)
     cbar.ax.tick_params(labelsize=8, length=2)
     from .style import set_scientific_tickformat
-    set_scientific_tickformat(cbar.ax, axis="y", scilimits=(-2, 2))
+    set_scientific_tickformat(cbar.ax, axis="x", scilimits=(-2, 2))
     add_panel_label(ax1, 'a', x=-0.10, y=1.05)
 
     # Annotate outlier genes (top 3 residuals) with staggered offsets
@@ -227,8 +237,12 @@ def plot_expression_correlation(
             fontsize=10, rotation=90, ha="center",
         )
         ax3.set_ylabel("Expression (mean \u00b1 SEM)", fontsize=11)
-        ax3.legend(fontsize=10, loc="upper right", ncol=1, frameon=False,
-                   bbox_to_anchor=(1.0, 1.0))
+        handles, labels = ax3.get_legend_handles_labels()
+        legend_ax = add_shared_legend_axes(
+            fig,
+            (ax3.get_position().x0, ax3.get_position().y0 - 0.085, ax3.get_position().width, 0.07),
+        )
+        legend_ax.legend(handles, labels, fontsize=10, loc="center", ncol=min(len(handles), 2), frameon=False)
     else:
         ax3.text(0.5, 0.5, "No marker genes found", ha="center", va="center",
                  transform=ax3.transAxes)

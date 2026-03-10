@@ -21,9 +21,11 @@ import numpy as np
 
 from .style import (
     COLORS, FONT_HEATMAP_CELL, FONT_LEGEND, FONT_SMALL,
-    abbreviate_cell_type, add_colorbar_safe, add_panel_label,
+    abbreviate_cell_type, add_panel_label,
     quality_color, save_with_vcd, set_adaptive_ytick_labels, style_axes,
 )
+from .explicit_positioning import add_axes_next_to
+from .panel_geometry import apply_layout_rect
 from src.utils.paths import FIG_DIR
 
 logger = logging.getLogger(__name__)
@@ -103,7 +105,7 @@ def plot_per_type_generation(
 
     fig = plt.figure(figsize=(14.0, 7.2))
     gs_g = fig.add_gridspec(1, 3, wspace=0.55, width_ratios=[1.1, 1.3, 1.0])
-    fig._clop_layout_rect = (0.02, 0.06, 0.98, 0.95)
+    apply_layout_rect(fig, (0.02, 0.06, 0.98, 0.95))
     summary = data.get("summary", {})
     # Title moved to LaTeX caption
 
@@ -190,12 +192,18 @@ def plot_per_type_generation(
             linewidth=0.6,
             clip_on=False,
         )
-        try:
-            cbar = add_colorbar_safe(sc, ax=ax, label="Diversity ratio", shrink=0.45, pad=0.04, aspect=12)
-            cbar.ax.set_position([ax.get_position().x1 - 0.04, ax.get_position().y0 + 0.02, 0.008, ax.get_position().height * 0.35])
-        except Exception:
-            cbar = fig.colorbar(sc, ax=ax, shrink=0.8, pad=0.10)
-            cbar.set_label("Diversity ratio", fontsize=11)
+        cax = add_axes_next_to(
+            fig,
+            ax,
+            side="right",
+            width=0.010,
+            height=ax.get_position().height * 0.34,
+            pad=0.012,
+            align="bottom",
+            y_offset=0.012,
+        )
+        cbar = fig.colorbar(sc, cax=cax)
+        cbar.set_label("Diversity ratio", fontsize=11)
         cbar.ax.tick_params(labelsize=10)
     else:
         ax.scatter(

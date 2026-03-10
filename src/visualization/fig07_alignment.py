@@ -26,9 +26,11 @@ import numpy as np
 
 from .style import (
     COLORS, FONT_HEATMAP_CELL, FONT_SMALL, FONT_TITLE,
-    abbreviate_cell_type, add_colorbar_safe, add_panel_label,
+    abbreviate_cell_type, add_panel_label,
     quality_color, save_with_vcd, set_adaptive_ytick_labels, style_axes,
 )
+from .explicit_positioning import add_axes_next_to
+from .panel_geometry import apply_layout_rect
 from src.utils.paths import FIG_DIR
 
 logger = logging.getLogger(__name__)
@@ -163,6 +165,7 @@ def plot_text_cell_heatmap(
     fig = plt.figure(figsize=(15.5, 9.5))
     gs = fig.add_gridspec(1, 3, width_ratios=[1.20, 0.85, 0.68], wspace=0.55)
     # Title moved to LaTeX caption
+    apply_layout_rect(fig, (0.02, 0.10, 0.98, 0.95))
 
     # ── F1: Clustered heatmap with annotations ──
     ax1 = fig.add_subplot(gs[0])
@@ -197,12 +200,18 @@ def plot_text_cell_heatmap(
 
     # Off-diagonal confusion details moved to LaTeX caption for cleaner panel
 
-    try:
-        cbar = add_colorbar_safe(im, ax=ax1, label="Cosine similarity",
-                                 shrink=0.55, pad=0.03, aspect=18)
-    except Exception:
-        cbar = fig.colorbar(im, ax=ax1, shrink=0.55, pad=0.03)
-        cbar.set_label("Cosine similarity", fontsize=11)
+    cax = add_axes_next_to(
+        fig,
+        ax1,
+        side="right",
+        width=0.011,
+        height=ax1.get_position().height * 0.52,
+        pad=0.012,
+        align="bottom",
+        y_offset=0.015,
+    )
+    cbar = fig.colorbar(im, cax=cax)
+    cbar.set_label("Cosine similarity", fontsize=11)
     cbar.ax.tick_params(labelsize=10)
     cbar.ax.yaxis.set_major_locator(MaxNLocator(nbins=6))
 
@@ -388,8 +397,6 @@ def plot_text_cell_heatmap(
     )
 
     style_axes(ax3, kind="default")
-
-    fig._clop_layout_rect = (0.02, 0.10, 0.98, 0.95)
 
     if save:
         path = Path(output_dir) / "fig07_text_cell_alignment.png"

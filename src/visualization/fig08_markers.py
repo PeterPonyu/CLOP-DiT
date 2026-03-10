@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .style import COLORS, abbreviate_cell_type, add_colorbar_safe, add_panel_label, save_with_vcd
+from .panel_geometry import apply_layout_rect
 
 logger = logging.getLogger(__name__)
 
@@ -141,7 +142,7 @@ def plot_marker_gene_comparison(
 
     fig = plt.figure(figsize=(10.4, 7.3))
     gs = fig.add_gridspec(2, 2, wspace=0.52, hspace=0.44)
-    fig._clop_layout_rect = (0.03, 0.04, 0.98, 0.96)
+    apply_layout_rect(fig, (0.03, 0.08, 0.98, 0.93))
     # Note: Figure-level title removed per revision requirements
 
     # -- N1: Grouped horizontal bar chart -- mean expression per marker (real vs gen) --
@@ -168,8 +169,9 @@ def plot_marker_gene_comparison(
     ax1.set_title("Marker Expression by Lineage", fontsize=12)
     ax1.grid(axis="x", linestyle=":", linewidth=0.7, alpha=0.35)
     ax1.set_axisbelow(True)
-    ax1.legend(fontsize=10, loc="upper right", frameon=False,
-               bbox_to_anchor=(1.0, 1.0))
+    ax1.legend(fontsize=10, loc="lower left", frameon=False,
+               bbox_to_anchor=(0.0, 1.02, 1.0, 0.12),
+               mode="expand", ncol=2, borderaxespad=0.0)
     add_panel_label(ax1, 'a', x=-0.10, y=1.05)
 
     # -- N2 & N3: Heatmaps (if per-type labels) --

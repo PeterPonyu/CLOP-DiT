@@ -12,8 +12,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats as scipy_stats
 
+from .explicit_positioning import add_axes_next_to
+from .panel_geometry import apply_layout_rect
 from .style import (
-    COLORS, add_colorbar_safe, save_panel, set_figure_suptitle, style_axes,
+    COLORS, save_panel, set_figure_suptitle, style_axes,
     add_panel_label, abbreviate_cell_type,
     FONT_TITLE, FONT_LABEL, FONT_TICK, FONT_TICK_DENSE, FONT_ANNOTATION,
     FONT_HEATMAP_CELL,
@@ -56,7 +58,7 @@ def plot_de_concordance_panel(
 
     fig = plt.figure(figsize=(16.0, 7.0))
     gs = fig.add_gridspec(1, 3, width_ratios=[1.4, 1.1, 1.1], wspace=0.65)
-    fig._clop_layout_rect = (0.02, 0.10, 0.98, 0.96)
+    apply_layout_rect(fig, (0.02, 0.10, 0.98, 0.96))
 
     # ── Panel (a): effect-size weighted logFC scatter ──
     ax = fig.add_subplot(gs[0])
@@ -153,9 +155,18 @@ def plot_de_concordance_panel(
         )
 
         # Horizontal colorbar below scatter
-        add_colorbar_safe(sc, ax=ax, label=cbar_label,
-                          shrink=0.55, pad=0.15,
-                          orientation="horizontal", aspect=22)
+        cax = add_axes_next_to(
+            fig,
+            ax,
+            side="bottom",
+            width=ax.get_position().width * 0.42,
+            height=0.018,
+            pad=0.05,
+            align="right",
+        )
+        cbar = fig.colorbar(sc, cax=cax, orientation="horizontal")
+        cbar.set_label(cbar_label, fontsize=FONT_ANNOTATION)
+        cbar.ax.tick_params(labelsize=FONT_HEATMAP_CELL)
 
         # Small legend (sign-disagreement + y=x) inside lower-left; sparse there
         ax.legend(fontsize=FONT_ANNOTATION, frameon=False,
@@ -206,7 +217,18 @@ def plot_de_concordance_panel(
             ax2.text(j, i, f"{val:.2f}", ha="center", va="center",
                      fontsize=FONT_HEATMAP_CELL, fontweight="bold", color=color)
 
-    add_colorbar_safe(im, ax=ax2, shrink=0.50, pad=0.04)
+    cax2 = add_axes_next_to(
+        fig,
+        ax2,
+        side="right",
+        width=0.010,
+        height=ax2.get_position().height * 0.48,
+        pad=0.012,
+        align="bottom",
+        y_offset=0.02,
+    )
+    cbar2 = fig.colorbar(im, cax=cax2)
+    cbar2.ax.tick_params(labelsize=FONT_HEATMAP_CELL)
     style_axes(ax2, "heatmap", title="Concordance Across Contrasts")
 
     # ── Panel (c): grouped bar chart ──

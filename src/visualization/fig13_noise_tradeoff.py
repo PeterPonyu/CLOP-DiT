@@ -14,6 +14,8 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .explicit_positioning import add_shared_legend_axes
+from .panel_geometry import apply_layout_rect
 from .style import COLORS, apply_style, save_with_vcd, add_panel_label
 
 logger = logging.getLogger(__name__)
@@ -34,6 +36,7 @@ def plot_panel_l(
 
     apply_style()
     fig, ax1 = plt.subplots(figsize=(7.5, 4.8))
+    apply_layout_rect(fig, (0.08, 0.18, 0.98, 0.95))
     # Title moved to LaTeX caption
     # set_figure_suptitle(fig, "Noise-Scale Trade-off (CFG=1.5)", fontsize=11)
     add_panel_label(ax1, 'a', x=-0.10, y=1.05)
@@ -79,16 +82,15 @@ def plot_panel_l(
 
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
-    ax1.legend(
+    legend_ax = add_shared_legend_axes(fig, (0.10, 0.02, 0.82, 0.10))
+    legend_ax.legend(
         lines1 + lines2,
         labels1 + labels2,
-        loc="lower left",
-        bbox_to_anchor=(0.0, -0.30),
+        loc="center",
         ncol=3,
         fontsize=9,
         frameon=False,
     )
-    fig._clop_layout_rect = (0.02, 0.12, 0.98, 0.95)
 
     best_idx = np.argmin(fds)
     if noise_scales[best_idx] != chosen_eps:

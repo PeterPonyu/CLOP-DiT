@@ -16,7 +16,7 @@ import argparse
 import shutil
 import sys
 from pathlib import Path
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 # Single source of truth: 20 article figure basenames (no .pdf).
 # Order matches the LaTeX \begin{figure} sequence in articles/clop_dit_biology.tex,
@@ -100,6 +100,68 @@ ARTICLE_FIGURE_PRODUCERS: List[Tuple[str, str]] = [
 ]
 
 _N_FIGURES = len(ARTICLE_FIGURE_BASENAMES)
+_PREVIEW_SUFFIXES = {".jpg"}
+_SOURCE_SUFFIXES = {".pdf", ".jpg", ".jpeg", ".png"}
+_TARGET_SUFFIXES = {".pdf", ".jpg", ".jpeg", ".png"}
+_TARGET_KEEP_NAMES = {"README.md"}
+
+
+def expected_source_artifacts(*, keep_preview: bool = True) -> set[str]:
+    """Return the canonical generated figure artifacts in ``results/figures``."""
+    suffixes = {".pdf"}
+    if keep_preview:
+        suffixes.update(_PREVIEW_SUFFIXES)
+    return {f"{source_base}{suffix}" for source_base in _SOURCE_BASENAMES for suffix in suffixes}
+
+
+def expected_target_artifacts() -> set[str]:
+    """Return the canonical article-facing artifacts in ``articles/figures``."""
+    return {f"{article_base}.pdf" for article_base in ARTICLE_FIGURE_BASENAMES} | _TARGET_KEEP_NAMES
+
+
+def cleanup_legacy_artifacts(
+    source_dir: Path,
+    target_dir: Path,
+    *,
+    keep_preview: bool = True,
+) -> Dict[str, list[str]]:
+    """Remove stale figure artifacts outside the canonical manifest.
+
+    Returns a summary mapping ``source_removed`` / ``target_removed`` to the
+    deleted filenames.
+    """
+    source_dir = Path(source_dir).resolve()
+    target_dir = Path(target_dir).resolve()
+
+    source_keep = expected_source_artifacts(keep_preview=keep_preview)
+    target_keep = expected_target_artifacts()
+    removed = {"source_removed": [], "target_removed": []}
+
+    if source_dir.exists():
+        for item in sorted(source_dir.iterdir()):
+            if not item.is_file():
+                continue
+            if item.suffix.lower() not in _SOURCE_SUFFIXES:
+                continue
+            if not (item.stem.startswith("fig") or item.name == "clop_dit_full_report.pdf"):
+                continue
+            if item.name in source_keep:
+                continue
+            item.unlink()
+            removed["source_removed"].append(item.name)
+
+    if target_dir.exists():
+        for item in sorted(target_dir.iterdir()):
+            if item.name in target_keep:
+                continue
+            if item.suffix.lower() not in _TARGET_SUFFIXES:
+                continue
+            if not (item.stem.startswith("fig") or item.is_symlink()):
+                continue
+            item.unlink()
+            removed["target_removed"].append(item.name)
+
+    return removed
 
 
 def deliver_figures(
@@ -108,6 +170,8 @@ def deliver_figures(
     *,
     symlink: bool = True,
     check_only: bool = False,
+    cleanup: bool = False,
+    keep_preview: bool = True,
 ) -> bool:
     """Verify all article figure PDFs exist in source_dir and optionally link/copy to target_dir.
 
@@ -141,6 +205,11 @@ def deliver_figures(
         return True
 
     target_dir.mkdir(parents=True, exist_ok=True)
+    if cleanup:
+        removed = cleanup_legacy_artifacts(source_dir, target_dir, keep_preview=keep_preview)
+        for category, names in removed.items():
+            if names:
+                print(f"  Cleaned {category}: {', '.join(names)}")
     for article_base in ARTICLE_FIGURE_BASENAMES:
         source_base = _SOURCE_MAP[article_base]
         src = source_dir / f"{source_base}.pdf"
@@ -179,6 +248,11 @@ def main() -> int:
         help="Copy files instead of creating symlinks (default: symlink)",
     )
     parser.add_argument(
+        "--no-cleanup",
+        action="store_true",
+        help="Do not remove stale figure artifacts outside the canonical manifest",
+    )
+    parser.add_argument(
         "--source-dir",
         type=Path,
         default=None,
@@ -205,7 +279,13 @@ def main() -> int:
         return 0 if ok else 1
 
     print(f"Checking {_N_FIGURES} article figures in {source}...")
-    ok = deliver_figures(source, target, symlink=not args.copy, check_only=False)
+    ok = deliver_figures(
+        source,
+        target,
+        symlink=not args.copy,
+        check_only=False,
+        cleanup=not args.no_cleanup,
+    )
     if not ok:
         print("Run 'bash scripts/regenerate_report.sh' to generate them.", file=sys.stderr)
         return 1

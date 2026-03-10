@@ -18,6 +18,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .panel_geometry import apply_layout_rect
 from .style import (
     COLORS, FONT_SMALL, FONT_ANNOTATION, METHOD_COLORS, abbreviate_cell_type,
     add_colorbar_safe, add_panel_label, save_panel, save_with_vcd,
@@ -100,6 +101,7 @@ def plot_benchmark_panel(
 
     fig = plt.figure(figsize=(16.0, 10.0))
     gs = fig.add_gridspec(2, 2, wspace=0.55, hspace=0.38, height_ratios=[1.0, 1.15])
+    apply_layout_rect(fig, (0.02, 0.08, 0.98, 0.95))
 
     # ── S1: Heatmap (methods x metrics) ──
     ax1 = fig.add_subplot(gs[0, 0])
@@ -219,7 +221,6 @@ def plot_benchmark_panel(
     ax3.set_xticklabels([km[1] for km in key_metrics], fontsize=9, rotation=20, ha="right")
     ax3.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.15),
                ncol=min(n_methods, 4), frameon=False, columnspacing=0.8)
-    fig._clop_layout_rect = (0.02, 0.08, 0.98, 0.95)
     style_axes(ax3, "bar", title="Key Metrics Comparison", ylabel="Value")
 
     # ── S4: CI comparison — error-bar plot ──

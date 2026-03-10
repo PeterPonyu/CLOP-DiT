@@ -27,11 +27,13 @@ from .style import (
     abbreviate_cell_type,
     add_panel_label,
     apply_style,
+    get_export_savefig_kwargs,
     save_with_vcd,
     set_dense_tick_labels,
     set_figure_suptitle,
     style_axes,
 )
+from .panel_geometry import apply_layout_rect
 from src.utils.paths import FIG_DIR
 
 logger = logging.getLogger(__name__)
@@ -109,7 +111,7 @@ def plot_embedding_space_merged(
     gs = fig.add_gridspec(n_rows, 3, wspace=0.58, hspace=0.25,
                           width_ratios=[1.1, 1.1, 1.2])
     # suptitle removed per revision; title information moved to LaTeX caption
-    fig._clop_layout_rect = (0.02, 0.03, 0.98, 0.97)
+    apply_layout_rect(fig, (0.02, 0.03, 0.98, 0.97))
     row = 0
 
     if has_b:
@@ -462,7 +464,7 @@ def plot_clop_embedding_space(
     ax_b2.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
     ax_b2.yaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
 
-    fig._clop_layout_rect = (0.20, 0.12, 0.98, 0.84)
+    apply_layout_rect(fig, (0.20, 0.12, 0.98, 0.84))
 
     if save:
         path = Path(output_dir) / "fig04_clop_embedding_umap.png"
@@ -729,7 +731,7 @@ def plot_fidelity_and_alignment_merged(
     images = []
     for f in [fig_g, fig_f]:
         buf = std_io.BytesIO()
-        f.savefig(buf, format="png", dpi=dpi, bbox_inches="tight", pad_inches=0.08)
+        f.savefig(buf, format="png", **get_export_savefig_kwargs(f, dpi=dpi, pad_inches=0.08))
         buf.seek(0)
         images.append(Image.open(buf))
         plt.close(f)

@@ -24,6 +24,14 @@ import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import ScalarFormatter
+from matplotlib.transforms import Bbox
+
+from .panel_geometry import (
+    DEFAULT_EXPORT_PAD_INCHES,
+    DEFAULT_LAYOUT_RECT,
+    apply_layout_rect,
+    get_export_pad_inches,
+)
 
 # ──────────────────────────────────────────────────────────────
 # Publication rcParams — Nature/Cell conventions
@@ -57,7 +65,7 @@ VIS_STYLE: dict = {
     "ytick.direction": "out",
     "lines.linewidth": 1.5,
     "savefig.dpi": 300,
-    "savefig.bbox": "tight",
+    "savefig.bbox": None,
     "savefig.pad_inches": 0.10,
     "figure.constrained_layout.use": False,
     "figure.facecolor": "white",
@@ -363,6 +371,112 @@ def add_colorbar_safe(
     return cbar
 
 
+def _safe_artist_bbox(artist, renderer) -> Bbox | None:
+    """Return a display-coordinate bbox for a visible artist when possible."""
+    if artist is None or not getattr(artist, "get_visible", lambda: True)():
+        return None
+    try:
+        bbox = artist.get_window_extent(renderer)
+    except Exception:
+        return None
+    if bbox is None or bbox.width <= 0 or bbox.height <= 0:
+        return None
+    return bbox
+
+
+def _collect_export_bboxes(fig: plt.Figure, renderer) -> list[Bbox]:
+    """Collect display-coordinate bboxes that should contribute to export cropping."""
+    boxes: list[Bbox] = []
+    width_px, height_px = fig.canvas.get_width_height()
+    boxes.append(Bbox.from_extents(0, 0, width_px, height_px))
+
+    for ax in fig.get_axes():
+        if not ax.get_visible():
+            continue
+        try:
+            bbox = ax.get_tightbbox(renderer)
+        except Exception:
+            bbox = None
+        if bbox is not None and bbox.width > 0 and bbox.height > 0:
+            boxes.append(bbox)
+
+        legend = ax.get_legend()
+        legend_bbox = _safe_artist_bbox(legend, renderer)
+        if legend_bbox is not None:
+            boxes.append(legend_bbox)
+
+    for txt in getattr(fig, "texts", []) or []:
+        bbox = _safe_artist_bbox(txt, renderer)
+        if bbox is not None:
+            boxes.append(bbox)
+
+    suptitle = getattr(fig, "_suptitle", None)
+    bbox = _safe_artist_bbox(suptitle, renderer)
+    if bbox is not None:
+        boxes.append(bbox)
+
+    for legend in getattr(fig, "legends", []) or []:
+        bbox = _safe_artist_bbox(legend, renderer)
+        if bbox is not None:
+            boxes.append(bbox)
+
+    for artist in getattr(fig, "_clop_export_artists", []) or []:
+        bbox = _safe_artist_bbox(artist, renderer)
+        if bbox is not None:
+            boxes.append(bbox)
+
+    return boxes
+
+
+def compute_fixed_export_bbox(
+    fig: plt.Figure,
+    *,
+    pad_inches: float = DEFAULT_EXPORT_PAD_INCHES,
+) -> Bbox:
+    """Compute one deterministic bbox to reuse across all export formats.
+
+    The returned bbox is expressed in inches and can be passed directly to
+    ``savefig(..., bbox_inches=...)``.
+    """
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    boxes = _collect_export_bboxes(fig, renderer)
+    union = Bbox.union(boxes)
+    pad_px = float(pad_inches) * float(fig.dpi)
+    union = Bbox.from_extents(
+        union.x0 - pad_px,
+        union.y0 - pad_px,
+        union.x1 + pad_px,
+        union.y1 + pad_px,
+    )
+    return fig.dpi_scale_trans.inverted().transform_bbox(union)
+
+
+def get_export_savefig_kwargs(
+    fig: plt.Figure,
+    dpi: int = 300,
+    *,
+    layout_rect: tuple[float, float, float, float] | None = None,
+    pad_inches: float | None = None,
+) -> dict:
+    """Return deterministic savefig kwargs shared by JPEG/PDF/buffer exports."""
+    if layout_rect is not None:
+        apply_layout_rect(fig, layout_rect)
+    elif getattr(fig, "_clop_layout_rect", None) is not None and not getattr(fig, "_clop_layout_managed", False):
+        apply_layout_rect(fig, getattr(fig, "_clop_layout_rect", DEFAULT_LAYOUT_RECT))
+
+    pad = get_export_pad_inches(
+        fig,
+        fallback=float(pad_inches if pad_inches is not None else VIS_STYLE.get("savefig.pad_inches", DEFAULT_EXPORT_PAD_INCHES)),
+    )
+    bbox_inches = compute_fixed_export_bbox(fig, pad_inches=pad)
+    return {
+        "dpi": dpi,
+        "bbox_inches": bbox_inches,
+        "pad_inches": 0.0,
+    }
+
+
 def save_with_vcd(
     fig: plt.Figure,
     path: Path | str,
@@ -372,11 +486,12 @@ def save_with_vcd(
     run_vcd: bool = True,
     layout_rect: tuple[float, float, float, float] | None = None,
 ) -> Path:
-    """Canonical save: tight_layout, margins, VCD check, PNG + PDF.
+    """Canonical save: deterministic layout, shared export crop, JPEG + PDF.
 
     This is the **single** save path for all CLOP-DiT figures.
-    It avoids mixing constrained_layout with tight_layout and uses
-    consistent ``bbox_inches="tight"`` with ``pad_inches=0.08``.
+    Layout must be fixed in the figure module itself (typically via
+    ``apply_layout_rect`` and direct artist positioning); the saver only
+    computes one deterministic export bbox and reuses it across formats.
 
     Parameters
     ----------
@@ -407,17 +522,8 @@ def save_with_vcd(
         else:
             style_axes(ax, kind="default")
 
-    # 2) tight_layout — single call with generous rect to leave room for suptitle
-    #    and avoid labels being clipped.  Do NOT follow this with subplots_adjust,
-    #    which would fight the layout engine and produce inconsistent spacing.
-    try:
-        if layout_rect is not None:
-            rect = list(layout_rect)
-        else:
-            rect = list(getattr(fig, "_clop_layout_rect", None) or [0.02, 0.03, 0.98, 0.95])
-        fig.tight_layout(rect=rect, pad=0.8)
-    except Exception:
-        pass  # fall back gracefully
+    # 2) Freeze export geometry once so JPEG/PDF use the exact same crop.
+    save_kw = get_export_savefig_kwargs(fig, dpi=dpi, layout_rect=layout_rect)
 
     # 3) Run VCD (strict mode)
     if run_vcd:
@@ -446,13 +552,7 @@ def save_with_vcd(
         except Exception:
             pass
 
-    # 4) Save JPEG + PDF with identical settings.
-    #    bbox_inches="tight" recomputes the bounding box each time, which
-    #    is the most reliable way to ensure colorbars/legends are never
-    #    truncated.  Using identical pad_inches ensures the crops match.
-    #    JPEG is used instead of PNG for smaller file sizes while retaining
-    #    sufficient quality for preview / VCD checks.
-    save_kw = dict(dpi=dpi, bbox_inches="tight", pad_inches=0.10)
+    # 4) Save JPEG + PDF with identical deterministic settings.
     jpg_path = path.with_suffix(".jpg")
     fig.savefig(jpg_path, **save_kw)
     fig.savefig(path.with_suffix(".pdf"), **save_kw)

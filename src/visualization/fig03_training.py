@@ -20,6 +20,7 @@ import numpy as np
 from matplotlib.ticker import FixedLocator, MaxNLocator
 
 from .style import COLORS, FONT_LEGEND_DENSE, FONT_LABEL, FONT_TITLE, SUPTITLE_Y_CLOSE, apply_style, save_with_vcd, set_figure_suptitle, set_scientific_tickformat, add_panel_label
+from .panel_geometry import apply_layout_rect
 
 logger = logging.getLogger(__name__)
 
@@ -34,11 +35,11 @@ def _add_training_phase_bands(ax: plt.Axes, max_epoch: int) -> None:
     ax.axvspan(p1_end, p2_end, color=COLORS["neutral"], alpha=0.05, lw=0)
     ax.axvspan(p2_end, max_epoch, color=COLORS["baseline_gauss"], alpha=0.07, lw=0)
     ax.text(
-        0.03, 0.97,
+        0.97, 0.80,
         "Phase I: rapid\nPhase II: refine\nPhase III: converge",
         transform=ax.transAxes,
         va="top",
-        ha="left",
+        ha="right",
         fontsize=9,
         path_effects=[pe.withStroke(linewidth=2.5, foreground="white", alpha=0.95)],
     )
@@ -232,7 +233,7 @@ def plot_dit_training(
 
     fig = plt.figure(figsize=(9.8, 6.9))
     gs_c = fig.add_gridspec(2, 2, wspace=0.45, hspace=0.50)
-    fig._clop_layout_rect = (0.11, 0.10, 0.95, 0.92)
+    apply_layout_rect(fig, (0.11, 0.10, 0.95, 0.92))
     # Note: Figure-level title removed per revision requirements; panel labels added below
 
     # ── C1: Loss ──
@@ -362,7 +363,7 @@ def plot_training_dynamics_combined(
     gs = fig.add_gridspec(2, 4, wspace=0.55, hspace=0.52,
                           width_ratios=[1.0, 1.0, 1.0, 1.2], height_ratios=[1, 1])
     # Note: Figure-level title removed per revision requirements; panel labels added below
-    fig._clop_layout_rect = (0.05, 0.03, 0.98, 0.92)
+    apply_layout_rect(fig, (0.05, 0.03, 0.98, 0.92))
 
     # ════════════════════════════════════════════════════════════
     # Top row: CLOP (4 panels spanning columns 0-3)
