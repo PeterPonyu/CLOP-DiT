@@ -14,6 +14,7 @@ from typing import Dict, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .panel_geometry import apply_layout_rect
 from .style import COLORS, apply_style, save_with_vcd, add_panel_label
 
 logger = logging.getLogger(__name__)
@@ -55,6 +56,7 @@ def plot_expression_diversity_panel(
 
     o = t6_data["overall"]
     fig, axes = plt.subplots(1, 2, figsize=(7.5, 4.8))
+    apply_layout_rect(fig, (0.08, 0.16, 0.98, 0.96), wspace=0.34)
     add_panel_label(axes[0], chr(ord('a') + label_offset), x=-0.10, y=1.05)
     add_panel_label(axes[1], chr(ord('a') + label_offset + 1), x=-0.10, y=1.05)
 
@@ -71,9 +73,14 @@ def plot_expression_diversity_panel(
         if real_vals[_bi] > 0:
             ratio = gen_vals[_bi] / real_vals[_bi]
             max_h = max(real_vals[_bi], gen_vals[_bi])
-            y_offset = 1.03 if abs(ratio - 1.0) < 0.02 else 1.12
+            if ratio >= 1.03:
+                y_offset = 1.12
+            elif ratio <= 0.97:
+                y_offset = 1.07
+            else:
+                y_offset = 1.02
             ax.text(_bi, max_h * y_offset, f"ratio={ratio:.2f}",
-                    ha="center", fontsize=10, fontweight="bold",
+                    ha="center", fontsize=10, fontweight="normal",
                     color=COLORS["annotation_dark"])
     ax.set_xticks(x)
     ax.set_xticklabels(labels)

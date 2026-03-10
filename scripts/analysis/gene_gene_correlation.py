@@ -24,7 +24,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from src.visualization.style import apply_style, COLORS, FONT_TITLE, FONT_LABEL, add_panel_label, add_colorbar_safe, save_with_vcd
+from src.visualization.explicit_positioning import add_axes_next_to
+from src.visualization.panel_geometry import apply_layout_rect
+from src.visualization.style import apply_style, COLORS, FONT_TITLE, FONT_LABEL, add_panel_label, save_with_vcd
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "results"
@@ -159,8 +161,9 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
 
     mantel_vals = [v["mantel_r"] for v in per_type_results.values()]
 
-    fig = plt.figure(figsize=(14, 10.5))
-    gs = fig.add_gridspec(2, 2, wspace=0.45, hspace=0.40)
+    fig = plt.figure(figsize=(13.8, 9.8))
+    gs = fig.add_gridspec(2, 2, height_ratios=[0.92, 1.08], wspace=0.34, hspace=0.30)
+    apply_layout_rect(fig, (0.06, 0.08, 0.98, 0.96))
 
     # ── Panel (a): Distribution with null baseline ──
     ax = fig.add_subplot(gs[0, 0])
@@ -250,9 +253,19 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     ax2.text(0.97, 0.03,
              f"r = {best_r:.3f}\nMAD = {mad:.3f}\nRMSE = {best_rmse:.3f}",
              transform=ax2.transAxes, ha="right", va="bottom",
-             fontsize=FONT_ANNOTATION, color="black",
-             bbox=dict(boxstyle="round,pad=0.25", fc="white", ec="#999", alpha=0.85))
-    add_colorbar_safe(im, ax=ax2, shrink=0.75, label="\u0394 corr (gen \u2212 real)")
+             fontsize=FONT_ANNOTATION, color="black")
+    cax2 = add_axes_next_to(
+        fig,
+        ax2,
+        side="right",
+        width=0.010,
+        height=ax2.get_position().height * 0.52,
+        pad=0.012,
+        align="bottom",
+        y_offset=0.01,
+    )
+    cb2 = fig.colorbar(im, cax=cax2)
+    cb2.set_label("Δ corr (gen − real)", fontsize=FONT_LABEL)
 
     # ── Panel (c): Worst-preserved cell type ──
     worst_type = min(per_type_results, key=lambda k: per_type_results[k]["mantel_r"])
@@ -277,9 +290,19 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     ax3.text(0.97, 0.03,
              f"r = {worst_r:.3f}\nMAD = {mad_w:.3f}\nRMSE = {worst_rmse:.3f}",
              transform=ax3.transAxes, ha="right", va="bottom",
-             fontsize=FONT_ANNOTATION, color="black",
-             bbox=dict(boxstyle="round,pad=0.25", fc="white", ec="#999", alpha=0.85))
-    add_colorbar_safe(im2, ax=ax3, shrink=0.75, label="\u0394 corr (gen \u2212 real)")
+             fontsize=FONT_ANNOTATION, color="black")
+    cax3 = add_axes_next_to(
+        fig,
+        ax3,
+        side="right",
+        width=0.010,
+        height=ax3.get_position().height * 0.52,
+        pad=0.012,
+        align="bottom",
+        y_offset=0.01,
+    )
+    cb3 = fig.colorbar(im2, cax=cax3)
+    cb3.set_label("Δ corr (gen − real)", fontsize=FONT_LABEL)
 
     # ── Panel (d): Replace non-informative cell-count panel ──
     # Use Mantel r vs per-type mean expression variance (biological heterogeneity)
@@ -332,8 +355,8 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     else:
         stat_text = "Insufficient variance for correlation"
 
-    ax4.text(0.03, 0.03, stat_text,
-             transform=ax4.transAxes, ha="left", va="bottom",
+    ax4.text(0.03, 0.78, stat_text,
+             transform=ax4.transAxes, ha="left", va="top",
              fontsize=FONT_SMALL, color=COLORS["neutral"])
 
     ax4.legend(fontsize=FONT_ANNOTATION, frameon=False)

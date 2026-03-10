@@ -20,7 +20,7 @@ from typing import Callable, Dict, List, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
+from .explicit_positioning import add_axes_next_to, add_shared_legend_axes, layout_axes_row
 from .panel_geometry import apply_layout_rect
 from .style import COLORS, FONT_DENSE_YTICK, abbreviate_cell_type, add_panel_label, quality_color, save_with_vcd
 
@@ -82,10 +82,10 @@ def plot_expression_correlation(
     pearson_r = metrics["gene_correlation"]["pearson_r"]
     spearman_rho = metrics["gene_correlation"]["spearman_rho"]
 
-    fig = plt.figure(figsize=(12.0, 7.8))
-    gs = fig.add_gridspec(2, 2, wspace=0.70, hspace=0.56)
+    fig = plt.figure(figsize=(12.0, 7.5))
+    gs = fig.add_gridspec(2, 2, wspace=0.54, hspace=0.42)
     # Note: Figure-level title removed per revision requirements; stats moved to caption
-    apply_layout_rect(fig, (0.04, 0.10, 0.98, 0.95))
+    apply_layout_rect(fig, (0.05, 0.12, 0.98, 0.95))
 
     # -- H1: Density scatter with residual coloring --
     ax1 = fig.add_subplot(gs[0, 0])
@@ -110,9 +110,9 @@ def plot_expression_correlation(
         fig,
         ax1,
         side="bottom",
-        width=ax1.get_position().width * 0.38,
+        width=ax1.get_position().width * 0.30,
         height=0.018,
-        pad=0.045,
+        pad=0.060,
         align="right",
     )
     cbar = fig.colorbar(sc, cax=cax, orientation="horizontal")
@@ -237,12 +237,7 @@ def plot_expression_correlation(
             fontsize=10, rotation=90, ha="center",
         )
         ax3.set_ylabel("Expression (mean \u00b1 SEM)", fontsize=11)
-        handles, labels = ax3.get_legend_handles_labels()
-        legend_ax = add_shared_legend_axes(
-            fig,
-            (ax3.get_position().x0, ax3.get_position().y0 - 0.085, ax3.get_position().width, 0.07),
-        )
-        legend_ax.legend(handles, labels, fontsize=10, loc="center", ncol=min(len(handles), 2), frameon=False)
+        legend_handles_c, legend_labels_c = ax3.get_legend_handles_labels()
     else:
         ax3.text(0.5, 0.5, "No marker genes found", ha="center", va="center",
                  transform=ax3.transAxes)
@@ -274,6 +269,17 @@ def plot_expression_correlation(
              f"|\u0394|<0.01: {pct_within_001:.0f}%\n|\u0394|<0.10: {pct_within_01:.0f}%",
              transform=ax4.transAxes, ha="right", va="top", fontsize=10,
              bbox=dict(boxstyle="round,pad=0.4", fc="white", ec="none", alpha=0.9))
+
+    layout_axes_row([ax1, ax2], widths=[0.86, 1.14], gaps=[0.040])
+    layout_axes_row([ax3, ax4], widths=[1.00, 1.00], gaps=[0.018])
+    cbar_width = ax1.get_position().width * 0.30
+    cax.set_position((ax1.get_position().x1 - cbar_width, ax1.get_position().y0 - 0.070, cbar_width, 0.018))
+    if 'legend_handles_c' in locals() and legend_handles_c:
+        legend_ax = add_shared_legend_axes(
+            fig,
+            (ax3.get_position().x0, ax3.get_position().y0 - 0.082, ax3.get_position().width * 0.82, 0.06),
+        )
+        legend_ax.legend(legend_handles_c, legend_labels_c, fontsize=10, loc="center", ncol=min(len(legend_handles_c), 2), frameon=False)
 
     if save:
         if save_panel_fn:

@@ -48,13 +48,14 @@ def _arrow(ax, start, end, color="#555", lw=1.2, style="->"):
 
 def make_figure():
     apply_style()
-    fig, ax = plt.subplots(1, 1, figsize=(11, 7.5))
-    ax.set_xlim(-0.5, 10.5)
-    ax.set_ylim(-0.5, 7.5)
+    fig, ax = plt.subplots(1, 1, figsize=(10.6, 7.0))
+    ax.set_xlim(-0.12, 10.36)
+    ax.set_ylim(-0.22, 7.18)
     ax.axis("off")
+    fig.subplots_adjust(left=0.01, right=0.99, top=0.99, bottom=0.01)
 
     # Title
-    ax.text(5.0, 7.1, "Evaluation Pipeline Schematic", fontsize=15,
+    ax.text(5.0, 6.96, "Evaluation Pipeline Schematic", fontsize=15,
             ha="center", va="center", weight="bold", color="#2C3E50")
 
     # ── Row 1: Data Sources ──
@@ -175,12 +176,12 @@ def make_figure():
         ("#F8CECC", "Metrics"),
     ]
     for i, (color, label) in enumerate(legend_items):
-        x = 0.0 + i * 2.1
-        p = mpatches.FancyBboxPatch((x, -0.35), 0.3, 0.2,
+        x = 0.15 + i * 1.95
+        p = mpatches.FancyBboxPatch((x, -0.14), 0.28, 0.17,
                                      boxstyle="round,pad=0.03",
                                      facecolor=color, edgecolor="#666", lw=0.5)
         ax.add_patch(p)
-        ax.text(x + 0.4, -0.25, label, fontsize=11, va="center", color="#333")
+        ax.text(x + 0.38, -0.055, label, fontsize=10.5, va="center", color="#333")
 
     out_png = FIG_DIR / "fig_evaluation_pipeline.png"
     from src.visualization.style import save_with_vcd

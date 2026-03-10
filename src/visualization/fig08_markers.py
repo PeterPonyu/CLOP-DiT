@@ -23,8 +23,9 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import COLORS, abbreviate_cell_type, add_colorbar_safe, add_panel_label, save_with_vcd
+from .explicit_positioning import add_shared_legend_axes
 from .panel_geometry import apply_layout_rect
+from .style import COLORS, abbreviate_cell_type, add_colorbar_safe, add_panel_label, save_with_vcd
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +36,10 @@ logger = logging.getLogger(__name__)
 
 # Biologically meaningful markers covering major lineages
 MARKER_PANEL_GENES: Dict[str, List[str]] = {
-    "CD8+ T":       ["CD8A", "GZMB"],
-    "Myeloid":      ["CD68", "CD163"],
-    "Epithelial":   ["EPCAM", "KRT8"],
-    "Stromal":      ["COL1A1", "COL1A2"],
+    "CD8+ T": ["CD8A", "GZMB"],
+    "Myeloid": ["CD68", "CD163"],
+    "Epithelial": ["EPCAM", "KRT8"],
+    "Stromal": ["COL1A1", "COL1A2"],
 }
 
 # Representative types to show per-type breakdown
@@ -106,12 +107,10 @@ def plot_marker_gene_comparison(
         gene_names = json.load(f)
 
     all_marker_genes: List[str] = []
-    marker_cats: List[str] = []
-    for cat, genes in MARKER_PANEL_GENES.items():
-        for g in genes:
-            if g in gene_names:
-                all_marker_genes.append(g)
-                marker_cats.append(cat)
+    for _, genes in MARKER_PANEL_GENES.items():
+        for gene in genes:
+            if gene in gene_names:
+                all_marker_genes.append(gene)
     if len(all_marker_genes) < 2:
         logger.warning("Too few markers found -- skipping Panel N")
         return None
@@ -125,27 +124,27 @@ def plot_marker_gene_comparison(
     if real_labels is not None:
         for target_name in MARKER_PANEL_TYPES:
             for tid, tname in type_names.items():
-                if target_name.lower() in tname.lower():
-                    if tid in np.unique(real_labels):
-                        selected_type_ids.append(tid)
-                        selected_type_names.append(abbreviate_cell_type(tname, 24))
-                        break
+                if target_name.lower() in tname.lower() and tid in np.unique(real_labels):
+                    selected_type_ids.append(tid)
+                    selected_type_names.append(abbreviate_cell_type(tname, 24))
+                    break
     if len(selected_type_ids) < 3 and real_labels is not None:
         unique, counts = np.unique(real_labels, return_counts=True)
         top4 = unique[np.argsort(counts)[-4:]]
         selected_type_ids = top4.tolist()
-        selected_type_names = [abbreviate_cell_type(type_names.get(int(t), f"Type_{t}"), 24)
-                               for t in selected_type_ids]
+        selected_type_names = [
+            abbreviate_cell_type(type_names.get(int(t), f"Type_{t}"), 24)
+            for t in selected_type_ids
+        ]
 
     n_markers = len(all_marker_genes)
     n_sel_types = len(selected_type_ids)
 
-    fig = plt.figure(figsize=(10.4, 7.3))
-    gs = fig.add_gridspec(2, 2, wspace=0.52, hspace=0.44)
-    apply_layout_rect(fig, (0.03, 0.08, 0.98, 0.93))
-    # Note: Figure-level title removed per revision requirements
+    fig = plt.figure(figsize=(10.8, 7.7))
+    gs = fig.add_gridspec(2, 2, wspace=0.44, hspace=0.42, width_ratios=[1.0, 1.28])
+    apply_layout_rect(fig, (0.04, 0.10, 0.98, 0.92))
 
-    # -- N1: Grouped horizontal bar chart -- mean expression per marker (real vs gen) --
+    # -- N1: Grouped horizontal bar chart --
     ax1 = fig.add_subplot(gs[0, 0])
     r_means = np.array([real[:, gi].mean() for gi in gene_idx])
     g_means = np.array([gen[:, gi].mean() for gi in gene_idx])
@@ -156,42 +155,52 @@ def plot_marker_gene_comparison(
 
     y_pos = np.arange(n_markers)
     width = 0.35
-    ax1.barh(y_pos - width / 2, r_means, width, xerr=r_stds / np.sqrt(n_real),
-             label="Real", color=COLORS["real"], alpha=0.85, edgecolor="white",
-             capsize=3, error_kw=dict(lw=0.8))
-    ax1.barh(y_pos + width / 2, g_means, width, xerr=g_stds / np.sqrt(n_gen),
-             label="Gen", color=COLORS["generated"], alpha=0.85, edgecolor="white",
-             capsize=3, error_kw=dict(lw=0.8))
-
+    ax1.barh(
+        y_pos - width / 2,
+        r_means,
+        width,
+        xerr=r_stds / np.sqrt(n_real),
+        label="Real",
+        color=COLORS["real"],
+        alpha=0.85,
+        edgecolor="white",
+        capsize=3,
+        error_kw=dict(lw=0.8),
+    )
+    ax1.barh(
+        y_pos + width / 2,
+        g_means,
+        width,
+        xerr=g_stds / np.sqrt(n_gen),
+        label="Gen",
+        color=COLORS["generated"],
+        alpha=0.85,
+        edgecolor="white",
+        capsize=3,
+        error_kw=dict(lw=0.8),
+    )
     ax1.set_yticks(y_pos)
     ax1.set_yticklabels([f"{g[:15]}" for g in all_marker_genes], fontsize=10)
     ax1.set_xlabel("Mean Expression", fontsize=11)
-    ax1.set_title("Marker Expression by Lineage", fontsize=12)
+    ax1.set_title("Marker Expression by Lineage", fontsize=12, pad=10)
     ax1.grid(axis="x", linestyle=":", linewidth=0.7, alpha=0.35)
     ax1.set_axisbelow(True)
-    ax1.legend(fontsize=10, loc="lower left", frameon=False,
-               bbox_to_anchor=(0.0, 1.02, 1.0, 0.12),
-               mode="expand", ncol=2, borderaxespad=0.0)
-    add_panel_label(ax1, 'a', x=-0.10, y=1.05)
+    handles_top, labels_top = ax1.get_legend_handles_labels()
+    add_panel_label(ax1, "a", x=-0.10, y=1.05)
 
-    # -- N2 & N3: Heatmaps (if per-type labels) --
+    # -- N2, N3, N4 --
     if n_sel_types >= 2 and real_labels is not None and gen_labels is not None:
         real_heat = np.zeros((n_sel_types, n_markers))
         gen_heat = np.zeros((n_sel_types, n_markers))
-        real_heat_std = np.zeros((n_sel_types, n_markers))
-        gen_heat_std = np.zeros((n_sel_types, n_markers))
         for i, tid in enumerate(selected_type_ids):
             r_mask = real_labels == tid
             g_mask = gen_labels == tid
             for j, gi in enumerate(gene_idx):
                 if r_mask.any():
                     real_heat[i, j] = real[r_mask][:, gi].mean()
-                    real_heat_std[i, j] = real[r_mask][:, gi].std()
                 if g_mask.any():
                     gen_heat[i, j] = gen[g_mask][:, gi].mean()
-                    gen_heat_std[i, j] = gen[g_mask][:, gi].std()
 
-        # N2: Side-by-side annotated heatmaps
         ax2 = fig.add_subplot(gs[0, 1])
         combined = np.hstack([real_heat, gen_heat])
         vmin, vmax = combined.min(), combined.max()
@@ -199,7 +208,10 @@ def plot_marker_gene_comparison(
         display = np.hstack([real_heat, gap_col, gen_heat])
 
         cmap_n2 = mcolors.LinearSegmentedColormap.from_list(
-            "expr_heat", ["#fff3e0", "#ffcc80", "#ff9800", "#e65100", "#bf360c"], N=256)
+            "expr_heat",
+            ["#fff3e0", "#ffcc80", "#ff9800", "#e65100", "#bf360c"],
+            N=256,
+        )
         im = ax2.imshow(display, cmap=cmap_n2, aspect="auto", vmin=vmin, vmax=vmax)
         ax2.set_yticks(range(n_sel_types))
         ax2.set_yticklabels([abbreviate_cell_type(n, 20) for n in selected_type_names], fontsize=10)
@@ -207,76 +219,88 @@ def plot_marker_gene_comparison(
         xtick_labels = all_marker_genes + all_marker_genes
         ax2.set_xticks(xtick_pos)
         ax2.set_xticklabels(xtick_labels, fontsize=10, rotation=90, ha="center")
-        # Use an explicit center band so the Real|Generated split survives print and downscaling.
         ax2.axvspan(n_markers - 0.5, n_markers + 0.5, color="#f3f3f3", zorder=0)
         ax2.axvline(x=n_markers, color="#666", linewidth=1.6, linestyle="-")
-        ax2.axvline(x=n_markers - 0.5, color='black', linewidth=1.5, zorder=5)
-        ax2.set_title("Per-Type \u00d7 Marker (Real | Gen)", fontsize=11, pad=8)
-        ax2.text(n_markers / 2 - 0.5, -1.2, "Real", ha="center",
-             fontsize=11, color=COLORS["real"])
-        ax2.text(n_markers + 0.5 + n_markers / 2 - 0.5, -1.2, "Generated",
-             ha="center", fontsize=11, color=COLORS["generated"])
-
+        ax2.axvline(x=n_markers - 0.5, color="black", linewidth=1.5, zorder=5)
+        ax2.set_title("Per-Type × Marker (Real | Gen)", fontsize=11, pad=10)
+        ax2.text(n_markers / 2 - 0.5, -1.2, "Real", ha="center", fontsize=11, color=COLORS["real"])
+        ax2.text(
+            n_markers + 0.5 + n_markers / 2 - 0.5,
+            -1.2,
+            "Generated",
+            ha="center",
+            fontsize=11,
+            color=COLORS["generated"],
+        )
         add_colorbar_safe(im, ax=ax2, label="Expr.", shrink=0.6, pad=0.05)
-        add_panel_label(ax2, 'b', x=-0.10, y=1.05)
+        add_panel_label(ax2, "b", x=-0.10, y=1.05)
 
-        # N3: Difference heatmap with significance
+        legend_ax = add_shared_legend_axes(
+            fig,
+            (ax1.get_position().x0, ax1.get_position().y1 + 0.008, ax2.get_position().x1 - ax1.get_position().x0, 0.045),
+        )
+        legend_ax.legend(handles_top, labels_top, fontsize=10, loc="center", frameon=False, ncol=2)
+
         ax3 = fig.add_subplot(gs[1, 0])
         diff = gen_heat - real_heat
-        pct_diff = diff / (np.abs(real_heat) + 1e-8) * 100
         max_abs = max(abs(diff.min()), abs(diff.max()), 0.01)
-
-        im3 = ax3.imshow(diff, cmap="RdBu_r", aspect="auto",
-                 vmin=-max_abs, vmax=max_abs)
+        im3 = ax3.imshow(diff, cmap="RdBu_r", aspect="auto", vmin=-max_abs, vmax=max_abs)
         im3.set_rasterized(True)
         ax3.set_yticks(range(n_sel_types))
         ax3.set_yticklabels([abbreviate_cell_type(n, 20) for n in selected_type_names], fontsize=10)
         ax3.set_xticks(range(n_markers))
         ax3.set_xticklabels(all_marker_genes, fontsize=11, rotation=90, ha="center")
-        ax3.set_title("\u0394 Expression (Gen \u2212 Real)", fontsize=11)
-        add_colorbar_safe(im3, ax=ax3, label="\u0394", shrink=0.72, pad=0.06, aspect=14)
-        add_panel_label(ax3, 'c', x=-0.10, y=1.05)
-        # Only annotate cells with large differences
+        ax3.set_title("Δ Expression (Gen − Real)", fontsize=11)
+        add_colorbar_safe(im3, ax=ax3, label="Δ", shrink=0.72, pad=0.06, aspect=14)
+        add_panel_label(ax3, "c", x=-0.10, y=1.05)
         for i in range(n_sel_types):
             for j in range(n_markers):
                 if abs(diff[i, j]) > max_abs * 0.3:
                     txt_color = "white" if abs(diff[i, j]) > max_abs * 0.5 else "black"
-                    ax3.text(j, i, f"{diff[i, j]:+.2f}",
-                             ha="center", va="center", fontsize=10, color=txt_color,
-                             fontweight="normal")
+                    ax3.text(
+                        j,
+                        i,
+                        f"{diff[i, j]:+.2f}",
+                        ha="center",
+                        va="center",
+                        fontsize=10,
+                        color=txt_color,
+                        fontweight="normal",
+                    )
 
-        # N4: Log2 fold-change diverging horizontal bar chart
         ax4 = fig.add_subplot(gs[1, 1])
         fc_all = gen_marker_means / (real_marker_means + 1e-8)
         log2fc = np.log2(fc_all + 1e-12)
         sort_fc = np.argsort(log2fc)
         log2fc_sorted = log2fc[sort_fc]
         names_sorted = [all_marker_genes[i] for i in sort_fc]
-
-        bar_colors = [COLORS.get("good", "#4CAF50") if v >= 0
-                      else COLORS.get("bad", "#E53935") for v in log2fc_sorted]
-
-        ax4.barh(range(n_markers), log2fc_sorted,
-                 color=bar_colors, height=0.6, edgecolor="white",
-                 alpha=0.85)
+        bar_colors = [
+            COLORS.get("good", "#4CAF50") if v >= 0 else COLORS.get("bad", "#E53935")
+            for v in log2fc_sorted
+        ]
+        ax4.barh(range(n_markers), log2fc_sorted, color=bar_colors, height=0.6, edgecolor="white", alpha=0.85)
         ax4.axvline(x=0, color="#333", linewidth=1.5, linestyle="-")
         ax4.set_yticks(range(n_markers))
         ax4.set_yticklabels(names_sorted, fontsize=10)
         ax4.set_xlabel("log$_2$ Fold Change (Gen / Real)", fontsize=11)
         ax4.set_title("Marker Fold Change", fontsize=12)
-        add_panel_label(ax4, 'd', x=-0.10, y=1.05)
+        add_panel_label(ax4, "d", x=-0.10, y=1.05)
         for i, lfc in enumerate(log2fc_sorted):
             if abs(lfc) < 0.005:
                 continue
-            ax4.text(lfc + 0.002 if lfc >= 0 else lfc - 0.002, i,
-                     f"{lfc:+.2f}", va="center", fontsize=10,
-                     ha="left" if lfc >= 0 else "right",
-                     fontweight="bold" if abs(lfc) > 0.07 else "normal")
+            ax4.text(
+                lfc + 0.002 if lfc >= 0 else lfc - 0.002,
+                i,
+                f"{lfc:+.2f}",
+                va="center",
+                fontsize=10,
+                ha="left" if lfc >= 0 else "right",
+                fontweight="bold" if abs(lfc) > 0.07 else "normal",
+            )
     else:
         ax_fallback = fig.add_subplot(gs[0, 1])
-        add_panel_label(ax_fallback, 'b')
-        ax_fallback.text(0.5, 0.5, "Per-type labels not available",
-                         ha="center", va="center", transform=ax_fallback.transAxes)
+        add_panel_label(ax_fallback, "b")
+        ax_fallback.text(0.5, 0.5, "Per-type labels not available", ha="center", va="center", transform=ax_fallback.transAxes)
 
     if save:
         if save_panel_fn:

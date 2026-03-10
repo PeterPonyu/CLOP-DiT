@@ -35,7 +35,7 @@ def _add_training_phase_bands(ax: plt.Axes, max_epoch: int) -> None:
     ax.axvspan(p1_end, p2_end, color=COLORS["neutral"], alpha=0.05, lw=0)
     ax.axvspan(p2_end, max_epoch, color=COLORS["baseline_gauss"], alpha=0.07, lw=0)
     ax.text(
-        0.97, 0.80,
+        0.92, 0.80,
         "Phase I: rapid\nPhase II: refine\nPhase III: converge",
         transform=ax.transAxes,
         va="top",
@@ -94,8 +94,9 @@ def plot_clop_training(
     h = hist
     epochs = np.arange(1, len(h["train_loss"]) + 1)
 
-    fig = plt.figure(figsize=(7.4, 6.0))
-    gs = fig.add_gridspec(2, 2, wspace=0.45, hspace=0.50)
+    fig = plt.figure(figsize=(7.3, 5.7))
+    gs = fig.add_gridspec(2, 2, wspace=0.34, hspace=0.34)
+    apply_layout_rect(fig, (0.08, 0.10, 0.97, 0.94))
     # Note: Figure-level title removed per revision requirements; panel labels added below
 
     # ── A1: Loss curves ──
@@ -231,9 +232,9 @@ def plot_dit_training(
     h = hist
     epochs = np.arange(1, len(h["train_loss"]) + 1)
 
-    fig = plt.figure(figsize=(9.8, 6.9))
-    gs_c = fig.add_gridspec(2, 2, wspace=0.45, hspace=0.50)
-    apply_layout_rect(fig, (0.11, 0.10, 0.95, 0.92))
+    fig = plt.figure(figsize=(9.5, 6.3))
+    gs_c = fig.add_gridspec(2, 2, wspace=0.34, hspace=0.34)
+    apply_layout_rect(fig, (0.08, 0.10, 0.97, 0.94))
     # Note: Figure-level title removed per revision requirements; panel labels added below
 
     # ── C1: Loss ──
@@ -359,11 +360,11 @@ def plot_training_dynamics_combined(
         return None
 
     apply_style()
-    fig = plt.figure(figsize=(14.4, 8.6))
-    gs = fig.add_gridspec(2, 4, wspace=0.55, hspace=0.52,
+    fig = plt.figure(figsize=(14.2, 7.9))
+    gs = fig.add_gridspec(2, 4, wspace=0.42, hspace=0.36,
                           width_ratios=[1.0, 1.0, 1.0, 1.2], height_ratios=[1, 1])
     # Note: Figure-level title removed per revision requirements; panel labels added below
-    apply_layout_rect(fig, (0.05, 0.03, 0.98, 0.92))
+    apply_layout_rect(fig, (0.05, 0.08, 0.98, 0.94))
 
     # ════════════════════════════════════════════════════════════
     # Top row: CLOP (4 panels spanning columns 0-3)

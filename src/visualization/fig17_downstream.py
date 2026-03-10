@@ -21,7 +21,7 @@ from typing import Dict, List, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
+from .explicit_positioning import add_axes_next_to, add_shared_legend_axes, layout_axes_row
 from .panel_geometry import apply_layout_rect
 from .style import (
     COLORS,
@@ -118,9 +118,9 @@ def _plot_classifier_metric_heatmap(
             _val = display_matrix[_ri, _ci]
             _color = "white" if _val < 0.5 else "black"
             ax.text(_ci, _ri, f"{_val:.2f}", ha="center", va="center",
-                    fontsize=FONT_HEATMAP_CELL, color=_color, fontweight="normal")
+                    fontsize=max(FONT_HEATMAP_CELL - 1, 6), color=_color, fontweight="normal")
     ax.set_xticks(range(3))
-    ax.set_xticklabels(["Precision", "Recall", "F1"], fontsize=9)
+    ax.set_xticklabels(["Prec.", "Rec.", "F1"], fontsize=8)
     ax.set_yticks(range(len(display_names)))
     ax.set_yticklabels(
         [
@@ -186,6 +186,7 @@ def plot_clustering_panel(
     fig = plt.figure(figsize=(13.0, 5.5))
     gs = fig.add_gridspec(1, 3, width_ratios=[1.3, 1.0, 0.8],
                           wspace=0.45)
+    apply_layout_rect(fig, (0.05, 0.10, 0.98, 0.93))
     # suptitle removed per revision; title information moved to LaTeX caption
 
     ax = fig.add_subplot(gs[0])
@@ -247,6 +248,8 @@ def plot_clustering_panel(
     ax3.text(0.5, 0.02, f"Leiden clusters: {n_clusters}",
              transform=ax3.transAxes, ha="center", fontsize=8, color="#666")
 
+    layout_axes_row([ax, ax2, ax3], widths=[1.10, 1.35, 0.82], gaps=[0.028, 0.018])
+
     if save:
         path = save_panel(fig, output_dir / "fig17_clustering_mixing.png", dpi)
         logger.info(f"Saved Panel P → {path}")
@@ -281,6 +284,7 @@ def plot_classifier_panel(
     fig = plt.figure(figsize=(13.0, 6.0))
     gs = fig.add_gridspec(1, 3, width_ratios=[1.2, 1.0, 0.9],
                           wspace=0.50)
+    apply_layout_rect(fig, (0.05, 0.10, 0.98, 0.93))
     gen_acc = classifier_data.get("gen_accuracy", 0)
     gen_f1 = classifier_data.get("gen_f1", 0)
     disc_auc = classifier_data.get("discriminator_auc", 0)
@@ -392,6 +396,8 @@ def plot_classifier_panel(
                  transform=ax3.transAxes)
         ax3.set_title("Discriminator ROC")
 
+    layout_axes_row([ax, ax2, ax3], widths=[1.10, 1.35, 0.82], gaps=[0.028, 0.018])
+
     if save:
         path = save_panel(fig, output_dir / "fig17_classifier_alignment.png", dpi)
         logger.info(f"Saved Panel Q → {path}")
@@ -413,11 +419,11 @@ def plot_clustering_and_classifier_merged(
     """Merged figure: clustering + classifier alignment (former P + Q)."""
     apply_style()
 
-    fig = plt.figure(figsize=(16.0, 11.2))
-    gs = fig.add_gridspec(2, 3, wspace=0.62, hspace=0.42,
+    fig = plt.figure(figsize=(16.0, 10.8))
+    gs = fig.add_gridspec(2, 3, wspace=0.40, hspace=0.30,
                           height_ratios=[1, 1.05],
-                          width_ratios=[1.4, 1.3, 1.0])
-    apply_layout_rect(fig, (0.03, 0.08, 0.98, 0.96))
+                          width_ratios=[1.15, 1.42, 0.85])
+    apply_layout_rect(fig, (0.03, 0.10, 0.98, 0.96))
     # Title moved to LaTeX caption
     # set_figure_suptitle(fig, "Downstream Validation: Clustering & Classifier Alignment", fontsize=11)
 
@@ -511,18 +517,16 @@ def plot_clustering_and_classifier_merged(
 
     ax_q2 = fig.add_subplot(gs[1, 1])
     add_panel_label(ax_q2, 'e')
+    note_ax = None
     if per_type_acc and cm is not None:
         summary = _plot_classifier_metric_heatmap(
             fig,
             ax_q2,
             np.array(cm),
             class_names or [f"C{i}" for i in range(np.array(cm).shape[0])],
-            max_rows=20,
+            max_rows=18,
         )
-        note_ax = add_shared_legend_axes(
-            fig,
-            (ax_q2.get_position().x0, ax_q2.get_position().y0 - 0.07, ax_q2.get_position().width, 0.05),
-        )
+        note_ax = add_shared_legend_axes(fig, (ax_q2.get_position().x0, ax_q2.get_position().y0 - 0.07, ax_q2.get_position().width, 0.05))
         note_ax.text(
             0.50,
             0.5,
@@ -530,7 +534,7 @@ def plot_clustering_and_classifier_merged(
             transform=note_ax.transAxes,
             ha="center",
             va="center",
-            fontsize=9,
+            fontsize=8,
             color=COLORS["neutral"],
         )
     else:
@@ -546,6 +550,11 @@ def plot_clustering_and_classifier_merged(
     else:
         ax_q3.text(0.5, 0.5, "No discriminator data", ha="center", va="center",
                    transform=ax_q3.transAxes)
+
+    layout_axes_row([ax_p1, ax_p2, ax_ps], widths=[1.10, 1.38, 0.82], gaps=[0.028, 0.018])
+    layout_axes_row([ax_q1, ax_q2, ax_q3], widths=[1.10, 1.38, 0.82], gaps=[0.028, 0.018])
+    if note_ax is not None:
+        note_ax.set_position((ax_q2.get_position().x0, ax_q2.get_position().y0 - 0.065, ax_q2.get_position().width, 0.05))
 
     if save:
         path = save_panel(

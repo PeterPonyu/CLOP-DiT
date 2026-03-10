@@ -20,6 +20,7 @@ from typing import Callable, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .explicit_positioning import add_shared_legend_axes, layout_axes_row
 from .panel_geometry import apply_layout_rect
 from .style import COLORS, add_colorbar_safe, add_panel_label, quality_color, save_with_vcd
 
@@ -73,9 +74,9 @@ def plot_expression_analysis(
 
     overall = metrics.get("overall", {})
 
-    fig = plt.figure(figsize=(9.8, 7.4))
-    gs = fig.add_gridspec(2, 2, wspace=0.58, hspace=0.56)
-    apply_layout_rect(fig, (0.03, 0.04, 0.98, 0.96))
+    fig = plt.figure(figsize=(10.1, 7.5))
+    gs = fig.add_gridspec(2, 2, wspace=0.48, hspace=0.42)
+    apply_layout_rect(fig, (0.04, 0.08, 0.98, 0.96))
     # Note: Figure-level title removed per revision requirements; stats moved to caption
 
     # -- I1: CV scatter (real vs gen) with gene labels --
@@ -171,8 +172,7 @@ def plot_expression_analysis(
     ax3.set_xlabel("Per-Cell Std Dev", fontsize=11)
     ax3.set_ylabel("Density", fontsize=11)
     ax3.set_title("Per-Cell Variability Distribution", fontsize=12)
-    ax3.legend(fontsize=10, loc='upper left', bbox_to_anchor=(1.02, 1.0),
-               frameon=False)
+    legend_handles_c, legend_labels_c = ax3.get_legend_handles_labels()
     ax3.locator_params(axis='x', nbins=4)
     add_panel_label(ax3, 'c', x=-0.10, y=1.05)
 
@@ -209,7 +209,7 @@ def plot_expression_analysis(
     ax4.set_yticklabels(names_show, fontsize=10, ha="right")
     ax4.set_xlabel("Std Ratio (Gen / Real, clipped at 5\u00d7)", fontsize=11)
     ax4.set_title("Most Divergent Genes\n(over- & under-dispersed)", fontsize=11, pad=10)
-    add_panel_label(ax4, 'd', x=-0.12, y=1.12)
+    add_panel_label(ax4, 'd', x=-0.10, y=1.05)
     placed_annotations: list = []
     for i, r in enumerate(ratios_show):
         # Skip annotations within 0.05 of an already-placed one to avoid overlap
@@ -219,6 +219,15 @@ def plot_expression_analysis(
             ax4.text(r + 0.02, i, f"{r:.2f}\u00d7", va="center", fontsize=10,
                      fontweight="normal")
             placed_annotations.append((r, i))
+
+    layout_axes_row([ax1, ax2], widths=[1.00, 1.02], gaps=[0.040])
+    layout_axes_row([ax3, ax4], widths=[1.02, 0.98], gaps=[0.030])
+    if legend_handles_c:
+        legend_ax = add_shared_legend_axes(
+            fig,
+            (ax3.get_position().x0, ax3.get_position().y1 + 0.004, ax3.get_position().width * 0.98, 0.04),
+        )
+        legend_ax.legend(legend_handles_c, legend_labels_c, fontsize=10, loc="center", ncol=2, frameon=False)
 
     if save:
         if save_panel_fn:

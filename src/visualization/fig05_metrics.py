@@ -15,6 +15,7 @@ from typing import Callable, Dict, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .panel_geometry import apply_layout_rect
 from .style import COLORS, FONT_LEGEND_DENSE, FONT_LABEL, FONT_SMALL, FONT_TITLE, FONT_TICK_DENSE, FONT_ANNOTATION, abbreviate_cell_type, add_panel_label, apply_style, save_with_vcd, set_figure_suptitle
 from ._utils import sample_pairwise_cosines
 from src.utils.paths import CACHE_DIR, RESULTS_DIR, FIG_DIR, CHECKPOINT_DIR
@@ -374,9 +375,9 @@ def plot_metrics_summary(
     if not train_metrics and not gen_metrics:
         return None
 
-    fig = plt.figure(figsize=(15.5, 9.0))
-    gs = fig.add_gridspec(2, 2, wspace=0.60, hspace=0.50, width_ratios=[1.2, 1.0])
-    fig._clop_layout_rect = (0.03, 0.04, 0.97, 0.95)
+    fig = plt.figure(figsize=(15.2, 8.4))
+    gs = fig.add_gridspec(2, 2, wspace=0.44, hspace=0.34, width_ratios=[1.12, 1.0])
+    apply_layout_rect(fig, (0.05, 0.08, 0.98, 0.95))
     # Note: Figure-level title removed per revision requirements
 
     # Map from display metric names to bootstrap_cis keys
@@ -461,65 +462,69 @@ def plot_metrics_summary(
     if gen_metrics or expr_metrics:
         bar_labels = []
         bar_vals = []
-        bar_colors = []
         if gen_metrics:
             fd_score = max(0, 1.0 - gen_metrics.get("FD", 1.0))
             bar_labels.append("FD\n(inv)")
             bar_vals.append(fd_score)
-            bar_colors.append(COLORS["real"])
             bar_labels.append("Coverage")
             bar_vals.append(gen_metrics.get("Coverage", 0))
-            bar_colors.append(COLORS["real"])
             bar_labels.append("Centroid\nCos")
             bar_vals.append(gen_metrics.get("Centroid Cos", 0))
-            bar_colors.append(COLORS["real"])
         if div_metrics:
             bar_labels.append("Diversity\nRatio")
             bar_vals.append(div_metrics.get("Diversity Ratio", 0))
-            bar_colors.append(COLORS["real"])
         if expr_metrics:
             bar_labels.append("Gene\nCorr")
             bar_vals.append(expr_metrics.get("Gene Pearson r", 0))
-            bar_colors.append(COLORS["real"])
 
         if bar_vals:
+            gauss_bl = baseline_data.get("Gaussian N(\u03bc,\u03c3\u00b2I)", {})
+            if not gauss_bl:
+                gauss_bl = bench_baselines.get("Gaussian N(\u03bc,\u03c3\u00b2I)", {})
+
+            baseline_vals = []
+            for lbl in bar_labels:
+                if "FD" in lbl:
+                    baseline_vals.append(max(0, 1.0 - gauss_bl.get("frechet_distance", 1.0)) if gauss_bl else 0.0)
+                elif "Coverage" in lbl:
+                    baseline_vals.append(gauss_bl.get("coverage", 0.0) if gauss_bl else 0.0)
+                elif "Centroid" in lbl:
+                    baseline_vals.append(gauss_bl.get("mean_centroid_cosine", 0.0) if gauss_bl else 0.0)
+                elif "Diversity" in lbl:
+                    baseline_vals.append(min(gauss_bl.get("diversity_ratio", 0.0), 1.0) if gauss_bl else 0.0)
+                elif "Gene" in lbl:
+                    baseline_vals.append(0.0)
+                else:
+                    baseline_vals.append(0.0)
+
             x_pos = np.arange(len(bar_vals))
-            bars = ax2.bar(x_pos, bar_vals, color=bar_colors, alpha=0.85,
-                           edgecolor="white", linewidth=0.8, width=0.6)
+            width = 0.34 if gauss_bl else 0.58
+            bars_clop = ax2.bar(x_pos - (width / 2 if gauss_bl else 0.0), bar_vals,
+                                color=COLORS["real"], alpha=0.88,
+                                edgecolor="white", linewidth=0.8, width=width,
+                                label="CLOP-DiT")
+            bars_gauss = []
+            if gauss_bl:
+                bars_gauss = ax2.bar(x_pos + width / 2, baseline_vals,
+                                     color=COLORS["baseline_gauss"], alpha=0.72,
+                                     edgecolor="white", linewidth=0.8, width=width,
+                                     label="Gaussian baseline")
             ax2.set_xticks(x_pos)
             ax2.set_xticklabels(bar_labels, fontsize=FONT_TICK_DENSE)
             ax2.set_ylim(0, 1.15)
             ax2.set_ylabel("Score", fontsize=FONT_LABEL)
-            # Add value annotations on bars (above scatter)
-            for bar, val in zip(bars, bar_vals):
+            # Add value annotations on bars.
+            for bar, val in zip(bars_clop, bar_vals):
                 ax2.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.02,
                          f"{val:.3f}", ha="center", va="bottom",
                          fontsize=FONT_ANNOTATION, fontweight="bold",
                          color=COLORS["real"], zorder=8)
-            # Overlay Gaussian baseline (lower zorder so it doesn't mask annotations)
-            gauss_bl = baseline_data.get("Gaussian N(\u03bc,\u03c3\u00b2I)", {})
-            if not gauss_bl:
-                gauss_bl = bench_baselines.get("Gaussian N(\u03bc,\u03c3\u00b2I)", {})
+            for bar, val in zip(bars_gauss, baseline_vals):
+                ax2.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.02,
+                         f"{val:.3f}", ha="center", va="bottom",
+                         fontsize=FONT_SMALL, color=COLORS["baseline_gauss"], zorder=8)
             if gauss_bl:
-                bl_vals = []
-                for i, lbl in enumerate(bar_labels):
-                    if "FD" in lbl:
-                        bl_fd = gauss_bl.get("frechet_distance", 1.0)
-                        bl_vals.append(max(0, 1.0 - bl_fd))
-                    elif "Coverage" in lbl:
-                        bl_vals.append(gauss_bl.get("coverage", 0))
-                    elif "Centroid" in lbl:
-                        bl_vals.append(gauss_bl.get("mean_centroid_cosine", 0))
-                    elif "Diversity" in lbl:
-                        bl_vals.append(min(gauss_bl.get("diversity_ratio", 0), 1.0))
-                    elif "Gene" in lbl:
-                        bl_vals.append(0)
-                    else:
-                        bl_vals.append(0)
-                ax2.scatter(x_pos, bl_vals, marker="x", s=60, zorder=4,
-                            color=COLORS["baseline_gauss"], linewidth=2.0,
-                            label="Gaussian baseline")
-                ax2.legend(fontsize=FONT_LEGEND_DENSE, frameon=False, loc="upper right")
+                ax2.legend(fontsize=FONT_LEGEND_DENSE, frameon=False, loc="upper left", ncol=2)
         ax2.set_title("Quality Profile", fontsize=FONT_TITLE)
         add_panel_label(ax2, 'b', x=-0.10, y=1.05)
     else:

@@ -16,6 +16,7 @@ from pathlib import Path
 import numpy as np
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from src.visualization.panel_geometry import apply_layout_rect
 from src.visualization.style import apply_style, COLORS, add_panel_label, save_with_vcd
 import matplotlib
 matplotlib.use("Agg")
@@ -172,8 +173,9 @@ def main():
     )
     from scipy import stats as scipy_stats
 
-    fig = plt.figure(figsize=(17, 12))
-    gs = fig.add_gridspec(2, 2, width_ratios=[1.2, 1.0], wspace=0.40, hspace=0.35)
+    fig = plt.figure(figsize=(17, 11.2))
+    gs = fig.add_gridspec(2, 2, width_ratios=[1.2, 1.0], wspace=0.34, hspace=0.28)
+    apply_layout_rect(fig, (0.08, 0.08, 0.98, 0.96))
 
     # ── Panel (a): SWD per Cell Type (sorted bar chart) ──
     sorted_results = sorted(results, key=lambda r: r["swd"], reverse=True)
@@ -215,7 +217,7 @@ def main():
             ax.text(r["swd"] + 0.0003, i, f"n={r['n_real']:,}",
                     fontsize=7, va="center", color="#666")
 
-    ax.legend(fontsize=FONT_ANNOTATION, frameon=True, framealpha=0.9, edgecolor="none",
+    ax.legend(fontsize=FONT_ANNOTATION, frameon=False,
               loc="lower right")
     style_axes(ax, "bar", xlabel="SWD (lower is better)", title="Latent SWD per Cell Type")
 
@@ -247,8 +249,7 @@ def main():
              f"IQR = [{vr_q25:.3f}, {vr_q75:.3f}]\n"
              f"{pct_in_band:.0f}% within \u00b10.1",
              transform=ax2.transAxes, ha="right", va="top",
-             fontsize=FONT_ANNOTATION, color=COLORS["neutral"],
-             bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="none", alpha=0.88))
+             fontsize=FONT_ANNOTATION, color=COLORS["neutral"])
 
     ax2.set_yticks([])
     ax2.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="lower left")
@@ -281,8 +282,7 @@ def main():
              f"Note: global variance ratio \u2248 1\n"
              f"but per-dim structure is weak",
              transform=ax3.transAxes, ha="right", va="bottom",
-             fontsize=FONT_SMALL, color=COLORS["neutral"],
-             bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="none", alpha=0.88))
+             fontsize=FONT_SMALL, color=COLORS["neutral"])
 
     ax3.set_ylim(0, 1.05)
     ax3.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="upper left")
@@ -329,10 +329,9 @@ def main():
     else:
         stat_text = "Insufficient data for correlation"
 
-    ax4.text(0.97, 0.97, stat_text,
-             transform=ax4.transAxes, ha="right", va="top",
-             fontsize=FONT_ANNOTATION, color=COLORS["neutral"],
-             bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="none", alpha=0.88))
+    ax4.text(0.03, 0.04, stat_text,
+             transform=ax4.transAxes, ha="left", va="bottom",
+             fontsize=FONT_ANNOTATION, color=COLORS["neutral"])
 
     # Label top 3 outliers
     top3 = np.argsort(swd_arr)[-3:]

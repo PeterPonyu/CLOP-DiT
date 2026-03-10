@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats as scipy_stats
 
-from .explicit_positioning import add_axes_next_to
+from .explicit_positioning import add_axes_next_to, layout_axes_row
 from .panel_geometry import apply_layout_rect
 from .style import (
     COLORS, save_panel, set_figure_suptitle, style_axes,
@@ -56,13 +56,13 @@ def plot_de_concordance_panel(
     contrasts = list(de_data.keys())
     n_contrasts = len(contrasts)
 
-    fig = plt.figure(figsize=(16.0, 7.0))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.4, 1.1, 1.1], wspace=0.65)
-    apply_layout_rect(fig, (0.02, 0.10, 0.98, 0.96))
+    fig = plt.figure(figsize=(15.8, 6.8))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.4, 1.05, 1.0], wspace=0.50)
+    apply_layout_rect(fig, (0.06, 0.14, 0.98, 0.94))
 
     # ── Panel (a): effect-size weighted logFC scatter ──
     ax = fig.add_subplot(gs[0])
-    add_panel_label(ax, 'a', x=-0.10, y=1.05)
+    add_panel_label(ax, 'a', x=-0.08, y=1.02)
 
     first_key = contrasts[0]
     first = de_data[first_key]
@@ -80,7 +80,7 @@ def plot_de_concordance_panel(
 
         if len(real_padj) == len(real_logfc) and len(gen_padj) == len(gen_logfc):
             significance = -np.log10(np.clip(np.minimum(real_padj, gen_padj), 1e-50, 1.0))
-            cbar_label = r"$\min\;-\log_{10}(\mathrm{adj.\;p})$"
+            cbar_label = r"min $-\log_{10}(\mathrm{adj.\;p})$"
         else:
             significance = effect_size
             cbar_label   = "Effect size"
@@ -117,16 +117,20 @@ def plot_de_concordance_panel(
 
         # ── Gene name labels: top-6 by weighted residual, staggered to avoid pileup ──
         residuals = np.abs(gen_logfc - real_logfc) * np.maximum(effect_size, 1e-6)
-        n_label   = min(8, len(residuals))
-        top_idx   = np.argsort(residuals)[-n_label:]
-        # Staggered offsets: alternate quadrants so labels fan out from the origin
-        _offsets = [(35, 25), (-38, 30), (35, -28), (-38, -30), (48, 12), (-50, 12), (30, -35), (-35, 35)]
-        for _k, idx in enumerate(top_idx):
+        n_label = min(6, len(residuals))
+        top_idx = np.argsort(residuals)[-n_label:]
+        placed_points = []
+        for _k, idx in enumerate(top_idx[np.argsort(residuals[top_idx])[::-1]]):
             if idx < len(shared_genes):
-                ox, oy = _offsets[_k % len(_offsets)]
+                x_pt = real_logfc[idx]
+                y_pt = gen_logfc[idx]
+                if any(abs(x_pt - px) < 0.35 and abs(y_pt - py) < 0.35 for px, py in placed_points):
+                    continue
+                ox = (28 + 6 * _k) * (-1 if x_pt > np.median(real_logfc) else 1)
+                oy = (18 + 5 * (_k % 3)) * (-1 if y_pt > np.median(gen_logfc) else 1)
                 ax.annotate(
                     shared_genes[idx],
-                    (real_logfc[idx], gen_logfc[idx]),
+                    (x_pt, y_pt),
                     fontsize=FONT_ANNOTATION,
                     xytext=(ox, oy), textcoords="offset points",
                     arrowprops=dict(arrowstyle="->", lw=0.6, color="#666",
@@ -135,6 +139,7 @@ def plot_de_concordance_panel(
                     ha="center",
                     bbox=dict(boxstyle="round,pad=0.15", fc="none", ec="none"),
                 )
+                placed_points.append((x_pt, y_pt))
 
         # ── Minimal in-plot annotation: 2 key stats only ──
         pearson_r,    pearson_p    = scipy_stats.pearsonr(real_logfc, gen_logfc)
@@ -159,10 +164,10 @@ def plot_de_concordance_panel(
             fig,
             ax,
             side="bottom",
-            width=ax.get_position().width * 0.42,
-            height=0.018,
+            width=ax.get_position().width * 0.34,
+            height=0.022,
             pad=0.05,
-            align="right",
+            align="center",
         )
         cbar = fig.colorbar(sc, cax=cax, orientation="horizontal")
         cbar.set_label(cbar_label, fontsize=FONT_ANNOTATION)
@@ -183,13 +188,13 @@ def plot_de_concordance_panel(
 
     style_axes(ax, "scatter", xlabel="Real logFC", ylabel="Generated logFC")
     ax.set_title(f"Effect-Size Concordance\n{sub_line}",
-                 fontsize=FONT_TITLE, pad=6)
+                 fontsize=FONT_TITLE - 1, pad=4)
     ax.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
     ax.tick_params(labelsize=FONT_TICK)
 
     # ── Panel (b): concordance heatmap ──
     ax2 = fig.add_subplot(gs[1])
-    add_panel_label(ax2, 'b', x=-0.10, y=1.05)
+    add_panel_label(ax2, 'b', x=-0.08, y=1.02)
 
     metric_names = ["Pears. r", "Spear. \u03c1", "Jacc.@50", "Sign agr."]
     metric_keys  = ["logfc_pearson_r", "logfc_spearman_rho",
@@ -233,7 +238,7 @@ def plot_de_concordance_panel(
 
     # ── Panel (c): grouped bar chart ──
     ax3 = fig.add_subplot(gs[2])
-    add_panel_label(ax3, 'c', x=-0.10, y=1.05)
+    add_panel_label(ax3, 'c', x=-0.08, y=1.02)
 
     x        = np.arange(n_contrasts)
     n_metrics = len(metric_names)
@@ -250,12 +255,18 @@ def plot_de_concordance_panel(
     xs_labels = [_abbrev_contrast(c, max_len=14) for c in contrasts]
     ax3.set_xticks(x)
     ax3.set_xticklabels(xs_labels, fontsize=FONT_TICK_DENSE,
-                         rotation=25, ha="right", multialignment="center")
+                         rotation=18, ha="right", multialignment="center")
     ax3.set_ylim(0, 1.12)
     ax3.legend(fontsize=FONT_ANNOTATION, ncol=2,
                loc="upper right", frameon=False)
     style_axes(ax3, "bar", title="Per-Contrast Summary", ylabel="Score")
     ax3.tick_params(labelsize=FONT_TICK)
+
+    layout_axes_row([ax, ax2, ax3], widths=[1.36, 1.00, 0.96], gaps=[0.045, 0.030])
+    pos_a = ax.get_position()
+    cax.set_position((pos_a.x0 + (pos_a.width * 0.33), pos_a.y0 - 0.078, pos_a.width * 0.34, 0.022))
+    pos_b = ax2.get_position()
+    cax2.set_position((pos_b.x1 + 0.012, pos_b.y0 + 0.02, 0.010, pos_b.height * 0.48))
 
     if save:
         path = save_panel(fig, output_dir / "fig18_de_concordance.png", dpi)

@@ -54,13 +54,16 @@ def plot_panel_m(
     _fw = 15.0  # Fixed width for reproducible layout
     has_row3 = full_dim_data is not None and len(full_dim_data) > 0
     if has_row3:
-        fig = plt.figure(figsize=(_fw, 14.0))
-        outer = fig.add_gridspec(3, 1, height_ratios=[2.2, 1.2, 1.2], hspace=0.50)
+        fig = plt.figure(figsize=(_fw, 13.4))
+        outer = fig.add_gridspec(3, 1, height_ratios=[2.15, 1.15, 1.10], hspace=0.38)
     else:
-        fig = plt.figure(figsize=(_fw, 9.0))
-        outer = fig.add_gridspec(2, 1, height_ratios=[2.2, 1.2], hspace=0.50)
-    apply_layout_rect(fig, (0.04, 0.04, 0.98, 0.97))
-    gs_top = outer[0].subgridspec(1, n_modes, wspace=0.40)
+        fig = plt.figure(figsize=(_fw, 8.8))
+        outer = fig.add_gridspec(2, 1, height_ratios=[2.15, 1.12], hspace=0.36)
+    apply_layout_rect(fig, (0.04, 0.05, 0.98, 0.97))
+    top_widths = [1.0] * n_modes
+    if n_modes > 1:
+        top_widths[-1] = 1.04
+    gs_top = outer[0].subgridspec(1, n_modes, wspace=0.28, width_ratios=top_widths)
     axes = [fig.add_subplot(gs_top[0, i]) for i in range(n_modes)]
 
     # Panel labels: placed with enough clearance for single-line titles
@@ -116,7 +119,7 @@ def plot_panel_m(
         )
 
     # ── Row 2: Quantitative summaries ──
-    gs_bottom = outer[1].subgridspec(1, 3, wspace=0.42)
+    gs_bottom = outer[1].subgridspec(1, 3, wspace=0.34, width_ratios=[1.08, 1.02, 0.92])
     ax_b1 = fig.add_subplot(gs_bottom[0, 0])
     add_panel_label(ax_b1, 'b', x=-0.12, y=_panel_label_y)
     ax_b2 = fig.add_subplot(gs_bottom[0, 1])
@@ -208,7 +211,7 @@ def plot_panel_m(
         from sklearn.decomposition import PCA as _PCA
         from sklearn.neighbors import KNeighborsClassifier
 
-        gs_row3 = outer[2].subgridspec(1, 3, wspace=0.55)
+        gs_row3 = outer[2].subgridspec(1, 3, wspace=0.38, width_ratios=[0.95, 1.15, 0.90])
         ax_c1 = fig.add_subplot(gs_row3[0, 0])
         add_panel_label(ax_c1, 'e', x=-0.12, y=_panel_label_y)
         ax_c2 = fig.add_subplot(gs_row3[0, 1])
@@ -358,12 +361,10 @@ def plot_panel_m(
         leg = _ax.get_legend()
         if leg is not None:
             leg.remove()
-    legend_ax = add_shared_legend_axes(
-        fig,
-        (0.08, 0.60 if has_row3 else 0.49, 0.84, 0.055),
-    )
+    legend_bottom = ax_b1.get_position().y1 + 0.012
+    legend_ax = add_shared_legend_axes(fig, (0.08, legend_bottom, 0.84, 0.048))
     legend_ax.legend(
-        handles, labels, loc="upper center",
+        handles, labels, loc="center",
         ncol=min(len(handles), 8), fontsize=FONT_TICK_DENSE,
         markerscale=1.5, frameon=False,
         columnspacing=0.4, handletextpad=0.3,

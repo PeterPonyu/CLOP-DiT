@@ -29,7 +29,7 @@ from .style import (
     abbreviate_cell_type, add_panel_label,
     quality_color, save_with_vcd, set_adaptive_ytick_labels, style_axes,
 )
-from .explicit_positioning import add_axes_next_to
+from .explicit_positioning import add_axes_next_to, layout_axes_row
 from .panel_geometry import apply_layout_rect
 from src.utils.paths import FIG_DIR
 
@@ -162,10 +162,10 @@ def plot_text_cell_heatmap(
     sim_sorted = sim_matrix[sort_order][:, sort_order]
     labels_sorted = [labels[i] for i in sort_order]
 
-    fig = plt.figure(figsize=(15.5, 9.5))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.20, 0.85, 0.68], wspace=0.55)
+    fig = plt.figure(figsize=(15.2, 9.1))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.22, 0.84, 0.66], wspace=0.46)
     # Title moved to LaTeX caption
-    apply_layout_rect(fig, (0.02, 0.10, 0.98, 0.95))
+    apply_layout_rect(fig, (0.03, 0.10, 0.98, 0.95))
 
     # ── F1: Clustered heatmap with annotations ──
     ax1 = fig.add_subplot(gs[0])
@@ -397,6 +397,10 @@ def plot_text_cell_heatmap(
     )
 
     style_axes(ax3, kind="default")
+
+    layout_axes_row([ax1, ax2, ax3], widths=[1.18, 0.90, 0.72], gaps=[0.040, 0.020])
+    pos1 = ax1.get_position()
+    cax.set_position((pos1.x1 + 0.012, pos1.y0 + 0.015, 0.011, pos1.height * 0.52))
 
     if save:
         path = Path(output_dir) / "fig07_text_cell_alignment.png"

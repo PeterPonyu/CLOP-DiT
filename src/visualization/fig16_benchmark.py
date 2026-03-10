@@ -18,10 +18,11 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
 from .panel_geometry import apply_layout_rect
 from .style import (
     COLORS, FONT_SMALL, FONT_ANNOTATION, METHOD_COLORS, abbreviate_cell_type,
-    add_colorbar_safe, add_panel_label, save_panel, save_with_vcd,
+    add_panel_label, save_panel, save_with_vcd,
     set_figure_suptitle, style_axes
 )
 from src.utils.paths import RESULTS_DIR, FIG_DIR
@@ -99,9 +100,9 @@ def plot_benchmark_panel(
         ("gene_spearman_rho",    "Gene \u03c1 \u2191",      "higher"),
     ]
 
-    fig = plt.figure(figsize=(16.0, 10.0))
-    gs = fig.add_gridspec(2, 2, wspace=0.55, hspace=0.38, height_ratios=[1.0, 1.15])
-    apply_layout_rect(fig, (0.02, 0.08, 0.98, 0.95))
+    fig = plt.figure(figsize=(16.0, 9.4))
+    gs = fig.add_gridspec(2, 2, wspace=0.52, hspace=0.24, height_ratios=[1.0, 1.12])
+    apply_layout_rect(fig, (0.08, 0.16, 0.98, 0.95))
 
     # ── S1: Heatmap (methods x metrics) ──
     ax1 = fig.add_subplot(gs[0, 0])
@@ -151,7 +152,19 @@ def plot_benchmark_panel(
         ax1.add_patch(plt.Rectangle((j - 0.5, best_i - 0.5), 1, 1,
                                     fill=False, edgecolor=COLORS["good"], linewidth=2.5))
 
-    add_colorbar_safe(im, ax=ax1, label="Normalised Score (1 = best)", shrink=0.6, pad=0.08)
+    cax1 = add_axes_next_to(
+        fig,
+        ax1,
+        side="right",
+        width=0.010,
+        height=ax1.get_position().height * 0.56,
+        pad=0.012,
+        align="bottom",
+        y_offset=0.01,
+    )
+    cbar1 = fig.colorbar(im, cax=cax1)
+    cbar1.set_label("Normalised Score (1 = best)", fontsize=FONT_ANNOTATION)
+    cbar1.ax.tick_params(labelsize=FONT_SMALL)
     style_axes(ax1, "heatmap", title="Metrics Comparison Heatmap")
 
     # ── S2: Composite score bars ──
@@ -199,10 +212,10 @@ def plot_benchmark_panel(
     ax3 = fig.add_subplot(gs[1, 0])
     add_panel_label(ax3, 'c', x=-0.10, y=1.05)
     key_metrics = [
-        ("frechet_distance",     "Fr\u00e9chet Dist. \u2193"),
-        ("mean_centroid_cosine", "Centroid Cos. \u2191"),
-        ("diversity_ratio",      "Diversity \u2191"),
-        ("coverage",             "Coverage \u2191"),
+        ("frechet_distance",     "FD \u2193"),
+        ("mean_centroid_cosine", "Cent Cos \u2191"),
+        ("diversity_ratio",      "Div \u2191"),
+        ("coverage",             "Cover \u2191"),
         ("gene_pearson_r",       "Gene r \u2191"),
     ]
 
@@ -218,10 +231,9 @@ def plot_benchmark_panel(
                 color=color, alpha=0.85, edgecolor="white")
 
     ax3.set_xticks(x)
-    ax3.set_xticklabels([km[1] for km in key_metrics], fontsize=9, rotation=20, ha="right")
-    ax3.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.15),
-               ncol=min(n_methods, 4), frameon=False, columnspacing=0.8)
-    style_axes(ax3, "bar", title="Key Metrics Comparison", ylabel="Value")
+    ax3.set_xticklabels([km[1] for km in key_metrics], fontsize=8, rotation=12, ha="right")
+    handles_s3, labels_s3 = ax3.get_legend_handles_labels()
+    style_axes(ax3, "bar", title="Key Metrics", ylabel="Value")
 
     # ── S4: CI comparison — error-bar plot ──
     ax4 = fig.add_subplot(gs[1, 1])
@@ -270,7 +282,11 @@ def plot_benchmark_panel(
     style_axes(ax4, "default", title="95% Bootstrap CI Comparison",
                xlabel="Metric Value")
 
+    legend_ax_s3 = add_shared_legend_axes(fig, (ax3.get_position().x0, ax3.get_position().y0 - 0.085, ax3.get_position().width, 0.055))
+    legend_ax_s3.legend(handles_s3, labels_s3, fontsize=8, loc="center",
+                        ncol=min(n_methods, 4), frameon=False, columnspacing=0.8)
+
     if save:
-        path = save_with_vcd(fig, output_dir / "fig16_benchmark.png", dpi, layout_rect=(0.02, 0.08, 0.98, 0.94))
+        path = save_with_vcd(fig, output_dir / "fig16_benchmark.png", dpi, layout_rect=(0.08, 0.16, 0.98, 0.95))
         logger.info(f"Saved Fig 16 \u2192 {path}")
     return fig

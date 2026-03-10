@@ -16,7 +16,7 @@ from typing import Dict, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .explicit_positioning import add_shared_legend_axes
+from .explicit_positioning import add_shared_legend_axes, layout_axes_row
 from .panel_geometry import apply_layout_rect
 from .style import COLORS, FONT_SMALL, FONT_ANNOTATION, METHOD_COLORS, save_panel, style_axes, add_panel_label
 from src.utils.paths import CACHE_DIR, RESULTS_DIR, FIG_DIR
@@ -102,9 +102,9 @@ def plot_baseline_comparison(
     # Direction: lower-is-better for FD, higher-is-better for others
     directions = ["lower", "higher", "higher", "higher"]
 
-    fig = plt.figure(figsize=(15.0, 6.2))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.2, 1.0, 1.3], wspace=0.58)
-    apply_layout_rect(fig, (0.04, 0.18, 0.98, 0.95))
+    fig = plt.figure(figsize=(15.0, 6.1))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.2, 1.0, 1.3], wspace=0.48)
+    apply_layout_rect(fig, (0.04, 0.16, 0.98, 0.95))
 
     # ── O1: Grouped bar chart ──
     ax = fig.add_subplot(gs[0])
@@ -155,9 +155,9 @@ def plot_baseline_comparison(
         ax2.plot(vals, [i] * len(vals), color=METHOD_COLORS.get(mname, "#999"),
                  linewidth=1.2, alpha=0.4, zorder=1)
         # Annotate aggregate score
-        ax2.text(1.02, i, f"{agg_scores[mname]:.2f}", va="center",
-                 fontsize=FONT_SMALL, color=COLORS["neutral"],
-                 transform=ax2.get_yaxis_transform())
+        score_x = min(1.08, max(vals) + 0.04)
+        ax2.text(score_x, i, f"{agg_scores[mname]:.2f}", va="center",
+                 ha="left", fontsize=FONT_SMALL, color=COLORS["neutral"])
 
     ax2.set_yticks(y_pos)
     ax2.set_yticklabels(sorted_methods, fontsize=9)
@@ -213,11 +213,13 @@ def plot_baseline_comparison(
         sep_y = g * n_metrics - 0.5
         ax3.axhline(y=sep_y, color="#DDD", linewidth=1, linestyle="--")
 
-    legend_ax_a = add_shared_legend_axes(fig, (ax.get_position().x0, 0.04, ax.get_position().width, 0.08))
+    layout_axes_row([ax, ax2, ax3], widths=[1.18, 1.02, 1.18], gaps=[0.024, 0.028])
+
+    legend_ax_a = add_shared_legend_axes(fig, (ax.get_position().x0, 0.03, ax.get_position().width, 0.06))
     legend_ax_a.legend(handles_a, labels_a, fontsize=8, loc="center",
                        ncol=min(n_methods, 3), frameon=False)
 
-    legend_ax_b = add_shared_legend_axes(fig, (ax2.get_position().x0, 0.04, ax2.get_position().width, 0.08))
+    legend_ax_b = add_shared_legend_axes(fig, (ax2.get_position().x0, 0.03, ax2.get_position().width, 0.06))
     legend_ax_b.legend(handles_b, labels_b, fontsize=7, loc="center",
                        frameon=False, ncol=4, handletextpad=0.3, columnspacing=0.6)
 

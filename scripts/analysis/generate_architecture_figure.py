@@ -297,7 +297,7 @@ def create_architecture_figure(output_dir=None):
                (shared_x, shared_y + shared_h / 2),
                color="#F9A825", linewidth=0.8, style="<->")
 
-    ax.text(cx1 + BW / 2, cy + BH + 0.06,
+    ax.text(cx1 + BW / 2, cy + BH + 0.16,
             "scGPT latent =\nDiT training target",
             ha="center", va="bottom", fontsize=FONT_ARCH_SUBLABEL, color=C_MID_GREY,
             fontweight="normal", zorder=5)
@@ -432,8 +432,8 @@ def create_architecture_figure(output_dir=None):
     draw_arrow(ax, (ode_x + ode_w, dit_y_mid + SBH / 2),
                (dec_x0, dec_y_mid + SBH / 2),
                color=C_GEN_MID, linewidth=1.3)
-    sampled_label_x = (ode_x + ode_w + dec_x0) / 2
-    sampled_label_y = dec_y_mid + SBH / 2 + 0.48
+    sampled_label_x = (ode_x + ode_w + dec_x0) / 2 - 0.10
+    sampled_label_y = dec_y_mid + SBH / 2 + 0.38
     sampled_label = FancyBboxPatch(
         (sampled_label_x - 0.41, sampled_label_y - 0.07), 0.82, 0.16,
         boxstyle="round,pad=0.03",
@@ -449,11 +449,37 @@ def create_architecture_figure(output_dir=None):
     dec_bx = dec_x0 + z1_w + 0.10
     dec_w = 0.70
     dec_h = BH + 0.12
-    draw_box(ax, (dec_bx, dec_y_mid - 0.15), dec_w, dec_h,
-             "scGPT\nDecoder",
-             sublabel="frozen",
-             facecolor=C_DECODE_BOX, edgecolor=C_DECODE_DARK, fontsize=FONT_ARCH_LABEL,
-             textcolor="black", linewidth=1.3)
+    decoder_y = dec_y_mid - 0.15
+    decoder_box = FancyBboxPatch(
+        (dec_bx, decoder_y), dec_w, dec_h,
+        boxstyle="round,pad=0.08",
+        facecolor=C_DECODE_BOX,
+        edgecolor=C_DECODE_DARK,
+        linewidth=1.3,
+        zorder=3,
+        mutation_scale=0.5,
+    )
+    ax.add_patch(decoder_box)
+    ax.text(
+        dec_bx + dec_w / 2,
+        decoder_y + dec_h * 0.66,
+        "scGPT\nDecoder",
+        ha="center",
+        va="center",
+        fontsize=FONT_ARCH_LABEL,
+        color="black",
+        zorder=4,
+    )
+    ax.text(
+        dec_bx + dec_w / 2,
+        decoder_y + dec_h * 0.20,
+        "frozen",
+        ha="center",
+        va="center",
+        fontsize=FONT_ARCH_SUBLABEL,
+        color=C_GREY,
+        zorder=4,
+    )
     draw_arrow(ax, (dec_x0 + z1_w, dec_y_mid + SBH / 2),
                (dec_bx, dec_y_mid + SBH / 2 - 0.04),
                color=C_DECODE_MID, linewidth=1.3)
@@ -464,7 +490,7 @@ def create_architecture_figure(output_dir=None):
     draw_box(ax, (out_x, out_y), out_w, SBH + 0.04, "Gene Expr.\nProfile",
              facecolor="#E8EAF6", edgecolor="#283593", fontsize=FONT_ARCH_LABEL,
              textcolor="black")
-    draw_arrow(ax, (dec_bx + dec_w / 2, dec_y_mid - 0.15 + dec_h),
+    draw_arrow(ax, (dec_bx + dec_w / 2, decoder_y + dec_h),
                (out_x + out_w / 2, out_y),
                color=C_DECODE_MID, linewidth=1.3)
 

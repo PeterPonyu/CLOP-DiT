@@ -77,3 +77,58 @@ def add_shared_legend_axes(fig, rect: Sequence[float]):
     legend_ax.set_axis_off()
     legend_ax.patch.set_alpha(0.0)
     return legend_ax
+
+
+def union_axes_rect(axes) -> tuple[float, float, float, float]:
+    """Return the union rectangle of multiple axes in figure coordinates."""
+    rects = [get_axes_rect(ax) for ax in axes]
+    left = min(r[0] for r in rects)
+    bottom = min(r[1] for r in rects)
+    right = max(r[0] + r[2] for r in rects)
+    top = max(r[1] + r[3] for r in rects)
+    return left, bottom, right - left, top - bottom
+
+
+def layout_axes_row(
+    axes,
+    *,
+    widths: Sequence[float] | None = None,
+    gaps: float | Sequence[float] = 0.02,
+    rect: Sequence[float] | None = None,
+):
+    """Lay out a sequence of axes in one explicit horizontal row.
+
+    Parameters are interpreted in figure coordinates. When ``rect`` is omitted,
+    the current union rectangle of ``axes`` is reused.
+    """
+    axes = list(axes)
+    if not axes:
+        return []
+
+    if widths is None:
+        widths = [1.0] * len(axes)
+    if len(widths) != len(axes):
+        raise ValueError("widths must match number of axes")
+
+    if isinstance(gaps, (int, float)):
+        gaps = [float(gaps)] * max(len(axes) - 1, 0)
+    else:
+        gaps = list(map(float, gaps))
+    if len(gaps) != max(len(axes) - 1, 0):
+        raise ValueError("gaps must contain len(axes) - 1 values")
+
+    left, bottom, width, height = union_axes_rect(axes) if rect is None else tuple(map(float, rect))
+    total_gap = sum(gaps)
+    usable_width = width - total_gap
+    scale = usable_width / sum(map(float, widths))
+
+    x = left
+    rects = []
+    for idx, (ax, rel_width) in enumerate(zip(axes, widths)):
+        ax_width = float(rel_width) * scale
+        ax_rect = (x, bottom, ax_width, height)
+        set_axes_rect(ax, ax_rect)
+        rects.append(ax_rect)
+        if idx < len(gaps):
+            x += ax_width + gaps[idx]
+    return rects
