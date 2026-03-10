@@ -126,6 +126,14 @@ DEFAULT_METHOD_SPECS: List[MethodSpec] = [
         capabilities=_cap(has_embeddings=True),
     ),
     MethodSpec(
+        slug="scgen",
+        display_name="scGen",
+        family="external_baseline",
+        source="scgen",
+        color="#E91E63",
+        capabilities=_cap(has_embeddings=True),
+    ),
+    MethodSpec(
         slug="gaussian",
         display_name="Gaussian N(μ,σ²I)",
         family="synthetic",
