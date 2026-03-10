@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# regenerate_report.sh — One-command regeneration of all 19 panels (A–S) + architecture figure.
+# regenerate_report.sh — One-command regeneration of all 20 article figures.
 #
 # Prerequisites: trained CLOP (clop_best.pth) + DiT (dit_best.pth) + scGPT decoder.
 # All intermediate outputs (embeddings, metrics, figures) are regenerated.
-# After step 7 (visualization), step 8 verifies all 17 article figures and
+# After step 7 (visualization), step 8 verifies all 20 article figures and
 # creates symlinks in articles/figures/ so the LaTeX article builds correctly.
 #
 # Paths come from configs/pipeline.yaml and src.utils.paths; override via env:
@@ -79,14 +79,20 @@ echo ""
 echo "▶ Step 6/8: Running model benchmarking..."
 python -m src.evaluation.model_benchmarking
 
-# ── Step 7: Generate Panels A–S + combined report ──
+# ── Step 7: Generate Figs 3–18 + combined report ──
 echo ""
-echo "▶ Step 7/8: Generating panels A–S + combined PDF..."
+echo "▶ Step 7/10: Generating Figs 3–18 + combined PDF..."
 python -m src.visualization.results_visualizer $UMAP_FLAG
 
-# ── Step 8: Verify article figures + create symlinks ──
+# ── Step 8: External figures (Figs 19, 20) ──
 echo ""
-echo "▶ Step 8/8: Verifying article figures + creating symlinks..."
+echo "▶ Step 8/10: Generating external figures (Figs 19, 20)..."
+python scripts/analysis/variance_matching_pilot.py
+python scripts/analysis/gene_gene_correlation.py
+
+# ── Step 9: Verify article figures + create symlinks ──
+echo ""
+echo "▶ Step 9/10: Verifying article figures + creating symlinks..."
 bash scripts/pipeline/verify_article_figures.sh
 
 # ── Summary ──
@@ -95,34 +101,29 @@ echo "════════════════════════�
 echo "  Report regeneration complete"
 echo "═══════════════════════════════════════════════════════════════"
 echo ""
-echo "Outputs:"
-echo "  Architecture: results/figures/fig_architecture.{png,pdf}"
-echo "  Panels A–I:  results/figures/panel_[a-i]_*.{png,pdf}"
-echo "  Panels J–K:  results/figures/panel_j_diversity_diagnostics.{png,pdf}"
-echo "               results/figures/panel_k_expression_diversity.{png,pdf}"
-echo "  Panels L–M:  results/figures/panel_l_noise_tradeoff.{png,pdf}"
-echo "               results/figures/panel_m_conditioning_umap.{png,pdf}"
-echo "  Panel N:     results/figures/panel_n_marker_gene_comparison.{png,pdf}"
-echo "  Panel O:     results/figures/panel_o_baseline_comparison.{png,pdf}"
-echo "  Panel P:     results/figures/panel_p_clustering_mixing.{png,pdf}"
-echo "  Panel Q:     results/figures/panel_q_classifier_alignment.{png,pdf}"
-echo "  Panel R:     results/figures/panel_r_de_concordance.{png,pdf}"
-echo "  Panel S:     results/figures/panel_s_benchmark.{png,pdf}"
-echo ""
-echo "  Merged (article):"
-echo "    results/figures/fig_training_dynamics.{png,pdf}     (A+C)"
-echo "    results/figures/fig_embedding_space.{png,pdf}       (B+E)"
-echo "    results/figures/fig_fidelity_alignment.{png,pdf}    (G+F)"
-echo "    results/figures/fig_diversity_tradeoff.{png,pdf}    (L+K)"
-echo "    results/figures/fig_downstream_pq.{png,pdf}         (P+Q)"
+echo "Outputs (20 article figures):"
+echo "  Fig 1:   results/figures/fig_architecture.{png,pdf}"
+echo "  Fig 2:   results/figures/fig_evaluation_pipeline.{png,pdf}"
+echo "  Fig 3:   results/figures/fig03_training_dynamics.{png,pdf}"
+echo "  Fig 4:   results/figures/fig04_embedding_space.{png,pdf}"
+echo "  Fig 5:   results/figures/fig05_metrics_summary.{png,pdf}"
+echo "  Fig 6:   results/figures/fig06_per_type_fidelity.{png,pdf}"
+echo "  Fig 7:   results/figures/fig07_text_cell_alignment.{png,pdf}"
+echo "  Fig 8:   results/figures/fig08_marker_genes.{png,pdf}"
+echo "  Fig 9:   results/figures/fig09_expression_correlation.{png,pdf}"
+echo "  Fig 10:  results/figures/fig10_expression_analysis.{png,pdf}"
+echo "  Fig 11:  results/figures/fig11_conditioning_umap.{png,pdf}"
+echo "  Fig 12:  results/figures/fig12_diversity_diagnostics.{png,pdf}"
+echo "  Fig 13:  results/figures/fig13_noise_tradeoff.{png,pdf}"
+echo "  Fig 14:  results/figures/fig14_expression_diversity.{png,pdf}"
+echo "  Fig 15:  results/figures/fig15_baseline_comparison.{png,pdf}"
+echo "  Fig 16:  results/figures/fig16_benchmark.{png,pdf}"
+echo "  Fig 17:  results/figures/fig17_downstream_pq.{png,pdf}"
+echo "  Fig 18:  results/figures/fig18_de_concordance.{png,pdf}"
+echo "  Fig 19:  results/figures/fig19_variance_matching_pilot.{png,pdf}"
+echo "  Fig 20:  results/figures/fig20_gene_gene_correlation.{png,pdf}"
 echo ""
 echo "  Combined:    results/figures/clop_dit_full_report.pdf"
-echo "  Symlinks:    articles/figures/ (17 PDFs → results/figures/)"
-echo ""
-echo "  Metrics:     results/generation_metrics.json"
-echo "               results/generation_metadata.json"
-echo "               results/diversity_diagnostics.json"
-echo "               results/expression_metrics.json"
-echo "               results/benchmark_report.json"
+echo "  Symlinks:    articles/figures/ (20 PDFs → results/figures/)"
 echo ""
 ls -lh results/figures/clop_dit_full_report.pdf 2>/dev/null || true

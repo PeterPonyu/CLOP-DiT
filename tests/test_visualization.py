@@ -81,4 +81,4 @@ class TestStyleConstants:
 
     def test_suptitle_y(self):
         from src.visualization.style import SUPTITLE_Y
-        assert SUPTITLE_Y == 0.98
+        assert SUPTITLE_Y == 0.96

@@ -244,7 +244,7 @@ def create_architecture_figure(output_dir=None):
     tx1 = tx0 + SBW + gap
     draw_box(ax, (tx1, ty - 0.05), BW, BH + 0.10, "BiomedBERT",
              sublabel="frozen | 340M",
-             facecolor=C_TEXT_LIGHT, edgecolor=C_TEXT_DARK, fontsize=7,
+             facecolor=C_TEXT_LIGHT, edgecolor=C_TEXT_DARK, fontsize=FONT_ARCH_SUBLABEL,
              textcolor="black", linewidth=1.3)
     draw_arrow(ax, (tx0 + SBW, ty + SBH / 2),
                (tx1, ty + SBH / 2 - 0.02), color=C_TEXT_MID, linewidth=1.2)
@@ -262,7 +262,7 @@ def create_architecture_figure(output_dir=None):
     tx3 = tx2 + zca_w + gap
     draw_box(ax, (tx3, ty - 0.05), BW, BH + 0.10, "Text Proj.",
              sublabel="MLP 1024\u2192512",
-            facecolor=C_TEXT_LIGHT, edgecolor=C_TEXT_DARK, fontsize=7.0,
+            facecolor=C_TEXT_LIGHT, edgecolor=C_TEXT_DARK, fontsize=FONT_ARCH_SUBLABEL,
              textcolor="black")
     draw_arrow(ax, (tx2 + zca_w, ty + SBH / 2),
                (tx3, ty + SBH / 2 - 0.02), color=C_TEXT_MID, linewidth=1.2)
@@ -280,7 +280,7 @@ def create_architecture_figure(output_dir=None):
     cx1 = cx0 + SBW + gap
     draw_box(ax, (cx1, cy - 0.05), BW, BH + 0.10, "scGPT Enc.",
              sublabel="frozen | 51M",
-             facecolor=C_CELL_LIGHT, edgecolor=C_CELL_DARK, fontsize=7,
+             facecolor=C_CELL_LIGHT, edgecolor=C_CELL_DARK, fontsize=FONT_ARCH_SUBLABEL,
              textcolor="black", linewidth=1.3)
     draw_arrow(ax, (cx0 + SBW, cy + SBH / 2),
                (cx1, cy + SBH / 2 - 0.02), color=C_CELL_MID, linewidth=1.2)
@@ -289,7 +289,7 @@ def create_architecture_figure(output_dir=None):
     cx2 = tx3
     draw_box(ax, (cx2, cy - 0.05), BW, BH + 0.10, "Cell Proj.",
              sublabel="MLP 512\u2192512",
-            facecolor=C_CELL_LIGHT, edgecolor=C_CELL_DARK, fontsize=7.0,
+            facecolor=C_CELL_LIGHT, edgecolor=C_CELL_DARK, fontsize=FONT_ARCH_SUBLABEL,
              textcolor="black")
     draw_arrow(ax, (cx1 + BW, cy + SBH / 2 - 0.02),
                (cx2, cy + SBH / 2 - 0.02), color=C_CELL_MID, linewidth=1.2)
@@ -356,7 +356,7 @@ def create_architecture_figure(output_dir=None):
     z0_w = 0.50
     draw_box(ax, (dit_x0, dit_y_mid), z0_w, SBH,
              r"$z_0$", sublabel="512-d",
-             facecolor=C_GEN_BOX, edgecolor=C_GEN_DARK, fontsize=7,
+             facecolor=C_GEN_BOX, edgecolor=C_GEN_DARK, fontsize=FONT_ARCH_SUBLABEL,
              textcolor="black")
     ax.text(dit_x0 + z0_w / 2, dit_y_mid + SBH + 0.03,
             r"$\sim\mathcal{N}(0,I)$",
@@ -384,7 +384,7 @@ def create_architecture_figure(output_dir=None):
             color=C_GREY, zorder=5)
     ax.text(cx_dit, dit_by + dit_bh - 0.66,
             r"$v(z_t, t, c)$",
-            ha="center", va="center", fontsize=7,
+            ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL,
             color="black", zorder=5)
 
     # Arrow: z0 -> DiT
@@ -484,7 +484,7 @@ def create_architecture_figure(output_dir=None):
     z1_w = 0.40
     draw_box(ax, (dec_x0, dec_y_mid), z1_w, SBH,
              r"$z_1$",
-             facecolor=C_GEN_BOX, edgecolor=C_GEN_DARK, fontsize=7,
+             facecolor=C_GEN_BOX, edgecolor=C_GEN_DARK, fontsize=FONT_ARCH_SUBLABEL,
              textcolor="black")
     ax.text(dec_x0 + z1_w / 2, dec_y_mid - 0.10, "512-d",
             ha="center", va="top", fontsize=FONT_ARCH_SUBLABEL, color=C_GREY, zorder=5)

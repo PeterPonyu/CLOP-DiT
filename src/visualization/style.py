@@ -35,11 +35,11 @@ from matplotlib.ticker import ScalarFormatter
 VIS_STYLE: dict = {
     "font.family": "sans-serif",
     "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
-    "font.size": 10,
-    "axes.titlesize": 11,
-    "axes.titleweight": "normal",
+    "font.size": 11,
+    "axes.titlesize": 13,
+    "axes.titleweight": "bold",
     "axes.titlepad": 8,
-    "axes.labelsize": 10,
+    "axes.labelsize": 11,
     "xtick.labelsize": 10,
     "ytick.labelsize": 10,
     "legend.fontsize": 10,
@@ -102,8 +102,20 @@ MARKER_CATEGORY_COLORS = {
     "Stromal": "#6A1B9A",
 }
 
+# Canonical method colors for benchmarking and baseline comparison panels
+METHOD_COLORS = {
+    "CLOP-DiT":              COLORS["real"],              # #0D47A1
+    "Gaussian N(\u03bc,\u03c3\u00b2I)": COLORS["baseline_gauss"],   # #1B5E20
+    "Shuffled Labels":       COLORS["baseline_shuffle"],   # #4A148C
+    "Random N(0,I)":         "#795548",
+    "Mean-only (collapse)":  COLORS["accent"],             # #FF8F00
+}
+
+# Concordance metric colors (neutral, no semantic overlap with data-source colors)
+METRIC_COLORS = ["#1565C0", "#E65100", "#2E7D32", "#6A1B9A"]
+
 # ──────────────────────────────────────────────────────────────
-# 69-type deterministic palette (colourblind-friendly via HSL spacing)
+# 69-type deterministic palette (HSL spacing via gist_ncar)
 # ──────────────────────────────────────────────────────────────
 
 def _build_type_palette(n: int = 69) -> np.ndarray:
@@ -119,25 +131,25 @@ TYPE_PALETTE = _build_type_palette(69)
 
 # Consistent suptitle vertical position — keeps title close to axes
 SUPTITLE_Y = 0.96
-SUPTITLE_Y_CLOSE = 0.96  # Multi-row figures: keeps suptitle closer to axes
+SUPTITLE_Y_CLOSE = SUPTITLE_Y  # Deprecated alias — identical to SUPTITLE_Y
 # Standard legend font size (matches VIS_STYLE legend.fontsize)
 FONT_LEGEND = 10
 # Dense multi-panel figures where 10pt legends would crowd the layout
-FONT_LEGEND_DENSE = 8
+FONT_LEGEND_DENSE = 9
 # Architecture diagram (Fig 1) — diagram-specific labels (min 5.5pt per VCD)
-FONT_ARCH_LABEL = 9
-FONT_ARCH_SUBLABEL = 8
+FONT_ARCH_LABEL = 10
+FONT_ARCH_SUBLABEL = 9
 # Centralized font sizes for publication figures
-FONT_SUPTITLE = 11
-FONT_TITLE = 11
-FONT_LABEL = 10
+FONT_SUPTITLE = 14
+FONT_TITLE = 13
+FONT_LABEL = 11
 FONT_TICK = 10
-FONT_TICK_DENSE = 8
-FONT_ANNOTATION = 8
-FONT_SMALL = 7
+FONT_TICK_DENSE = 9
+FONT_ANNOTATION = 9
+FONT_SMALL = 8
 # Minimum-size fonts for dense contexts (replaces illegal sub-7pt values)
-FONT_HEATMAP_CELL = 7      # Heatmap cell annotations (was 5-6.5pt)
-FONT_DENSE_YTICK = 7       # Dense y-axis tick labels (was 6pt)
+FONT_HEATMAP_CELL = 8      # Heatmap cell annotations (was 7pt)
+FONT_DENSE_YTICK = 8       # Dense y-axis tick labels (was 7pt)
 _FONTS_REGISTERED = False
 
 
@@ -198,13 +210,13 @@ def style_axes(
         Adjusts font sizes and grid visibility to suit the subplot type.
     """
     style_map = {
-        "default":  {"title": 11, "label": 10, "tick": 10, "grid": True},
-        "bar":      {"title": 11, "label": 10, "tick": 10, "grid": True},
-        "heatmap":  {"title": 11, "label": 10, "tick": 8,  "grid": False},
-        "scatter":  {"title": 11, "label": 10, "tick": 10, "grid": True},
-        "umap":     {"title": 11, "label": 10, "tick": 10, "grid": False},
-        "polar":    {"title": 11, "label": 10, "tick": 10, "grid": True},
-        "table":    {"title": 11, "label": 10, "tick": 10, "grid": False},
+        "default":  {"title": 13, "label": 11, "tick": 10, "grid": True},
+        "bar":      {"title": 13, "label": 11, "tick": 10, "grid": True},
+        "heatmap":  {"title": 13, "label": 11, "tick": 9,  "grid": False},
+        "scatter":  {"title": 13, "label": 11, "tick": 10, "grid": True},
+        "umap":     {"title": 13, "label": 11, "tick": 10, "grid": False},
+        "polar":    {"title": 13, "label": 11, "tick": 10, "grid": True},
+        "table":    {"title": 13, "label": 11, "tick": 10, "grid": False},
     }
     s = style_map.get(kind, style_map["default"])
 

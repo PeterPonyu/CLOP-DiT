@@ -35,11 +35,8 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-
-matplotlib.use("Agg")  # non-interactive backend for PDF generation
 
 # Shared style infrastructure (centralised in style.py)
 from .style import (
@@ -75,8 +72,6 @@ class ResultsVisualizer:
         cache_dir: Optional[str] = None,
         output_dir: Optional[str] = None,
         dpi: int = 300,
-        auto_refine: bool = True,
-        max_refine_passes: int = 3,
     ):
         if clop_history_path is None:
             clop_history_path = str(CHECKPOINT_DIR / "clop_history.json")
@@ -90,9 +85,6 @@ class ResultsVisualizer:
         self.output = Path(output_dir)
         self.output.mkdir(parents=True, exist_ok=True)
         self.dpi = dpi
-        self.auto_refine = auto_refine
-        self.max_refine_passes = max_refine_passes
-        self._refine_stats: Dict[str, int] = {}  # panel_id -> passes_used
 
         # Load CLOP history
         clop_path = Path(clop_history_path)
@@ -136,50 +128,6 @@ class ResultsVisualizer:
         path = self.output / f"{basename}.png"
         return save_with_vcd(fig, path, self.dpi)
 
-    def _save_with_refine(
-        self,
-        make_fn,
-        panel_id: str,
-        basename: str,
-        *,
-        max_passes: int = 0,
-    ) -> Optional[plt.Figure]:
-        """Optionally auto-refine a panel, then save it.
-
-        Parameters
-        ----------
-        make_fn : callable(PanelConfig) -> Figure | None
-            A function that creates the figure from a PanelConfig.
-        panel_id : str
-            Short identifier (e.g. "A", "D", "R").
-        basename : str
-            Output file basename (without extension).
-        max_passes : int
-            Override max_refine_passes for this panel (0 = use self default).
-        """
-        if not self.auto_refine:
-            return None  # caller should fall back to direct generation
-
-        from .auto_refine import refine_panel
-        from .panel_config import PanelConfig
-
-        passes = max_passes or self.max_refine_passes
-        default_config = PanelConfig(panel_id=panel_id)
-
-        fig, final_cfg, issues = refine_panel(
-            make_fn, default_config,
-            max_passes=passes,
-            label=panel_id,
-            verbose=True,
-        )
-        n_warn = sum(1 for i in issues if i.get("severity") == "warning")
-        self._refine_stats[panel_id] = passes
-        logger.info(f"[auto_refine] {panel_id}: {n_warn} warnings after refinement")
-
-        if fig is not None:
-            self._save_panel(fig, basename)
-        return fig
-
     # ──────────────────────────────────────────────────────────
     # PANEL A: CLOP Training Dynamics
     # ──────────────────────────────────────────────────────────
@@ -191,7 +139,7 @@ class ResultsVisualizer:
         A3: Prototype accuracy (train/val + top-5, top-10)
         A4: Embedding quality (alignment, uniformity, inter-sep, t↔c alignment)
         """
-        from .panels_training import plot_clop_training as _plot_a
+        from .fig03_training import plot_clop_training as _plot_a
         return _plot_a(
             hist=self.clop_hist,
             output_dir=self.output,
@@ -207,14 +155,14 @@ class ResultsVisualizer:
         self, n_cells: int = 8000, save: bool = True
     ) -> Optional[plt.Figure]:
         """3-panel CLOP alignment visualization (B0: histogram, B1: prototypes, B2: cells + overlay)."""
-        from .panels_embedding import plot_clop_embedding_space as _plot_b
+        from .fig04_embedding import plot_clop_embedding_space as _plot_b
         return _plot_b(
             cache_dir=self.cache,
             type_names=self.type_names,
             output_dir=self.output,
             dpi=self.dpi,
             save=save,
-            save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "panel_b_clop_embedding_umap"),
+            save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "fig04_clop_embedding_umap"),
             n_cells=n_cells,
         )
 
@@ -226,7 +174,7 @@ class ResultsVisualizer:
 
         Top-left: Loss; top-right: Cosine similarity; bottom-left: LR schedule; bottom-right: key metrics summary.
         """
-        from .panels_training import plot_dit_training as _plot_c
+        from .fig03_training import plot_dit_training as _plot_c
         return _plot_c(
             hist=self.dit_hist,
             output_dir=self.output,
@@ -255,7 +203,7 @@ class ResultsVisualizer:
             expr_metrics_path = str(RESULTS_DIR / "expression_metrics.json")
         if div_metrics_path is None:
             div_metrics_path = str(RESULTS_DIR / "diversity_diagnostics.json")
-        from .panels_quality import plot_metrics_summary as _plot_d
+        from .fig05_metrics import plot_metrics_summary as _plot_d
         return _plot_d(
             clop_hist=self.clop_hist,
             dit_hist=self.dit_hist,
@@ -265,7 +213,7 @@ class ResultsVisualizer:
             output_dir=str(self.output),
             dpi=self.dpi,
             save=save,
-            save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "panel_d_metrics_summary"),
+            save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "fig05_metrics_summary"),
         )
 
     # ──────────────────────────────────────────────────────────
@@ -284,7 +232,7 @@ class ResultsVisualizer:
         E2: Generated cells (UMAP, coloured by type)
         E3: Overlay (real=circles, generated=triangles)
         """
-        from .panels_quality import plot_real_vs_generated as _plot_e
+        from .fig04_embedding import plot_real_vs_generated as _plot_e
         return _plot_e(
             cache_dir=str(self.cache),
             generated_path=generated_path,
@@ -293,7 +241,7 @@ class ResultsVisualizer:
             output_dir=str(self.output),
             dpi=self.dpi,
             save=save,
-            save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "panel_e_real_vs_generated"),
+            save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "fig04_real_vs_generated"),
         )
 
     # ──────────────────────────────────────────────────────────
@@ -306,14 +254,14 @@ class ResultsVisualizer:
         F2: Sorted per-type alignment bars with threshold bands
         F3: Distribution of diagonal vs off-diagonal similarities
         """
-        from .panels_quality import plot_text_cell_heatmap as _plot_f
+        from .fig07_alignment import plot_text_cell_heatmap as _plot_f
         return _plot_f(
             cache_dir=str(self.cache),
             type_names=self.type_names,
             output_dir=str(self.output),
             dpi=self.dpi,
             save=save,
-            save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "panel_f_text_cell_heatmap"),
+            save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "fig07_text_cell_alignment"),
         )
 
     # ──────────────────────────────────────────────────────────
@@ -332,13 +280,13 @@ class ResultsVisualizer:
         """
         if metrics_path is None:
             metrics_path = str(RESULTS_DIR / "generation_metrics.json")
-        from .panels_quality import plot_per_type_generation as _plot_g
+        from .fig06_fidelity import plot_per_type_generation as _plot_g
         return _plot_g(
             metrics_path=metrics_path,
             output_dir=str(self.output),
             dpi=self.dpi,
             save=save,
-            save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "panel_g_per_type_generation"),
+            save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "fig06_per_type_fidelity"),
         )
 
     # ──────────────────────────────────────────────────────────
@@ -367,7 +315,7 @@ class ResultsVisualizer:
         gen_labels_path = gen_labels_path or str(RESULTS_DIR / "generated_expression_labels.npy")
         gene_names_path = gene_names_path or str(RESULTS_DIR / "expression_gene_names.json")
         metrics_path = metrics_path or str(RESULTS_DIR / "expression_metrics.json")
-        from .panels_expression import plot_expression_correlation as _plot_h
+        from .fig09_expression_corr import plot_expression_correlation as _plot_h
         return _plot_h(
             real_expr_path=real_expr_path,
             gen_expr_path=gen_expr_path,
@@ -403,7 +351,7 @@ class ResultsVisualizer:
         gen_expr_path = gen_expr_path or str(RESULTS_DIR / "generated_expression.npy")
         gene_names_path = gene_names_path or str(RESULTS_DIR / "expression_gene_names.json")
         metrics_path = metrics_path or str(RESULTS_DIR / "expression_metrics.json")
-        from .panels_expression import plot_expression_analysis as _plot_i
+        from .fig10_expression_analysis import plot_expression_analysis as _plot_i
         return _plot_i(
             real_expr_path=real_expr_path,
             gen_expr_path=gen_expr_path,
@@ -442,7 +390,7 @@ class ResultsVisualizer:
         gen_labels_path = gen_labels_path or str(RESULTS_DIR / "generated_expression_labels.npy")
         gene_names_path = gene_names_path or str(RESULTS_DIR / "expression_gene_names.json")
         metrics_path = metrics_path or str(RESULTS_DIR / "expression_metrics.json")
-        from .panels_expression import plot_marker_gene_comparison as _plot_n
+        from .fig08_markers import plot_marker_gene_comparison as _plot_n
         return _plot_n(
             real_expr_path=real_expr_path,
             gen_expr_path=gen_expr_path,
@@ -471,7 +419,7 @@ class ResultsVisualizer:
         gen_metrics_path = gen_metrics_path or str(RESULTS_DIR / "generation_metrics.json")
         div_metrics_path = div_metrics_path or str(RESULTS_DIR / "diversity_diagnostics.json")
         baseline_metrics_path = baseline_metrics_path or str(RESULTS_DIR / "baseline_metrics.json")
-        from .baseline_panels import plot_baseline_comparison as _plot_o
+        from .fig15_baselines import plot_baseline_comparison as _plot_o
         return _plot_o(
             gen_metrics_path=gen_metrics_path,
             div_metrics_path=div_metrics_path,
@@ -493,12 +441,12 @@ class ResultsVisualizer:
         """
         if downstream_dir is None:
             downstream_dir = str(RESULTS_DIR / "downstream")
-        from .downstream_panels import (
+        from .fig17_downstream import (
             plot_clustering_panel,
             plot_classifier_panel,
-            plot_de_concordance_panel,
             plot_clustering_and_classifier_merged,
         )
+        from .fig18_de_concordance import plot_de_concordance_panel
         import json as _json
 
         ds_dir = Path(downstream_dir)
@@ -520,7 +468,7 @@ class ResultsVisualizer:
                     clust_data[key] = np.load(arr_path, allow_pickle=True)
             fig_p = plot_clustering_panel(clust_data, self.type_names, self.output, self.dpi)
             if fig_p:
-                saved.append(self.output / "panel_p_clustering_mixing.pdf")
+                saved.append(self.output / "fig17_clustering_mixing.pdf")
                 plt.close(fig_p)
 
         # Panel Q: Classifier
@@ -536,7 +484,7 @@ class ResultsVisualizer:
                 classif_data["_disc_y"] = classif_data["disc_y"]
             fig_q = plot_classifier_panel(classif_data, self.output, self.dpi)
             if fig_q:
-                saved.append(self.output / "panel_q_classifier_alignment.pdf")
+                saved.append(self.output / "fig17_classifier_alignment.pdf")
                 plt.close(fig_q)
 
         # Merged P+Q: Clustering & Classifier
@@ -551,7 +499,7 @@ class ResultsVisualizer:
                     save=True,
                 )
                 if fig_pq:
-                    saved.append(self.output / "fig_downstream_pq.pdf")
+                    saved.append(self.output / "fig17_downstream_pq.pdf")
                     plt.close(fig_pq)
             except Exception as exc:
                 logger.warning(f"Merged P+Q figure failed: {exc}")
@@ -569,7 +517,7 @@ class ResultsVisualizer:
                         de_data[cname][key] = np.load(arr_path, allow_pickle=True).tolist()
             fig_r = plot_de_concordance_panel(de_data, self.output, self.dpi)
             if fig_r:
-                saved.append(self.output / "panel_r_de_concordance.pdf")
+                saved.append(self.output / "fig18_de_concordance.pdf")
                 plt.close(fig_r)
 
         if not saved:
@@ -587,10 +535,10 @@ class ResultsVisualizer:
         """
         import io as _io
         from PIL import Image
-        from .panels_quality import plot_diversity_distributions_violin
-        from .panels_diversity import plot_expression_diversity_panel
+        from .fig05_metrics import plot_diversity_distributions_violin
+        from .fig14_expr_diversity import plot_expression_diversity_panel
 
-        l_path = self.output / "panel_l_noise_tradeoff.png"
+        l_path = self.output / "fig13_noise_tradeoff.png"
 
         # Regenerate K with label_offset=1 so labels become (b)(c) in merged fig.
         div_metrics_path = str(RESULTS_DIR / "diversity_diagnostics.json")
@@ -641,7 +589,7 @@ class ResultsVisualizer:
             return arr[y0:y1, x0:x1]
 
         l_image = Image.open(l_path)
-        images = [(l_path.stem, l_image), ("panel_k_expression_diversity", k_image)]
+        images = [(l_path.stem, l_image), ("fig14_expression_diversity", k_image)]
 
         fig = plt.figure(figsize=(13.6, 8.6), dpi=self.dpi)
         gs = fig.add_gridspec(2, 2, height_ratios=[1.0, 1.0], wspace=0.04, hspace=0.14)
@@ -706,25 +654,25 @@ class ResultsVisualizer:
         # ── Part I: Training ──
         fig_a = self.plot_clop_training()
         if fig_a:
-            saved.append(self.output / "panel_a_clop_training.pdf")
+            saved.append(self.output / "fig03_clop_training.pdf")
             plt.close(fig_a)
 
         if include_umap:
             fig_b = self.plot_clop_embedding_space()
             if fig_b:
-                saved.append(self.output / "panel_b_clop_embedding_umap.pdf")
+                saved.append(self.output / "fig04_clop_embedding_umap.pdf")
                 plt.close(fig_b)
         else:
             logger.info("Skipping Panel B (UMAP) — use --include-umap to enable")
 
         fig_c = self.plot_dit_training()
         if fig_c:
-            saved.append(self.output / "panel_c_dit_training.pdf")
+            saved.append(self.output / "fig03_dit_training.pdf")
             plt.close(fig_c)
 
         # ── Merged: A+C Training Dynamics ──
         try:
-            from .panels_training import plot_training_dynamics_combined
+            from .fig03_training import plot_training_dynamics_combined
             fig_ac = plot_training_dynamics_combined(
                 clop_hist=self.clop_hist,
                 dit_hist=self.dit_hist,
@@ -734,7 +682,7 @@ class ResultsVisualizer:
                 save_panel_fn=lambda fig, name, *a, **kw: self._save_panel(fig, name),
             )
             if fig_ac:
-                saved.append(self.output / "fig_training_dynamics.pdf")
+                saved.append(self.output / "fig03_training_dynamics.pdf")
                 plt.close(fig_ac)
         except Exception as exc:
             logger.warning(f"Merged A+C figure failed: {exc}")
@@ -742,28 +690,28 @@ class ResultsVisualizer:
         # ── Part II: Generation quality ──
         fig_d = self.plot_metrics_summary()
         if fig_d:
-            saved.append(self.output / "panel_d_metrics_summary.pdf")
+            saved.append(self.output / "fig05_metrics_summary.pdf")
             plt.close(fig_d)
 
         fig_e = self.plot_real_vs_generated()
         if fig_e:
-            saved.append(self.output / "panel_e_real_vs_generated.pdf")
+            saved.append(self.output / "fig04_real_vs_generated.pdf")
             plt.close(fig_e)
 
         fig_f = self.plot_text_cell_heatmap()
         if fig_f:
-            saved.append(self.output / "panel_f_text_cell_heatmap.pdf")
+            saved.append(self.output / "fig07_text_cell_alignment.pdf")
             plt.close(fig_f)
 
         fig_g = self.plot_per_type_generation()
         if fig_g:
-            saved.append(self.output / "panel_g_per_type_generation.pdf")
+            saved.append(self.output / "fig06_per_type_fidelity.pdf")
             plt.close(fig_g)
 
         # ── Merged: B+E Embedding Space ──
         if include_umap:
             try:
-                from .panels_quality import plot_embedding_space_merged
+                from .fig04_embedding import plot_embedding_space_merged
                 fig_be = plot_embedding_space_merged(
                     cache_dir=str(self.cache),
                     type_names=self.type_names,
@@ -771,17 +719,17 @@ class ResultsVisualizer:
                     output_dir=str(self.output),
                     dpi=self.dpi,
                     save=True,
-                    save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "fig_embedding_space"),
+                    save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "fig04_embedding_space"),
                 )
                 if fig_be:
-                    saved.append(self.output / "fig_embedding_space.pdf")
+                    saved.append(self.output / "fig04_embedding_space.pdf")
                     plt.close(fig_be)
             except Exception as exc:
                 logger.warning(f"Merged B+E figure failed: {exc}")
 
         # ── Merged: G+F Fidelity & Alignment ──
         try:
-            from .panels_quality import plot_fidelity_and_alignment_merged
+            from .fig04_embedding import plot_fidelity_and_alignment_merged
             fig_gf = plot_fidelity_and_alignment_merged(
                 cache_dir=str(self.cache),
                 metrics_path=str(RESULTS_DIR / "generation_metrics.json"),
@@ -800,23 +748,23 @@ class ResultsVisualizer:
         # ── Part III: Expression & biological validation ──
         fig_h = self.plot_expression_correlation()
         if fig_h:
-            saved.append(self.output / "panel_h_expression_correlation.pdf")
+            saved.append(self.output / "fig09_expression_correlation.pdf")
             plt.close(fig_h)
 
         fig_i = self.plot_expression_analysis()
         if fig_i:
-            saved.append(self.output / "panel_i_expression_analysis.pdf")
+            saved.append(self.output / "fig10_expression_analysis.pdf")
             plt.close(fig_i)
 
         fig_n = self.plot_marker_gene_comparison()
         if fig_n:
-            saved.append(self.output / "panel_n_marker_gene_comparison.pdf")
+            saved.append(self.output / "fig08_marker_genes.pdf")
             plt.close(fig_n)
 
         # ── Part IV: Baselines & downstream ──
         fig_o = self.plot_baseline_comparison()
         if fig_o:
-            saved.append(self.output / "panel_o_baseline_comparison.pdf")
+            saved.append(self.output / "fig15_baseline_comparison.pdf")
             plt.close(fig_o)
 
         # Panels P/Q/R: Downstream biology (from pre-computed JSONs)
@@ -825,24 +773,24 @@ class ResultsVisualizer:
 
         # Panel S: Model Benchmarking
         try:
-            from .benchmark_panels import plot_benchmark_panel as _plot_s
+            from .fig16_benchmark import plot_benchmark_panel as _plot_s
             fig_s = _plot_s(
                 report_path=str(RESULTS_DIR / "benchmark_report.json"),
                 output_dir=self.output,
                 dpi=self.dpi,
             )
             if fig_s:
-                saved.append(self.output / "panel_s_benchmark.pdf")
+                saved.append(self.output / "fig16_benchmark.pdf")
                 plt.close(fig_s)
         except Exception as exc:
             logger.warning(f"Panel S (Benchmark) failed: {exc}")
 
-        # Panels J–M: Pre-generated external panels
+        # Panels J–M: Pre-generated external panels (fig12, fig14, fig13, fig11)
         for panel_name in [
-            "panel_j_diversity_diagnostics",
-            "panel_k_expression_diversity",
-            "panel_l_noise_tradeoff",
-            "panel_m_conditioning_umap",
+            "fig12_diversity_diagnostics",
+            "fig14_expression_diversity",
+            "fig13_noise_tradeoff",
+            "fig11_conditioning_umap",
         ]:
             panel_pdf = self.output / f"{panel_name}.pdf"
             panel_png = self.output / f"{panel_name}.png"
@@ -885,10 +833,6 @@ def main():
     parser.add_argument("--cache-dir", default=str(CACHE_DIR))
     parser.add_argument("--output-dir", default=str(FIG_DIR))
     parser.add_argument("--no-umap", action="store_true", help="Skip UMAP (faster)")
-    parser.add_argument("--no-auto-refine", action="store_true",
-                        help="Disable VCD auto-refinement loop")
-    parser.add_argument("--max-refine-passes", type=int, default=3,
-                        help="Max auto-refinement passes per panel (default: 3)")
     parser.add_argument("--dpi", type=int, default=300)
     parser.add_argument("--generated", default=None, help="Path to generated cells .npy")
     args = parser.parse_args()
@@ -899,20 +843,12 @@ def main():
         cache_dir=args.cache_dir,
         output_dir=args.output_dir,
         dpi=args.dpi,
-        auto_refine=not args.no_auto_refine,
-        max_refine_passes=args.max_refine_passes,
     )
 
     saved = viz.generate_full_report(include_umap=not args.no_umap)
     print(f"\nGenerated {len(saved)} files:")
     for p in saved:
         print(f"  {p}")
-
-    # Print auto-refinement stats
-    if viz._refine_stats:
-        print(f"\nAuto-refinement passes per panel:")
-        for panel_id, passes in sorted(viz._refine_stats.items()):
-            print(f"  {panel_id}: {passes} passes")
 
 
 if __name__ == "__main__":

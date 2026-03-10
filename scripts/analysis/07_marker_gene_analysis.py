@@ -221,11 +221,11 @@ def plot_marker_violin_grid(
         # Show best KS p-value
         best_ks = min(ks_stats, key=lambda x: x[1])
         ax.text(0.95, 0.95, f"KS={best_ks[1]:.3f}\np={best_ks[2]:.2e}",
-                transform=ax.transAxes, fontsize=6, ha="right", va="top",
+                transform=ax.transAxes, fontsize=8, ha="right", va="top",
                 bbox=dict(boxstyle="round,pad=0.3", facecolor="wheat", alpha=0.7))
 
         ax.set_xticks(positions)
-        ax.set_xticklabels(tick_labels, fontsize=7, rotation=0)
+        ax.set_xticklabels(tick_labels, fontsize=8, rotation=0)
         ax.set_title(marker, fontweight="bold", fontsize=11)
         ax.set_ylabel("Expression", fontsize=8)
         ax.grid(axis="y", alpha=0.3)
@@ -291,7 +291,7 @@ def plot_cross_celltype_heatmap(
 
     im = ax.imshow(heatmap_z, cmap="RdBu_r", aspect="auto", vmin=-2.5, vmax=2.5)
     ax.set_xticks(range(len(all_markers_unique)))
-    ax.set_xticklabels(all_markers_unique, rotation=90, fontsize=7, fontweight="bold")
+    ax.set_xticklabels(all_markers_unique, rotation=90, fontsize=8, fontweight="bold")
     ax.set_yticks(range(n_rows))
     ax.set_yticklabels(row_labels, fontsize=9)
 
@@ -301,7 +301,7 @@ def plot_cross_celltype_heatmap(
             val = heatmap_z[i, j]
             color = "white" if abs(val) > 1.5 else "black"
             ax.text(j, i, f"{val:.1f}", ha="center", va="center",
-                    fontsize=5, color=color)
+                    fontsize=8, color=color)
 
     plt.colorbar(im, label="Z-score (normalized per marker)", shrink=0.8)
     ax.set_title("Cross-Cell-Type Marker Gene Expression (Z-scored)\n"
@@ -501,7 +501,7 @@ def plot_distribution_comparison(
         ax.set_xlabel("Expression", fontsize=8)
         ax.set_ylabel("Density", fontsize=8)
         if idx == 0:
-            ax.legend(fontsize=5, loc="upper right")
+            ax.legend(fontsize=8, loc="upper right")
 
     # Hide empty
     for idx in range(len(key_markers), n_rows * n_cols):
@@ -556,7 +556,7 @@ def plot_correlation_scatter(real_expr, gen_expr_dict, gene_names, output_dir, m
         top_diff = np.argsort(diff)[-5:]
         for j in top_diff:
             ax.annotate(gene_names[j], (real_mean[j], gen_mean[j]),
-                        fontsize=5, alpha=0.7, color="red")
+                        fontsize=8, alpha=0.7, color="red")
 
         ax.set_xlabel("Real mean expression", fontsize=10)
         ax.set_ylabel("Generated mean expression", fontsize=10)

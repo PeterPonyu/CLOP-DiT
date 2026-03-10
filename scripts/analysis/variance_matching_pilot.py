@@ -14,7 +14,9 @@ import json
 from pathlib import Path
 
 import numpy as np
-import torch
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from src.visualization.style import apply_style, COLORS
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -163,6 +165,7 @@ def main():
     print(f"  Var corr:   mean={np.mean(var_corrs):.4f}, median={np.median(var_corrs):.4f}")
 
     # ── Generate figure ──
+    apply_style()
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
 
     # Panel A: SWD per type (sorted)
@@ -170,10 +173,10 @@ def main():
     names = [r["name"][:25] for r in sorted_results]
     swds = [r["swd"] for r in sorted_results]
     ax = axes[0, 0]
-    colors = ["#E53935" if s > np.mean(swds) + np.std(swds) else "#1976D2" for s in swds]
+    colors = [COLORS["generated"] if s > np.mean(swds) + np.std(swds) else COLORS["real"] for s in swds]
     ax.barh(range(len(names)), swds, color=colors, height=0.7)
     ax.set_yticks(range(len(names)))
-    ax.set_yticklabels(names, fontsize=5)
+    ax.set_yticklabels(names, fontsize=8)
     ax.set_xlabel("Sliced Wasserstein Distance")
     ax.set_title("(a) SWD per Cell Type (latent space)")
     ax.invert_yaxis()
@@ -182,9 +185,9 @@ def main():
 
     # Panel B: Variance ratio distribution
     ax = axes[0, 1]
-    ax.hist(var_ratios, bins=25, color="#1976D2", alpha=0.8, edgecolor="white")
-    ax.axvline(1.0, color="#E53935", linestyle="--", linewidth=2, label="Ideal (1.0)")
-    ax.axvline(np.mean(var_ratios), color="#FFA726", linestyle="-.", linewidth=2,
+    ax.hist(var_ratios, bins=25, color=COLORS["real"], alpha=0.8, edgecolor="white")
+    ax.axvline(1.0, color=COLORS["generated"], linestyle="--", linewidth=2, label="Ideal (1.0)")
+    ax.axvline(np.mean(var_ratios), color=COLORS["accent"], linestyle="-.", linewidth=2,
                label=f"Mean={np.mean(var_ratios):.3f}")
     ax.set_xlabel("Variance Ratio (gen/real)")
     ax.set_ylabel("Count")
@@ -193,8 +196,8 @@ def main():
 
     # Panel C: Variance correlation distribution
     ax = axes[1, 0]
-    ax.hist(var_corrs, bins=25, color="#00897B", alpha=0.8, edgecolor="white")
-    ax.axvline(np.mean(var_corrs), color="#FFA726", linestyle="-.", linewidth=2,
+    ax.hist(var_corrs, bins=25, color=COLORS["good"], alpha=0.8, edgecolor="white")
+    ax.axvline(np.mean(var_corrs), color=COLORS["accent"], linestyle="-.", linewidth=2,
                label=f"Mean={np.mean(var_corrs):.3f}")
     ax.set_xlabel("Per-Dimension Variance Correlation")
     ax.set_ylabel("Count")
@@ -204,32 +207,42 @@ def main():
     # Panel D: SWD vs. cell count
     ax = axes[1, 1]
     n_reals = [r["n_real"] for r in results]
-    ax.scatter(n_reals, swd_values, c="#1976D2", alpha=0.6, s=30, edgecolors="white", linewidth=0.5)
+    ax.scatter(n_reals, swd_values, c=COLORS["real"], alpha=0.6, s=30, edgecolors="white", linewidth=0.5)
     ax.set_xlabel("Number of Real Cells")
     ax.set_ylabel("Sliced Wasserstein Distance")
     ax.set_title("(d) SWD vs. Training Cell Count")
     ax.set_xscale("log")
 
-    # Add correlation annotation
-    corr = np.corrcoef(np.log10(np.array(n_reals) + 1), swd_values)[0, 1]
+    # Add correlation annotation (with NaN guard)
+    log_n = np.log10(np.array(n_reals) + 1)
+    swd_arr = np.array(swd_values)
+    valid = np.isfinite(log_n) & np.isfinite(swd_arr)
+    if valid.sum() >= 3:
+        corr = np.corrcoef(log_n[valid], swd_arr[valid])[0, 1]
+        if np.isnan(corr):
+            corr = 0.0
+    else:
+        corr = 0.0
     ax.annotate(f"r(log N, SWD) = {corr:.3f}", xy=(0.05, 0.95), xycoords="axes fraction",
                 fontsize=9, ha="left", va="top",
                 bbox=dict(boxstyle="round,pad=0.3", facecolor="wheat", alpha=0.8))
 
     plt.tight_layout()
     fig_path = output_dir / "variance_matching_pilot.pdf"
-    plt.savefig(fig_path, dpi=150, bbox_inches="tight")
-    plt.savefig(str(fig_path).replace(".pdf", ".png"), dpi=150, bbox_inches="tight")
-    plt.close()
+    plt.savefig(fig_path, dpi=300, bbox_inches="tight")
+    plt.savefig(str(fig_path).replace(".pdf", ".png"), dpi=300, bbox_inches="tight")
     print(f"\n[var_pilot] Figure saved to {fig_path}")
 
-    # Also save a copy into the articles/figures/ directory
-    article_fig_path = project_root / "articles" / "figures" / "fig18_variance_matching_pilot.pdf"
+    # Also save to results/figures/ with the article-delivery basename
+    fig_dir = project_root / "results" / "figures"
+    fig_dir.mkdir(parents=True, exist_ok=True)
     import shutil
-    shutil.copy(fig_path, article_fig_path)
-    shutil.copy(str(fig_path).replace(".pdf", ".png"),
-                str(article_fig_path).replace(".pdf", ".png"))
-    print(f"[var_pilot] Copied to {article_fig_path}")
+    for suffix in (".pdf", ".png"):
+        src = output_dir / f"variance_matching_pilot{suffix}"
+        dst = fig_dir / f"fig19_variance_matching_pilot{suffix}"
+        shutil.copy(src, dst)
+    print(f"[var_pilot] Copied to {fig_dir / 'fig19_variance_matching_pilot.pdf'}")
+    plt.close()
 
 
 if __name__ == "__main__":

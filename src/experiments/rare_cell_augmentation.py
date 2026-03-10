@@ -39,8 +39,6 @@ import torch
 import anndata as ad
 import scanpy as sc
 
-import matplotlib
-matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from scipy import stats
 from sklearn.linear_model import LogisticRegression

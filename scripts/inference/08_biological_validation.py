@@ -568,7 +568,7 @@ def _plot_umap_panel(real_recon, fake_adata, ax):
     ax.set_ylabel("UMAP 2")
     ax.set_title("(b) UMAP Integration")
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles, labels, fontsize=6, loc="upper right", frameon=False,
+    ax.legend(handles, labels, fontsize=8, loc="upper right", frameon=False,
               ncol=1, markerscale=0.8, handletextpad=0.3, borderaxespad=0.2)
 
 
@@ -645,7 +645,7 @@ def _plot_marker_heatmap(real_n, fake_n, ax, marker_dict=None):
     xtick_pos = list(range(n_m)) + list(range(n_m, 2 * n_m))
     xtick_labels = all_markers + all_markers
     ax.set_xticks(xtick_pos)
-    ax.set_xticklabels(xtick_labels, rotation=90, fontsize=6)
+    ax.set_xticklabels(xtick_labels, rotation=90, fontsize=8)
     ax.set_yticks(range(len(row_labels)))
     ax.set_yticklabels(row_labels, fontsize=8)
 
@@ -658,7 +658,7 @@ def _plot_marker_heatmap(real_n, fake_n, ax, marker_dict=None):
     ax.set_title("(c) Marker Gene Expression (z-scored)")
 
     cbar = plt.colorbar(im, ax=ax, fraction=0.03, pad=0.02)
-    cbar.set_label("z-score", fontsize=7)
+    cbar.set_label("z-score", fontsize=8)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -793,7 +793,7 @@ def figure2_cell2cell(adata_ref, indices_map, scgpt, output_dir, args, metrics, 
     ax.set_xlabel(f"PC1 ({pca.explained_variance_ratio_[0]*100:.1f}%)")
     ax.set_ylabel(f"PC2 ({pca.explained_variance_ratio_[1]*100:.1f}%)")
     ax.set_title(f"(a) Cell Editing Vector Field\n{src_type} → {tgt_type}")
-    ax.legend(fontsize=7, frameon=False, loc="upper left")
+    ax.legend(fontsize=8, frameon=False, loc="upper left")
 
     # (b) ΔExpression scatter
     ax = axes[1]
@@ -1023,14 +1023,14 @@ def figure3_celltypist(fake_adata, output_dir, metrics, model_name=CELLTYPIST_MO
     ax = axes[0]
     im = ax.imshow(mat, aspect="auto", cmap="Blues", vmin=0, vmax=1)
     ax.set_xticks(range(len(top_labels)))
-    ax.set_xticklabels(top_labels, rotation=45, ha="right", fontsize=7)
+    ax.set_xticklabels(top_labels, rotation=45, ha="right", fontsize=8)
     ax.set_yticks(range(len(prompt_types)))
     ax.set_yticklabels(prompt_types, fontsize=8)
     ax.set_title(f"(a) CellTypist Confusion (row-normalized)\nModel: {model_name}")
     ax.text(0.02, -0.18, f"Generated label entropy: {label_entropy:.2f} bits",
-            transform=ax.transAxes, fontsize=7, color="#555555")
+            transform=ax.transAxes, fontsize=8, color="#555555")
     cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.02)
-    cbar.set_label("Fraction", fontsize=7)
+    cbar.set_label("Fraction", fontsize=8)
 
     # (b) Prompt-wise purity + match rate
     ax = axes[1]
@@ -1040,12 +1040,12 @@ def figure3_celltypist(fake_adata, output_dir, metrics, model_name=CELLTYPIST_MO
     ax.barh(y - 0.2, purity_vals, height=0.35, color="#4c72b0", alpha=0.8, label="Purity")
     ax.barh(y + 0.2, match_vals, height=0.35, color="#55a868", alpha=0.8, label="Match rate")
     ax.set_yticks(y)
-    ax.set_yticklabels(prompt_types, fontsize=7)
+    ax.set_yticklabels(prompt_types, fontsize=8)
     ax.invert_yaxis()
     ax.set_xlabel("Fraction")
     ax.set_xlim(0, 1.0)
     ax.set_title("(b) Prompt-wise Purity & Match")
-    ax.legend(fontsize=7, frameon=False, loc="lower right")
+    ax.legend(fontsize=8, frameon=False, loc="lower right")
 
     fig.tight_layout()
     save_with_vcd(fig, output_dir / "figure3_celltypist.png", dpi=300, close=False)
@@ -1078,7 +1078,7 @@ def figure4_summary(metrics: Dict, output_dir: Path):
     ax = axes[0]
     ax.bar(range(len(labels)), gene_mean, color="#4c72b0", alpha=0.85)
     ax.set_xticks(range(len(labels)))
-    ax.set_xticklabels(labels, rotation=30, ha="right", fontsize=7)
+    ax.set_xticklabels(labels, rotation=30, ha="right", fontsize=8)
     ax.set_ylim(0, 1.0)
     ax.set_ylabel("Pearson r")
     ax.set_title("(a) Gene Mean Correlation")
@@ -1086,7 +1086,7 @@ def figure4_summary(metrics: Dict, output_dir: Path):
     ax = axes[1]
     ax.bar(range(len(labels)), msi_gen, color="#55a868", alpha=0.85)
     ax.set_xticks(range(len(labels)))
-    ax.set_xticklabels(labels, rotation=30, ha="right", fontsize=7)
+    ax.set_xticklabels(labels, rotation=30, ha="right", fontsize=8)
     ax.set_ylim(0, 1.0)
     ax.set_ylabel("MSI")
     ax.set_title("(b) Marker Specificity (Gen)")

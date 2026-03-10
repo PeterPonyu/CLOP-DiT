@@ -1,0 +1,251 @@
+"""
+fig06_fidelity.py -- Article Figure 6: Per-Type Generation Fidelity.
+
+  G1: Centroid cosine per type (sorted, hardest types highlighted)
+  G2: Frechet outlier profile (sorted, mean-anchored)
+  G3: Fidelity vs abundance with FD bubble size and diversity-ratio color
+
+Standalone function extracted from panels_heatmaps for composability and
+VCD-integrated saving via an optional ``save_panel_fn`` callback.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+from pathlib import Path
+from typing import Callable, Optional
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+from .style import (
+    COLORS, FONT_HEATMAP_CELL, FONT_LEGEND, FONT_SMALL,
+    abbreviate_cell_type, add_colorbar_safe, add_panel_label,
+    quality_color, save_with_vcd, set_adaptive_ytick_labels, style_axes,
+)
+from src.utils.paths import FIG_DIR
+
+logger = logging.getLogger(__name__)
+
+
+def plot_per_type_generation(
+    metrics_path: str = "results/generation_metrics.json",
+    div_metrics_path: str = "results/diversity_diagnostics.json",
+    output_dir: Optional[str] = None,
+    dpi: int = 300,
+    save: bool = True,
+    save_panel_fn: Optional[Callable] = None,
+    label_offset: int = 0,
+) -> Optional[plt.Figure]:
+    """Per-type generation quality with heterogeneity emphasis.
+
+    G1: Centroid cosine per type (sorted, hardest types highlighted)
+    G2: Frechet outlier profile (sorted, mean-anchored)
+    G3: Fidelity vs abundance with FD bubble size and diversity-ratio color
+    """
+    if output_dir is None:
+        output_dir = str(FIG_DIR)
+    if not Path(metrics_path).exists():
+        logger.info(f"No generation metrics found at {metrics_path} — skipping Panel G")
+        return None
+
+    with open(metrics_path) as f:
+        data = json.load(f)
+
+    per_type = data.get("per_type", {})
+    if not per_type:
+        logger.warning("No per-type metrics — skipping Panel G")
+        return None
+
+    names = list(per_type.keys())
+    cosines = [per_type[n]["centroid_cosine"] for n in names]
+    fds = [per_type[n].get("frechet_distance", float("nan")) for n in names]
+    n_real = [per_type[n]["n_real"] for n in names]
+
+    diversity_by_type_id = {}
+    collapsed_type_ids = set()
+    div_path = Path(div_metrics_path)
+    if div_path.exists():
+        try:
+            with open(div_path) as f:
+                div_data = json.load(f)
+            t1 = div_data.get("test1_intratype_diversity", {})
+            per_type_div = t1.get("per_type", {})
+            for entry in per_type_div.values():
+                t_id = entry.get("type_id")
+                ratio = entry.get("diversity_ratio")
+                if t_id is None or ratio is None:
+                    continue
+                diversity_by_type_id[int(t_id)] = float(ratio)
+                if ratio < 0.5:
+                    collapsed_type_ids.add(int(t_id))
+        except Exception:
+            diversity_by_type_id = {}
+            collapsed_type_ids = set()
+
+    type_ids = [per_type[n].get("type_id") for n in names]
+    short_names = [abbreviate_cell_type(n, max_len=22) for n in names]
+
+    div_ratios = []
+    for t_id in type_ids:
+        if t_id is None:
+            div_ratios.append(np.nan)
+        else:
+            div_ratios.append(diversity_by_type_id.get(int(t_id), np.nan))
+
+    fd_array = np.asarray(fds, dtype=float)
+    cos_array = np.asarray(cosines, dtype=float)
+    n_real_array = np.asarray(n_real, dtype=float)
+    div_array = np.asarray(div_ratios, dtype=float)
+    fd_valid = np.isfinite(fd_array)
+    fd_mean = float(np.nanmean(fd_array)) if fd_valid.any() else float("nan")
+
+    fig = plt.figure(figsize=(14.0, 7.2))
+    gs_g = fig.add_gridspec(1, 3, wspace=0.50, width_ratios=[1.2, 1.2, 1.0])
+    fig._clop_layout_rect = (0.02, 0.06, 0.98, 0.95)
+    summary = data.get("summary", {})
+    # Title moved to LaTeX caption
+
+    # G1: Centroid cosine (sorted)
+    from matplotlib.ticker import MaxNLocator
+    ax = fig.add_subplot(gs_g[0])
+    add_panel_label(ax, chr(ord('a') + label_offset), x=-0.10, y=1.05)
+    sorted_idx = np.argsort(cosines)
+    sorted_cos = [cosines[i] for i in sorted_idx]
+    sorted_names_cos = [short_names[i] for i in sorted_idx]
+    sorted_type_ids = [type_ids[i] for i in sorted_idx]
+    # Thresholds (0.9, 0.7): centroid cosine quality bands per FIGURE_PRESENTATION_POLICY
+    colors = []
+    for v, t_id in zip(sorted_cos, sorted_type_ids):
+        if t_id is not None and int(t_id) in collapsed_type_ids:
+            colors.append(COLORS["bad"])
+        else:
+            colors.append(quality_color(v, (0.9, 0.7)))
+    ax.barh(range(len(sorted_cos)), sorted_cos, color=colors, height=0.8)
+    set_adaptive_ytick_labels(ax, sorted_names_cos, max_visible=25, fontsize=FONT_HEATMAP_CELL)
+    ax.set_xlabel("Centroid Cosine Similarity")
+    ax.set_title("Real\u2194Gen Centroid Cosine", fontsize=11)
+    ax.axvline(
+        x=summary.get("mean_centroid_cosine", 0), color=COLORS["bad"],
+        linestyle="--", alpha=0.5,
+        label="mean (see caption)",
+    )
+    ax.set_xlim(0, 1.05)
+    ax.xaxis.set_major_locator(MaxNLocator(nbins=5, prune="upper"))
+    ax.legend(fontsize=FONT_LEGEND, frameon=False, loc="lower right")
+    style_axes(ax, kind="bar")
+
+    # G2: Frechet outlier profile
+    ax = fig.add_subplot(gs_g[1])
+    add_panel_label(ax, chr(ord('a') + label_offset + 1), x=-0.10, y=1.05)
+    if fd_valid.any():
+        fd_idx = np.where(fd_valid)[0][np.argsort(fd_array[fd_valid])]
+        fd_vals = fd_array[fd_idx]
+        fd_names = [short_names[i] for i in fd_idx]
+        fd_min = float(np.nanmin(fd_vals))
+        fd_ptp = float(np.nanmax(fd_vals) - fd_min) or 1.0
+        fd_norm = np.clip((fd_vals - fd_min) / fd_ptp, 0, 1)
+        colors_fd = plt.cm.PiYG_r(fd_norm)
+        y_pos = np.arange(len(fd_vals))
+        ax.hlines(y_pos, 0, fd_vals, color=colors_fd, linewidth=2.8, alpha=0.85)
+        ax.scatter(fd_vals, y_pos, s=28 + 70 * fd_norm, color=colors_fd, edgecolors="white", linewidths=0.4, zorder=3)
+        if np.isfinite(fd_mean):
+            ax.axvline(fd_mean, color=COLORS["bad"], linestyle="--", alpha=0.7, linewidth=1.5, label="mean (see caption)")
+        set_adaptive_ytick_labels(ax, fd_names, max_visible=25, fontsize=FONT_HEATMAP_CELL)
+        ax.set_xlabel("Fr\u00e9chet Distance (lower = better)")
+        ax.set_title("Fr\u00e9chet Outlier Profile")
+        ax.legend(fontsize=FONT_LEGEND, frameon=False, loc="lower right")
+        ax.set_xlim(0, float(np.nanmax(fd_vals)) * 1.12)
+        ax.xaxis.set_major_locator(MaxNLocator(nbins=5, prune="lower"))
+        style_axes(ax, kind="bar")
+    else:
+        ax.text(
+            0.5, 0.5, "No valid FD values",
+            ha="center", va="center", transform=ax.transAxes,
+        )
+
+    # G3: Cosine vs abundance with FD bubble size and diversity color
+    ax = fig.add_subplot(gs_g[2])
+    add_panel_label(ax, chr(ord('a') + label_offset + 2), x=-0.10, y=1.05)
+    fd_for_size = np.where(fd_valid, fd_array, np.nanmedian(fd_array[fd_valid]) if fd_valid.any() else 1.0)
+    fd_min = float(np.nanmin(fd_for_size)) if np.isfinite(fd_for_size).any() else 0.0
+    fd_ptp = float(np.nanmax(fd_for_size) - fd_min) if np.isfinite(fd_for_size).any() else 1.0
+    fd_ptp = fd_ptp or 1.0
+    bubble_sizes = 50 + 220 * np.clip((fd_for_size - fd_min) / fd_ptp, 0, 1)
+    x_vals = np.log10(np.maximum(n_real_array, 1))
+
+    if np.isfinite(div_array).any():
+        color_values = np.where(np.isfinite(div_array), div_array, np.nanmedian(div_array[np.isfinite(div_array)]))
+        sc = ax.scatter(
+            x_vals,
+            cos_array,
+            c=color_values,
+            cmap="viridis",
+            vmin=0.5,
+            vmax=1.05,
+            s=bubble_sizes,
+            alpha=0.78,
+            edgecolors="white",
+            linewidth=0.6,
+            clip_on=False,
+        )
+        try:
+            cbar = add_colorbar_safe(sc, ax=ax, label="Diversity ratio", shrink=0.65, pad=0.10)
+        except Exception:
+            cbar = fig.colorbar(sc, ax=ax, shrink=0.65, pad=0.10)
+            cbar.set_label("Diversity ratio", fontsize=10)
+        cbar.ax.tick_params(labelsize=8)
+    else:
+        ax.scatter(
+            x_vals,
+            cos_array,
+            c=COLORS["real"],
+            s=bubble_sizes,
+            alpha=0.78,
+            edgecolors="white",
+            linewidth=0.6,
+            clip_on=False,
+        )
+
+    if len(x_vals) > 1:
+        slope, intercept = np.polyfit(x_vals, cos_array, deg=1)
+        x_line = np.linspace(x_vals.min(), x_vals.max(), 100)
+        ax.plot(x_line, slope * x_line + intercept, color=COLORS["trend_dark"], linestyle="--", linewidth=1.3, label="Trend")
+
+    worst_idx = np.argsort(cos_array)[:5]
+    label_offsets = [(-34, -12), (10, -10), (-30, 10), (12, 10), (16, -18)]
+    for rank, i in enumerate(worst_idx):
+        if cos_array[i] < 0.94:
+            x_offset, y_offset = label_offsets[rank % len(label_offsets)]
+            if x_vals[i] > np.median(x_vals):
+                x_offset = min(x_offset, -10)
+            else:
+                x_offset = max(x_offset, 10)
+            ax.annotate(
+                abbreviate_cell_type(short_names[i], max_len=14),
+                (x_vals[i], cos_array[i]),
+                fontsize=FONT_SMALL,
+                xytext=(x_offset, y_offset),
+                textcoords="offset points",
+                arrowprops=dict(arrowstyle="-", color="gray", lw=0.5),
+                bbox=dict(boxstyle="round,pad=0.16", facecolor="white",
+                          edgecolor="none", alpha=0.75),
+            )
+    ax.set_xlabel("log10(Number of Real Cells)")
+    ax.set_ylabel("Centroid Cosine Similarity")
+    ax.set_title("Fidelity vs Abundance")
+    ax.axhline(y=0.9, color=COLORS["good"], linestyle=":", alpha=0.4, label="Target (0.9)")
+    ax.legend(fontsize=FONT_LEGEND, frameon=False, loc="upper left")
+    ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
+    ax.set_xlim(x_vals.min() - 0.10, x_vals.max() + 0.10)
+    style_axes(ax, kind="scatter")
+
+    if save:
+        path = Path(output_dir) / "fig06_per_type_fidelity.png"
+        if save_panel_fn is not None:
+            save_panel_fn(fig, path, dpi)
+        else:
+            save_with_vcd(fig, path, dpi)
+    return fig

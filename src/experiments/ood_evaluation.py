@@ -36,8 +36,6 @@ import torch
 import anndata as ad
 import scanpy as sc
 
-import matplotlib
-matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
