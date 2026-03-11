@@ -148,7 +148,7 @@ def plot_embedding_space_merged(
     row = 0
 
     if has_b:
-        b_slots = row_regions[row].split_cols([0.96, 0.92, 1.12], gap=[0.030, 0.034])
+        b_slots = row_regions[row].split_cols([0.92, 0.88, 1.24], gap=[0.042, 0.048])
         proj_text = np.load(proj_text_path)
         cell_proj = np.load(proj_cell_path)
         if gid_text_path.exists() and proj_text.shape[0] != group_ids.shape[0]:
@@ -182,7 +182,7 @@ def plot_embedding_space_merged(
         cell_coords = coords_b[:len(s_idx)]
         proto_coords = coords_b[len(s_idx):]
 
-        ax_b0 = b_slots[0].inset(right=0.004).add_axes(fig)
+        ax_b0 = b_slots[0].inset(right=0.010).add_axes(fig)
         ax = ax_b0
         add_panel_label(ax, 'a', x=-0.12, y=1.04)
         for i, (x, y) in enumerate(proto_coords):
@@ -195,7 +195,7 @@ def plot_embedding_space_merged(
         _set_umap_limits_from_points(ax, proto_coords, pad_frac=0.04)
         _set_interior_umap_ticks(ax)
 
-        ax_b1 = b_slots[1].inset(left=0.024, right=0.010).add_axes(fig)
+        ax_b1 = b_slots[1].inset(left=0.034, right=0.018).add_axes(fig)
         ax = ax_b1
         add_panel_label(ax, 'b', x=-0.14, y=1.04)
         for t in unique_types:
@@ -213,7 +213,7 @@ def plot_embedding_space_merged(
         _set_umap_limits_from_points(ax, np.vstack([cell_coords, proto_coords]), pad_frac=0.03)
         _set_interior_umap_ticks(ax)
 
-        ax_b2 = b_slots[2].inset(left=0.126, right=0.090).add_axes(fig)
+        ax_b2 = b_slots[2].inset(left=0.130, right=0.050).add_axes(fig)
         ax = ax_b2
         add_panel_label(ax, 'c', x=-0.18, y=1.06)
         so = np.argsort(type_counts)[::-1]
@@ -235,7 +235,7 @@ def plot_embedding_space_merged(
         row += 1
 
     if has_e:
-        e_slots = row_regions[row].split_cols([0.96, 0.96, 1.16], gap=[0.024, 0.028])
+        e_slots = row_regions[row].split_cols([0.90, 0.90, 1.24], gap=[0.040, 0.048])
         cell_path = cache / "cell_embeddings_dedup_preprocessed.npy"
         if not cell_path.exists():
             logger.warning("Missing cell embeddings for E row")
@@ -264,7 +264,7 @@ def plot_embedding_space_merged(
             rc = coords_e[:len(r_sub)]
             gc = coords_e[len(r_sub):]
 
-            ax_e0 = e_slots[0].inset(right=0.004).add_axes(fig)
+            ax_e0 = e_slots[0].inset(right=0.012).add_axes(fig)
             ax = ax_e0
             add_panel_label(ax, 'd', x=-0.12, y=1.08)
             for t in np.unique(r_gids):
@@ -278,7 +278,7 @@ def plot_embedding_space_merged(
             _set_umap_limits_from_points(ax, rc, pad_frac=0.04)
             _set_interior_umap_ticks(ax, n_ticks=2)
 
-            ax_e1 = e_slots[1].inset(right=0.004).add_axes(fig)
+            ax_e1 = e_slots[1].inset(left=0.008, right=0.012).add_axes(fig)
             ax = ax_e1
             add_panel_label(ax, 'e', x=-0.12, y=1.08)
             if g_gids is not None:
@@ -296,7 +296,7 @@ def plot_embedding_space_merged(
             _set_umap_limits_from_points(ax, gc, pad_frac=0.04)
             _set_interior_umap_ticks(ax, n_ticks=2)
 
-            ax_e2 = e_slots[2].inset(right=0.040).add_axes(fig)
+            ax_e2 = e_slots[2].inset(left=0.006, right=0.028).add_axes(fig)
             ax = ax_e2
             add_panel_label(ax, 'f', x=-0.12, y=1.08)
             all_types = np.unique(np.concatenate([r_gids, g_gids])) if g_gids is not None else np.unique(r_gids)

@@ -70,6 +70,7 @@ def plot_expression_diversity_panel(
     ax.bar(x - w / 2, real_vals, w, label="Real", color=COLORS["real"], alpha=0.8)
     ax.bar(x + w / 2, gen_vals, w, label="Generated", color=COLORS["generated"], alpha=0.8)
     # Add gen/real ratio annotations above each bar pair
+    annotation_tops = []
     for _bi in range(len(real_vals)):
         if real_vals[_bi] > 0:
             ratio = gen_vals[_bi] / real_vals[_bi]
@@ -80,9 +81,13 @@ def plot_expression_diversity_panel(
                 y_offset = 1.07
             else:
                 y_offset = 1.02
-                ax.text(_bi, max_h * y_offset, f"ratio={ratio:.2f}",
+            ann_y = max_h * y_offset
+            annotation_tops.append(ann_y)
+            ax.text(_bi, ann_y, f"ratio={ratio:.2f}",
                     ha="center", fontsize=8, fontweight="normal",
                     color=COLORS["annotation_dark"])
+    if annotation_tops:
+        ax.set_ylim(0, max(max(real_vals + gen_vals) * 1.08, max(annotation_tops) * 1.10))
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
     ax.set_ylabel("Standard Deviation")

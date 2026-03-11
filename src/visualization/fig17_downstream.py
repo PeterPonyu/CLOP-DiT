@@ -420,7 +420,7 @@ def plot_clustering_and_classifier_merged(
 
     fig = plt.figure(figsize=(16.0, 10.2))
     layout = bind_figure_region(fig, (0.03, 0.10, 0.98, 0.96))
-    top_row, bottom_row = layout.split_rows([1, 1.05], hspace=0.38)
+    top_row, bottom_row = layout.split_rows([0.98, 1.10], hspace=0.34)
     top_rects = top_row.split_cols([1.10, 1.34, 0.82], gap=[0.060, 0.050])
     bottom_rects = bottom_row.split_cols([1.10, 1.34, 0.82], gap=[0.060, 0.050])
     # Title moved to LaTeX caption
@@ -505,7 +505,7 @@ def plot_clustering_and_classifier_merged(
     gen_f1 = classifier_data.get("gen_f1", 0)
     disc_auc = classifier_data.get("discriminator_auc", 0)
 
-    ax_q1 = bottom_rects[0].add_axes(fig)
+    ax_q1 = bottom_rects[0].inset(bottom=-0.006).add_axes(fig)
     add_panel_label(ax_q1, 'd', x=-0.08, y=1.05)
     if cm is not None:
         cm = np.array(cm)
@@ -527,7 +527,7 @@ def plot_clustering_and_classifier_merged(
         ax_q1.text(0.5, 0.5, "No confusion matrix", ha="center", va="center",
                    transform=ax_q1.transAxes)
 
-    ax_q2 = bottom_rects[1].inset(left=0.090, right=0.110).add_axes(fig)
+    ax_q2 = bottom_rects[1].inset(left=0.060, right=0.070).add_axes(fig)
     add_panel_label(ax_q2, 'e', x=-0.12, y=1.05)
     note_ax = None
     if per_type_acc and cm is not None:

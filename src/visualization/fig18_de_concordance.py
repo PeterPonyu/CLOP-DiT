@@ -62,7 +62,7 @@ def plot_de_concordance_panel(
         gap=[0.060, 0.055],
     )
     ax_rect_a = panel_a.inset(left=0.014, right=0.050)
-    ax_rect_b = panel_b.inset(left=0.030, right=0.050)
+    ax_rect_b = panel_b.inset(left=0.070, right=0.020)
     ax_rect_c = panel_c.inset(left=0.032, right=0.028)
 
     # ── Panel (a): effect-size weighted logFC scatter ──
@@ -201,9 +201,10 @@ def plot_de_concordance_panel(
 
     # ── Panel (b): concordance heatmap ──
     ax2 = ax_rect_b.add_axes(fig)
-    add_panel_label(ax2, 'b', x=-0.14, y=1.04)
+    add_panel_label(ax2, 'b', x=-0.10, y=1.04)
 
     metric_names = ["Pears. r", "Spear. \u03c1", "Jacc.@50", "Sign agr."]
+    metric_tick_labels = ["Pears.\nr", "Spear.\n\u03c1", "Jacc.\n50", "Sign\nagr."]
     metric_keys  = ["logfc_pearson_r", "logfc_spearman_rho",
                     "top_k_jaccard", "top_k_sign_agreement"]
     heatmap_data   = np.zeros((n_contrasts, len(metric_names)))
@@ -216,8 +217,8 @@ def plot_de_concordance_panel(
 
     im = ax2.imshow(heatmap_data, cmap="PiYG", aspect="auto", vmin=0, vmax=1)
     ax2.set_xticks(range(len(metric_names)))
-    ax2.set_xticklabels(metric_names, fontsize=FONT_TICK_DENSE,
-                         rotation=35, ha="right")
+    ax2.set_xticklabels(metric_tick_labels, fontsize=FONT_TICK_DENSE,
+                         rotation=0, ha="center")
     ax2.set_yticks(range(n_contrasts))
     ax2.set_yticklabels(contrast_labels, fontsize=FONT_TICK_DENSE)
 

@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .direct_layout import bind_figure_region
-from .explicit_positioning import add_shared_legend_axes
+from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
 from .style import COLORS, abbreviate_cell_type, add_colorbar_safe, add_panel_label, save_with_vcd
 
 logger = logging.getLogger(__name__)
@@ -270,7 +270,20 @@ def plot_marker_gene_comparison(
         ax3.set_xticks(range(n_markers))
         ax3.set_xticklabels(all_marker_genes, fontsize=11, rotation=90, ha="center")
         ax3.set_title("Δ Expression (Gen − Real)", fontsize=11)
-        add_colorbar_safe(im3, ax=ax3, label="Δ", shrink=0.72, pad=0.06, aspect=14)
+        cax3 = add_axes_next_to(
+            fig,
+            ax3,
+            side="right",
+            width=0.010,
+            height=ax3.get_position().height * 0.42,
+            pad=0.014,
+            align="bottom",
+            y_offset=0.012,
+        )
+        cbar3 = fig.colorbar(im3, cax=cax3)
+        cbar3.set_label("")
+        cbar3.ax.set_title("Δ", fontsize=10, pad=2)
+        cbar3.ax.tick_params(labelsize=8)
         add_panel_label(ax3, "c", x=-0.14, y=1.03)
         for i in range(n_sel_types):
             for j in range(n_markers):

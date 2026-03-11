@@ -27,6 +27,7 @@ import numpy as np
 from .direct_layout import bind_figure_region
 from .style import (
     COLORS, FONT_HEATMAP_CELL, FONT_SMALL, FONT_TITLE,
+    add_colorbar_safe,
     abbreviate_cell_type, add_panel_label,
     quality_color, save_with_vcd, set_adaptive_ytick_labels, style_axes,
 )
@@ -187,6 +188,7 @@ def plot_text_cell_heatmap(
         sim_sorted, cmap=cmap, vmin=-0.1, vmax=1.0,
         aspect="auto", interpolation="nearest",
     )
+    im.set_rasterized(True)
     step_x = max(8, int(np.ceil(n_types / 7)))
     step_y = max(4, int(np.ceil(n_types / 14)))
     _xtl = [x_labels_sorted[i] if i % step_x == 0 else "" for i in range(n_types)]
@@ -210,13 +212,13 @@ def plot_text_cell_heatmap(
         fig,
         ax1,
         side="right",
-        width=0.009,
-        height=ax1.get_position().height * 0.52,
-        pad=0.010,
+        width=0.008,
+        height=ax1.get_position().height * 0.42,
+        pad=0.012,
         align="bottom",
-        y_offset=0.015,
+        y_offset=0.012,
     )
-    cbar = fig.colorbar(im, cax=cax)
+    cbar = add_colorbar_safe(im, ax=ax1, cax=cax, shrink=1.0, pad=0.0, aspect=14)
     cbar.set_label("")
     cbar.ax.set_title("Cos.\nsim.", fontsize=10, pad=4)
     cbar.ax.tick_params(labelsize=10)
@@ -228,10 +230,11 @@ def plot_text_cell_heatmap(
     n_inset = min(6, n_types)
     ax_inset = inset_axes(ax1, width="24%", height="24%", loc="upper right",
                           borderpad=1.5)
-    ax_inset.imshow(
+    im_inset = ax_inset.imshow(
         sim_sorted[:n_inset, :n_inset], cmap=cmap, vmin=-0.1, vmax=1.0,
         aspect="auto", interpolation="nearest",
     )
+    im_inset.set_rasterized(True)
     ax_inset.set_xticks([])
     ax_inset.set_yticks([])
     for spine in ax_inset.spines.values():

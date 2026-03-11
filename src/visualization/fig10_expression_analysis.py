@@ -147,7 +147,7 @@ def plot_expression_analysis(
     add_panel_label(ax1, 'a', x=-0.12, y=1.08)
 
     # -- I2: Expression range with percentile bands --
-    ax2 = top_right.add_axes(fig)
+    ax2 = top_right.inset(left=0.10, right=0.02).add_axes(fig)
     real_means = real.mean(axis=0)
     gen_means = gen.mean(axis=0)
     sort_idx = np.argsort(real_means)
@@ -175,7 +175,7 @@ def plot_expression_analysis(
     ax2.set_title("Expression Range", fontsize=12)
     ax2.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, 0.98), ncol=2, frameon=False)
     ax2.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="upper"))
-    add_panel_label(ax2, 'b', x=-0.12, y=1.08)
+    add_panel_label(ax2, 'b', x=-0.18, y=1.08)
 
     # -- I3: Per-cell std as overlaid smooth histograms --
     ax3 = bottom_left.add_axes(fig)

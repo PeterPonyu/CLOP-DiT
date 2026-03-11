@@ -175,7 +175,7 @@ def main():
 
     fig = plt.figure(figsize=(17.4, 11.4))
     layout = bind_figure_region(fig, (0.13, 0.08, 0.97, 0.96))
-    top_row, bottom_row = layout.split_rows([1.20, 0.92], hspace=0.18)
+    top_row, bottom_row = layout.split_rows([1.20, 0.92], hspace=0.15)
     top_left, top_right = top_row.split_cols([1.2, 1.0], wspace=0.34)
     bottom_left, bottom_right = bottom_row.split_cols([1.16, 1.04], wspace=0.46)
 
@@ -295,7 +295,7 @@ def main():
 
     # ── Panel (d): SWD vs. Training Cell Count ──
     ax4 = bottom_right.inset(left=0.05, right=0.06).add_axes(fig)
-    add_panel_label(ax4, 'd', x=-0.10, y=1.05)
+    add_panel_label(ax4, 'd', x=-0.06, y=1.04)
 
     n_reals = np.array([r["n_real"] for r in results])
     swd_arr = np.array(swd_values)

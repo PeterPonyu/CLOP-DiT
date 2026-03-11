@@ -87,7 +87,7 @@ def plot_expression_correlation(
     layout = bind_figure_region(fig, (0.07, 0.14, 0.985, 0.95))
     top_row, bottom_row = layout.split_rows(2, hspace=0.46)
     top_left, top_right = top_row.split_cols([0.86, 1.14], gap=0.050)
-    bottom_left, bottom_right = bottom_row.split_cols([1.00, 1.00], gap=0.032)
+    bottom_left, bottom_right = bottom_row.split_cols([1.04, 0.92], gap=0.050)
 
     # -- H1: Density scatter with residual coloring --
     ax1 = top_left.inset(right=0.028).add_axes(fig)
@@ -141,8 +141,8 @@ def plot_expression_correlation(
     outlier_idx = np.argsort(abs_res)[-5:]
     outlier_idx = outlier_idx[np.argsort(abs_res[outlier_idx])[::-1]]
     sorted_by_y = sorted(outlier_idx, key=lambda idx: gen_means[idx], reverse=True)
-    left_slots = [(0.13, 0.88, "left"), (0.13, 0.62, "left"), (0.13, 0.40, "left")]
-    right_slots = [(0.87, 0.82, "right"), (0.87, 0.56, "right")]
+    left_slots = [(0.20, 0.82, "left"), (0.20, 0.60, "left"), (0.20, 0.42, "left")]
+    right_slots = [(0.80, 0.76, "right"), (0.80, 0.54, "right")]
     label_plan = []
     for idx, slot in zip(sorted_by_y[::2], left_slots):
         label_plan.append((idx, *slot))
@@ -161,11 +161,11 @@ def plot_expression_correlation(
             ha=ha,
             va="center",
             color="#333",
-            bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="none", alpha=0.88),
+            bbox=dict(boxstyle="round,pad=0.10", fc="white", ec="none", alpha=0.86),
             zorder=6,
             clip_on=False,
         )
-        connector_x = slot_x + (0.01 if ha == "left" else -0.01)
+        connector_x = slot_x + (0.02 if ha == "left" else -0.02)
         connector = ConnectionPatch(
             xyA=(real_means[i], gen_means[i]),
             coordsA=ax1.transData,
@@ -179,7 +179,7 @@ def plot_expression_correlation(
             alpha=0.65,
             shrinkA=0,
             shrinkB=0,
-            connectionstyle="arc3,rad=0.0",
+            connectionstyle=f"arc3,rad={0.12 if ha == 'left' else -0.12}",
         )
         connector.set_zorder(2)
         connector.set_clip_on(False)
@@ -300,7 +300,7 @@ def plot_expression_correlation(
     add_panel_label(ax3, 'c', x=-0.12, y=1.08)
 
     # -- H4: Residual distribution --
-    ax4 = bottom_right.add_axes(fig)
+    ax4 = bottom_right.inset(left=0.07, right=0.02).add_axes(fig)
     ax4.hist(residuals, bins=60, color=COLORS["real"], alpha=0.7, edgecolor="white",
              density=True)
     ax4.tick_params(axis='x', labelsize=10, rotation=30)
