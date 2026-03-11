@@ -186,6 +186,7 @@ def register_project_fonts(font_dir: Optional[Path | str] = None) -> list[str]:
         root = Path(__file__).resolve().parents[2]
         candidates.extend([
             root / "fonts",
+            root / "scripts" / "vcd" / "fonts",
             root / "assets" / "fonts",
             root / "articles" / "fonts",
         ])

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # build_article.sh — Verify article figures and build the LaTeX PDF.
 #
-# 1. Runs scripts/pipeline/verify_article_figures.sh so all 20 PDFs are in articles/figures/
-# 2. Runs latexmk -g -pdf in the articles directory
+# 1. Runs scripts/pipeline/verify_article_figures.sh so all 20 JPEG/PDF figure pairs are in articles/figures/
+# 2. Runs latexmk -g -pdf in the articles directory, with LaTeX including the JPEG assets
 #
 # The -g flag forces a full recompile regardless of latexmk's timestamp/MD5 cache.
 # This is required because figure files are symlinks: latexmk can incorrectly treat

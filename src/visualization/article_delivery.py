@@ -1,7 +1,8 @@
 """Article figure delivery — single source of truth for the 20 MDPI article figures.
 
-Verify PDFs exist in a source directory and create symlinks (or copies) in the
-article figures directory so LaTeX can include them. The manifest below is the
+Verify JPEG/PDF figure pairs exist in a source directory and create symlinks
+(or copies) in the article figures directory so LaTeX can include the JPEG
+assets while keeping sibling PDFs alongside them. The manifest below is the
 canonical list; scripts and docs should reference this module.
 
 Usage:
@@ -18,7 +19,7 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-# Single source of truth: 20 article figure basenames (no .pdf).
+# Single source of truth: 20 article figure basenames (no suffix).
 # Order matches the LaTeX \begin{figure} sequence in articles/clop_dit_biology.tex,
 # which determines the auto-numbered Figure 1–20.
 #
@@ -100,6 +101,9 @@ ARTICLE_FIGURE_PRODUCERS: List[Tuple[str, str]] = [
 ]
 
 _N_FIGURES = len(ARTICLE_FIGURE_BASENAMES)
+_ARTICLE_INCLUDE_SUFFIX = ".jpg"
+_SOURCE_REQUIRED_SUFFIXES = (".pdf", ".jpg")
+_TARGET_DELIVERY_SUFFIXES = (".jpg", ".pdf")
 _PREVIEW_SUFFIXES = {".jpg"}
 _SOURCE_SUFFIXES = {".pdf", ".jpg", ".jpeg", ".png"}
 _TARGET_SUFFIXES = {".pdf", ".jpg", ".jpeg", ".png"}
@@ -116,7 +120,11 @@ def expected_source_artifacts(*, keep_preview: bool = True) -> set[str]:
 
 def expected_target_artifacts() -> set[str]:
     """Return the canonical article-facing artifacts in ``articles/figures``."""
-    return {f"{article_base}.pdf" for article_base in ARTICLE_FIGURE_BASENAMES} | _TARGET_KEEP_NAMES
+    return {
+        f"{article_base}{suffix}"
+        for article_base in ARTICLE_FIGURE_BASENAMES
+        for suffix in _TARGET_DELIVERY_SUFFIXES
+    } | _TARGET_KEEP_NAMES
 
 
 def cleanup_legacy_artifacts(
@@ -173,18 +181,19 @@ def deliver_figures(
     cleanup: bool = False,
     keep_preview: bool = True,
 ) -> bool:
-    """Verify all article figure PDFs exist in source_dir and optionally link/copy to target_dir.
+    """Verify all article figure assets exist in source_dir and optionally link/copy to target_dir.
 
     Parameters
     ----------
-    source_dir : directory containing the generated PDFs (e.g. results/figures)
+    source_dir : directory containing the generated figure pairs (e.g. results/figures)
     target_dir : directory for the article (e.g. articles/figures)
     symlink : if True, create symlinks; if False, copy files (ignored when check_only=True)
     check_only : if True, only verify presence in source_dir; do not modify target_dir
 
     Returns
     -------
-    True if all 20 PDFs are present (and, when not check_only, successfully linked/copied).
+    True if all required JPEG/PDF pairs are present (and, when not check_only,
+    successfully linked/copied).
     """
     source_dir = Path(source_dir).resolve()
     target_dir = Path(target_dir).resolve()
@@ -192,11 +201,15 @@ def deliver_figures(
     missing: List[str] = []
     for article_base in ARTICLE_FIGURE_BASENAMES:
         source_base = _SOURCE_MAP[article_base]
-        path = source_dir / f"{source_base}.pdf"
-        if not path.is_file():
-            missing.append(f"{source_base}.pdf (→ {article_base})")
+        for suffix in _SOURCE_REQUIRED_SUFFIXES:
+            path = source_dir / f"{source_base}{suffix}"
+            if not path.is_file():
+                missing.append(f"{source_base}{suffix} (→ {article_base}{suffix})")
     if missing:
-        print(f"Missing {len(missing)} of {_N_FIGURES} article figure PDFs in {source_dir}:", file=sys.stderr)
+        print(
+            f"Missing {len(missing)} required article figure assets across {_N_FIGURES} figures in {source_dir}:",
+            file=sys.stderr,
+        )
         for m in missing:
             print(f"  MISSING: {m}", file=sys.stderr)
         return False
@@ -212,14 +225,15 @@ def deliver_figures(
                 print(f"  Cleaned {category}: {', '.join(names)}")
     for article_base in ARTICLE_FIGURE_BASENAMES:
         source_base = _SOURCE_MAP[article_base]
-        src = source_dir / f"{source_base}.pdf"
-        dst = target_dir / f"{article_base}.pdf"
-        if symlink:
-            if dst.exists() or dst.is_symlink():
-                dst.unlink()
-            dst.symlink_to(src.resolve())
-        else:
-            shutil.copy2(src, dst)
+        for suffix in _TARGET_DELIVERY_SUFFIXES:
+            src = source_dir / f"{source_base}{suffix}"
+            dst = target_dir / f"{article_base}{suffix}"
+            if symlink:
+                if dst.exists() or dst.is_symlink():
+                    dst.unlink()
+                dst.symlink_to(src.resolve())
+            else:
+                shutil.copy2(src, dst)
     return True
 
 
@@ -235,12 +249,12 @@ def _default_dirs():
 def main() -> int:
     default_source, default_target = _default_dirs()
     parser = argparse.ArgumentParser(
-        description="Verify article figure PDFs and create symlinks (or copies) in the article figures directory."
+        description="Verify article JPEG/PDF figure pairs and create symlinks (or copies) in the article figures directory."
     )
     parser.add_argument(
         "--check-only",
         action="store_true",
-        help=f"Only verify all {_N_FIGURES} PDFs exist in source dir; do not create symlinks/copies",
+        help=f"Only verify all {_N_FIGURES} JPEG/PDF figure pairs exist in source dir; do not create symlinks/copies",
     )
     parser.add_argument(
         "--copy",
@@ -256,7 +270,7 @@ def main() -> int:
         "--source-dir",
         type=Path,
         default=None,
-        help=f"Source directory with generated PDFs (default: {default_source})",
+        help=f"Source directory with generated JPEG/PDF figure pairs (default: {default_source})",
     )
     parser.add_argument(
         "--target-dir",
@@ -270,15 +284,15 @@ def main() -> int:
     target = args.target_dir if args.target_dir is not None else default_target
 
     if args.check_only:
-        print(f"Checking {_N_FIGURES} article figures in {source}...")
+        print(f"Checking {_N_FIGURES} article figure pairs in {source}...")
         ok = deliver_figures(source, target, symlink=True, check_only=True)
         if ok:
-            print(f"  All {_N_FIGURES} PDFs present.")
+            print(f"  All {_N_FIGURES} JPEG/PDF figure pairs present.")
         else:
             print("Run 'bash scripts/regenerate_report.sh' to generate them.", file=sys.stderr)
         return 0 if ok else 1
 
-    print(f"Checking {_N_FIGURES} article figures in {source}...")
+    print(f"Checking {_N_FIGURES} article figure pairs in {source}...")
     ok = deliver_figures(
         source,
         target,
@@ -289,11 +303,14 @@ def main() -> int:
     if not ok:
         print("Run 'bash scripts/regenerate_report.sh' to generate them.", file=sys.stderr)
         return 1
-    print(f"  All {_N_FIGURES} PDFs present.")
+    print(f"  All {_N_FIGURES} JPEG/PDF figure pairs present.")
     mode = "copied" if args.copy else "symlinked"
-    print(f"  {_N_FIGURES} figures {mode} in {target}.")
+    print(f"  {_N_FIGURES} figure pairs {mode} in {target}.")
     print("")
-    print(f"All {_N_FIGURES} article figures verified and {'copied' if args.copy else 'symlinked'}.")
+    print(
+        f"All {_N_FIGURES} article figure pairs verified and {'copied' if args.copy else 'symlinked'}; "
+        f"LaTeX should include the {_ARTICLE_INCLUDE_SUFFIX} assets."
+    )
     return 0
 
 

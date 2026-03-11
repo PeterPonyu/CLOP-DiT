@@ -15,7 +15,7 @@ class TestArticleFigureManifest:
     def _article_tex_basenames() -> set[str]:
         tex_path = Path(__file__).parent.parent / "articles" / "clop_dit_biology.tex"
         tex = tex_path.read_text()
-        matches = re.findall(r"\\includegraphics\[[^\]]*\]\{figures/([^}]+)\.pdf\}", tex)
+        matches = re.findall(r"\\includegraphics\[[^\]]*\]\{figures/([^}]+)\.jpg\}", tex)
         return set(matches)
 
     def test_manifest_length(self):
@@ -63,7 +63,12 @@ class TestArticleFigureManifest:
 
 
 class TestDeliverFigures:
-    """deliver_figures() with temp dirs and dummy PDFs."""
+    """deliver_figures() with temp dirs and dummy JPEG/PDF figure pairs."""
+
+    @staticmethod
+    def _write_dummy_pair(root: Path, base: str) -> None:
+        (root / f"{base}.pdf").write_bytes(b"%PDF-1.0 dummy\n")
+        (root / f"{base}.jpg").write_bytes(b"\xff\xd8\xff\xd9")
 
     def test_check_only_all_present(self, tmp_path):
         from src.visualization.article_delivery import (
@@ -71,7 +76,7 @@ class TestDeliverFigures:
             deliver_figures,
         )
         for base in _SOURCE_BASENAMES:
-            (tmp_path / f"{base}.pdf").write_bytes(b"%PDF-1.0 dummy\n")
+            self._write_dummy_pair(tmp_path, base)
         ok = deliver_figures(tmp_path, tmp_path / "out", symlink=True, check_only=True)
         assert ok is True
         assert not (tmp_path / "out").exists()
@@ -81,9 +86,9 @@ class TestDeliverFigures:
             _SOURCE_BASENAMES,
             deliver_figures,
         )
-        # Create only 19 of 20
+        # Create only 19 of 20 JPEG/PDF pairs
         for base in _SOURCE_BASENAMES[:-1]:
-            (tmp_path / f"{base}.pdf").write_bytes(b"%PDF-1.0 dummy\n")
+            self._write_dummy_pair(tmp_path, base)
         ok = deliver_figures(tmp_path, tmp_path / "out", symlink=True, check_only=True)
         assert ok is False
 
@@ -94,16 +99,17 @@ class TestDeliverFigures:
             deliver_figures,
         )
         for base in _SOURCE_BASENAMES:
-            (tmp_path / f"{base}.pdf").write_bytes(b"%PDF-1.0 dummy\n")
+            self._write_dummy_pair(tmp_path, base)
         target = tmp_path / "article_figures"
         ok = deliver_figures(tmp_path, target, symlink=True, check_only=False)
         assert ok is True
         assert target.is_dir()
         for base in ARTICLE_FIGURE_BASENAMES:
-            link = target / f"{base}.pdf"
-            assert link.exists(), f"Missing link: {link}"
-            assert link.is_symlink(), f"Not a symlink: {link}"
-            assert link.resolve().exists(), f"Broken symlink: {link}"
+            for suffix in (".jpg", ".pdf"):
+                link = target / f"{base}{suffix}"
+                assert link.exists(), f"Missing link: {link}"
+                assert link.is_symlink(), f"Not a symlink: {link}"
+                assert link.resolve().exists(), f"Broken symlink: {link}"
 
     def test_deliver_copy(self, tmp_path):
         from src.visualization.article_delivery import (
@@ -112,15 +118,19 @@ class TestDeliverFigures:
             deliver_figures,
         )
         for base in _SOURCE_BASENAMES:
-            (tmp_path / f"{base}.pdf").write_bytes(b"%PDF-1.0 dummy\n")
+            self._write_dummy_pair(tmp_path, base)
         target = tmp_path / "article_figures"
         ok = deliver_figures(tmp_path, target, symlink=False, check_only=False)
         assert ok is True
         for base in ARTICLE_FIGURE_BASENAMES:
-            f = target / f"{base}.pdf"
-            assert f.is_file(), f"Missing file: {f}"
-            assert not f.is_symlink(), f"Expected copy, got symlink: {f}"
-            assert f.read_bytes() == b"%PDF-1.0 dummy\n"
+            pdf_file = target / f"{base}.pdf"
+            jpg_file = target / f"{base}.jpg"
+            assert pdf_file.is_file(), f"Missing file: {pdf_file}"
+            assert not pdf_file.is_symlink(), f"Expected copy, got symlink: {pdf_file}"
+            assert pdf_file.read_bytes() == b"%PDF-1.0 dummy\n"
+            assert jpg_file.is_file(), f"Missing file: {jpg_file}"
+            assert not jpg_file.is_symlink(), f"Expected copy, got symlink: {jpg_file}"
+            assert jpg_file.read_bytes() == b"\xff\xd8\xff\xd9"
 
 
 class TestArticlePresentationPolicy:
