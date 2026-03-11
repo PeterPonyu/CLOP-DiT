@@ -164,12 +164,15 @@ def plot_text_cell_heatmap(
 
     fig = plt.figure(figsize=(15.2, 9.1))
     # Title moved to LaTeX caption
-    layout = bind_figure_region(fig, (0.03, 0.10, 0.98, 0.95))
-    ax1_rect, ax2_rect, ax3_rect = layout.split_cols([1.18, 0.90, 0.72], gap=[0.040, 0.020])
+    layout = bind_figure_region(fig, (0.12, 0.20, 0.985, 0.90))
+    ax1_slot, ax2_slot, ax3_slot = layout.split_cols([1.42, 1.02, 0.60], gap=[0.060, 0.028])
+    ax1_rect = ax1_slot.inset(right=0.004)
+    ax2_rect = ax2_slot.inset(left=0.110, right=0.010)
+    ax3_rect = ax3_slot.inset(left=0.012)
 
     # ── F1: Clustered heatmap with annotations ──
     ax1 = ax1_rect.add_axes(fig)
-    add_panel_label(ax1, chr(ord('a') + label_offset), x=-0.10, y=1.05)
+    add_panel_label(ax1, chr(ord('a') + label_offset), x=-0.14, y=1.02)
     cmap = mcolors.LinearSegmentedColormap.from_list(
         "custom_heat",
         [
@@ -182,9 +185,10 @@ def plot_text_cell_heatmap(
         sim_sorted, cmap=cmap, vmin=-0.1, vmax=1.0,
         aspect="auto", interpolation="nearest",
     )
-    step = 4
-    _xtl = [labels_sorted[i] if i % step == 0 else "" for i in range(n_types)]
-    _ytl = [labels_sorted[i] if i % step == 0 else "" for i in range(n_types)]
+    step_x = max(4, int(np.ceil(n_types / 10)))
+    step_y = max(4, int(np.ceil(n_types / 14)))
+    _xtl = [labels_sorted[i] if i % step_x == 0 else "" for i in range(n_types)]
+    _ytl = [labels_sorted[i] if i % step_y == 0 else "" for i in range(n_types)]
     ax1.set_xticks(range(n_types))
     ax1.set_yticks(range(n_types))
     ax1.set_xticklabels(_xtl, rotation=75, fontsize=9, ha="right")
@@ -204,38 +208,30 @@ def plot_text_cell_heatmap(
         fig,
         ax1,
         side="right",
-        width=0.011,
+        width=0.009,
         height=ax1.get_position().height * 0.52,
-        pad=0.012,
+        pad=0.010,
         align="bottom",
         y_offset=0.015,
     )
     cbar = fig.colorbar(im, cax=cax)
-    cbar.set_label("Cosine similarity", fontsize=11)
+    cbar.set_label("")
+    cbar.ax.set_title("Cos.\nsim.", fontsize=10, pad=4)
     cbar.ax.tick_params(labelsize=10)
     cbar.ax.yaxis.set_major_locator(MaxNLocator(nbins=6))
 
     # Statistical summary moved to LaTeX caption for cleaner in-panel appearance
 
     # Inset: zoomed view of top-left diagonal corner (best-aligned types)
-    n_inset = min(8, n_types)
+    n_inset = min(6, n_types)
     ax_inset = inset_axes(ax1, width="24%", height="24%", loc="upper right",
                           borderpad=1.5)
     ax_inset.imshow(
         sim_sorted[:n_inset, :n_inset], cmap=cmap, vmin=-0.1, vmax=1.0,
         aspect="auto", interpolation="nearest",
     )
-    # Annotate diagonal values in inset
-    for ii in range(n_inset):
-        val_ii = sim_sorted[ii, ii]
-        ax_inset.text(
-            ii, ii, f"{val_ii:.2f}", ha="center", va="center",
-            fontsize=FONT_HEATMAP_CELL, color="white" if val_ii > 0.5 else "black",
-            fontweight="normal",
-        )
     ax_inset.set_xticks([])
     ax_inset.set_yticks([])
-    ax_inset.set_title(f"Top {n_inset}", fontsize=FONT_SMALL, pad=2)
     for spine in ax_inset.spines.values():
         spine.set_edgecolor("white")
         spine.set_linewidth(1.5)
@@ -245,7 +241,7 @@ def plot_text_cell_heatmap(
 
     # ── F2: Per-type alignment bars with threshold bands ──
     ax2 = ax2_rect.add_axes(fig)
-    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.10, y=1.05)
+    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.24, y=0.98)
     sorted_idx_asc = np.argsort(diag)
     d_asc = diag[sorted_idx_asc]
     labels_asc = [labels[i] for i in sorted_idx_asc]
@@ -263,8 +259,7 @@ def plot_text_cell_heatmap(
     ax2.set_xlabel("Cosine Similarity", fontsize=11)
 
     # Annotate values on the worst 3 and best 3 bars (with collision avoidance)
-    _ann_indices = list(range(min(3, n_types))) + list(range(max(0, n_types - 3), n_types))
-    _ann_indices = sorted(set(_ann_indices))  # deduplicate if n_types <= 6
+    _ann_indices = list(range(min(4, n_types)))
     _prev_y = -999
     for idx_bar in _ann_indices:
         val_bar = d_asc[idx_bar]
@@ -279,11 +274,6 @@ def plot_text_cell_heatmap(
 
     # Reference lines with annotations
     ax2.axvline(x=mean_diag, color=COLORS["bad"], linestyle="--", alpha=0.7, linewidth=1.5)
-    ax2.text(
-        mean_diag, n_types + 1.5, f"\u03bc={mean_diag:.3f}",
-        ha="center", va="bottom", fontsize=FONT_SMALL, color=COLORS["bad"],
-        clip_on=False,
-    )
     ax2.axvline(x=0.9, color=COLORS["good"], linestyle=":", alpha=0.5, linewidth=1.0)
     ax2.axvline(x=0.7, color=COLORS["warn"], linestyle=":", alpha=0.5, linewidth=1.0)
 
@@ -301,16 +291,22 @@ def plot_text_cell_heatmap(
     )
     # Place median label below the bar area to avoid colliding with the mean label
     ax2.text(
-        median_diag, -2.0, f"med={median_diag:.3f}",
-        ha="center", va="top", fontsize=10, color=COLORS["heatmap_purple"],
-        clip_on=False,
+        0.98, 0.98,
+        f"\u03bc={mean_diag:.3f}\nmed={median_diag:.3f}",
+        transform=ax2.transAxes,
+        ha="right",
+        va="top",
+        fontsize=FONT_SMALL,
+        color=COLORS["annotation_dark"],
+        bbox=dict(boxstyle="round,pad=0.24", facecolor="white", edgecolor="none", alpha=0.85),
+        zorder=10,
     )
 
     style_axes(ax2, kind="bar")
 
     # ── F3: Distribution comparison with statistics ──
     ax3 = ax3_rect.add_axes(fig)
-    add_panel_label(ax3, chr(ord('a') + label_offset + 2), x=-0.10, y=1.05)
+    add_panel_label(ax3, chr(ord('a') + label_offset + 2), x=-0.14, y=1.02)
 
     # Histograms with concise legend entries
     ax3.hist(
@@ -358,14 +354,14 @@ def plot_text_cell_heatmap(
     ax3.set_title("Diag vs Off-Diag", fontsize=FONT_TITLE)
 
     # Tighter y-axis: avoid wasting space on empty negative range
-    _ylim_lo = max(off_diag.min() - 0.08, -0.15)
+    _ylim_lo = min(off_diag.min() - 0.02, diag.min() - 0.02)
     ax3.set_ylim(_ylim_lo, 1.05)
     ax3.yaxis.set_major_locator(MaxNLocator(nbins=8, prune="both"))
     ax3.xaxis.set_major_locator(MaxNLocator(nbins=5, prune="both"))
     ax3.tick_params(axis="both", labelsize=10)
 
     # Legend — place in empty region without frame
-    ax3.legend(fontsize=10, frameon=False, loc="upper left")
+    ax3.legend(fontsize=10, frameon=False, loc="lower center", bbox_to_anchor=(0.5, 1.03), ncol=1)
 
     # Add gridlines for readability
     ax3.grid(True, axis="both", alpha=0.2, linewidth=0.4)

@@ -108,13 +108,13 @@ def plot_embedding_space_merged(
     apply_style()
     n_rows = (1 if has_b else 0) + (1 if has_e else 0)
     fig = plt.figure(figsize=(14.8, 5.2 * n_rows))
-    layout = bind_figure_region(fig, (0.04, 0.06, 0.98, 0.96))
-    row_regions = layout.split_rows(n_rows, hspace=0.25)
+    layout = bind_figure_region(fig, (0.05, 0.07, 0.985, 0.96))
+    row_regions = layout.split_rows(n_rows, hspace=0.30)
     # suptitle removed per revision; title information moved to LaTeX caption
     row = 0
 
     if has_b:
-        b_rects = row_regions[row].split_cols([0.92, 0.92, 1.04], gap=[0.018, 0.042])
+        b_slots = row_regions[row].split_cols([0.96, 0.96, 1.16], gap=[0.024, 0.028])
         proj_text = np.load(proj_text_path)
         cell_proj = np.load(proj_cell_path)
         if gid_text_path.exists() and proj_text.shape[0] != group_ids.shape[0]:
@@ -148,9 +148,9 @@ def plot_embedding_space_merged(
         cell_coords = coords_b[:len(s_idx)]
         proto_coords = coords_b[len(s_idx):]
 
-        ax_b0 = b_rects[0].add_axes(fig)
+        ax_b0 = b_slots[0].inset(right=0.004).add_axes(fig)
         ax = ax_b0
-        add_panel_label(ax, 'a', x=-0.10, y=1.05)
+        add_panel_label(ax, 'a', x=-0.12, y=1.08)
         for i, (x, y) in enumerate(proto_coords):
             color = TYPE_PALETTE[i % len(TYPE_PALETTE)]
             ax.scatter(x, y, c=[color], s=120, marker="D", edgecolors="black",
@@ -159,9 +159,9 @@ def plot_embedding_space_merged(
         ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
         style_axes(ax, kind="umap")
 
-        ax_b1 = b_rects[1].add_axes(fig)
+        ax_b1 = b_slots[1].inset(right=0.004).add_axes(fig)
         ax = ax_b1
-        add_panel_label(ax, 'b', x=-0.10, y=1.05)
+        add_panel_label(ax, 'b', x=-0.14, y=1.08)
         for t in unique_types:
             mask = gids_sub == t
             color = TYPE_PALETTE[int(t) % len(TYPE_PALETTE)]
@@ -175,9 +175,9 @@ def plot_embedding_space_merged(
         ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
         style_axes(ax, kind="umap")
 
-        ax_b2 = b_rects[2].add_axes(fig)
+        ax_b2 = b_slots[2].inset(left=0.072, right=0.014).add_axes(fig)
         ax = ax_b2
-        add_panel_label(ax, 'c', x=-0.10, y=1.05)
+        add_panel_label(ax, 'c', x=-0.12, y=1.08)
         so = np.argsort(type_counts)[::-1]
         bar_c = [TYPE_PALETTE[t % len(TYPE_PALETTE)] for t in unique_types[so]]
         y_pos = np.arange(n_types)
@@ -193,7 +193,7 @@ def plot_embedding_space_merged(
         row += 1
 
     if has_e:
-        e_rects = row_regions[row].split_cols([0.92, 0.92, 1.04], gap=[0.018, 0.042])
+        e_slots = row_regions[row].split_cols([0.96, 0.96, 1.16], gap=[0.024, 0.028])
         cell_path = cache / "cell_embeddings_dedup_preprocessed.npy"
         if not cell_path.exists():
             logger.warning("Missing cell embeddings for E row")
@@ -222,9 +222,9 @@ def plot_embedding_space_merged(
             rc = coords_e[:len(r_sub)]
             gc = coords_e[len(r_sub):]
 
-            ax_e0 = e_rects[0].add_axes(fig)
+            ax_e0 = e_slots[0].inset(right=0.004).add_axes(fig)
             ax = ax_e0
-            add_panel_label(ax, 'd', x=-0.10, y=1.05)
+            add_panel_label(ax, 'd', x=-0.12, y=1.08)
             for t in np.unique(r_gids):
                 m = r_gids == t
                 ax.scatter(rc[m, 0], rc[m, 1],
@@ -234,9 +234,9 @@ def plot_embedding_space_merged(
             ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
             style_axes(ax, kind="umap")
 
-            ax_e1 = e_rects[1].add_axes(fig)
+            ax_e1 = e_slots[1].inset(right=0.004).add_axes(fig)
             ax = ax_e1
-            add_panel_label(ax, 'e', x=-0.10, y=1.05)
+            add_panel_label(ax, 'e', x=-0.12, y=1.08)
             if g_gids is not None:
                 for t in np.unique(g_gids):
                     m = g_gids == t
@@ -250,9 +250,9 @@ def plot_embedding_space_merged(
             ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
             style_axes(ax, kind="umap")
 
-            ax_e2 = e_rects[2].add_axes(fig)
+            ax_e2 = e_slots[2].inset(right=0.020).add_axes(fig)
             ax = ax_e2
-            add_panel_label(ax, 'f', x=-0.10, y=1.05)
+            add_panel_label(ax, 'f', x=-0.12, y=1.08)
             all_types = np.unique(np.concatenate([r_gids, g_gids])) if g_gids is not None else np.unique(r_gids)
             for t in all_types:
                 color = TYPE_PALETTE[int(t) % len(TYPE_PALETTE)]
@@ -274,9 +274,7 @@ def plot_embedding_space_merged(
             ax.legend(
                 markerscale=2.0,
                 fontsize=FONT_LEGEND,
-                loc="upper left",
-                bbox_to_anchor=(1.02, 1.0),
-                borderaxespad=0.0,
+                loc="upper right",
                 frameon=False,
             )
             ax.set_title("Type-Colored Overlay")

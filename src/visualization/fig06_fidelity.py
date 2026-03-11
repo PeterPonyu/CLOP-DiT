@@ -104,15 +104,18 @@ def plot_per_type_generation(
     fd_mean = float(np.nanmean(fd_array)) if fd_valid.any() else float("nan")
 
     fig = plt.figure(figsize=(14.0, 6.9))
-    layout = bind_figure_region(fig, (0.03, 0.08, 0.98, 0.94))
-    g1_rect, g2_rect, g3_rect = layout.split_cols([1.08, 1.22, 0.82], gap=[0.020, 0.042])
+    layout = bind_figure_region(fig, (0.16, 0.10, 0.965, 0.90))
+    g1_slot, g2_slot, g3_slot = layout.split_cols([1.00, 1.30, 0.72], gap=[0.022, 0.034])
+    g1_rect = g1_slot.inset(right=0.004)
+    g2_rect = g2_slot.inset(left=0.110, right=0.014)
+    g3_rect = g3_slot.inset(left=0.014, right=0.016)
     summary = data.get("summary", {})
     # Title moved to LaTeX caption
 
     # G1: Centroid cosine (sorted)
     from matplotlib.ticker import MaxNLocator
     ax = g1_rect.add_axes(fig)
-    add_panel_label(ax, chr(ord('a') + label_offset), x=-0.10, y=1.05)
+    add_panel_label(ax, chr(ord('a') + label_offset), x=-0.14, y=1.05)
     sorted_idx = np.argsort(cosines)
     sorted_cos = [cosines[i] for i in sorted_idx]
     sorted_names_cos = [short_names[i] for i in sorted_idx]
@@ -140,7 +143,7 @@ def plot_per_type_generation(
 
     # G2: Frechet outlier profile
     ax = g2_rect.add_axes(fig)
-    add_panel_label(ax, chr(ord('a') + label_offset + 1), x=-0.10, y=1.05)
+    add_panel_label(ax, chr(ord('a') + label_offset + 1), x=-0.14, y=1.05)
     if fd_valid.any():
         fd_idx = np.where(fd_valid)[0][np.argsort(fd_array[fd_valid])]
         fd_vals = fd_array[fd_idx]
@@ -157,7 +160,7 @@ def plot_per_type_generation(
         set_adaptive_ytick_labels(ax, fd_names, max_visible=25, fontsize=FONT_HEATMAP_CELL)
         ax.set_xlabel("Fr\u00e9chet Distance (lower = better)")
         ax.set_title("Fr\u00e9chet Outlier Profile")
-        ax.legend(fontsize=FONT_LEGEND, frameon=False, loc="lower right")
+        # Mean reference is described in the caption; omit legend here to keep the panel clear.
         ax.set_xlim(0, float(np.nanmax(fd_vals)) * 1.12)
         ax.xaxis.set_major_locator(MaxNLocator(nbins=5, prune="lower"))
         style_axes(ax, kind="bar")
@@ -169,7 +172,7 @@ def plot_per_type_generation(
 
     # G3: Cosine vs abundance with FD bubble size and diversity color
     ax = g3_rect.add_axes(fig)
-    add_panel_label(ax, chr(ord('a') + label_offset + 2), x=-0.10, y=1.05)
+    add_panel_label(ax, chr(ord('a') + label_offset + 2), x=-0.22, y=1.00)
     fd_for_size = np.where(fd_valid, fd_array, np.nanmedian(fd_array[fd_valid]) if fd_valid.any() else 1.0)
     fd_min = float(np.nanmin(fd_for_size)) if np.isfinite(fd_for_size).any() else 0.0
     fd_ptp = float(np.nanmax(fd_for_size) - fd_min) if np.isfinite(fd_for_size).any() else 1.0
@@ -204,7 +207,8 @@ def plot_per_type_generation(
             y_offset=0.012,
         )
         cbar = fig.colorbar(sc, cax=cax)
-        cbar.set_label("Diversity ratio", fontsize=11)
+        cbar.set_label("")
+        cbar.ax.set_title("Div.\nratio", fontsize=10, pad=4)
         cbar.ax.tick_params(labelsize=10)
     else:
         ax.scatter(
@@ -223,17 +227,19 @@ def plot_per_type_generation(
         x_line = np.linspace(x_vals.min(), x_vals.max(), 100)
         ax.plot(x_line, slope * x_line + intercept, color=COLORS["trend_dark"], linestyle="--", linewidth=1.3, label="Trend")
 
-    worst_idx = np.argsort(cos_array)[:5]
+    worst_idx = np.argsort(cos_array)[:2]
     label_offsets = [(-34, -12), (10, -10), (-30, 10), (12, 10), (16, -18)]
     for rank, i in enumerate(worst_idx):
         if cos_array[i] < 0.94:
+            if x_vals[i] > np.quantile(x_vals, 0.75):
+                continue
             x_offset, y_offset = label_offsets[rank % len(label_offsets)]
             if x_vals[i] > np.median(x_vals):
                 x_offset = min(x_offset, -10)
             else:
                 x_offset = max(x_offset, 10)
             ax.annotate(
-                abbreviate_cell_type(short_names[i], max_len=20),
+                abbreviate_cell_type(short_names[i], max_len=12),
                 (x_vals[i], cos_array[i]),
                 fontsize=FONT_SMALL,
                 xytext=(x_offset, y_offset),
@@ -245,8 +251,7 @@ def plot_per_type_generation(
     ax.set_xlabel("log10(Number of Real Cells)")
     ax.set_ylabel("Centroid Cosine Similarity")
     ax.set_title("Fidelity vs Abundance")
-    ax.axhline(y=0.9, color=COLORS["good"], linestyle=":", alpha=0.4, label="Target (0.9)")
-    ax.legend(fontsize=FONT_LEGEND, frameon=False, loc="upper left")
+    ax.axhline(y=0.9, color=COLORS["good"], linestyle=":", alpha=0.4)
     ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
     ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
     ax.set_xlim(x_vals.min() - 0.10, x_vals.max() + 0.10)

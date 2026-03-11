@@ -6,6 +6,40 @@ from matplotlib.transforms import Bbox
 from .vcd_core import _ArtistInfo, _safe_bbox, _shrink, _fig_bbox, _overlap_area, _sides_outside
 
 
+def _iter_legends(fig, renderer):
+    """Yield visible legend objects with display bboxes and owner ids."""
+    seen_ids: set[int] = set()
+    for ax in fig.get_axes():
+        legend = ax.get_legend()
+        if legend is None or not legend.get_visible():
+            continue
+        leg_bb = _safe_bbox(legend, renderer)
+        if leg_bb is None:
+            continue
+        seen_ids.add(id(legend))
+        owner_id = id(fig) if getattr(ax, '_is_legend_cell', False) else id(ax)
+        yield legend, leg_bb, owner_id
+
+    for legend in getattr(fig, "legends", []) or []:
+        if id(legend) in seen_ids or not legend.get_visible():
+            continue
+        leg_bb = _safe_bbox(legend, renderer)
+        if leg_bb is None:
+            continue
+        seen_ids.add(id(legend))
+        yield legend, leg_bb, id(fig)
+
+    for child in fig.get_children():
+        if hasattr(child, 'get_texts') and hasattr(child, '_legend_box') and id(child) not in seen_ids:
+            if not getattr(child, "get_visible", lambda: True)():
+                continue
+            leg_bb = _safe_bbox(child, renderer)
+            if leg_bb is None:
+                continue
+            seen_ids.add(id(child))
+            yield child, leg_bb, id(fig)
+
+
 def _check_legend_spillover(fig, renderer, tol_px=5.0, tight_bb=None):
     """Pass 10: Legends extending beyond their parent axes or the figure.
 
@@ -95,7 +129,8 @@ def _check_legend_vs_other_panel_content(fig, renderer, infos, min_overlap_px2=3
             continue
         leg_bb = _safe_bbox(legend, renderer)
         if leg_bb:
-            legend_infos.append((leg_bb, id(ax)))
+            owner_id = id(fig) if getattr(ax, '_is_legend_cell', False) else id(ax)
+            legend_infos.append((leg_bb, owner_id))
 
     # Also include figure-level legends
     for child in fig.get_children():
@@ -402,4 +437,82 @@ def _check_legend_crowding_autofix(fig, renderer, auto_fix=True):
                 "elements": [f"legend_axes_{idx}"],
             })
 
+    return issues
+
+
+def _check_legend_vs_legend(fig, renderer, min_overlap_px2=60.0):
+    """Detect overlapping legend boxes anywhere in the figure."""
+    issues: list[dict] = []
+    legends = list(_iter_legends(fig, renderer))
+    for i in range(len(legends)):
+        leg_i, bb_i, owner_i = legends[i]
+        for j in range(i + 1, len(legends)):
+            leg_j, bb_j, owner_j = legends[j]
+            if owner_i == owner_j:
+                continue
+            area = _overlap_area(bb_i, bb_j)
+            if area > min_overlap_px2:
+                issues.append({
+                    "type": "legend_legend_overlap",
+                    "severity": "warning",
+                    "detail": f"Legend boxes overlap ({area:.0f} px²)",
+                    "elements": ["legend_box", "legend_box"],
+                })
+    return issues
+
+
+def _check_legend_vs_other_artists(fig, renderer, infos, min_overlap_px2=60.0):
+    """Detect legend boxes masking text or non-background artists anywhere in the figure."""
+    issues: list[dict] = []
+    legends = list(_iter_legends(fig, renderer))
+    if not legends:
+        return issues
+
+    for legend, leg_bb, owner_id in legends:
+        own_text_ids = {id(txt) for txt in legend.get_texts()}
+        for info in infos:
+            if info.artist is legend or id(info.artist) in own_text_ids:
+                continue
+            if info.kind == "legend" and info.artist is not legend:
+                area = _overlap_area(leg_bb, info.bbox)
+                if area > min_overlap_px2:
+                    issues.append({
+                        "type": "legend_artist_masking",
+                        "severity": "warning",
+                        "detail": f"Legend masks '{info.tag}' ({area:.0f} px²)",
+                        "elements": ["legend_box", info.tag],
+                    })
+                continue
+
+            if info.kind == "patch" and any(skip in info.tag for skip in ("Spine", "FancyBbox", "_ColorbarSpine")):
+                continue
+
+            area = _overlap_area(leg_bb, info.bbox)
+            if area <= min_overlap_px2:
+                continue
+
+            target_area = max(info.bbox.width * info.bbox.height, 1.0)
+            frac = area / target_area
+            same_owner = owner_id == info.ax_id and info.ax_id is not None
+
+            if same_owner and info.kind == "line" and frac < 0.30:
+                severity = "info"
+            elif same_owner and info.kind == "collection" and frac < 0.15:
+                severity = "info"
+            elif same_owner and info.kind == "patch" and frac < 0.20:
+                severity = "info"
+            elif same_owner and info.kind == "text" and frac < 0.20:
+                severity = "info"
+            else:
+                severity = "warning"
+
+            issues.append({
+                "type": "legend_artist_masking",
+                "severity": severity,
+                "detail": (
+                    f"Legend masks '{info.tag}' "
+                    f"({frac:.0%}, {area:.0f} px²)"
+                ),
+                "elements": ["legend_box", info.tag],
+            })
     return issues

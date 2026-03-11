@@ -299,6 +299,8 @@ def _check_label_density(fig, renderer, infos, density_threshold=0.70):
     for ax in fig.get_axes():
         if getattr(ax, 'name', None) == 'polar':
             continue
+        if getattr(ax, '_is_legend_cell', False):
+            continue
         # Skip colorbar axes -- they are narrow by design and their tick
         # density is governed by the colorbar tick locator, not by data layout.
         if _is_colorbar_axes(ax):
@@ -417,7 +419,7 @@ def _check_cross_axes_text_overlap(fig, renderer, tol_px=2.0, min_overlap_px2=10
     for idx, ax in enumerate(fig.get_axes()):
         # Skip colorbar axes entirely -- their ticks are right next to
         # the parent axes and would produce false positives.
-        if _is_colorbar_axes(ax):
+        if _is_colorbar_axes(ax) or getattr(ax, '_is_legend_cell', False):
             continue
         aid = id(ax)
 

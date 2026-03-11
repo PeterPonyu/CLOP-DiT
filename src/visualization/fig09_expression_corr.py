@@ -84,10 +84,10 @@ def plot_expression_correlation(
 
     fig = plt.figure(figsize=(12.0, 7.5))
     # Note: Figure-level title removed per revision requirements; stats moved to caption
-    layout = bind_figure_region(fig, (0.05, 0.12, 0.98, 0.95))
-    top_row, bottom_row = layout.split_rows(2, hspace=0.42)
-    top_left, top_right = top_row.split_cols([0.86, 1.14], gap=0.040)
-    bottom_left, bottom_right = bottom_row.split_cols([1.00, 1.00], gap=0.018)
+    layout = bind_figure_region(fig, (0.07, 0.14, 0.985, 0.95))
+    top_row, bottom_row = layout.split_rows(2, hspace=0.46)
+    top_left, top_right = top_row.split_cols([0.86, 1.14], gap=0.050)
+    bottom_left, bottom_right = bottom_row.split_cols([1.00, 1.00], gap=0.032)
 
     # -- H1: Density scatter with residual coloring --
     ax1 = top_left.add_axes(fig)
@@ -104,7 +104,6 @@ def plot_expression_correlation(
     ax1.set_xlabel("Real Mean Expression", fontsize=11)
     ax1.set_ylabel("Generated Mean Expression", fontsize=11)
     ax1.set_title("Per-Gene Correlation", fontsize=12)
-    ax1.legend(fontsize=10, loc="upper left", frameon=False)
     from matplotlib.ticker import MaxNLocator as _MaxNLoc
     ax1.xaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
     ax1.yaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
@@ -122,11 +121,11 @@ def plot_expression_correlation(
     cbar.ax.tick_params(labelsize=8, length=2)
     from .style import set_scientific_tickformat
     set_scientific_tickformat(cbar.ax, axis="x", scilimits=(-2, 2))
-    add_panel_label(ax1, 'a', x=-0.10, y=1.05)
+    add_panel_label(ax1, 'a', x=-0.12, y=1.08)
 
-    # Annotate outlier genes (top 3 residuals) with staggered offsets
-    outlier_idx = np.argsort(abs_res)[-3:]
-    _offsets = [(-60, -25), (15, 18), (-65, 15)]
+    # Annotate outlier genes with staggered offsets
+    outlier_idx = np.argsort(abs_res)[-2:]
+    _offsets = [(-80, -35), (45, 40), (-85, 25)]
     for j, i in enumerate(outlier_idx):
         if i < len(gene_names):
             ax1.annotate(gene_names[i], (real_means[i], gen_means[i]),
@@ -185,7 +184,7 @@ def plot_expression_correlation(
     ax2.xaxis.get_major_formatter().set_useOffset(False)
     ax2.xaxis.get_major_formatter().set_scientific(False)
     ax2.ticklabel_format(axis='x', useOffset=False, style='plain')
-    add_panel_label(ax2, 'b', x=-0.10, y=1.05)
+    add_panel_label(ax2, 'b', x=-0.12, y=1.08)
 
     # -- H3: Marker gene expression with error bars --
     ax3 = bottom_left.add_axes(fig)
@@ -247,7 +246,7 @@ def plot_expression_correlation(
     # Note: do NOT set xaxis MaxNLocator here -- it would override the explicit
     # gene-name tick labels set above (set_xticks / set_xticklabels).
     ax3.yaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
-    add_panel_label(ax3, 'c', x=-0.10, y=1.05)
+    add_panel_label(ax3, 'c', x=-0.12, y=1.08)
 
     # -- H4: Residual distribution --
     ax4 = bottom_right.add_axes(fig)
@@ -263,7 +262,7 @@ def plot_expression_correlation(
     ax4.legend(fontsize=10, frameon=False)
     ax4.xaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
     ax4.yaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
-    add_panel_label(ax4, 'd', x=-0.10, y=1.05)
+    add_panel_label(ax4, 'd', x=-0.12, y=1.08)
 
     pct_within_01 = (np.abs(residuals) < 0.1).mean() * 100
     pct_within_001 = (np.abs(residuals) < 0.01).mean() * 100
@@ -272,12 +271,8 @@ def plot_expression_correlation(
              transform=ax4.transAxes, ha="right", va="top", fontsize=10,
              bbox=dict(boxstyle="round,pad=0.4", fc="white", ec="none", alpha=0.9))
 
-    if 'legend_handles_c' in locals() and legend_handles_c:
-        legend_ax = add_shared_legend_axes(
-            fig,
-            (ax3.get_position().x0, ax3.get_position().y0 - 0.082, ax3.get_position().width * 0.82, 0.06),
-        )
-        legend_ax.legend(legend_handles_c, legend_labels_c, fontsize=10, loc="center", ncol=min(len(legend_handles_c), 2), frameon=False)
+    # Real/Gen color semantics are consistent across the paper; avoid adding a
+    # separate legend here because it masks neighbouring panel content.
 
     if save:
         if save_panel_fn:

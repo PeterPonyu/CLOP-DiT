@@ -162,14 +162,14 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     mantel_vals = [v["mantel_r"] for v in per_type_results.values()]
 
     fig = plt.figure(figsize=(13.8, 9.8))
-    layout = bind_figure_region(fig, (0.06, 0.08, 0.98, 0.96))
+    layout = bind_figure_region(fig, (0.08, 0.08, 0.93, 0.94))
     top_row, bottom_row = layout.split_rows([0.92, 1.08], hspace=0.30)
     top_left, top_right = top_row.split_cols(2, wspace=0.34)
     bottom_left, bottom_right = bottom_row.split_cols(2, wspace=0.34)
 
     # ── Panel (a): Distribution with null baseline ──
     ax = top_left.add_axes(fig)
-    add_panel_label(ax, 'a', x=-0.10, y=1.05)
+    add_panel_label(ax, 'a', x=-0.12, y=1.08)
 
     # Compute null baseline: permuted gene labels within each type
     rng = np.random.default_rng(42)
@@ -214,18 +214,18 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     ci_lo, ci_hi = np.percentile(boot_means, [2.5, 97.5])
 
     null_mean = np.mean(null_mantels) if null_mantels else 0
-    ax.text(0.97, 0.97,
+    ax.text(0.03, 0.97,
             f"Mean 95% CI: [{ci_lo:.3f}, {ci_hi:.3f}]\n"
             f"Null mean: {null_mean:.3f}\n"
             f"All {len(mantel_vals)} types > null mean"
             if all(m > null_mean for m in mantel_vals)
             else f"Mean 95% CI: [{ci_lo:.3f}, {ci_hi:.3f}]\n"
                  f"Null mean: {null_mean:.3f}",
-            transform=ax.transAxes, ha="right", va="top",
-            fontsize=FONT_SMALL, color=COLORS["neutral"])
+            transform=ax.transAxes, ha="left", va="top",
+              fontsize=FONT_SMALL, color=COLORS["neutral"])
 
-    ax.legend(fontsize=FONT_ANNOTATION, frameon=True, framealpha=0.9, edgecolor="none",
-              loc="upper left")
+    ax.legend(fontsize=FONT_ANNOTATION - 1, frameon=False,
+              loc="upper right")
     style_axes(ax, "default",
                xlabel="Upper-triangle Pearson r (real vs. gen corr. matrix)",
                ylabel="Density",
@@ -243,7 +243,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     R_gen = _corr_matrix(gen_sub[g_mask][:, :50])
 
     ax2 = top_right.add_axes(fig)
-    add_panel_label(ax2, 'b', x=-0.10, y=1.05)
+    add_panel_label(ax2, 'b', x=-0.12, y=1.08)
     diff = R_gen - R_real
     im = ax2.imshow(diff, cmap="RdBu_r", vmin=-0.5, vmax=0.5, aspect="auto")
     ax2.set_title(f"Best: {best_name}", fontsize=FONT_TITLE)
@@ -260,14 +260,15 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
         fig,
         ax2,
         side="right",
-        width=0.010,
+        width=0.008,
         height=ax2.get_position().height * 0.52,
-        pad=0.012,
+        pad=0.018,
         align="bottom",
         y_offset=0.01,
     )
     cb2 = fig.colorbar(im, cax=cax2)
-    cb2.set_label("Δ corr (gen − real)", fontsize=FONT_LABEL)
+    cb2.set_label("Δ corr (gen − real)", fontsize=FONT_LABEL - 1)
+    cb2.ax.tick_params(labelsize=FONT_HEATMAP_CELL - 1)
 
     # ── Panel (c): Worst-preserved cell type ──
     worst_type = min(per_type_results, key=lambda k: per_type_results[k]["mantel_r"])
@@ -281,7 +282,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     R_gen_w = _corr_matrix(gen_sub[g_mask][:, :50])
 
     ax3 = bottom_left.add_axes(fig)
-    add_panel_label(ax3, 'c', x=-0.10, y=1.05)
+    add_panel_label(ax3, 'c', x=-0.12, y=1.08)
     diff_w = R_gen_w - R_real_w
     im2 = ax3.imshow(diff_w, cmap="RdBu_r", vmin=-0.5, vmax=0.5, aspect="auto")
     ax3.set_title(f"Worst: {worst_name}", fontsize=FONT_TITLE)
@@ -297,19 +298,20 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
         fig,
         ax3,
         side="right",
-        width=0.010,
+        width=0.008,
         height=ax3.get_position().height * 0.52,
-        pad=0.012,
+        pad=0.018,
         align="bottom",
         y_offset=0.01,
     )
     cb3 = fig.colorbar(im2, cax=cax3)
-    cb3.set_label("Δ corr (gen − real)", fontsize=FONT_LABEL)
+    cb3.set_label("Δ corr (gen − real)", fontsize=FONT_LABEL - 1)
+    cb3.ax.tick_params(labelsize=FONT_HEATMAP_CELL - 1)
 
     # ── Panel (d): Replace non-informative cell-count panel ──
     # Use Mantel r vs per-type mean expression variance (biological heterogeneity)
     ax4 = bottom_right.add_axes(fig)
-    add_panel_label(ax4, 'd', x=-0.10, y=1.05)
+    add_panel_label(ax4, 'd', x=-0.12, y=1.08)
 
     # Compute mean expression variance per type as a proxy for heterogeneity
     type_het = []
@@ -362,6 +364,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
              fontsize=FONT_SMALL, color=COLORS["neutral"])
 
     ax4.legend(fontsize=FONT_ANNOTATION, frameon=False)
+    ax4.xaxis.set_major_locator(plt.MaxNLocator(nbins=4, prune="both"))
     style_axes(ax4, "scatter",
                xlabel="Mean Gene Expression Variance",
                ylabel="Upper-Tri Pearson r",

@@ -74,6 +74,7 @@ def add_axes_next_to(fig, ax, **kwargs):
 def add_shared_legend_axes(fig, rect: Sequence[float]):
     """Create an invisible axes dedicated to shared legends or annotations."""
     legend_ax = fig.add_axes(tuple(map(float, rect)))
+    legend_ax._is_legend_cell = True
     legend_ax.set_axis_off()
     legend_ax.patch.set_alpha(0.0)
     return legend_ax

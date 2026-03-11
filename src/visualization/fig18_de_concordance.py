@@ -58,13 +58,13 @@ def plot_de_concordance_panel(
 
     fig = plt.figure(figsize=(15.8, 6.8))
     ax_rect_a, ax_rect_b, ax_rect_c = bind_figure_region(fig, (0.06, 0.14, 0.98, 0.94)).split_cols(
-        [1.36, 1.00, 0.96],
+        [1.36, 1.00, 1.08],
         gap=[0.045, 0.030],
     )
 
     # ── Panel (a): effect-size weighted logFC scatter ──
     ax = ax_rect_a.add_axes(fig)
-    add_panel_label(ax, 'a', x=-0.08, y=1.02)
+    add_panel_label(ax, 'a', x=-0.10, y=1.05)
 
     first_key = contrasts[0]
     first = de_data[first_key]
@@ -196,7 +196,7 @@ def plot_de_concordance_panel(
 
     # ── Panel (b): concordance heatmap ──
     ax2 = ax_rect_b.add_axes(fig)
-    add_panel_label(ax2, 'b', x=-0.08, y=1.02)
+    add_panel_label(ax2, 'b', x=-0.10, y=1.05)
 
     metric_names = ["Pears. r", "Spear. \u03c1", "Jacc.@50", "Sign agr."]
     metric_keys  = ["logfc_pearson_r", "logfc_spearman_rho",
@@ -240,7 +240,7 @@ def plot_de_concordance_panel(
 
     # ── Panel (c): grouped bar chart ──
     ax3 = ax_rect_c.add_axes(fig)
-    add_panel_label(ax3, 'c', x=-0.08, y=1.02)
+    add_panel_label(ax3, 'c', x=-0.16, y=1.02)
 
     x        = np.arange(n_contrasts)
     n_metrics = len(metric_names)
@@ -254,10 +254,10 @@ def plot_de_concordance_panel(
                 color=bar_colors[j], alpha=0.85, edgecolor="white")
 
     # Build short x-labels from contrast names (biology-aware)
-    xs_labels = [_abbrev_contrast(c, max_len=14) for c in contrasts]
+    xs_labels = [_abbrev_contrast(c, max_len=12) for c in contrasts]
     ax3.set_xticks(x)
-    ax3.set_xticklabels(xs_labels, fontsize=FONT_TICK_DENSE,
-                         rotation=18, ha="right", multialignment="center")
+    ax3.set_xticklabels(xs_labels, fontsize=7,
+                         rotation=25, ha="right", multialignment="center")
     ax3.set_ylim(0, 1.12)
     ax3.legend(fontsize=FONT_ANNOTATION, ncol=2,
                loc="upper right", frameon=False)

@@ -58,19 +58,19 @@ def plot_diagnostics(
     apply_style()
 
     # ── Figure 12: Diversity Diagnostics (4 subplots) ──
-    fig = plt.figure(figsize=(10.2, 8.4))
-    layout = bind_figure_region(fig, (0.02, 0.18, 0.98, 0.96))
-    top_row, bottom_row = layout.split_rows(2, hspace=0.56)
-    top_left, top_right = top_row.split_cols([1.00, 1.00], gap=0.034)
-    bottom_left, bottom_right = bottom_row.split_cols([1.02, 0.98], gap=0.030)
+    fig = plt.figure(figsize=(12.8, 9.0))
+    layout = bind_figure_region(fig, (0.14, 0.18, 0.988, 0.95))
+    top_row, bottom_row = layout.split_rows(2, hspace=0.78)
+    top_left, top_right = top_row.split_cols([1.00, 1.00], gap=0.072)
+    bottom_left, bottom_right = bottom_row.split_cols([1.02, 0.98], gap=0.070)
     axes = np.array([
         [top_left.add_axes(fig), top_right.add_axes(fig)],
         [bottom_left.add_axes(fig), bottom_right.add_axes(fig)],
     ], dtype=object)
-    add_panel_label(axes[0, 0], 'a', x=-0.10, y=1.05)
-    add_panel_label(axes[0, 1], 'b', x=-0.10, y=1.05)
-    add_panel_label(axes[1, 0], 'c', x=-0.10, y=1.05)
-    add_panel_label(axes[1, 1], 'd', x=-0.10, y=1.05)
+    add_panel_label(axes[0, 0], 'a', x=-0.16, y=1.03)
+    add_panel_label(axes[0, 1], 'b', x=-0.14, y=1.03)
+    add_panel_label(axes[1, 0], 'c', x=-0.16, y=1.03)
+    add_panel_label(axes[1, 1], 'd', x=-0.22, y=1.00)
 
     ax = axes[0, 0]
     t1 = all_results.get("test1_intratype_diversity", {}).get("per_type", {})
@@ -78,16 +78,16 @@ def plot_diagnostics(
         names = list(t1.keys())
         div_ratios = [t1[n]["diversity_ratio"] for n in names]
         sorted_idx = np.argsort(div_ratios)
-        sorted_names = [abbreviate_cell_type(names[i], 22) for i in sorted_idx]
+        sorted_names = [abbreviate_cell_type(names[i], 14) for i in sorted_idx]
         sorted_divs = [div_ratios[i] for i in sorted_idx]
 
         colors = [COLORS["bad"] if d < 0.5 else COLORS["warn"] if d < 0.8 else COLORS["good"] if d < 1.2 else COLORS["real"]
                   for d in sorted_divs]
         ax.barh(range(len(sorted_divs)), sorted_divs, color=colors, height=0.8)
         ax.set_yticks(range(len(sorted_divs)))
-        _step_j1 = max(1, len(sorted_divs) // 14)
+        _step_j1 = max(2, int(np.ceil(len(sorted_divs) / 9)))
         _ytl_j1 = [n if i % _step_j1 == 0 else "" for i, n in enumerate(sorted_names)]
-        ax.set_yticklabels(_ytl_j1, fontsize=FONT_DENSE_YTICK)
+        ax.set_yticklabels(_ytl_j1, fontsize=8)
         ax.axvline(x=1.0, color="black", ls="--", lw=1, alpha=0.5, label="ratio=1 (equal)")
         ax.axvline(x=0.5, color="red", ls=":", lw=1, alpha=0.5, label="ratio=0.5 (collapse)")
         ax.set_xlabel("Diversity Ratio (gen / real)")
@@ -128,10 +128,13 @@ def plot_diagnostics(
         ax2 = ax.twinx()
         color2 = COLORS["generated"]
         ax2.plot(scales, norms, "s--", color=color2, lw=2, markersize=8, label="Norm")
-        ax2.set_ylabel("Mean Embedding Norm", color=color2)
+        ax2.set_ylabel("")
         ax2.tick_params(axis="y", labelcolor=color2)
+        ax2.tick_params(axis="x", which="both", bottom=False, labelbottom=False)
+        ax2.yaxis.labelpad = 10
 
         ax.set_title("CFG Scale vs Diversity & Norm")
+        ax.xaxis.set_major_locator(plt.MaxNLocator(nbins=4, prune="both"))
         lines1, labels1 = ax.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
         # Labels will be collected into the figure-level legend below
@@ -151,11 +154,12 @@ def plot_diagnostics(
         ax.bar(x - w / 2, cent_divs, w, label="Centroid Cond", color=COLORS["real"], alpha=0.8)
         ax.bar(x + w / 2, noise_divs, w, label="Centroid + Noise", color=COLORS["generated"], alpha=0.8)
         ax.set_xticks(x)
-        _type_labels_d = [abbreviate_cell_type(type_names.get(int(k), f"Type {k}"), 22)
+        _type_labels_d = [abbreviate_cell_type(type_names.get(int(k), f"Type {k}"), 12)
                           for k in type_ids]
-        ax.set_xticklabels(_type_labels_d, fontsize=FONT_DENSE_YTICK, rotation=45, ha="right")
+        _displayed_labels = [label if i % 2 == 0 else "" for i, label in enumerate(_type_labels_d)]
+        ax.set_xticklabels(_displayed_labels, fontsize=8, rotation=65, ha="right")
         ax.set_xlabel("Cell Type")
-        ax.set_ylabel("Intra-Type Diversity (1 - mean cosine)")
+        ax.set_ylabel("Intra-Type Div.")
         gain = t5["summary"]["mean_diversity_gain"]
         eps = t5["summary"].get("noise_scale", "?")
         ax.set_title("Centroid vs Noisy Conditioning")
@@ -171,10 +175,8 @@ def plot_diagnostics(
                 _seen_labels.add(_l)
                 _handles.append(_h)
                 _labels.append(_l)
-    if _handles:
-        legend_ax = add_shared_legend_axes(fig, (axes[1, 0].get_position().x0, 0.03, 0.38, 0.08))
-        legend_ax.legend(_handles, _labels, loc='center', fontsize=9, frameon=False,
-                         ncol=min(len(_handles), 3))
+    # Shared legend removed: the remaining labels are self-explanatory and the
+    # legend occupied more visual space than the signal it provided.
 
     path = out / "fig12_diversity_diagnostics.png"
     save_with_vcd(fig, path, dpi)

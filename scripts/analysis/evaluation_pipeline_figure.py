@@ -50,10 +50,12 @@ def _arrow(ax, start, end, color="#555", lw=1.2, style="->"):
 def make_figure():
     apply_style()
     fig = plt.figure(figsize=(10.6, 7.0))
-    ax = bind_figure_region(fig, (0.01, 0.01, 0.99, 0.99)).add_axes(fig)
+    ax = bind_figure_region(fig, (0.04, 0.04, 0.96, 0.97)).add_axes(fig)
     ax.set_xlim(-0.12, 10.36)
     ax.set_ylim(-0.22, 7.18)
     ax.axis("off")
+    ax.set_xticks([])
+    ax.set_yticks([])
 
     # Title
     ax.text(5.0, 6.96, "Evaluation Pipeline Schematic", fontsize=15,
@@ -152,7 +154,7 @@ def make_figure():
 
     _rounded_box(ax, (1.5, y5), 3.2, 0.7,
                  "Common-Metrics Composite (9)\nPRIMARY BENCHMARK",
-                 fc="#E74C3C", ec="#C0392B", text_color="white", bold=True)
+                 fc="#F7B7AE", ec="#C0392B", text_color="#111111", bold=True)
 
     _rounded_box(ax, (5.5, y5), 3.2, 0.7,
                  "Full Composite (17)\n+ 8 downstream biology metrics\n(structurally biased)",

@@ -140,11 +140,11 @@ def plot_marker_gene_comparison(
     n_markers = len(all_marker_genes)
     n_sel_types = len(selected_type_ids)
 
-    fig = plt.figure(figsize=(10.8, 7.7))
-    layout = bind_figure_region(fig, (0.04, 0.10, 0.98, 0.92))
-    top_row, bottom_row = layout.split_rows(2, hspace=0.42)
-    top_left, top_right = top_row.split_cols([1.0, 1.28], wspace=0.44)
-    bottom_left, bottom_right = bottom_row.split_cols([1.0, 1.28], wspace=0.44)
+    fig = plt.figure(figsize=(10.8, 8.4))
+    layout = bind_figure_region(fig, (0.11, 0.10, 0.98, 0.92))
+    top_row, bottom_row = layout.split_rows(2, hspace=0.90)
+    top_left, top_right = top_row.split_cols([1.0, 1.28], wspace=0.52)
+    bottom_left, bottom_right = bottom_row.split_cols([1.0, 1.28], wspace=0.52)
 
     # -- N1: Grouped horizontal bar chart --
     ax1 = top_left.add_axes(fig)
@@ -182,13 +182,13 @@ def plot_marker_gene_comparison(
         error_kw=dict(lw=0.8),
     )
     ax1.set_yticks(y_pos)
-    ax1.set_yticklabels([f"{g[:15]}" for g in all_marker_genes], fontsize=10)
+    ax1.set_yticklabels([f"{g[:12]}" for g in all_marker_genes], fontsize=10)
     ax1.set_xlabel("Mean Expression", fontsize=11)
-    ax1.set_title("Marker Expression by Lineage", fontsize=12, pad=10)
+    ax1.set_title("")
     ax1.grid(axis="x", linestyle=":", linewidth=0.7, alpha=0.35)
     ax1.set_axisbelow(True)
     handles_top, labels_top = ax1.get_legend_handles_labels()
-    add_panel_label(ax1, "a", x=-0.10, y=1.05)
+    add_panel_label(ax1, "a", x=-0.14, y=1.03)
 
     # -- N2, N3, N4 --
     if n_sel_types >= 2 and real_labels is not None and gen_labels is not None:
@@ -216,15 +216,16 @@ def plot_marker_gene_comparison(
         )
         im = ax2.imshow(display, cmap=cmap_n2, aspect="auto", vmin=vmin, vmax=vmax)
         ax2.set_yticks(range(n_sel_types))
-        ax2.set_yticklabels([abbreviate_cell_type(n, 20) for n in selected_type_names], fontsize=10)
+        ax2.set_yticklabels([abbreviate_cell_type(n, 16) for n in selected_type_names], fontsize=10)
         xtick_pos = list(range(n_markers)) + list(range(n_markers + 1, 2 * n_markers + 1))
-        xtick_labels = all_marker_genes + all_marker_genes
+        xtick_short = [g[:12] for g in all_marker_genes]
+        xtick_labels = xtick_short + xtick_short
         ax2.set_xticks(xtick_pos)
         ax2.set_xticklabels(xtick_labels, fontsize=10, rotation=90, ha="center")
         ax2.axvspan(n_markers - 0.5, n_markers + 0.5, color="#f3f3f3", zorder=0)
         ax2.axvline(x=n_markers, color="#666", linewidth=1.6, linestyle="-")
         ax2.axvline(x=n_markers - 0.5, color="black", linewidth=1.5, zorder=5)
-        ax2.set_title("Per-Type × Marker (Real | Gen)", fontsize=11, pad=10)
+        ax2.set_title("")
         ax2.text(n_markers / 2 - 0.5, -1.2, "Real", ha="center", fontsize=11, color=COLORS["real"])
         ax2.text(
             n_markers + 0.5 + n_markers / 2 - 0.5,
@@ -235,11 +236,11 @@ def plot_marker_gene_comparison(
             color=COLORS["generated"],
         )
         add_colorbar_safe(im, ax=ax2, label="Expr.", shrink=0.6, pad=0.05)
-        add_panel_label(ax2, "b", x=-0.10, y=1.05)
+        add_panel_label(ax2, "b", x=-0.24, y=1.01)
 
         legend_ax = add_shared_legend_axes(
             fig,
-            (ax1.get_position().x0, ax1.get_position().y1 + 0.008, ax2.get_position().x1 - ax1.get_position().x0, 0.045),
+            (ax1.get_position().x0, ax1.get_position().y1 + 0.040, ax2.get_position().x1 - ax1.get_position().x0, 0.030),
         )
         legend_ax.legend(handles_top, labels_top, fontsize=10, loc="center", frameon=False, ncol=2)
 
@@ -249,12 +250,12 @@ def plot_marker_gene_comparison(
         im3 = ax3.imshow(diff, cmap="RdBu_r", aspect="auto", vmin=-max_abs, vmax=max_abs)
         im3.set_rasterized(True)
         ax3.set_yticks(range(n_sel_types))
-        ax3.set_yticklabels([abbreviate_cell_type(n, 20) for n in selected_type_names], fontsize=10)
+        ax3.set_yticklabels([abbreviate_cell_type(n, 16) for n in selected_type_names], fontsize=10)
         ax3.set_xticks(range(n_markers))
         ax3.set_xticklabels(all_marker_genes, fontsize=11, rotation=90, ha="center")
         ax3.set_title("Δ Expression (Gen − Real)", fontsize=11)
         add_colorbar_safe(im3, ax=ax3, label="Δ", shrink=0.72, pad=0.06, aspect=14)
-        add_panel_label(ax3, "c", x=-0.10, y=1.05)
+        add_panel_label(ax3, "c", x=-0.14, y=1.03)
         for i in range(n_sel_types):
             for j in range(n_markers):
                 if abs(diff[i, j]) > max_abs * 0.3:
@@ -286,7 +287,7 @@ def plot_marker_gene_comparison(
         ax4.set_yticklabels(names_sorted, fontsize=10)
         ax4.set_xlabel("log$_2$ Fold Change (Gen / Real)", fontsize=11)
         ax4.set_title("Marker Fold Change", fontsize=12)
-        add_panel_label(ax4, "d", x=-0.10, y=1.05)
+        add_panel_label(ax4, "d", x=-0.14, y=1.03)
         for i, lfc in enumerate(log2fc_sorted):
             if abs(lfc) < 0.005:
                 continue
@@ -301,7 +302,7 @@ def plot_marker_gene_comparison(
             )
     else:
         ax_fallback = top_right.add_axes(fig)
-        add_panel_label(ax_fallback, "b")
+        add_panel_label(ax_fallback, "b", x=-0.12, y=1.08)
         ax_fallback.text(0.5, 0.5, "Per-type labels not available", ha="center", va="center", transform=ax_fallback.transAxes)
 
     if save:

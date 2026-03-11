@@ -15,6 +15,7 @@ from typing import Dict, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.ticker import MaxNLocator
 
 from .direct_layout import bind_figure_region
 from .explicit_positioning import add_shared_legend_axes
@@ -102,15 +103,15 @@ def plot_baseline_comparison(
     # Direction: lower-is-better for FD, higher-is-better for others
     directions = ["lower", "higher", "higher", "higher"]
 
-    fig = plt.figure(figsize=(15.0, 6.1))
-    ax_rect_1, ax_rect_2, ax_rect_3 = bind_figure_region(fig, (0.04, 0.16, 0.98, 0.95)).split_cols(
+    fig = plt.figure(figsize=(15.2, 6.2))
+    ax_rect_1, ax_rect_2, ax_rect_3 = bind_figure_region(fig, (0.04, 0.16, 0.98, 0.91)).split_cols(
         [1.18, 1.02, 1.18],
-        gap=[0.024, 0.028],
+        gap=[0.050, 0.050],
     )
 
     # ── O1: Grouped bar chart ──
     ax = ax_rect_1.add_axes(fig)
-    add_panel_label(ax, 'a', x=-0.10, y=1.05)
+    add_panel_label(ax, 'a', x=-0.12, y=1.02)
     x = np.arange(len(metric_labels))
     w = 0.8 / n_methods
     for i, mname in enumerate(method_names):
@@ -126,7 +127,7 @@ def plot_baseline_comparison(
 
     # ── O2: Ranked dot plot (normalised scores) ──
     ax2 = ax_rect_2.add_axes(fig)
-    add_panel_label(ax2, 'b', x=-0.10, y=1.05)
+    add_panel_label(ax2, 'b', x=-0.12, y=1.02)
 
     # Normalise each metric to [0,1] with direction awareness
     all_vals = {k: [methods[m][k] for m in method_names] for k in metric_keys}
@@ -171,7 +172,7 @@ def plot_baseline_comparison(
 
     # ── O3: Absolute delta bar chart (CLOP-DiT minus baseline) ──
     ax3 = ax_rect_3.add_axes(fig)
-    add_panel_label(ax3, 'c', x=-0.10, y=1.05)
+    add_panel_label(ax3, 'c', x=-0.12, y=1.02)
 
     clop_vals = methods["CLOP-DiT"]
     bl_names = [bl for bl in baselines]
@@ -200,8 +201,9 @@ def plot_baseline_comparison(
 
     # Annotate values at bar tips
     for i, val in enumerate(y_vals):
-        ha = "left" if val >= 0 else "right"
-        ax3.text(val, i, f" {val:+.3f}", va="center", ha=ha,
+        x_text = val + 0.03 if val >= 0 else min(-0.02, val + 0.08)
+        ha = "left"
+        ax3.text(x_text, i, f"{val:+.3f}", va="center", ha=ha,
                  fontsize=FONT_ANNOTATION, color="#333")
 
     ax3.set_yticks(y_pos)
@@ -225,6 +227,7 @@ def plot_baseline_comparison(
 
     style_axes(ax3, "bar", title="CLOP-DiT Advantage (\u0394 metric)",
                xlabel="Absolute Improvement")
+    ax3.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
 
     if save:
         path = save_panel(fig, output_dir / "fig15_baseline_comparison.png", dpi)

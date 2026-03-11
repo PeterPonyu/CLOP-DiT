@@ -55,11 +55,11 @@ def plot_expression_diversity_panel(
     apply_style()
 
     o = t6_data["overall"]
-    fig = plt.figure(figsize=(7.5, 4.8))
-    left_rect, right_rect = bind_figure_region(fig, (0.08, 0.16, 0.98, 0.96)).split_cols(2, wspace=0.34)
+    fig = plt.figure(figsize=(7.6, 4.9))
+    left_rect, right_rect = bind_figure_region(fig, (0.08, 0.16, 0.98, 0.93)).split_cols(2, wspace=0.38)
     axes = [left_rect.add_axes(fig), right_rect.add_axes(fig)]
-    add_panel_label(axes[0], chr(ord('a') + label_offset), x=-0.10, y=1.05)
-    add_panel_label(axes[1], chr(ord('a') + label_offset + 1), x=-0.10, y=1.05)
+    add_panel_label(axes[0], chr(ord('a') + label_offset), x=-0.14, y=1.02)
+    add_panel_label(axes[1], chr(ord('a') + label_offset + 1), x=-0.24, y=0.98)
 
     ax = axes[0]
     labels = ["Cell Std\n(across genes)", "Gene Std\n(across cells)"]

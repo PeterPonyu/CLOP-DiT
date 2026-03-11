@@ -37,6 +37,8 @@ from .vcd_checks_legend import (
     _check_fig_legend_vs_subplot_content,
     _check_legend_internal,
     _check_legend_crowding_autofix,
+    _check_legend_vs_legend,
+    _check_legend_vs_other_artists,
 )
 from .vcd_checks_colorbar import (
     _check_colorbar_internal,
@@ -160,6 +162,8 @@ def detect_all_conflicts(
     issues.extend(_check_legend_spillover(fig, renderer, tight_bb=tight_bb))
     # Pass 11
     issues.extend(_check_legend_vs_other_panel_content(fig, renderer, infos))
+    issues.extend(_check_legend_vs_legend(fig, renderer))
+    issues.extend(_check_legend_vs_other_artists(fig, renderer, infos))
     # ── Layer 1: subplot-level passes (12-15) ──
     issues.extend(_check_legend_vs_own_content(fig, renderer, infos))
     issues.extend(_check_fig_legend_vs_subplot_content(fig, renderer, infos))

@@ -364,9 +364,9 @@ def plot_training_dynamics_combined(
         return None
 
     apply_style()
-    fig = plt.figure(figsize=(14.2, 7.9))
-    layout = bind_figure_region(fig, (0.05, 0.08, 0.98, 0.94))
-    top_row, bottom_row = layout.split_rows([1, 1], hspace=0.36)
+    fig = plt.figure(figsize=(14.4, 8.2))
+    layout = bind_figure_region(fig, (0.08, 0.14, 0.96, 0.88))
+    top_row, bottom_row = layout.split_rows([1, 1], hspace=0.55)
     top_cols = top_row.split_cols([1.0, 1.0, 1.0, 1.2], wspace=0.42)
     bottom_cols = bottom_row.split_cols([1.0, 1.0, 1.0, 1.2], wspace=0.42)
     # Note: Figure-level title removed per revision requirements; panel labels added below
@@ -390,7 +390,7 @@ def plot_training_dynamics_combined(
         ax_a1.locator_params(axis='x', nbins=3)
         ax_a1.yaxis.set_major_locator(MaxNLocator(nbins=4, prune='both'))
         _add_training_phase_bands(ax_a1, int(max(epochs)))
-        add_panel_label(ax_a1, 'a', x=-0.10, y=1.05)
+        add_panel_label(ax_a1, 'a', x=-0.12, y=1.02)
 
         # A2: Temperature (fixed τ = 14.0 in production)
         ax_a2 = top_cols[1].add_axes(fig)
@@ -404,7 +404,7 @@ def plot_training_dynamics_combined(
         ax_a2.set_xlim(0, max(epochs) * 1.08)
         ax_a2.locator_params(axis='x', nbins=4)
         ax_a2.locator_params(axis='y', nbins=4)
-        add_panel_label(ax_a2, 'b', x=-0.10, y=1.05)
+        add_panel_label(ax_a2, 'b', x=-0.12, y=1.02)
 
         # A3: Accuracy
         ax_a3 = top_cols[2].add_axes(fig)
@@ -426,7 +426,7 @@ def plot_training_dynamics_combined(
         ax_a3.set_xlim(0, max(epochs) * 1.08)
         ax_a3.locator_params(axis='x', nbins=4)
         ax_a3.locator_params(axis='y', nbins=4)
-        add_panel_label(ax_a3, 'c', x=-0.10, y=1.05)
+        add_panel_label(ax_a3, 'c', x=-0.12, y=1.02)
 
         # A4: Embedding quality
         ax_a4 = top_cols[3].add_axes(fig)
@@ -446,7 +446,7 @@ def plot_training_dynamics_combined(
         ax_a4.set_xlim(0, max(epochs) * 1.08)
         ax_a4.locator_params(axis='x', nbins=4)
         ax_a4.locator_params(axis='y', nbins=4)
-        add_panel_label(ax_a4, 'd', x=-0.10, y=1.05)
+        add_panel_label(ax_a4, 'd', x=-0.12, y=1.02)
 
     # ════════════════════════════════════════════════════════════
     # Bottom row: DiT (3 plots + 1 summary, columns 0-3)
@@ -477,7 +477,7 @@ def plot_training_dynamics_combined(
         if _decade_ticks:
             ax_c1.yaxis.set_major_locator(FixedLocator(_decade_ticks))
         _add_training_phase_bands(ax_c1, int(max(epochs)))
-        add_panel_label(ax_c1, 'e', x=-0.10, y=1.05)
+        add_panel_label(ax_c1, 'e', x=-0.12, y=1.02)
 
         # C2: Cosine similarity
         ax_c2 = bottom_cols[1].add_axes(fig)
@@ -490,7 +490,7 @@ def plot_training_dynamics_combined(
         ax_c2.set_xlim(0, max(epochs) * 1.05)
         ax_c2.xaxis.set_major_locator(MaxNLocator(nbins=4, integer=True, prune="both"))
         ax_c2.locator_params(axis='y', nbins=4)
-        add_panel_label(ax_c2, 'f', x=-0.10, y=1.05)
+        add_panel_label(ax_c2, 'f', x=-0.12, y=1.02)
 
         # C3: Learning rate
         ax_c3 = bottom_cols[2].add_axes(fig)
@@ -501,7 +501,7 @@ def plot_training_dynamics_combined(
         set_scientific_tickformat(ax_c3, axis="y", scilimits=(-4, -4))
         ax_c3.set_xlim(0, max(epochs) * 1.05)
         ax_c3.xaxis.set_major_locator(MaxNLocator(nbins=4, integer=True, prune="both"))
-        add_panel_label(ax_c3, 'g', x=-0.10, y=1.05)
+        add_panel_label(ax_c3, 'g', x=-0.16, y=1.02)
 
         # C4: Normalized convergence comparison (CLOP + DiT)
         ax_c4 = bottom_cols[3].add_axes(fig)
@@ -538,7 +538,7 @@ def plot_training_dynamics_combined(
         ax_c4.legend(fontsize=FONT_LEGEND_DENSE, loc="upper right", frameon=False)
         ax_c4.locator_params(axis='x', nbins=4)
         ax_c4.locator_params(axis='y', nbins=4)
-        add_panel_label(ax_c4, 'h', x=-0.10, y=1.05)
+        add_panel_label(ax_c4, 'h', x=-0.12, y=1.02)
 
     if save:
         if save_panel_fn:

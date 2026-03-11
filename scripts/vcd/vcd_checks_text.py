@@ -100,7 +100,7 @@ def _check_text_vs_artist_overlap(
 
 def _check_cross_panel_spillover(fig, renderer, tol_px=5.0):
     """Pass 8: Detect content from one axes spilling into an adjacent axes."""
-    axes_list = fig.get_axes()
+    axes_list = [ax for ax in fig.get_axes() if not getattr(ax, '_is_legend_cell', False)]
     if len(axes_list) < 2:
         return []
 
@@ -112,6 +112,8 @@ def _check_cross_panel_spillover(fig, renderer, tol_px=5.0):
             ax_bboxes.append((ax, bb))
 
     for i, (ax_i, bb_i) in enumerate(ax_bboxes):
+        if getattr(ax_i, '_is_legend_cell', False):
+            continue
         for child in ax_i.get_children():
             if not child.get_visible():
                 continue
@@ -121,6 +123,8 @@ def _check_cross_panel_spillover(fig, renderer, tol_px=5.0):
                     continue
                 for j, (ax_j, bb_j) in enumerate(ax_bboxes):
                     if i == j:
+                        continue
+                    if getattr(ax_j, '_is_legend_cell', False):
                         continue
                     area = _overlap_area(child_bb, bb_j)
                     if area > 50:

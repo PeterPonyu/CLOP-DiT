@@ -32,6 +32,7 @@ from src.visualization.style import (
     FONT_ARCH_LABEL,
     FONT_ARCH_SUBLABEL,
     apply_style,
+    add_panel_label,
     save_panel,
 )
 
@@ -164,7 +165,7 @@ def create_architecture_figure(output_dir=None):
         output_dir = Path(FIG_DIR)
     output_dir = Path(output_dir)
     fig = plt.figure(figsize=(10.0, 3.8))
-    ax = bind_figure_region(fig, (0.02, 0.02, 0.98, 0.93)).add_axes(fig)
+    ax = bind_figure_region(fig, (0.03, 0.04, 0.98, 0.84)).add_axes(fig)
     ax.set_xlim(-0.20, 7.95)
     ax.set_ylim(-0.18, 3.15)
     ax.axis("off")
@@ -189,13 +190,10 @@ def create_architecture_figure(output_dir=None):
                   "Stage 3: Decoding",
                   C_DECODE_DARK, alpha=0.15, label_color="black")
 
-    # Panel labels
-    ax.text(0.02, 2.85, "(a)", ha="left", va="top",
-            fontsize=14, fontweight="bold", color="black", zorder=10)
-    ax.text(3.65, 2.85, "(b)", ha="left", va="top",
-            fontsize=14, fontweight="bold", color="black", zorder=10)
-    ax.text(6.15, 2.85, "(c)", ha="left", va="top",
-            fontsize=14, fontweight="bold", color="black", zorder=10)
+    # Panel labels (figure margin, outside the main axes content)
+    fig.text(0.05, 0.93, "(a)", ha="left", va="top", fontsize=14, fontweight="bold", color="black")
+    fig.text(0.44, 0.93, "(b)", ha="left", va="top", fontsize=14, fontweight="bold", color="black")
+    fig.text(0.70, 0.93, "(c)", ha="left", va="top", fontsize=14, fontweight="bold", color="black")
 
     ax.text(1.68, 2.80, "train: align text and cell latents",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=2)

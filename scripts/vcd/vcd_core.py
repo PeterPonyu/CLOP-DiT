@@ -134,6 +134,7 @@ class _ArtistInfo:
 def _collect_artists(fig, renderer) -> list[_ArtistInfo]:
     """Walk *fig* and collect all visible artists with valid bboxes."""
     infos: list[_ArtistInfo] = []
+    seen_legend_ids: set[int] = set()
 
     # Identify colorbar axes to annotate properly
     cbar_axes = set()
@@ -198,6 +199,7 @@ def _collect_artists(fig, renderer) -> list[_ArtistInfo]:
             # Legend
             legend = ax.get_legend()
             if legend is not None:
+                seen_legend_ids.add(id(legend))
                 bb = _safe_bbox(legend, renderer)
                 if bb:
                     infos.append(_ArtistInfo(
@@ -279,5 +281,30 @@ def _collect_artists(fig, renderer) -> list[_ArtistInfo]:
                     _fig_suptitle_obj, bb,
                     _artist_label(_fig_suptitle_obj, "suptitle"),
                     "text", None))
+
+    # ── Figure-level legends (fig.legend / shared legends) ─────────────────
+    fig_legends = list(getattr(fig, "legends", []) or [])
+    for child in fig.get_children():
+        if hasattr(child, "get_texts") and hasattr(child, "_legend_box") and id(child) not in seen_legend_ids:
+            fig_legends.append(child)
+
+    for legend in fig_legends:
+        if id(legend) in seen_legend_ids:
+            continue
+        if not getattr(legend, "get_visible", lambda: True)():
+            continue
+        seen_legend_ids.add(id(legend))
+        bb = _safe_bbox(legend, renderer)
+        if bb:
+            infos.append(_ArtistInfo(
+                legend, bb, "fig_legend_box", "legend", None))
+        for txt in legend.get_texts():
+            if txt.get_text().strip():
+                tbb = _safe_bbox(txt, renderer)
+                if tbb:
+                    infos.append(_ArtistInfo(
+                        txt, tbb,
+                        _artist_label(txt, "fig_legend_text"),
+                        "text", None))
 
     return infos

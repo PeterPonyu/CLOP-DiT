@@ -124,10 +124,10 @@ def _plot_classifier_metric_heatmap(
     ax.set_yticks(range(len(display_names)))
     ax.set_yticklabels(
         [
-            textwrap.shorten(str(name).replace("_", " "), width=22, placeholder="…")
+            textwrap.shorten(str(name).replace("_", " "), width=18, placeholder="…")
             for name in display_names
         ],
-        fontsize=8,
+        fontsize=7,
     )
     default_title = "Per-Type P/R/F1"
     if rows_truncated:
@@ -136,21 +136,22 @@ def _plot_classifier_metric_heatmap(
         else:
             default_title += f" (top {len(display_names)})"
     ax.set_title(title or default_title, fontsize=10)
-    ax.set_ylabel("Cell Type (sorted by F1)")
+    ax.set_ylabel("")
     # ax.set_xlabel("Metric")  # Removed to reduce label density
 
     cax = add_axes_next_to(
         fig,
         ax,
-        side="bottom",
-        width=ax.get_position().width * 0.42,
-        height=0.018,
-        pad=0.045,
-        align="right",
+        side="right",
+        width=0.010,
+        height=ax.get_position().height * 0.52,
+        pad=0.012,
+        align="bottom",
+        y_offset=0.01,
     )
-    cbar = fig.colorbar(im, cax=cax, orientation="horizontal")
+    cbar = fig.colorbar(im, cax=cax)
     cbar.set_label("Score", fontsize=10)
-    cbar.ax.tick_params(labelsize=8)
+    cbar.ax.tick_params(labelsize=7)
     return summary
 
 
@@ -191,12 +192,12 @@ def plot_clustering_panel(
     # suptitle removed per revision; title information moved to LaTeX caption
 
     ax = ax_rect_1.add_axes(fig)
-    add_panel_label(ax, 'a', x=-0.10, y=1.05)
+    add_panel_label(ax, 'a', x=-0.12, y=1.08)
     plot_umap_overlay(ax, umap_coords, source, cell_type,
                       legend_loc="upper left", legend_fontsize=9)
 
     ax2 = ax_rect_2.add_axes(fig)
-    add_panel_label(ax2, 'b', x=-0.10, y=1.05)
+    add_panel_label(ax2, 'b', x=-0.12, y=1.08)
     mixing = clustering_data.get("per_type_mixing", {})
     if mixing:
         sorted_types = sorted(mixing.keys(), key=lambda k: mixing[k])
@@ -222,7 +223,7 @@ def plot_clustering_panel(
         ax2.set_title("kNN Mixing Score")
 
     ax3 = ax_rect_3.add_axes(fig)
-    add_panel_label(ax3, 'c', x=-0.10, y=1.05)
+    add_panel_label(ax3, 'c', x=-0.12, y=1.08)
     ax3.axis("off")
 
     gauge_items = [
@@ -291,7 +292,7 @@ def plot_classifier_panel(
     # suptitle and stats banner removed per revision; title information moved to LaTeX caption
 
     ax = ax_rect_1.add_axes(fig)
-    add_panel_label(ax, 'a', x=-0.10, y=1.05)
+    add_panel_label(ax, 'a', x=-0.12, y=1.08)
     cm_norm = cm.astype(float) / (cm.sum(axis=1, keepdims=True) + 1e-8)
     im = ax.imshow(cm_norm, cmap="Blues", aspect="auto", vmin=0, vmax=1)
 
@@ -334,7 +335,7 @@ def plot_classifier_panel(
                xlabel="Predicted", ylabel="True Type")
 
     ax2 = ax_rect_2.add_axes(fig)
-    add_panel_label(ax2, 'b', x=-0.10, y=1.05)
+    add_panel_label(ax2, 'b', x=-0.12, y=1.08)
     if per_type_acc:
         summary = _plot_classifier_metric_heatmap(fig, ax2, cm, class_names)
         f1 = summary["f1"]
@@ -356,7 +357,7 @@ def plot_classifier_panel(
         ax2.set_title("Per-Type Summary")
 
     ax3 = ax_rect_3.add_axes(fig)
-    add_panel_label(ax3, 'c', x=-0.10, y=1.05)
+    add_panel_label(ax3, 'c', x=-0.12, y=1.08)
     disc_proba = classifier_data.get("_disc_proba")
     disc_y = classifier_data.get("_disc_y")
 
@@ -419,9 +420,9 @@ def plot_clustering_and_classifier_merged(
 
     fig = plt.figure(figsize=(16.0, 10.8))
     layout = bind_figure_region(fig, (0.03, 0.10, 0.98, 0.96))
-    top_row, bottom_row = layout.split_rows([1, 1.05], hspace=0.30)
-    top_rects = top_row.split_cols([1.10, 1.38, 0.82], gap=[0.028, 0.018])
-    bottom_rects = bottom_row.split_cols([1.10, 1.38, 0.82], gap=[0.028, 0.018])
+    top_row, bottom_row = layout.split_rows([1, 1.05], hspace=0.58)
+    top_rects = top_row.split_cols([1.10, 1.38, 0.82], gap=[0.055, 0.045])
+    bottom_rects = bottom_row.split_cols([1.10, 1.38, 0.82], gap=[0.055, 0.045])
     # Title moved to LaTeX caption
     # set_figure_suptitle(fig, "Downstream Validation: Clustering & Classifier Alignment", fontsize=11)
 
@@ -430,7 +431,7 @@ def plot_clustering_and_classifier_merged(
     cell_type = clustering_data.get("_cell_type")
 
     ax_p1 = top_rects[0].add_axes(fig)
-    add_panel_label(ax_p1, 'a')
+    add_panel_label(ax_p1, 'a', x=-0.12, y=1.08)
     if umap_coords is not None:
         umap_coords = np.asarray(umap_coords)
         source = np.asarray(source)
@@ -442,7 +443,7 @@ def plot_clustering_and_classifier_merged(
                    transform=ax_p1.transAxes)
 
     ax_p2 = top_rects[1].add_axes(fig)
-    add_panel_label(ax_p2, 'b')
+    add_panel_label(ax_p2, 'b', x=-0.12, y=1.08)
     mixing = clustering_data.get("per_type_mixing", {})
     if mixing:
         sorted_types = sorted(mixing.keys(), key=lambda k: mixing[k])
@@ -467,7 +468,7 @@ def plot_clustering_and_classifier_merged(
                    transform=ax_p2.transAxes)
 
     ax_ps = top_rects[2].add_axes(fig)
-    add_panel_label(ax_ps, 'c')
+    add_panel_label(ax_ps, 'c', x=-0.12, y=1.08)
     summary_items = [
         ("ARI", clustering_data.get("ari_gt_vs_leiden", 0), (0.7, 0.4)),
         ("NMI", clustering_data.get("nmi_gt_vs_leiden", 0), (0.7, 0.4)),
@@ -494,6 +495,7 @@ def plot_clustering_and_classifier_merged(
     ax_ps.invert_yaxis()
     n_cl = clustering_data.get("n_leiden_clusters", "?")
     ax_ps.set_xlabel(f"Leiden clusters: {n_cl}", fontsize=9)
+    ax_ps.tick_params(axis="x", labelbottom=False, bottom=False)
     style_axes(ax_ps, "bar", title="Clustering Metrics")
 
     cm = classifier_data.get("_confusion_matrix")
@@ -504,17 +506,24 @@ def plot_clustering_and_classifier_merged(
     disc_auc = classifier_data.get("discriminator_auc", 0)
 
     ax_q1 = bottom_rects[0].add_axes(fig)
-    add_panel_label(ax_q1, 'd')
+    add_panel_label(ax_q1, 'd', x=-0.12, y=1.08)
     if cm is not None:
         cm = np.array(cm)
         plot_confusion_matrix(ax_q1, cm, class_names or None,
                               title="Confusion Matrix")
+        if cm.shape[0] > 30:
+            tick_step = max(4, cm.shape[0] // 3)
+            tick_positions = list(range(0, cm.shape[0], tick_step))
+            ax_q1.set_xticks(tick_positions)
+            ax_q1.set_yticks(tick_positions)
+            ax_q1.set_xticklabels([str(i) for i in tick_positions], fontsize=7, rotation=45, ha="right")
+            ax_q1.set_yticklabels([str(i) for i in tick_positions], fontsize=7)
     else:
         ax_q1.text(0.5, 0.5, "No confusion matrix", ha="center", va="center",
                    transform=ax_q1.transAxes)
 
     ax_q2 = bottom_rects[1].add_axes(fig)
-    add_panel_label(ax_q2, 'e')
+    add_panel_label(ax_q2, 'e', x=-0.12, y=1.08)
     note_ax = None
     if per_type_acc and cm is not None:
         summary = _plot_classifier_metric_heatmap(
@@ -540,7 +549,7 @@ def plot_clustering_and_classifier_merged(
                    transform=ax_q2.transAxes)
 
     ax_q3 = bottom_rects[2].add_axes(fig)
-    add_panel_label(ax_q3, 'f')
+    add_panel_label(ax_q3, 'f', x=-0.12, y=1.08)
     disc_proba = classifier_data.get("_disc_proba")
     disc_y = classifier_data.get("_disc_y")
     if disc_proba is not None and disc_y is not None:

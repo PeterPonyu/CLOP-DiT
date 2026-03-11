@@ -87,7 +87,7 @@ def _check_artist_content_overlap(
     harmless background geometry.
     """
     graphical = [a for a in infos
-                 if a.kind in ("collection", "patch", "image", "legend")
+                 if a.kind in ("collection", "patch", "image")
                  and "Spine" not in a.tag]
     issues = []
     for i in range(len(graphical)):

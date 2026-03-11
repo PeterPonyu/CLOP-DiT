@@ -74,11 +74,11 @@ def plot_expression_analysis(
 
     overall = metrics.get("overall", {})
 
-    fig = plt.figure(figsize=(10.1, 7.5))
-    layout = bind_figure_region(fig, (0.04, 0.08, 0.98, 0.96))
-    top_row, bottom_row = layout.split_rows(2, hspace=0.42)
-    top_left, top_right = top_row.split_cols([1.00, 1.02], gap=0.040)
-    bottom_left, bottom_right = bottom_row.split_cols([1.02, 0.98], gap=0.030)
+    fig = plt.figure(figsize=(10.4, 7.7))
+    layout = bind_figure_region(fig, (0.10, 0.08, 0.985, 0.93))
+    top_row, bottom_row = layout.split_rows(2, hspace=0.52)
+    top_left, top_right = top_row.split_cols([1.00, 1.02], gap=0.050)
+    bottom_left, bottom_right = bottom_row.split_cols([1.02, 0.98], gap=0.060)
     # Note: Figure-level title removed per revision requirements; stats moved to caption
 
     # -- I1: CV scatter (real vs gen) with gene labels --
@@ -100,7 +100,7 @@ def plot_expression_analysis(
     add_colorbar_safe(sc, ax=ax1, label="|\u0394CV|", shrink=0.50, pad=0.03, aspect=16)
 
     # Annotate top 3 divergent genes with staggered offsets
-    top_cv_idx = np.argsort(cv_diff)[-3:]
+    top_cv_idx = np.argsort(cv_diff)[-2:]
     _offsets_cv = [(-85, -40), (30, 30), (-90, 30)]
     for j, i in enumerate(top_cv_idx):
         if i < len(gene_names):
@@ -119,7 +119,7 @@ def plot_expression_analysis(
     from matplotlib.ticker import MaxNLocator
     ax1.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
     ax1.yaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
-    add_panel_label(ax1, 'a', x=-0.10, y=1.05)
+    add_panel_label(ax1, 'a', x=-0.12, y=1.08)
 
     # -- I2: Expression range with percentile bands --
     ax2 = top_right.add_axes(fig)
@@ -148,8 +148,9 @@ def plot_expression_analysis(
     ax2.set_xlabel("Gene index (sorted by real mean)", fontsize=11)
     ax2.set_ylabel("Expression", fontsize=11)
     ax2.set_title("Expression Range", fontsize=12)
-    ax2.legend(fontsize=10, loc="upper left", ncol=2, frameon=False)
-    add_panel_label(ax2, 'b', x=-0.10, y=1.05)
+    ax2.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, 0.98), ncol=2, frameon=False)
+    ax2.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="upper"))
+    add_panel_label(ax2, 'b', x=-0.12, y=1.08)
 
     # -- I3: Per-cell std as overlaid smooth histograms --
     ax3 = bottom_left.add_axes(fig)
@@ -173,16 +174,17 @@ def plot_expression_analysis(
     ax3.axvline(x=gen_cell_std.mean(), color=COLORS["generated"], linestyle="--", lw=1.5)
     ax3.set_xlabel("Per-Cell Std Dev", fontsize=11)
     ax3.set_ylabel("Density", fontsize=11)
-    ax3.set_title("Per-Cell Variability Distribution", fontsize=12)
+    ax3.set_title("Per-Cell Variability", fontsize=12)
     legend_handles_c, legend_labels_c = ax3.get_legend_handles_labels()
-    ax3.locator_params(axis='x', nbins=4)
-    add_panel_label(ax3, 'c', x=-0.10, y=1.05)
+    ax3.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
+    add_panel_label(ax3, 'c', x=-0.12, y=1.08)
 
     std_ratio = gen_cell_std.mean() / (real_cell_std.mean() + 1e-8)
-    ax3.text(0.02, 0.95,
+    ax3.text(0.02, 0.15,
              f"Std ratio: {std_ratio:.3f}",
-             transform=ax3.transAxes, ha="left", va="top", fontsize=10,
+             transform=ax3.transAxes, ha="left", va="bottom", fontsize=9,
              bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="none", alpha=0.9))
+    ax3.yaxis.set_major_locator(MaxNLocator(nbins=4, prune="upper"))
 
     # -- I4: Top variable genes ranked bar chart --
     ax4 = bottom_right.add_axes(fig)
@@ -211,7 +213,7 @@ def plot_expression_analysis(
     ax4.set_yticklabels(names_show, fontsize=10, ha="right")
     ax4.set_xlabel("Std Ratio (Gen / Real, clipped at 5\u00d7)", fontsize=11)
     ax4.set_title("Most Divergent Genes\n(over- & under-dispersed)", fontsize=11, pad=10)
-    add_panel_label(ax4, 'd', x=-0.10, y=1.05)
+    add_panel_label(ax4, 'd', x=-0.24, y=1.00)
     placed_annotations: list = []
     for i, r in enumerate(ratios_show):
         # Skip annotations within 0.05 of an already-placed one to avoid overlap
@@ -221,11 +223,12 @@ def plot_expression_analysis(
             ax4.text(r + 0.02, i, f"{r:.2f}\u00d7", va="center", fontsize=10,
                      fontweight="normal")
             placed_annotations.append((r, i))
+    ax4.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
 
     if legend_handles_c:
         legend_ax = add_shared_legend_axes(
             fig,
-            (ax3.get_position().x0, ax3.get_position().y1 + 0.004, ax3.get_position().width * 0.98, 0.04),
+            (ax3.get_position().x0, ax3.get_position().y1 + 0.055, ax3.get_position().width * 0.98, 0.045),
         )
         legend_ax.legend(legend_handles_c, legend_labels_c, fontsize=10, loc="center", ncol=2, frameon=False)
 

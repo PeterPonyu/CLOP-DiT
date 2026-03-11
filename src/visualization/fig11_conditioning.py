@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as pe
 import numpy as np
 from matplotlib.colors import Normalize
 from matplotlib.ticker import MaxNLocator
@@ -55,24 +56,24 @@ def plot_panel_m(
     has_row3 = full_dim_data is not None and len(full_dim_data) > 0
     if has_row3:
         fig = plt.figure(figsize=(_fw, 13.4))
-        row_regions = bind_figure_region(fig, (0.04, 0.05, 0.98, 0.97)).split_rows([2.15, 1.15, 1.10], hspace=0.38)
+        row_regions = bind_figure_region(fig, (0.06, 0.08, 0.97, 0.95)).split_rows([2.15, 1.15, 1.10], hspace=0.52)
     else:
         fig = plt.figure(figsize=(_fw, 8.8))
-        row_regions = bind_figure_region(fig, (0.04, 0.05, 0.98, 0.97)).split_rows([2.15, 1.12], hspace=0.36)
+        row_regions = bind_figure_region(fig, (0.06, 0.08, 0.97, 0.95)).split_rows([2.15, 1.12], hspace=0.46)
     top_widths = [1.0] * n_modes
     if n_modes > 1:
         top_widths[-1] = 1.04
-    axes = [region.add_axes(fig) for region in row_regions[0].split_cols(top_widths, wspace=0.28)]
+    axes = [region.add_axes(fig) for region in row_regions[0].split_cols(top_widths, wspace=0.46)]
 
     # Panel labels: placed with enough clearance for single-line titles
-    _panel_label_y = 1.12
+    _panel_label_y = 1.04
     add_panel_label(axes[0], 'a', x=-0.12, y=_panel_label_y)
 
     type_to_color = {tid: TYPE_PALETTE[i % len(TYPE_PALETTE)] for i, tid in enumerate(selected_types)}
     type_to_name = {
         tid: abbreviate_cell_type(
             type_names.get(int(tid), f"Type_{tid}") if type_names else f"Type_{tid}",
-            max_len=22,
+            max_len=18,
         )
         for tid in selected_types
     }
@@ -88,7 +89,7 @@ def plot_panel_m(
                        c=[type_to_color[tid]], s=size, alpha=alpha,
                        edgecolors="white", linewidths=0.2,
                        label=type_to_name[tid])
-        ax.set_title(title, fontsize=FONT_TITLE, pad=8)
+        ax.set_title(title, fontsize=FONT_TITLE - 1, pad=10)
         ax.set_xlabel("PC1", fontsize=FONT_LABEL)
         if show_ylabel:
             ax.set_ylabel("PC2", fontsize=FONT_LABEL)
@@ -96,8 +97,8 @@ def plot_panel_m(
             ax.set_ylabel("", fontsize=FONT_LABEL)
             ax.tick_params(axis="y", labelleft=False)
         ax.tick_params(labelsize=FONT_TICK)
-        ax.xaxis.set_major_locator(MaxNLocator(nbins=4))
-        ax.yaxis.set_major_locator(MaxNLocator(nbins=4))
+        ax.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
+        ax.yaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
 
     # ── Row 1: PCA scatter for Real + each conditioning mode ──
     real_mask_bool = combined_source == "Real"
@@ -117,13 +118,13 @@ def plot_panel_m(
         )
 
     # ── Row 2: Quantitative summaries ──
-    bottom_regions = row_regions[1].split_cols([1.08, 1.02, 0.92], wspace=0.34)
+    bottom_regions = row_regions[1].split_cols([1.08, 1.02, 0.92], wspace=0.38)
     ax_b1 = bottom_regions[0].add_axes(fig)
-    add_panel_label(ax_b1, 'b', x=-0.12, y=_panel_label_y)
+    add_panel_label(ax_b1, 'b', x=-0.18, y=_panel_label_y)
     ax_b2 = bottom_regions[1].add_axes(fig)
-    add_panel_label(ax_b2, 'c', x=-0.12, y=_panel_label_y)
+    add_panel_label(ax_b2, 'c', x=-0.18, y=_panel_label_y)
     ax_b3 = bottom_regions[2].add_axes(fig)
-    add_panel_label(ax_b3, 'd', x=-0.12, y=_panel_label_y)
+    add_panel_label(ax_b3, 'd', x=-0.24, y=_panel_label_y)
 
     # Build per-type real centroids in 2D for shift summaries.
     real_centroids = {}
@@ -209,9 +210,9 @@ def plot_panel_m(
         from sklearn.decomposition import PCA as _PCA
         from sklearn.neighbors import KNeighborsClassifier
 
-        row3_regions = row_regions[2].split_cols([0.95, 1.15, 0.90], wspace=0.38)
+        row3_regions = row_regions[2].split_cols([0.95, 1.15, 0.90], wspace=0.42)
         ax_c1 = row3_regions[0].add_axes(fig)
-        add_panel_label(ax_c1, 'e', x=-0.12, y=_panel_label_y)
+        add_panel_label(ax_c1, 'e', x=-0.20, y=_panel_label_y)
         ax_c2 = row3_regions[1].add_axes(fig)
         add_panel_label(ax_c2, 'f', x=-0.12, y=_panel_label_y)
         ax_c3 = row3_regions[2].add_axes(fig)
@@ -244,24 +245,24 @@ def plot_panel_m(
 
         xpos_c1 = np.arange(len(mode_names_list))
         max_acc = max(knn_accs) if knn_accs else 1.0
-        ylim_top = min(1.0, max_acc * 1.18) if knn_accs else 1.0
+        ylim_top = min(1.08, max_acc * 1.24) if knn_accs else 1.0
         bars = ax_c1.bar(
             xpos_c1, knn_accs,
             color=COLORS["generated"], alpha=0.85, edgecolor="white",
         )
         for bar, acc in zip(bars, knn_accs):
-            # Place annotation inside bar top if near ylim, else above
-            y_pos = bar.get_height() - 0.03 if bar.get_height() > ylim_top * 0.85 else bar.get_height() + 0.01
-            va = "top" if bar.get_height() > ylim_top * 0.85 else "bottom"
-            txt_color = "white" if bar.get_height() > ylim_top * 0.85 else "black"
+            y_pos = min(bar.get_height() + 0.015, ylim_top - 0.02)
+            va = "bottom"
+            txt_color = "black"
             ax_c1.text(bar.get_x() + bar.get_width() / 2, y_pos,
                        f"{acc:.2f}", ha="center", va=va, fontsize=FONT_ANNOTATION,
-                       fontweight="bold", color=txt_color)
+                       fontweight="bold", color=txt_color,
+                       path_effects=[pe.withStroke(linewidth=1.6, foreground="black" if txt_color == "white" else "white"), pe.Normal()])
         ax_c1.set_xticks(xpos_c1)
         ax_c1.set_xticklabels([_short_mode(m) for m in mode_names_list],
                                rotation=0, ha="center", fontsize=FONT_TICK)
         ax_c1.set_ylabel("KNN-5 Accuracy", fontsize=FONT_LABEL)
-        ax_c1.set_title("Identity Preservation (KNN-5)", fontsize=FONT_TITLE)
+        ax_c1.set_title("Identity Preservation (KNN-5)", fontsize=FONT_TITLE - 1)
         ax_c1.set_ylim(0, ylim_top)
 
         # ── C2: Per-type diversity heatmap (types x modes) ──
@@ -284,7 +285,7 @@ def plot_panel_m(
         type_short_names = [
             abbreviate_cell_type(
                 type_names.get(int(tid), f"T{tid}") if type_names else f"T{tid}",
-                max_len=22,
+                max_len=16,
             )
             for tid in selected_types
         ]
@@ -359,7 +360,7 @@ def plot_panel_m(
         leg = _ax.get_legend()
         if leg is not None:
             leg.remove()
-    legend_bottom = ax_b1.get_position().y1 + 0.012
+    legend_bottom = ax_b1.get_position().y1 + 0.035
     legend_ax = add_shared_legend_axes(fig, (0.08, legend_bottom, 0.84, 0.048))
     legend_ax.legend(
         handles, labels, loc="center",

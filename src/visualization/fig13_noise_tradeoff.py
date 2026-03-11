@@ -13,6 +13,7 @@ from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.ticker import MaxNLocator
 
 from .direct_layout import bind_figure_region
 from .explicit_positioning import add_shared_legend_axes
@@ -35,11 +36,11 @@ def plot_panel_l(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     apply_style()
-    fig = plt.figure(figsize=(7.8, 5.0))
-    ax1 = bind_figure_region(fig, (0.08, 0.24, 0.98, 0.95)).add_axes(fig)
+    fig = plt.figure(figsize=(8.2, 5.4))
+    ax1 = bind_figure_region(fig, (0.10, 0.30, 0.92, 0.90)).add_axes(fig)
     # Title moved to LaTeX caption
     # set_figure_suptitle(fig, "Noise-Scale Trade-off (CFG=1.5)", fontsize=11)
-    add_panel_label(ax1, 'a', x=-0.10, y=1.05)
+    add_panel_label(ax1, 'a', x=-0.12, y=1.02)
 
     color_fd = COLORS["real"]
     color_cos = COLORS["baseline_gauss"]
@@ -53,9 +54,11 @@ def plot_panel_l(
     ax2 = ax1.twinx()
     ax2.plot(noise_scales, centroids, "s-", color=color_cos, lw=2, markersize=5, label="Centroid Cosine \u2191")
     ax2.plot(noise_scales, div_ratios, "D-", color=color_div, lw=2, markersize=5, label="Diversity Ratio \u2191")
-    ax2.set_ylabel("Cosine / Ratio")
+    ax2.set_ylabel("Cosine / Ratio", labelpad=10)
     ax2.set_ylim(0, 1.2)
     ax2.tick_params(axis="x", which="both", bottom=False, top=False, labelbottom=False)
+    ax1.yaxis.set_major_locator(MaxNLocator(nbins=4, prune="upper"))
+    ax2.yaxis.set_major_locator(MaxNLocator(nbins=4, prune="upper"))
 
     xticks = sorted(set(noise_scales))
     ax1.set_xticks(xticks, [f"{x:.2f}" for x in xticks])
@@ -82,7 +85,7 @@ def plot_panel_l(
 
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
-    legend_ax = add_shared_legend_axes(fig, (0.08, 0.01, 0.84, 0.09))
+    legend_ax = add_shared_legend_axes(fig, (0.10, 0.08, 0.80, 0.08))
     legend_ax.legend(
         lines1 + lines2,
         labels1 + labels2,

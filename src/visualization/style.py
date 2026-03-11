@@ -15,6 +15,7 @@ Provides:
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Optional
 
@@ -308,7 +309,9 @@ def add_panel_label(
         color=color,
         va="bottom",
         ha="left",
-        zorder=100,
+        zorder=120,
+        clip_on=False,
+        gid=f"panel_label:{label}",
         path_effects=[
             pe.withStroke(linewidth=stroke_linewidth, foreground=stroke_foreground),
             pe.Normal(),
@@ -508,6 +511,14 @@ def save_with_vcd(
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     basename = path.stem
+    live_vcd_dir = path.parent / "_live_vcd"
+    live_vcd_dir.mkdir(parents=True, exist_ok=True)
+    live_vcd_payload = {
+        "figure": basename,
+        "warnings": [],
+        "info": [],
+        "error": None,
+    }
 
     # 1) Apply style_axes to all axes (if not already styled by caller)
     for ax in fig.get_axes():
@@ -534,6 +545,14 @@ def save_with_vcd(
                 sys.path.insert(0, str(_scripts))
             from vcd import detect_all_conflicts
             issues = detect_all_conflicts(fig, label=basename, verbose=True)
+            live_vcd_payload["warnings"] = [
+                str(x) for x in issues
+                if str(x.get("severity", "")).lower() == "warning"
+            ]
+            live_vcd_payload["info"] = [
+                str(x) for x in issues
+                if str(x.get("severity", "")).lower() != "warning"
+            ]
             if issues:
                 n_warn = sum(1 for x in issues if x.get("severity") == "warning")
                 if n_warn > 0:
@@ -549,8 +568,13 @@ def save_with_vcd(
                         n_warn,
                         f" | suggested actions: {top_actions}" if top_actions else "",
                     )
-        except Exception:
-            pass
+        except Exception as exc:
+            live_vcd_payload["error"] = str(exc)
+
+    live_vcd_payload["total_warnings"] = len(live_vcd_payload["warnings"])
+    live_vcd_payload["total_info"] = len(live_vcd_payload["info"])
+    with open(live_vcd_dir / f"{basename}.json", "w") as f:
+        json.dump(live_vcd_payload, f, indent=2)
 
     # 4) Save JPEG + PDF with identical deterministic settings.
     jpg_path = path.with_suffix(".jpg")

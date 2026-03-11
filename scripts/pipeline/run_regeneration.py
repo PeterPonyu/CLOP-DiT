@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import logging
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -282,8 +283,76 @@ def run_vcd_on_figures(pdf_list: list[Path]) -> dict:
         "total_warnings": total_warn,
         "total_info": total_info,
         "files_with_warnings": len(failures),
+        "pdf_total_warnings": total_warn,
+        "pdf_total_info": total_info,
+        "pdf_files_with_warnings": len(failures),
     }
     return vcd_results
+
+
+def load_live_vcd_results(fig_dir: Path) -> dict[str, dict]:
+    """Load live figure-time VCD sidecars emitted by save_with_vcd."""
+    live_dir = fig_dir / "_live_vcd"
+    if not live_dir.exists():
+        return {}
+
+    live_results: dict[str, dict] = {}
+    for json_path in sorted(live_dir.glob("*.json")):
+        try:
+            with open(json_path) as f:
+                payload = json.load(f)
+            live_results[json_path.stem] = payload
+        except Exception as exc:
+            live_results[json_path.stem] = {"error": str(exc), "warnings": [], "info": []}
+    return live_results
+
+
+def merge_live_vcd_results(pdf_vcd: dict, live_vcd: dict[str, dict]) -> dict:
+    """Prefer live figure-time warnings over the post-export PDF-only VCD pass."""
+    if not live_vcd:
+        return pdf_vcd
+
+    total_live_warn = 0
+    total_live_info = 0
+    files_with_live_warnings = 0
+
+    for name, data in pdf_vcd.items():
+        if name.startswith("__"):
+            continue
+        stem = Path(name).stem
+        live = live_vcd.get(stem)
+        data["pdf_warnings"] = list(data.get("warnings", []))
+        data["pdf_info"] = list(data.get("info", []))
+        if not live:
+            continue
+
+        live_warnings = list(live.get("warnings", []))
+        live_info = list(live.get("info", []))
+        data["live_warnings"] = live_warnings
+        data["live_info"] = live_info
+        data["live_error"] = live.get("error")
+
+        total_live_warn += len(live_warnings)
+        total_live_info += len(live_info)
+        if live_warnings:
+            files_with_live_warnings += 1
+            data["warnings"] = live_warnings
+            data["info"] = live_info
+
+    summary = pdf_vcd.setdefault("__summary__", {})
+    summary["live_total_warnings"] = total_live_warn
+    summary["live_total_info"] = total_live_info
+    summary["live_files_with_warnings"] = files_with_live_warnings
+    summary["total_warnings"] = total_live_warn
+    summary["total_info"] = total_live_info
+    summary["files_with_warnings"] = files_with_live_warnings
+    log.info(
+        "── Live VCD summary: total_warnings=%d total_info=%d files_with_warnings=%d ──",
+        total_live_warn,
+        total_live_info,
+        files_with_live_warnings,
+    )
+    return pdf_vcd
 
 
 def save_vcd_report(vcd: dict):
@@ -298,6 +367,8 @@ def save_vcd_report(vcd: dict):
     md_lines += [
         f"**Total warnings:** {summary.get('total_warnings', '?')}",
         f"**Files with warnings:** {summary.get('files_with_warnings', '?')}",
+        f"**Live generator warnings:** {summary.get('live_total_warnings', summary.get('total_warnings', '?'))}",
+        f"**Post-export PDF warnings:** {summary.get('pdf_total_warnings', '?')}",
         "",
         "## Per-Figure",
         "",
@@ -373,6 +444,9 @@ def main():
     log.info("CLOP-DiT Figure Regeneration Pipeline (20 figures) — %s", time.strftime("%Y-%m-%d"))
     log.info("=" * 70)
     FIG_DIR.mkdir(parents=True, exist_ok=True)
+    live_vcd_dir = FIG_DIR / "_live_vcd"
+    if live_vcd_dir.exists():
+        shutil.rmtree(live_vcd_dir)
 
     # 1. Figs 11+13: Conditioning figures from cached data (before ResultsVisualizer)
     cond_saved = run_conditioning_figures()
@@ -421,6 +495,8 @@ def main():
     # 8. VCD pass
     if not args.no_vcd:
         vcd = run_vcd_on_figures(all_pdfs)
+        live_vcd = load_live_vcd_results(FIG_DIR)
+        vcd = merge_live_vcd_results(vcd, live_vcd)
         save_vcd_report(vcd)
     else:
         log.info("VCD skipped (--no-vcd)")

@@ -87,28 +87,28 @@ def plot_benchmark_panel(
 
     # Metrics to display in the heatmap — readable names with direction arrows
     heatmap_metrics = [
-        ("frechet_distance",     "Fr\u00e9chet \u2193",     "lower"),
-        ("mmd_rbf",              "MMD \u2193",              "lower"),
-        ("mean_kl",              "KL \u2193",               "lower"),
-        ("coverage",             "Coverage \u2191",         "higher"),
-        ("density",              "Density \u2191",          "higher"),
-        ("mean_centroid_cosine", "Centroid Cos \u2191",     "higher"),
-        ("min_centroid_cosine",  "Min Cos \u2191",          "higher"),
-        ("diversity_ratio",      "Diversity \u2191",        "higher"),
-        ("fraction_collapsed",   "Collapsed \u2193",        "lower"),
-        ("gene_pearson_r",       "Gene r \u2191",           "higher"),
-        ("gene_spearman_rho",    "Gene \u03c1 \u2191",      "higher"),
+        ("frechet_distance",     "FD \u2193",    "lower"),
+        ("mmd_rbf",              "MMD \u2193",   "lower"),
+        ("mean_kl",              "KL \u2193",    "lower"),
+        ("coverage",             "Cov \u2191",   "higher"),
+        ("density",              "Den \u2191",   "higher"),
+        ("mean_centroid_cosine", "Cent \u2191",  "higher"),
+        ("min_centroid_cosine",  "Min \u2191",   "higher"),
+        ("diversity_ratio",      "Div \u2191",   "higher"),
+        ("fraction_collapsed",   "Coll \u2193",  "lower"),
+        ("gene_pearson_r",       "r \u2191",     "higher"),
+        ("gene_spearman_rho",    "\u03c1 \u2191",     "higher"),
     ]
 
-    fig = plt.figure(figsize=(16.0, 9.4))
-    layout = bind_figure_region(fig, (0.08, 0.16, 0.98, 0.95))
-    top_row, bottom_row = layout.split_rows([1.0, 1.12], hspace=0.24)
+    fig = plt.figure(figsize=(16.2, 9.6))
+    layout = bind_figure_region(fig, (0.08, 0.16, 0.96, 0.95))
+    top_row, bottom_row = layout.split_rows([1.05, 1.12], hspace=0.32)
     top_left, top_right = top_row.split_cols(2, wspace=0.52)
     bottom_left, bottom_right = bottom_row.split_cols(2, wspace=0.52)
 
     # ── S1: Heatmap (methods x metrics) ──
     ax1 = top_left.add_axes(fig)
-    add_panel_label(ax1, 'a', x=-0.10, y=1.05)
+    add_panel_label(ax1, 'a', x=-0.12, y=1.08)
     metric_labels = [m[1] for m in heatmap_metrics]
     metric_keys = [m[0] for m in heatmap_metrics]
     directions = [m[2] for m in heatmap_metrics]
@@ -144,7 +144,7 @@ def plot_benchmark_panel(
 
     short_method_names = [abbreviate_cell_type(n, 20) for n in method_names]
     ax1.set_xticks(range(len(metric_labels)))
-    ax1.set_xticklabels(metric_labels, rotation=55, ha="right", fontsize=8)
+    ax1.set_xticklabels(metric_labels, rotation=20, ha="right", fontsize=8)
     ax1.set_yticks(range(n_methods))
     ax1.set_yticklabels(short_method_names, fontsize=9)
 
@@ -171,7 +171,7 @@ def plot_benchmark_panel(
 
     # ── S2: Composite score bars ──
     ax2 = top_right.add_axes(fig)
-    add_panel_label(ax2, 'b', x=-0.10, y=1.05)
+    add_panel_label(ax2, 'b', x=-0.12, y=1.08)
     composite_common = report.get("composite_score_common_metrics_only", composite)
     sorted_methods = sorted(composite_common.keys(), key=lambda k: composite_common.get(k, 0.0), reverse=True)
     scores = [composite[m] for m in sorted_methods]
@@ -207,12 +207,13 @@ def plot_benchmark_panel(
 
     ax2.set_xlim(0, max(scores) * 1.25)
     ax2.legend(fontsize=FONT_SMALL, loc="lower right", framealpha=0.7)
+    ax2.xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(nbins=4, prune="upper"))
     style_axes(ax2, "bar", title="Composite Score (higher = better)",
                xlabel="Normalised Aggregate Score")
 
     # ── S3: Grouped bar chart for key metrics ──
     ax3 = bottom_left.add_axes(fig)
-    add_panel_label(ax3, 'c', x=-0.10, y=1.05)
+    add_panel_label(ax3, 'c', x=-0.12, y=1.08)
     key_metrics = [
         ("frechet_distance",     "FD \u2193"),
         ("mean_centroid_cosine", "Cent Cos \u2191"),
@@ -239,7 +240,7 @@ def plot_benchmark_panel(
 
     # ── S4: CI comparison — error-bar plot ──
     ax4 = bottom_right.add_axes(fig)
-    add_panel_label(ax4, 'd', x=-0.10, y=1.05)
+    add_panel_label(ax4, 'd', x=-0.12, y=1.08)
     ci_metrics = [
         ("frechet_distance",     "fd_ci",              "Fr\u00e9chet Distance"),
         ("mean_centroid_cosine", "centroid_cosine_ci",  "Centroid Cosine"),
@@ -277,7 +278,10 @@ def plot_benchmark_panel(
             all_y += 1.6
 
     ax4.set_yticks(group_positions)
-    ax4.set_yticklabels(group_labels, fontsize=8)
+    ax4.set_yticklabels([
+        label if i % 2 == 0 else ""
+        for i, label in enumerate(group_labels)
+    ], fontsize=7)
     ax4.invert_yaxis()
 
     ax4.legend(fontsize=FONT_SMALL, loc="lower right", ncol=1, frameon=False)

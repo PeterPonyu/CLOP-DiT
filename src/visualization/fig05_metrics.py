@@ -377,9 +377,9 @@ def plot_metrics_summary(
         return None
 
     fig = plt.figure(figsize=(15.2, 8.4))
-    layout = bind_figure_region(fig, (0.05, 0.08, 0.98, 0.95))
+    layout = bind_figure_region(fig, (0.12, 0.08, 0.98, 0.95))
     top_row, bottom_row = layout.split_rows(2, hspace=0.34)
-    top_left, top_right = top_row.split_cols([1.12, 1.0], wspace=0.44)
+    top_left, top_right = top_row.split_cols([1.12, 1.0], wspace=0.50)
     bottom_left, bottom_right = bottom_row.split_cols([1.12, 1.0], wspace=0.44)
     # Note: Figure-level title removed per revision requirements
 
@@ -397,6 +397,14 @@ def plot_metrics_summary(
         if core_metrics:
             train_metrics = {**core_metrics, **train_metrics}
         names = list(train_metrics.keys())
+        metric_abbrev = {
+            "CLOP Val Loss": "CLOP Loss",
+            "Proto Accuracy": "Proto Acc",
+            "Top-5 Accuracy": "Top-5 Acc",
+            "Text-Cell Align": "Text-Cell",
+            "DiT Val Loss": "DiT Loss",
+            "DiT Val Cosine": "DiT Cosine",
+        }
         vals = list(train_metrics.values())
         display_vals = []
         for n, v in zip(names, vals):
@@ -415,7 +423,7 @@ def plot_metrics_summary(
         bars = ax1.barh(y_pos, display_vals, color=colors_d1, height=0.6,
                         edgecolor="white", linewidth=0.8)
         ax1.set_yticks(y_pos)
-        ax1.set_yticklabels(names, fontsize=10)
+        ax1.set_yticklabels([metric_abbrev.get(name, name) for name in names], fontsize=10)
 
         # Add value labels and bootstrap CI whiskers
         for i, (bar, dv, n) in enumerate(zip(bars, display_vals, names)):
