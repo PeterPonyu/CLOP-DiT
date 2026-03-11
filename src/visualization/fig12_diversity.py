@@ -14,8 +14,8 @@ from typing import Dict, List, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .explicit_positioning import add_shared_legend_axes, layout_axes_row
-from .panel_geometry import apply_layout_rect
+from .direct_layout import bind_figure_region
+from .explicit_positioning import add_shared_legend_axes
 from .style import COLORS, FONT_DENSE_YTICK, apply_style, save_with_vcd, add_panel_label, abbreviate_cell_type
 from .fig14_expr_diversity import plot_expression_diversity_panel
 
@@ -58,9 +58,15 @@ def plot_diagnostics(
     apply_style()
 
     # ── Figure 12: Diversity Diagnostics (4 subplots) ──
-    fig, axes = plt.subplots(2, 2, figsize=(10.2, 8.4),
-                             gridspec_kw={"hspace": 0.56, "wspace": 0.44})
-    apply_layout_rect(fig, (0.02, 0.18, 0.98, 0.96))
+    fig = plt.figure(figsize=(10.2, 8.4))
+    layout = bind_figure_region(fig, (0.02, 0.18, 0.98, 0.96))
+    top_row, bottom_row = layout.split_rows(2, hspace=0.56)
+    top_left, top_right = top_row.split_cols([1.00, 1.00], gap=0.034)
+    bottom_left, bottom_right = bottom_row.split_cols([1.02, 0.98], gap=0.030)
+    axes = np.array([
+        [top_left.add_axes(fig), top_right.add_axes(fig)],
+        [bottom_left.add_axes(fig), bottom_right.add_axes(fig)],
+    ], dtype=object)
     add_panel_label(axes[0, 0], 'a', x=-0.10, y=1.05)
     add_panel_label(axes[0, 1], 'b', x=-0.10, y=1.05)
     add_panel_label(axes[1, 0], 'c', x=-0.10, y=1.05)
@@ -166,8 +172,6 @@ def plot_diagnostics(
                 _handles.append(_h)
                 _labels.append(_l)
     if _handles:
-        layout_axes_row([axes[0, 0], axes[0, 1]], widths=[1.00, 1.00], gaps=[0.034])
-        layout_axes_row([axes[1, 0], axes[1, 1]], widths=[1.02, 0.98], gaps=[0.030])
         legend_ax = add_shared_legend_axes(fig, (axes[1, 0].get_position().x0, 0.03, 0.38, 0.08))
         legend_ax.legend(_handles, _labels, loc='center', fontsize=9, frameon=False,
                          ncol=min(len(_handles), 3))

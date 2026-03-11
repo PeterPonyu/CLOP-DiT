@@ -19,8 +19,8 @@ import matplotlib.patheffects as pe
 import numpy as np
 from matplotlib.ticker import FixedLocator, MaxNLocator
 
+from .direct_layout import bind_figure_region
 from .style import COLORS, FONT_LEGEND_DENSE, FONT_LABEL, FONT_TITLE, SUPTITLE_Y_CLOSE, apply_style, save_with_vcd, set_figure_suptitle, set_scientific_tickformat, add_panel_label
-from .panel_geometry import apply_layout_rect
 
 logger = logging.getLogger(__name__)
 
@@ -95,12 +95,14 @@ def plot_clop_training(
     epochs = np.arange(1, len(h["train_loss"]) + 1)
 
     fig = plt.figure(figsize=(7.3, 5.7))
-    gs = fig.add_gridspec(2, 2, wspace=0.34, hspace=0.34)
-    apply_layout_rect(fig, (0.08, 0.10, 0.97, 0.94))
+    layout = bind_figure_region(fig, (0.08, 0.10, 0.97, 0.94))
+    top_row, bottom_row = layout.split_rows(2, hspace=0.34)
+    top_left, top_right = top_row.split_cols(2, wspace=0.34)
+    bottom_left, bottom_right = bottom_row.split_cols(2, wspace=0.34)
     # Note: Figure-level title removed per revision requirements; panel labels added below
 
     # ── A1: Loss curves ──
-    ax_a1 = fig.add_subplot(gs[0, 0])
+    ax_a1 = top_left.add_axes(fig)
     ax_a1.plot(epochs, h["train_loss"], label="Train", color=COLORS["real"])
     ax_a1.plot(epochs, h["val_loss"], label="Val", color=COLORS["generated"], linestyle="--")
     ax_a1.set_xlabel("Epoch", fontsize=11)
@@ -113,7 +115,7 @@ def plot_clop_training(
     add_panel_label(ax_a1, 'a', x=-0.10, y=1.05)
 
     # ── A2: Temperature stability (fixed τ = 14.0 in production) ──
-    ax_a2 = fig.add_subplot(gs[0, 1])
+    ax_a2 = top_right.add_axes(fig)
     ax_a2.plot(epochs, h["temperature"], color=COLORS["baseline_gauss"], linewidth=2)
     ax_a2.set_xlabel("Epoch", fontsize=FONT_LABEL)
     ax_a2.set_ylabel("Logit Scale (\u03c4)", fontsize=FONT_LABEL)
@@ -127,7 +129,7 @@ def plot_clop_training(
     add_panel_label(ax_a2, 'b', x=-0.10, y=1.05)
 
     # ── A3: Prototype accuracy ──
-    ax_a3 = fig.add_subplot(gs[1, 0])
+    ax_a3 = bottom_left.add_axes(fig)
     ax_a3.plot(
         epochs, np.array(h["val_proto_acc"]) * 100,
         label="Val Acc", color=COLORS["baseline_shuffle"], linewidth=2,
@@ -157,7 +159,7 @@ def plot_clop_training(
     add_panel_label(ax_a3, 'c', x=-0.10, y=1.05)
 
     # ── A4: Embedding quality metrics ──
-    ax_a4 = fig.add_subplot(gs[1, 1])
+    ax_a4 = bottom_right.add_axes(fig)
     quality_metrics = [
         ("val_text_cell_align", "Text\u2194Cell", COLORS["accent"]),
         ("val_inter_sep", "Inter-sep", COLORS["warn"]),
@@ -233,12 +235,14 @@ def plot_dit_training(
     epochs = np.arange(1, len(h["train_loss"]) + 1)
 
     fig = plt.figure(figsize=(9.5, 6.3))
-    gs_c = fig.add_gridspec(2, 2, wspace=0.34, hspace=0.34)
-    apply_layout_rect(fig, (0.08, 0.10, 0.97, 0.94))
+    layout = bind_figure_region(fig, (0.08, 0.10, 0.97, 0.94))
+    top_row, bottom_row = layout.split_rows(2, hspace=0.34)
+    top_left, top_right = top_row.split_cols(2, wspace=0.34)
+    bottom_left, bottom_right = bottom_row.split_cols(2, wspace=0.34)
     # Note: Figure-level title removed per revision requirements; panel labels added below
 
     # ── C1: Loss ──
-    ax_c1 = fig.add_subplot(gs_c[0, 0])
+    ax_c1 = top_left.add_axes(fig)
     ax_c1.plot(epochs, h["train_loss"], label="Train MSE", color=COLORS["real"])
     ax_c1.plot(epochs, h["val_loss"], label="Val MSE", color=COLORS["generated"], linestyle="--")
     ax_c1.set_xlabel("Epoch", fontsize=11)
@@ -264,7 +268,7 @@ def plot_dit_training(
     add_panel_label(ax_c1, 'e', x=-0.10, y=1.05)
 
     # ── C2: Cosine similarity ──
-    ax_c2 = fig.add_subplot(gs_c[0, 1])
+    ax_c2 = top_right.add_axes(fig)
     ax_c2.plot(epochs, h["val_cosine_sim"], color=COLORS["baseline_gauss"], linewidth=2)
     ax_c2.set_xlabel("Epoch", fontsize=11)
     ax_c2.set_ylabel("Cosine Similarity", fontsize=11)
@@ -277,7 +281,7 @@ def plot_dit_training(
     add_panel_label(ax_c2, 'f', x=-0.10, y=1.05)
 
     # ── C3: Learning rate ──
-    ax_c3 = fig.add_subplot(gs_c[1, 0])
+    ax_c3 = bottom_left.add_axes(fig)
     ax_c3.plot(epochs, h["lr"], color=COLORS["baseline_shuffle"], linewidth=1.5)
     ax_c3.set_xlabel("Epoch", fontsize=11)
     ax_c3.set_ylabel("Learning Rate", fontsize=11)
@@ -288,7 +292,7 @@ def plot_dit_training(
     add_panel_label(ax_c3, 'g', x=-0.10, y=1.05)
 
     # ── C4: Convergence rate (train vs val) ──
-    ax_c4 = fig.add_subplot(gs_c[1, 1])
+    ax_c4 = bottom_right.add_axes(fig)
 
     dit_tl = np.array(h["train_loss"])
     dit_vl = np.array(h["val_loss"])
@@ -361,10 +365,11 @@ def plot_training_dynamics_combined(
 
     apply_style()
     fig = plt.figure(figsize=(14.2, 7.9))
-    gs = fig.add_gridspec(2, 4, wspace=0.42, hspace=0.36,
-                          width_ratios=[1.0, 1.0, 1.0, 1.2], height_ratios=[1, 1])
+    layout = bind_figure_region(fig, (0.05, 0.08, 0.98, 0.94))
+    top_row, bottom_row = layout.split_rows([1, 1], hspace=0.36)
+    top_cols = top_row.split_cols([1.0, 1.0, 1.0, 1.2], wspace=0.42)
+    bottom_cols = bottom_row.split_cols([1.0, 1.0, 1.0, 1.2], wspace=0.42)
     # Note: Figure-level title removed per revision requirements; panel labels added below
-    apply_layout_rect(fig, (0.05, 0.08, 0.98, 0.94))
 
     # ════════════════════════════════════════════════════════════
     # Top row: CLOP (4 panels spanning columns 0-3)
@@ -374,7 +379,7 @@ def plot_training_dynamics_combined(
         epochs = np.arange(1, len(h["train_loss"]) + 1)
 
         # A1: Loss
-        ax_a1 = fig.add_subplot(gs[0, 0])
+        ax_a1 = top_cols[0].add_axes(fig)
         ax_a1.plot(epochs, h["train_loss"], label="Train", color=COLORS["real"])
         ax_a1.plot(epochs, h["val_loss"], label="Val", color=COLORS["generated"], linestyle="--")
         ax_a1.set_xlabel("Epoch", fontsize=11)
@@ -388,7 +393,7 @@ def plot_training_dynamics_combined(
         add_panel_label(ax_a1, 'a', x=-0.10, y=1.05)
 
         # A2: Temperature (fixed τ = 14.0 in production)
-        ax_a2 = fig.add_subplot(gs[0, 1])
+        ax_a2 = top_cols[1].add_axes(fig)
         ax_a2.plot(epochs, h["temperature"], color=COLORS["baseline_gauss"], linewidth=2)
         ax_a2.set_xlabel("Epoch", fontsize=FONT_LABEL)
         ax_a2.set_ylabel("Logit Scale (\u03c4)", fontsize=FONT_LABEL)
@@ -402,7 +407,7 @@ def plot_training_dynamics_combined(
         add_panel_label(ax_a2, 'b', x=-0.10, y=1.05)
 
         # A3: Accuracy
-        ax_a3 = fig.add_subplot(gs[0, 2])
+        ax_a3 = top_cols[2].add_axes(fig)
         ax_a3.plot(epochs, np.array(h["val_proto_acc"]) * 100,
                 label="Val Acc", color=COLORS["baseline_shuffle"], linewidth=2)
         ax_a3.plot(epochs, np.array(h["train_proto_acc"]) * 100,
@@ -424,7 +429,7 @@ def plot_training_dynamics_combined(
         add_panel_label(ax_a3, 'c', x=-0.10, y=1.05)
 
         # A4: Embedding quality
-        ax_a4 = fig.add_subplot(gs[0, 3])
+        ax_a4 = top_cols[3].add_axes(fig)
         quality_metrics = [
             ("val_text_cell_align", "Text\u2194Cell", COLORS["accent"]),
             ("val_inter_sep", "Inter-sep", COLORS["warn"]),
@@ -451,7 +456,7 @@ def plot_training_dynamics_combined(
         epochs = np.arange(1, len(h["train_loss"]) + 1)
 
         # C1: Loss
-        ax_c1 = fig.add_subplot(gs[1, 0])
+        ax_c1 = bottom_cols[0].add_axes(fig)
         ax_c1.plot(epochs, h["train_loss"], label="Train MSE", color=COLORS["real"])
         ax_c1.plot(epochs, h["val_loss"], label="Val MSE", color=COLORS["generated"], linestyle="--")
         ax_c1.set_xlabel("Epoch", fontsize=11)
@@ -475,7 +480,7 @@ def plot_training_dynamics_combined(
         add_panel_label(ax_c1, 'e', x=-0.10, y=1.05)
 
         # C2: Cosine similarity
-        ax_c2 = fig.add_subplot(gs[1, 1])
+        ax_c2 = bottom_cols[1].add_axes(fig)
         ax_c2.plot(epochs, h["val_cosine_sim"], color=COLORS["baseline_gauss"], linewidth=2)
         ax_c2.set_xlabel("Epoch", fontsize=11)
         ax_c2.set_ylabel("Cosine Similarity", fontsize=11)
@@ -488,7 +493,7 @@ def plot_training_dynamics_combined(
         add_panel_label(ax_c2, 'f', x=-0.10, y=1.05)
 
         # C3: Learning rate
-        ax_c3 = fig.add_subplot(gs[1, 2])
+        ax_c3 = bottom_cols[2].add_axes(fig)
         ax_c3.plot(epochs, h["lr"], color=COLORS["baseline_shuffle"], linewidth=1.5)
         ax_c3.set_xlabel("Epoch", fontsize=11)
         ax_c3.set_ylabel("Learning Rate", fontsize=11)
@@ -499,7 +504,7 @@ def plot_training_dynamics_combined(
         add_panel_label(ax_c3, 'g', x=-0.10, y=1.05)
 
         # C4: Normalized convergence comparison (CLOP + DiT)
-        ax_c4 = fig.add_subplot(gs[1, 3])
+        ax_c4 = bottom_cols[3].add_axes(fig)
 
         # Normalize val loss: 1 = initial gap, 0 = fully converged
         dit_vl = np.array(h["val_loss"])

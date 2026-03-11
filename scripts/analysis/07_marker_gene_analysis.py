@@ -27,6 +27,7 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from src.utils.logging_config import setup_logging
+from src.visualization.direct_layout import bind_figure_region
 from src.visualization.style import apply_style, save_with_vcd
 
 logger = logging.getLogger(__name__)
@@ -85,6 +86,34 @@ CELL_TYPE_PROMPTS = {
         "Stromal fibroblast populations supporting the tumor microenvironment."
     ),
 }
+
+
+def _make_direct_grid(
+    figsize,
+    n_rows,
+    n_cols,
+    *,
+    rect=(0.08, 0.08, 0.98, 0.92),
+    hspace=0.16,
+    wspace=0.14,
+):
+    """Create an explicit axes grid without relying on plt.subplots."""
+    fig = plt.figure(figsize=figsize)
+    layout = bind_figure_region(fig, rect)
+    row_regions = layout.split_rows(n_rows, hspace=hspace) if n_rows > 1 else [layout]
+    axes = np.empty((n_rows, n_cols), dtype=object)
+    for row_idx, row_region in enumerate(row_regions):
+        col_regions = row_region.split_cols(n_cols, wspace=wspace) if n_cols > 1 else [row_region]
+        for col_idx, col_region in enumerate(col_regions):
+            axes[row_idx, col_idx] = col_region.add_axes(fig)
+    return fig, axes
+
+
+def _make_direct_axes(figsize, *, rect=(0.08, 0.10, 0.98, 0.92)):
+    """Create a single explicitly positioned axes."""
+    fig = plt.figure(figsize=figsize)
+    ax = bind_figure_region(fig, rect).add_axes(fig)
+    return fig, ax
 
 
 def load_inference_pipeline(clop_ckpt, dit_ckpt, scgpt_dir, device="cuda"):
@@ -163,13 +192,14 @@ def plot_marker_violin_grid(
     n_cols = min(max_cols, n_markers)
     n_rows = (n_markers + n_cols - 1) // n_cols
 
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(4 * n_cols, 4.5 * n_rows))
-    if n_rows == 1 and n_cols == 1:
-        axes = np.array([[axes]])
-    elif n_rows == 1:
-        axes = axes[np.newaxis, :]
-    elif n_cols == 1:
-        axes = axes[:, np.newaxis]
+    fig, axes = _make_direct_grid(
+        (4 * n_cols, 4.5 * n_rows),
+        n_rows,
+        n_cols,
+        rect=(0.08, 0.08, 0.98, 0.90),
+        hspace=0.18,
+        wspace=0.16,
+    )
 
     gen_types = list(gen_expr_dict.keys())
     colors = ["#2196F3", "#E91E63", "#4CAF50", "#FF9800", "#9C27B0"]
@@ -236,7 +266,6 @@ def plot_marker_violin_grid(
         axes[row, col].set_visible(False)
 
     # suptitle removed per revision; title information moved to LaTeX caption
-    plt.tight_layout()
     safe_name = ct_name.replace(" ", "_").replace("/", "_").replace("+", "plus")
     save_with_vcd(fig, output_dir / f"markers_{safe_name}.png", dpi=200, close=True)
     logger.info(f"  Saved: markers_{safe_name}.png ({n_markers} markers, {n_rows}x{n_cols} grid)")
@@ -287,7 +316,7 @@ def plot_cross_celltype_heatmap(
 
     # Plot
     fig_width = max(14, len(all_markers_unique) * 0.45)
-    fig, ax = plt.subplots(figsize=(fig_width, 4 + n_rows * 0.5))
+    fig, ax = _make_direct_axes((fig_width, 4 + n_rows * 0.5), rect=(0.08, 0.20, 0.98, 0.90))
 
     im = ax.imshow(heatmap_z, cmap="RdBu_r", aspect="auto", vmin=-2.5, vmax=2.5)
     ax.set_xticks(range(len(all_markers_unique)))
@@ -320,7 +349,6 @@ def plot_cross_celltype_heatmap(
         prev_ct = ct
         cumulative += 1
 
-    plt.tight_layout()
     save_with_vcd(fig, output_dir / "marker_heatmap_cross_celltype.png", dpi=200, close=True)
     logger.info(f"  Saved: marker_heatmap_cross_celltype.png ({len(all_markers_unique)} markers)")
 
@@ -360,7 +388,7 @@ def plot_celltype_umap(real_expr, gen_expr_dict, output_dir):
     reducer = umap.UMAP(n_neighbors=15, min_dist=0.3, random_state=42)
     umap_emb = reducer.fit_transform(pca_emb)
 
-    fig, ax = plt.subplots(figsize=(10, 8))
+    fig, ax = _make_direct_axes((10, 8), rect=(0.08, 0.10, 0.78, 0.95))
     unique_labels = list(dict.fromkeys(all_labels))
     cmap_colors = ["#1976D2", "#E91E63", "#4CAF50", "#FF9800", "#9C27B0"]
 
@@ -382,7 +410,6 @@ def plot_celltype_umap(real_expr, gen_expr_dict, output_dir):
                  fontweight="bold", fontsize=12)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
-    plt.tight_layout()
     save_with_vcd(fig, output_dir / "celltype_discrimination_umap.png", dpi=200, close=True)
     logger.info(f"  Saved: celltype_discrimination_umap.png")
 
@@ -401,13 +428,14 @@ def plot_discriminative_genes_grid(gene_names, gen_expr_dict, output_dir, max_co
     n_cols = min(max_cols, n_types)
     n_rows = (n_types + n_cols - 1) // n_cols
 
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(7 * n_cols, 7 * n_rows))
-    if n_rows == 1 and n_cols == 1:
-        axes = np.array([[axes]])
-    elif n_rows == 1:
-        axes = axes[np.newaxis, :]
-    elif n_cols == 1:
-        axes = axes[:, np.newaxis]
+    fig, axes = _make_direct_grid(
+        (7 * n_cols, 7 * n_rows),
+        n_rows,
+        n_cols,
+        rect=(0.08, 0.08, 0.98, 0.92),
+        hspace=0.18,
+        wspace=0.18,
+    )
 
     for i, ct in enumerate(gen_types):
         row, col = i // n_cols, i % n_cols
@@ -444,7 +472,6 @@ def plot_discriminative_genes_grid(gene_names, gen_expr_dict, output_dir, max_co
         axes[row, col].set_visible(False)
 
     # suptitle removed per revision; title information moved to LaTeX caption
-    plt.tight_layout()
     save_with_vcd(fig, output_dir / "discriminative_genes.png", dpi=200, close=True)
     logger.info(f"  Saved: discriminative_genes.png ({n_rows}x{n_cols} grid)")
 
@@ -475,9 +502,14 @@ def plot_distribution_comparison(
     n_cols = 4
     n_rows = (len(key_markers) + n_cols - 1) // n_cols
 
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(4 * n_cols, 3.5 * n_rows))
-    if n_rows == 1:
-        axes = axes[np.newaxis, :]
+    fig, axes = _make_direct_grid(
+        (4 * n_cols, 3.5 * n_rows),
+        n_rows,
+        n_cols,
+        rect=(0.07, 0.10, 0.98, 0.92),
+        hspace=0.20,
+        wspace=0.15,
+    )
 
     gen_types = list(gen_expr_dict.keys())
 
@@ -509,7 +541,6 @@ def plot_distribution_comparison(
         axes[row, col].set_visible(False)
 
     # suptitle removed per revision; title information moved to LaTeX caption
-    plt.tight_layout()
     save_with_vcd(fig, output_dir / "distribution_comparison.png", dpi=200, close=True)
     logger.info(f"  Saved: distribution_comparison.png ({len(key_markers)} markers)")
 
@@ -526,13 +557,14 @@ def plot_correlation_scatter(real_expr, gen_expr_dict, gene_names, output_dir, m
     n_cols = min(max_cols, n_types)
     n_rows = (n_types + n_cols - 1) // n_cols
 
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(6 * n_cols, 5.5 * n_rows))
-    if n_rows == 1 and n_cols == 1:
-        axes = np.array([[axes]])
-    elif n_rows == 1:
-        axes = axes[np.newaxis, :]
-    elif n_cols == 1:
-        axes = axes[:, np.newaxis]
+    fig, axes = _make_direct_grid(
+        (6 * n_cols, 5.5 * n_rows),
+        n_rows,
+        n_cols,
+        rect=(0.08, 0.08, 0.98, 0.92),
+        hspace=0.18,
+        wspace=0.16,
+    )
 
     real_mean = real_expr.mean(axis=0)
 
@@ -571,7 +603,6 @@ def plot_correlation_scatter(real_expr, gen_expr_dict, gene_names, output_dir, m
         axes[row, col].set_visible(False)
 
     # suptitle removed per revision; title information moved to LaTeX caption
-    plt.tight_layout()
     save_with_vcd(fig, output_dir / "correlation_scatter.png", dpi=200, close=True)
     logger.info(f"  Saved: correlation_scatter.png")
 

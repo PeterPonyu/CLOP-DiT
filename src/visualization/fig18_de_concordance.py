@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats as scipy_stats
 
-from .explicit_positioning import add_axes_next_to, layout_axes_row
-from .panel_geometry import apply_layout_rect
+from .direct_layout import bind_figure_region
+from .explicit_positioning import add_axes_next_to
 from .style import (
     COLORS, save_panel, set_figure_suptitle, style_axes,
     add_panel_label, abbreviate_cell_type,
@@ -57,11 +57,13 @@ def plot_de_concordance_panel(
     n_contrasts = len(contrasts)
 
     fig = plt.figure(figsize=(15.8, 6.8))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.4, 1.05, 1.0], wspace=0.50)
-    apply_layout_rect(fig, (0.06, 0.14, 0.98, 0.94))
+    ax_rect_a, ax_rect_b, ax_rect_c = bind_figure_region(fig, (0.06, 0.14, 0.98, 0.94)).split_cols(
+        [1.36, 1.00, 0.96],
+        gap=[0.045, 0.030],
+    )
 
     # ── Panel (a): effect-size weighted logFC scatter ──
-    ax = fig.add_subplot(gs[0])
+    ax = ax_rect_a.add_axes(fig)
     add_panel_label(ax, 'a', x=-0.08, y=1.02)
 
     first_key = contrasts[0]
@@ -193,7 +195,7 @@ def plot_de_concordance_panel(
     ax.tick_params(labelsize=FONT_TICK)
 
     # ── Panel (b): concordance heatmap ──
-    ax2 = fig.add_subplot(gs[1])
+    ax2 = ax_rect_b.add_axes(fig)
     add_panel_label(ax2, 'b', x=-0.08, y=1.02)
 
     metric_names = ["Pears. r", "Spear. \u03c1", "Jacc.@50", "Sign agr."]
@@ -237,7 +239,7 @@ def plot_de_concordance_panel(
     style_axes(ax2, "heatmap", title="Concordance Across Contrasts")
 
     # ── Panel (c): grouped bar chart ──
-    ax3 = fig.add_subplot(gs[2])
+    ax3 = ax_rect_c.add_axes(fig)
     add_panel_label(ax3, 'c', x=-0.08, y=1.02)
 
     x        = np.arange(n_contrasts)
@@ -261,12 +263,6 @@ def plot_de_concordance_panel(
                loc="upper right", frameon=False)
     style_axes(ax3, "bar", title="Per-Contrast Summary", ylabel="Score")
     ax3.tick_params(labelsize=FONT_TICK)
-
-    layout_axes_row([ax, ax2, ax3], widths=[1.36, 1.00, 0.96], gaps=[0.045, 0.030])
-    pos_a = ax.get_position()
-    cax.set_position((pos_a.x0 + (pos_a.width * 0.33), pos_a.y0 - 0.078, pos_a.width * 0.34, 0.022))
-    pos_b = ax2.get_position()
-    cax2.set_position((pos_b.x1 + 0.012, pos_b.y0 + 0.02, 0.010, pos_b.height * 0.48))
 
     if save:
         path = save_panel(fig, output_dir / "fig18_de_concordance.png", dpi)

@@ -26,6 +26,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
+from src.visualization.direct_layout import bind_figure_region
 from src.visualization.style import (
     COLORS,
     FONT_ARCH_LABEL,
@@ -162,14 +163,14 @@ def create_architecture_figure(output_dir=None):
         from src.utils.paths import FIG_DIR
         output_dir = Path(FIG_DIR)
     output_dir = Path(output_dir)
-    fig, ax = plt.subplots(figsize=(10.0, 3.8))
+    fig = plt.figure(figsize=(10.0, 3.8))
+    ax = bind_figure_region(fig, (0.02, 0.02, 0.98, 0.93)).add_axes(fig)
     ax.set_xlim(-0.20, 7.95)
     ax.set_ylim(-0.18, 3.15)
     ax.axis("off")
     ax.set_xticks([])
     ax.set_yticks([])
     fig.patch.set_facecolor(C_WHITE)
-    fig.subplots_adjust(left=0.02, right=0.98, top=0.93, bottom=0.02)
 
     BW = 0.78
     BH = 0.38

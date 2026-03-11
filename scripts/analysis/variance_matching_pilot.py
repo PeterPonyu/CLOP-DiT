@@ -16,7 +16,7 @@ from pathlib import Path
 import numpy as np
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from src.visualization.panel_geometry import apply_layout_rect
+from src.visualization.direct_layout import bind_figure_region
 from src.visualization.style import apply_style, COLORS, add_panel_label, save_with_vcd
 import matplotlib
 matplotlib.use("Agg")
@@ -174,8 +174,10 @@ def main():
     from scipy import stats as scipy_stats
 
     fig = plt.figure(figsize=(17, 11.2))
-    gs = fig.add_gridspec(2, 2, width_ratios=[1.2, 1.0], wspace=0.34, hspace=0.28)
-    apply_layout_rect(fig, (0.08, 0.08, 0.98, 0.96))
+    layout = bind_figure_region(fig, (0.08, 0.08, 0.98, 0.96))
+    top_row, bottom_row = layout.split_rows(2, hspace=0.28)
+    top_left, top_right = top_row.split_cols([1.2, 1.0], wspace=0.34)
+    bottom_left, bottom_right = bottom_row.split_cols([1.2, 1.0], wspace=0.34)
 
     # ── Panel (a): SWD per Cell Type (sorted bar chart) ──
     sorted_results = sorted(results, key=lambda r: r["swd"], reverse=True)
@@ -185,7 +187,7 @@ def main():
     swd_mean = np.mean(swds)
     swd_std = np.std(swds)
 
-    ax = fig.add_subplot(gs[0, 0])
+    ax = top_left.add_axes(fig)
     add_panel_label(ax, 'a', x=-0.10, y=1.05)
 
     # Color: orange for outliers (>mean+1σ), blue otherwise; add legend
@@ -222,7 +224,7 @@ def main():
     style_axes(ax, "bar", xlabel="SWD (lower is better)", title="Latent SWD per Cell Type")
 
     # ── Panel (b): Variance Ratio — strip + box plot ──
-    ax2 = fig.add_subplot(gs[0, 1])
+    ax2 = top_right.add_axes(fig)
     add_panel_label(ax2, 'b', x=-0.10, y=1.05)
 
     vr_arr = np.array(var_ratios)
@@ -258,7 +260,7 @@ def main():
                title="Per-Type Latent Variance Ratio")
 
     # ── Panel (c): Per-Dimension Variance Correlation — ECDF + box ──
-    ax3 = fig.add_subplot(gs[1, 0])
+    ax3 = bottom_left.add_axes(fig)
     add_panel_label(ax3, 'c', x=-0.10, y=1.05)
 
     vc_arr = np.array(var_corrs)
@@ -292,7 +294,7 @@ def main():
                title="Dimension-Wise Variance Correlation")
 
     # ── Panel (d): SWD vs. Training Cell Count ──
-    ax4 = fig.add_subplot(gs[1, 1])
+    ax4 = bottom_right.add_axes(fig)
     add_panel_label(ax4, 'd', x=-0.10, y=1.05)
 
     n_reals = np.array([r["n_real"] for r in results])

@@ -501,7 +501,7 @@ def save_with_vcd(
     close : whether to ``plt.close(fig)`` after saving
     run_vcd : whether to run visual conflict detection before save
     layout_rect : optional (left, bottom, right, top) in figure coords; if given,
-        passed to tight_layout(rect=layout_rect) instead of default
+        applied via the deterministic layout-rect helper before export
     """
     import logging as _logging
 

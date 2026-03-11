@@ -16,8 +16,8 @@ from typing import Dict, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .explicit_positioning import add_shared_legend_axes, layout_axes_row
-from .panel_geometry import apply_layout_rect
+from .direct_layout import bind_figure_region
+from .explicit_positioning import add_shared_legend_axes
 from .style import COLORS, FONT_SMALL, FONT_ANNOTATION, METHOD_COLORS, save_panel, style_axes, add_panel_label
 from src.utils.paths import CACHE_DIR, RESULTS_DIR, FIG_DIR
 
@@ -103,11 +103,13 @@ def plot_baseline_comparison(
     directions = ["lower", "higher", "higher", "higher"]
 
     fig = plt.figure(figsize=(15.0, 6.1))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.2, 1.0, 1.3], wspace=0.48)
-    apply_layout_rect(fig, (0.04, 0.16, 0.98, 0.95))
+    ax_rect_1, ax_rect_2, ax_rect_3 = bind_figure_region(fig, (0.04, 0.16, 0.98, 0.95)).split_cols(
+        [1.18, 1.02, 1.18],
+        gap=[0.024, 0.028],
+    )
 
     # ── O1: Grouped bar chart ──
-    ax = fig.add_subplot(gs[0])
+    ax = ax_rect_1.add_axes(fig)
     add_panel_label(ax, 'a', x=-0.10, y=1.05)
     x = np.arange(len(metric_labels))
     w = 0.8 / n_methods
@@ -123,7 +125,7 @@ def plot_baseline_comparison(
     style_axes(ax, "bar", title="Key Metrics Comparison", ylabel="Value")
 
     # ── O2: Ranked dot plot (normalised scores) ──
-    ax2 = fig.add_subplot(gs[1])
+    ax2 = ax_rect_2.add_axes(fig)
     add_panel_label(ax2, 'b', x=-0.10, y=1.05)
 
     # Normalise each metric to [0,1] with direction awareness
@@ -168,7 +170,7 @@ def plot_baseline_comparison(
                xlabel="Normalised Value")
 
     # ── O3: Absolute delta bar chart (CLOP-DiT minus baseline) ──
-    ax3 = fig.add_subplot(gs[2])
+    ax3 = ax_rect_3.add_axes(fig)
     add_panel_label(ax3, 'c', x=-0.10, y=1.05)
 
     clop_vals = methods["CLOP-DiT"]
@@ -212,8 +214,6 @@ def plot_baseline_comparison(
     for g in range(1, len(bl_names)):
         sep_y = g * n_metrics - 0.5
         ax3.axhline(y=sep_y, color="#DDD", linewidth=1, linestyle="--")
-
-    layout_axes_row([ax, ax2, ax3], widths=[1.18, 1.02, 1.18], gaps=[0.024, 0.028])
 
     legend_ax_a = add_shared_legend_axes(fig, (ax.get_position().x0, 0.03, ax.get_position().width, 0.06))
     legend_ax_a.legend(handles_a, labels_a, fontsize=8, loc="center",

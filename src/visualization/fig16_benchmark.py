@@ -18,8 +18,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .direct_layout import bind_figure_region
 from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
-from .panel_geometry import apply_layout_rect
 from .style import (
     COLORS, FONT_SMALL, FONT_ANNOTATION, METHOD_COLORS, abbreviate_cell_type,
     add_panel_label, save_panel, save_with_vcd,
@@ -101,11 +101,13 @@ def plot_benchmark_panel(
     ]
 
     fig = plt.figure(figsize=(16.0, 9.4))
-    gs = fig.add_gridspec(2, 2, wspace=0.52, hspace=0.24, height_ratios=[1.0, 1.12])
-    apply_layout_rect(fig, (0.08, 0.16, 0.98, 0.95))
+    layout = bind_figure_region(fig, (0.08, 0.16, 0.98, 0.95))
+    top_row, bottom_row = layout.split_rows([1.0, 1.12], hspace=0.24)
+    top_left, top_right = top_row.split_cols(2, wspace=0.52)
+    bottom_left, bottom_right = bottom_row.split_cols(2, wspace=0.52)
 
     # ── S1: Heatmap (methods x metrics) ──
-    ax1 = fig.add_subplot(gs[0, 0])
+    ax1 = top_left.add_axes(fig)
     add_panel_label(ax1, 'a', x=-0.10, y=1.05)
     metric_labels = [m[1] for m in heatmap_metrics]
     metric_keys = [m[0] for m in heatmap_metrics]
@@ -168,7 +170,7 @@ def plot_benchmark_panel(
     style_axes(ax1, "heatmap", title="Metrics Comparison Heatmap")
 
     # ── S2: Composite score bars ──
-    ax2 = fig.add_subplot(gs[0, 1])
+    ax2 = top_right.add_axes(fig)
     add_panel_label(ax2, 'b', x=-0.10, y=1.05)
     composite_common = report.get("composite_score_common_metrics_only", composite)
     sorted_methods = sorted(composite_common.keys(), key=lambda k: composite_common.get(k, 0.0), reverse=True)
@@ -209,7 +211,7 @@ def plot_benchmark_panel(
                xlabel="Normalised Aggregate Score")
 
     # ── S3: Grouped bar chart for key metrics ──
-    ax3 = fig.add_subplot(gs[1, 0])
+    ax3 = bottom_left.add_axes(fig)
     add_panel_label(ax3, 'c', x=-0.10, y=1.05)
     key_metrics = [
         ("frechet_distance",     "FD \u2193"),
@@ -236,7 +238,7 @@ def plot_benchmark_panel(
     style_axes(ax3, "bar", title="Key Metrics", ylabel="Value")
 
     # ── S4: CI comparison — error-bar plot ──
-    ax4 = fig.add_subplot(gs[1, 1])
+    ax4 = bottom_right.add_axes(fig)
     add_panel_label(ax4, 'd', x=-0.10, y=1.05)
     ci_metrics = [
         ("frechet_distance",     "fd_ci",              "Fr\u00e9chet Distance"),

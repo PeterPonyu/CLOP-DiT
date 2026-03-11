@@ -15,7 +15,7 @@ from typing import Callable, Dict, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .panel_geometry import apply_layout_rect
+from .direct_layout import bind_figure_region
 from .style import COLORS, FONT_LEGEND_DENSE, FONT_LABEL, FONT_SMALL, FONT_TITLE, FONT_TICK_DENSE, FONT_ANNOTATION, abbreviate_cell_type, add_panel_label, apply_style, save_with_vcd, set_figure_suptitle
 from ._utils import sample_pairwise_cosines
 from src.utils.paths import CACHE_DIR, RESULTS_DIR, FIG_DIR, CHECKPOINT_DIR
@@ -86,7 +86,8 @@ def plot_diversity_distributions_violin(
 
     created_fig = ax is None
     if created_fig:
-        fig, ax = plt.subplots(figsize=(13.0, 4.6))
+        fig = plt.figure(figsize=(13.0, 4.6))
+        ax = bind_figure_region(fig, (0.06, 0.16, 0.98, 0.92)).add_axes(fig)
     else:
         fig = ax.figure
 
@@ -376,8 +377,10 @@ def plot_metrics_summary(
         return None
 
     fig = plt.figure(figsize=(15.2, 8.4))
-    gs = fig.add_gridspec(2, 2, wspace=0.44, hspace=0.34, width_ratios=[1.12, 1.0])
-    apply_layout_rect(fig, (0.05, 0.08, 0.98, 0.95))
+    layout = bind_figure_region(fig, (0.05, 0.08, 0.98, 0.95))
+    top_row, bottom_row = layout.split_rows(2, hspace=0.34)
+    top_left, top_right = top_row.split_cols([1.12, 1.0], wspace=0.44)
+    bottom_left, bottom_right = bottom_row.split_cols([1.12, 1.0], wspace=0.44)
     # Note: Figure-level title removed per revision requirements
 
     # Map from display metric names to bootstrap_cis keys
@@ -389,7 +392,7 @@ def plot_metrics_summary(
     }
 
     # ── D1: Training convergence bars ──
-    ax1 = fig.add_subplot(gs[0, 0])
+    ax1 = top_left.add_axes(fig)
     if train_metrics:
         if core_metrics:
             train_metrics = {**core_metrics, **train_metrics}
@@ -458,7 +461,7 @@ def plot_metrics_summary(
     add_panel_label(ax1, 'a', x=-0.10, y=1.05)
 
     # ── D2: Generation quality bar chart (replaces radar for clarity) ──
-    ax2 = fig.add_subplot(gs[0, 1])
+    ax2 = top_right.add_axes(fig)
     if gen_metrics or expr_metrics:
         bar_labels = []
         bar_vals = []
@@ -534,7 +537,7 @@ def plot_metrics_summary(
         add_panel_label(ax2, 'b', x=-0.10, y=1.05)
 
     # ── D3: Diversity gauges ──
-    ax3 = fig.add_subplot(gs[1, 0])
+    ax3 = bottom_left.add_axes(fig)
     if div_metrics:
         gauge_items = [
             ("Diversity\nRatio", div_metrics.get("Diversity Ratio", 0), 1.0,
@@ -604,7 +607,7 @@ def plot_metrics_summary(
     add_panel_label(ax3, 'c', x=-0.10, y=1.05)
 
     # ── D4: Expression fidelity + config ──
-    ax4 = fig.add_subplot(gs[1, 1])
+    ax4 = bottom_right.add_axes(fig)
     if expr_metrics:
         expr_items = [
             ("Gene Pearson r", expr_metrics.get("Gene Pearson r", 0)),

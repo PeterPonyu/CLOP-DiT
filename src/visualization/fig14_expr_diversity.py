@@ -14,7 +14,7 @@ from typing import Dict, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .panel_geometry import apply_layout_rect
+from .direct_layout import bind_figure_region
 from .style import COLORS, apply_style, save_with_vcd, add_panel_label
 
 logger = logging.getLogger(__name__)
@@ -55,8 +55,9 @@ def plot_expression_diversity_panel(
     apply_style()
 
     o = t6_data["overall"]
-    fig, axes = plt.subplots(1, 2, figsize=(7.5, 4.8))
-    apply_layout_rect(fig, (0.08, 0.16, 0.98, 0.96), wspace=0.34)
+    fig = plt.figure(figsize=(7.5, 4.8))
+    left_rect, right_rect = bind_figure_region(fig, (0.08, 0.16, 0.98, 0.96)).split_cols(2, wspace=0.34)
+    axes = [left_rect.add_axes(fig), right_rect.add_axes(fig)]
     add_panel_label(axes[0], chr(ord('a') + label_offset), x=-0.10, y=1.05)
     add_panel_label(axes[1], chr(ord('a') + label_offset + 1), x=-0.10, y=1.05)
 

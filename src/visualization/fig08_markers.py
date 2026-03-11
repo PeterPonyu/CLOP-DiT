@@ -23,8 +23,8 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .direct_layout import bind_figure_region
 from .explicit_positioning import add_shared_legend_axes
-from .panel_geometry import apply_layout_rect
 from .style import COLORS, abbreviate_cell_type, add_colorbar_safe, add_panel_label, save_with_vcd
 
 logger = logging.getLogger(__name__)
@@ -141,11 +141,13 @@ def plot_marker_gene_comparison(
     n_sel_types = len(selected_type_ids)
 
     fig = plt.figure(figsize=(10.8, 7.7))
-    gs = fig.add_gridspec(2, 2, wspace=0.44, hspace=0.42, width_ratios=[1.0, 1.28])
-    apply_layout_rect(fig, (0.04, 0.10, 0.98, 0.92))
+    layout = bind_figure_region(fig, (0.04, 0.10, 0.98, 0.92))
+    top_row, bottom_row = layout.split_rows(2, hspace=0.42)
+    top_left, top_right = top_row.split_cols([1.0, 1.28], wspace=0.44)
+    bottom_left, bottom_right = bottom_row.split_cols([1.0, 1.28], wspace=0.44)
 
     # -- N1: Grouped horizontal bar chart --
-    ax1 = fig.add_subplot(gs[0, 0])
+    ax1 = top_left.add_axes(fig)
     r_means = np.array([real[:, gi].mean() for gi in gene_idx])
     g_means = np.array([gen[:, gi].mean() for gi in gene_idx])
     r_stds = np.array([real[:, gi].std() for gi in gene_idx])
@@ -201,7 +203,7 @@ def plot_marker_gene_comparison(
                 if g_mask.any():
                     gen_heat[i, j] = gen[g_mask][:, gi].mean()
 
-        ax2 = fig.add_subplot(gs[0, 1])
+        ax2 = top_right.add_axes(fig)
         combined = np.hstack([real_heat, gen_heat])
         vmin, vmax = combined.min(), combined.max()
         gap_col = np.full((n_sel_types, 1), np.nan)
@@ -241,7 +243,7 @@ def plot_marker_gene_comparison(
         )
         legend_ax.legend(handles_top, labels_top, fontsize=10, loc="center", frameon=False, ncol=2)
 
-        ax3 = fig.add_subplot(gs[1, 0])
+        ax3 = bottom_left.add_axes(fig)
         diff = gen_heat - real_heat
         max_abs = max(abs(diff.min()), abs(diff.max()), 0.01)
         im3 = ax3.imshow(diff, cmap="RdBu_r", aspect="auto", vmin=-max_abs, vmax=max_abs)
@@ -268,7 +270,7 @@ def plot_marker_gene_comparison(
                         fontweight="normal",
                     )
 
-        ax4 = fig.add_subplot(gs[1, 1])
+        ax4 = bottom_right.add_axes(fig)
         fc_all = gen_marker_means / (real_marker_means + 1e-8)
         log2fc = np.log2(fc_all + 1e-12)
         sort_fc = np.argsort(log2fc)
@@ -298,7 +300,7 @@ def plot_marker_gene_comparison(
                 fontweight="bold" if abs(lfc) > 0.07 else "normal",
             )
     else:
-        ax_fallback = fig.add_subplot(gs[0, 1])
+        ax_fallback = top_right.add_axes(fig)
         add_panel_label(ax_fallback, "b")
         ax_fallback.text(0.5, 0.5, "Per-type labels not available", ha="center", va="center", transform=ax_fallback.transAxes)
 

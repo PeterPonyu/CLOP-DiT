@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import MaxNLocator
 
+from .direct_layout import bind_figure_region
 from .style import (
     COLORS,
     FONT_DENSE_YTICK,
@@ -33,8 +34,6 @@ from .style import (
     set_figure_suptitle,
     style_axes,
 )
-from .explicit_positioning import layout_axes_row
-from .panel_geometry import apply_layout_rect
 from src.utils.paths import FIG_DIR
 
 logger = logging.getLogger(__name__)
@@ -109,13 +108,13 @@ def plot_embedding_space_merged(
     apply_style()
     n_rows = (1 if has_b else 0) + (1 if has_e else 0)
     fig = plt.figure(figsize=(14.8, 5.2 * n_rows))
-    gs = fig.add_gridspec(n_rows, 3, wspace=0.58, hspace=0.25,
-                          width_ratios=[1.1, 1.1, 1.2])
+    layout = bind_figure_region(fig, (0.04, 0.06, 0.98, 0.96))
+    row_regions = layout.split_rows(n_rows, hspace=0.25)
     # suptitle removed per revision; title information moved to LaTeX caption
-    apply_layout_rect(fig, (0.04, 0.06, 0.98, 0.96))
     row = 0
 
     if has_b:
+        b_rects = row_regions[row].split_cols([0.92, 0.92, 1.04], gap=[0.018, 0.042])
         proj_text = np.load(proj_text_path)
         cell_proj = np.load(proj_cell_path)
         if gid_text_path.exists() and proj_text.shape[0] != group_ids.shape[0]:
@@ -149,7 +148,7 @@ def plot_embedding_space_merged(
         cell_coords = coords_b[:len(s_idx)]
         proto_coords = coords_b[len(s_idx):]
 
-        ax_b0 = fig.add_subplot(gs[row, 0])
+        ax_b0 = b_rects[0].add_axes(fig)
         ax = ax_b0
         add_panel_label(ax, 'a', x=-0.10, y=1.05)
         for i, (x, y) in enumerate(proto_coords):
@@ -160,7 +159,7 @@ def plot_embedding_space_merged(
         ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
         style_axes(ax, kind="umap")
 
-        ax_b1 = fig.add_subplot(gs[row, 1])
+        ax_b1 = b_rects[1].add_axes(fig)
         ax = ax_b1
         add_panel_label(ax, 'b', x=-0.10, y=1.05)
         for t in unique_types:
@@ -176,7 +175,7 @@ def plot_embedding_space_merged(
         ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
         style_axes(ax, kind="umap")
 
-        ax_b2 = fig.add_subplot(gs[row, 2])
+        ax_b2 = b_rects[2].add_axes(fig)
         ax = ax_b2
         add_panel_label(ax, 'c', x=-0.10, y=1.05)
         so = np.argsort(type_counts)[::-1]
@@ -191,10 +190,10 @@ def plot_embedding_space_merged(
         ax.set_xlabel("Cells")
         ax.set_title("Cells per Type")
         style_axes(ax, kind="bar")
-        layout_axes_row([ax_b0, ax_b1, ax_b2], widths=[0.92, 0.92, 1.04], gaps=[0.018, 0.042])
         row += 1
 
     if has_e:
+        e_rects = row_regions[row].split_cols([0.92, 0.92, 1.04], gap=[0.018, 0.042])
         cell_path = cache / "cell_embeddings_dedup_preprocessed.npy"
         if not cell_path.exists():
             logger.warning("Missing cell embeddings for E row")
@@ -223,7 +222,7 @@ def plot_embedding_space_merged(
             rc = coords_e[:len(r_sub)]
             gc = coords_e[len(r_sub):]
 
-            ax_e0 = fig.add_subplot(gs[row, 0])
+            ax_e0 = e_rects[0].add_axes(fig)
             ax = ax_e0
             add_panel_label(ax, 'd', x=-0.10, y=1.05)
             for t in np.unique(r_gids):
@@ -235,7 +234,7 @@ def plot_embedding_space_merged(
             ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
             style_axes(ax, kind="umap")
 
-            ax_e1 = fig.add_subplot(gs[row, 1])
+            ax_e1 = e_rects[1].add_axes(fig)
             ax = ax_e1
             add_panel_label(ax, 'e', x=-0.10, y=1.05)
             if g_gids is not None:
@@ -251,7 +250,7 @@ def plot_embedding_space_merged(
             ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
             style_axes(ax, kind="umap")
 
-            ax_e2 = fig.add_subplot(gs[row, 2])
+            ax_e2 = e_rects[2].add_axes(fig)
             ax = ax_e2
             add_panel_label(ax, 'f', x=-0.10, y=1.05)
             all_types = np.unique(np.concatenate([r_gids, g_gids])) if g_gids is not None else np.unique(r_gids)
@@ -283,8 +282,6 @@ def plot_embedding_space_merged(
             ax.set_title("Type-Colored Overlay")
             ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
             style_axes(ax, kind="umap")
-            layout_axes_row([ax_e0, ax_e1, ax_e2], widths=[0.92, 0.92, 1.04], gaps=[0.018, 0.042])
-
     if save:
         path = Path(output_dir) / "fig04_embedding_space.png"
         if save_panel_fn is not None:
@@ -397,11 +394,14 @@ def plot_clop_embedding_space(
     proto_coords = coords[len(sampled_idx) :]
 
     fig = plt.figure(figsize=(11.2, 5.4))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.2, 1.2], wspace=0.42)
+    ax_rect_1, ax_rect_2, ax_rect_3 = bind_figure_region(fig, (0.18, 0.12, 0.98, 0.87)).split_cols(
+        [0.90, 0.96, 1.10],
+        gap=[0.020, 0.048],
+    )
     # REMOVED: set_figure_suptitle(fig, "CLOP Alignment Space...", ...)
     # Title information moved to LaTeX caption per MDPI style guidelines
 
-    ax_b0 = fig.add_subplot(gs[0])
+    ax_b0 = ax_rect_1.add_axes(fig)
     add_panel_label(ax_b0, 'a', x=-0.18, y=1.02)
     sorted_order = np.argsort(type_counts)[::-1]
     bar_colors = [TYPE_PALETTE[t % len(TYPE_PALETTE)] for t in unique_types[sorted_order]]
@@ -424,7 +424,7 @@ def plot_clop_embedding_space(
     ax_b0.legend(fontsize=10, loc="lower right", frameon=False)
     ax_b0.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
 
-    ax_b1 = fig.add_subplot(gs[1])
+    ax_b1 = ax_rect_2.add_axes(fig)
     add_panel_label(ax_b1, 'b', x=-0.18, y=1.02)
     top_label_candidates = np.argsort(type_counts)[::-1].tolist()
     label_offsets = [(0, 4), (0, -10), (8, 4), (-8, 4), (10, -8), (-10, -8)]
@@ -452,7 +452,7 @@ def plot_clop_embedding_space(
     ax_b1.set_xlabel("UMAP 1")
     ax_b1.set_ylabel("UMAP 2")
 
-    ax_b2 = fig.add_subplot(gs[2])
+    ax_b2 = ax_rect_3.add_axes(fig)
     add_panel_label(ax_b2, 'c', x=-0.12, y=1.02)
     for t in unique_types:
         mask = gids_sub == t
@@ -472,9 +472,6 @@ def plot_clop_embedding_space(
     ax_b2.set_ylabel("UMAP 2")
     ax_b2.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
     ax_b2.yaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
-
-    apply_layout_rect(fig, (0.18, 0.12, 0.98, 0.87))
-    layout_axes_row([ax_b0, ax_b1, ax_b2], widths=[0.90, 0.96, 1.10], gaps=[0.020, 0.048])
 
     if save:
         path = Path(output_dir) / "fig04_clop_embedding_umap.png"
@@ -580,7 +577,10 @@ def plot_real_vs_generated(
     gen_c = coords[len(real_sub) :]
 
     fig = plt.figure(figsize=(9.0, 5.2))
-    gs_e = fig.add_gridspec(1, 3, wspace=0.40)
+    ax_rect_1, ax_rect_2, ax_rect_3 = bind_figure_region(fig, (0.06, 0.12, 0.98, 0.92)).split_cols(
+        [0.92, 0.92, 1.02],
+        gap=[0.020, 0.040],
+    )
     # suptitle removed per revision; title information moved to LaTeX caption
 
     ax_e1 = None
@@ -588,7 +588,7 @@ def plot_real_vs_generated(
     ax_e3 = None
 
     # E1: Real — type-coloured
-    ax_e1 = fig.add_subplot(gs_e[0])
+    ax_e1 = ax_rect_1.add_axes(fig)
     ax = ax_e1
     add_panel_label(ax, 'a')
     if real_gids_sub is not None:
@@ -613,7 +613,7 @@ def plot_real_vs_generated(
     ax.set_ylabel("UMAP 2")
 
     # E2: Generated — type-coloured
-    ax_e2 = fig.add_subplot(gs_e[1])
+    ax_e2 = ax_rect_2.add_axes(fig)
     ax = ax_e2
     add_panel_label(ax, 'b')
     if gen_gids_sub is not None:
@@ -634,7 +634,7 @@ def plot_real_vs_generated(
     ax.set_ylabel("UMAP 2")
 
     # E3: Overlay — type-coloured, shape-split (circle=real, triangle=gen)
-    ax_e3 = fig.add_subplot(gs_e[2])
+    ax_e3 = ax_rect_3.add_axes(fig)
     ax = ax_e3
     add_panel_label(ax, 'c')
     if real_gids_sub is not None and gen_gids_sub is not None:
@@ -678,8 +678,6 @@ def plot_real_vs_generated(
         # Widen axis limits slightly to give tick labels breathing room
         xl = _ax.get_xlim()
         _ax.set_xlim(xl[0] - (xl[1] - xl[0]) * 0.10, xl[1] + (xl[1] - xl[0]) * 0.10)
-
-    layout_axes_row([ax_e1, ax_e2, ax_e3], widths=[0.92, 0.92, 1.02], gaps=[0.020, 0.040])
 
     if save:
         path = Path(output_dir) / "fig04_real_vs_generated.png"

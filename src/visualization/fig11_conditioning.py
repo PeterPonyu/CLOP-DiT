@@ -16,8 +16,8 @@ import numpy as np
 from matplotlib.colors import Normalize
 from matplotlib.ticker import MaxNLocator
 
+from .direct_layout import bind_figure_region
 from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
-from .panel_geometry import apply_layout_rect
 from .style import (
     COLORS, TYPE_PALETTE, apply_style, save_with_vcd,
     add_panel_label, abbreviate_cell_type,
@@ -55,16 +55,14 @@ def plot_panel_m(
     has_row3 = full_dim_data is not None and len(full_dim_data) > 0
     if has_row3:
         fig = plt.figure(figsize=(_fw, 13.4))
-        outer = fig.add_gridspec(3, 1, height_ratios=[2.15, 1.15, 1.10], hspace=0.38)
+        row_regions = bind_figure_region(fig, (0.04, 0.05, 0.98, 0.97)).split_rows([2.15, 1.15, 1.10], hspace=0.38)
     else:
         fig = plt.figure(figsize=(_fw, 8.8))
-        outer = fig.add_gridspec(2, 1, height_ratios=[2.15, 1.12], hspace=0.36)
-    apply_layout_rect(fig, (0.04, 0.05, 0.98, 0.97))
+        row_regions = bind_figure_region(fig, (0.04, 0.05, 0.98, 0.97)).split_rows([2.15, 1.12], hspace=0.36)
     top_widths = [1.0] * n_modes
     if n_modes > 1:
         top_widths[-1] = 1.04
-    gs_top = outer[0].subgridspec(1, n_modes, wspace=0.28, width_ratios=top_widths)
-    axes = [fig.add_subplot(gs_top[0, i]) for i in range(n_modes)]
+    axes = [region.add_axes(fig) for region in row_regions[0].split_cols(top_widths, wspace=0.28)]
 
     # Panel labels: placed with enough clearance for single-line titles
     _panel_label_y = 1.12
@@ -119,12 +117,12 @@ def plot_panel_m(
         )
 
     # ── Row 2: Quantitative summaries ──
-    gs_bottom = outer[1].subgridspec(1, 3, wspace=0.34, width_ratios=[1.08, 1.02, 0.92])
-    ax_b1 = fig.add_subplot(gs_bottom[0, 0])
+    bottom_regions = row_regions[1].split_cols([1.08, 1.02, 0.92], wspace=0.34)
+    ax_b1 = bottom_regions[0].add_axes(fig)
     add_panel_label(ax_b1, 'b', x=-0.12, y=_panel_label_y)
-    ax_b2 = fig.add_subplot(gs_bottom[0, 1])
+    ax_b2 = bottom_regions[1].add_axes(fig)
     add_panel_label(ax_b2, 'c', x=-0.12, y=_panel_label_y)
-    ax_b3 = fig.add_subplot(gs_bottom[0, 2])
+    ax_b3 = bottom_regions[2].add_axes(fig)
     add_panel_label(ax_b3, 'd', x=-0.12, y=_panel_label_y)
 
     # Build per-type real centroids in 2D for shift summaries.
@@ -211,12 +209,12 @@ def plot_panel_m(
         from sklearn.decomposition import PCA as _PCA
         from sklearn.neighbors import KNeighborsClassifier
 
-        gs_row3 = outer[2].subgridspec(1, 3, wspace=0.38, width_ratios=[0.95, 1.15, 0.90])
-        ax_c1 = fig.add_subplot(gs_row3[0, 0])
+        row3_regions = row_regions[2].split_cols([0.95, 1.15, 0.90], wspace=0.38)
+        ax_c1 = row3_regions[0].add_axes(fig)
         add_panel_label(ax_c1, 'e', x=-0.12, y=_panel_label_y)
-        ax_c2 = fig.add_subplot(gs_row3[0, 1])
+        ax_c2 = row3_regions[1].add_axes(fig)
         add_panel_label(ax_c2, 'f', x=-0.12, y=_panel_label_y)
-        ax_c3 = fig.add_subplot(gs_row3[0, 2])
+        ax_c3 = row3_regions[2].add_axes(fig)
         add_panel_label(ax_c3, 'g', x=-0.12, y=_panel_label_y)
 
         # PCA reduce full-dim data for KNN

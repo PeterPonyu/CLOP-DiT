@@ -21,8 +21,8 @@ from typing import Dict, List, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .explicit_positioning import add_axes_next_to, add_shared_legend_axes, layout_axes_row
-from .panel_geometry import apply_layout_rect
+from .direct_layout import bind_figure_region
+from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
 from .style import (
     COLORS,
     FONT_DENSE_YTICK,
@@ -184,17 +184,18 @@ def plot_clustering_panel(
     cell_type = np.asarray(cell_type)
 
     fig = plt.figure(figsize=(13.0, 5.5))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.3, 1.0, 0.8],
-                          wspace=0.45)
-    apply_layout_rect(fig, (0.05, 0.10, 0.98, 0.93))
+    ax_rect_1, ax_rect_2, ax_rect_3 = bind_figure_region(fig, (0.05, 0.10, 0.98, 0.93)).split_cols(
+        [1.10, 1.35, 0.82],
+        gap=[0.028, 0.018],
+    )
     # suptitle removed per revision; title information moved to LaTeX caption
 
-    ax = fig.add_subplot(gs[0])
+    ax = ax_rect_1.add_axes(fig)
     add_panel_label(ax, 'a', x=-0.10, y=1.05)
     plot_umap_overlay(ax, umap_coords, source, cell_type,
                       legend_loc="upper left", legend_fontsize=9)
 
-    ax2 = fig.add_subplot(gs[1])
+    ax2 = ax_rect_2.add_axes(fig)
     add_panel_label(ax2, 'b', x=-0.10, y=1.05)
     mixing = clustering_data.get("per_type_mixing", {})
     if mixing:
@@ -220,7 +221,7 @@ def plot_clustering_panel(
                  transform=ax2.transAxes, fontsize=10)
         ax2.set_title("kNN Mixing Score")
 
-    ax3 = fig.add_subplot(gs[2])
+    ax3 = ax_rect_3.add_axes(fig)
     add_panel_label(ax3, 'c', x=-0.10, y=1.05)
     ax3.axis("off")
 
@@ -247,8 +248,6 @@ def plot_clustering_panel(
     n_clusters = clustering_data.get("n_leiden_clusters", "?")
     ax3.text(0.5, 0.02, f"Leiden clusters: {n_clusters}",
              transform=ax3.transAxes, ha="center", fontsize=8, color="#666")
-
-    layout_axes_row([ax, ax2, ax3], widths=[1.10, 1.35, 0.82], gaps=[0.028, 0.018])
 
     if save:
         path = save_panel(fig, output_dir / "fig17_clustering_mixing.png", dpi)
@@ -282,15 +281,16 @@ def plot_classifier_panel(
     per_type_acc = classifier_data.get("per_type_accuracy", {})
 
     fig = plt.figure(figsize=(13.0, 6.0))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.2, 1.0, 0.9],
-                          wspace=0.50)
-    apply_layout_rect(fig, (0.05, 0.10, 0.98, 0.93))
+    ax_rect_1, ax_rect_2, ax_rect_3 = bind_figure_region(fig, (0.05, 0.10, 0.98, 0.93)).split_cols(
+        [1.10, 1.35, 0.82],
+        gap=[0.028, 0.018],
+    )
     gen_acc = classifier_data.get("gen_accuracy", 0)
     gen_f1 = classifier_data.get("gen_f1", 0)
     disc_auc = classifier_data.get("discriminator_auc", 0)
     # suptitle and stats banner removed per revision; title information moved to LaTeX caption
 
-    ax = fig.add_subplot(gs[0])
+    ax = ax_rect_1.add_axes(fig)
     add_panel_label(ax, 'a', x=-0.10, y=1.05)
     cm_norm = cm.astype(float) / (cm.sum(axis=1, keepdims=True) + 1e-8)
     im = ax.imshow(cm_norm, cmap="Blues", aspect="auto", vmin=0, vmax=1)
@@ -333,7 +333,7 @@ def plot_classifier_panel(
     style_axes(ax, "heatmap", title="Confusion Matrix (on Generated Cells)",
                xlabel="Predicted", ylabel="True Type")
 
-    ax2 = fig.add_subplot(gs[1])
+    ax2 = ax_rect_2.add_axes(fig)
     add_panel_label(ax2, 'b', x=-0.10, y=1.05)
     if per_type_acc:
         summary = _plot_classifier_metric_heatmap(fig, ax2, cm, class_names)
@@ -355,7 +355,7 @@ def plot_classifier_panel(
                  transform=ax2.transAxes)
         ax2.set_title("Per-Type Summary")
 
-    ax3 = fig.add_subplot(gs[2])
+    ax3 = ax_rect_3.add_axes(fig)
     add_panel_label(ax3, 'c', x=-0.10, y=1.05)
     disc_proba = classifier_data.get("_disc_proba")
     disc_y = classifier_data.get("_disc_y")
@@ -396,8 +396,6 @@ def plot_classifier_panel(
                  transform=ax3.transAxes)
         ax3.set_title("Discriminator ROC")
 
-    layout_axes_row([ax, ax2, ax3], widths=[1.10, 1.35, 0.82], gaps=[0.028, 0.018])
-
     if save:
         path = save_panel(fig, output_dir / "fig17_classifier_alignment.png", dpi)
         logger.info(f"Saved Panel Q → {path}")
@@ -420,10 +418,10 @@ def plot_clustering_and_classifier_merged(
     apply_style()
 
     fig = plt.figure(figsize=(16.0, 10.8))
-    gs = fig.add_gridspec(2, 3, wspace=0.40, hspace=0.30,
-                          height_ratios=[1, 1.05],
-                          width_ratios=[1.15, 1.42, 0.85])
-    apply_layout_rect(fig, (0.03, 0.10, 0.98, 0.96))
+    layout = bind_figure_region(fig, (0.03, 0.10, 0.98, 0.96))
+    top_row, bottom_row = layout.split_rows([1, 1.05], hspace=0.30)
+    top_rects = top_row.split_cols([1.10, 1.38, 0.82], gap=[0.028, 0.018])
+    bottom_rects = bottom_row.split_cols([1.10, 1.38, 0.82], gap=[0.028, 0.018])
     # Title moved to LaTeX caption
     # set_figure_suptitle(fig, "Downstream Validation: Clustering & Classifier Alignment", fontsize=11)
 
@@ -431,7 +429,7 @@ def plot_clustering_and_classifier_merged(
     source = clustering_data.get("_source")
     cell_type = clustering_data.get("_cell_type")
 
-    ax_p1 = fig.add_subplot(gs[0, 0])
+    ax_p1 = top_rects[0].add_axes(fig)
     add_panel_label(ax_p1, 'a')
     if umap_coords is not None:
         umap_coords = np.asarray(umap_coords)
@@ -443,7 +441,7 @@ def plot_clustering_and_classifier_merged(
         ax_p1.text(0.5, 0.5, "No UMAP data", ha="center", va="center",
                    transform=ax_p1.transAxes)
 
-    ax_p2 = fig.add_subplot(gs[0, 1])
+    ax_p2 = top_rects[1].add_axes(fig)
     add_panel_label(ax_p2, 'b')
     mixing = clustering_data.get("per_type_mixing", {})
     if mixing:
@@ -468,7 +466,7 @@ def plot_clustering_and_classifier_merged(
         ax_p2.text(0.5, 0.5, "No mixing data", ha="center", va="center",
                    transform=ax_p2.transAxes)
 
-    ax_ps = fig.add_subplot(gs[0, 2])
+    ax_ps = top_rects[2].add_axes(fig)
     add_panel_label(ax_ps, 'c')
     summary_items = [
         ("ARI", clustering_data.get("ari_gt_vs_leiden", 0), (0.7, 0.4)),
@@ -505,7 +503,7 @@ def plot_clustering_and_classifier_merged(
     gen_f1 = classifier_data.get("gen_f1", 0)
     disc_auc = classifier_data.get("discriminator_auc", 0)
 
-    ax_q1 = fig.add_subplot(gs[1, 0])
+    ax_q1 = bottom_rects[0].add_axes(fig)
     add_panel_label(ax_q1, 'd')
     if cm is not None:
         cm = np.array(cm)
@@ -515,7 +513,7 @@ def plot_clustering_and_classifier_merged(
         ax_q1.text(0.5, 0.5, "No confusion matrix", ha="center", va="center",
                    transform=ax_q1.transAxes)
 
-    ax_q2 = fig.add_subplot(gs[1, 1])
+    ax_q2 = bottom_rects[1].add_axes(fig)
     add_panel_label(ax_q2, 'e')
     note_ax = None
     if per_type_acc and cm is not None:
@@ -541,7 +539,7 @@ def plot_clustering_and_classifier_merged(
         ax_q2.text(0.5, 0.5, "No per-type data", ha="center", va="center",
                    transform=ax_q2.transAxes)
 
-    ax_q3 = fig.add_subplot(gs[1, 2])
+    ax_q3 = bottom_rects[2].add_axes(fig)
     add_panel_label(ax_q3, 'f')
     disc_proba = classifier_data.get("_disc_proba")
     disc_y = classifier_data.get("_disc_y")
@@ -551,8 +549,6 @@ def plot_clustering_and_classifier_merged(
         ax_q3.text(0.5, 0.5, "No discriminator data", ha="center", va="center",
                    transform=ax_q3.transAxes)
 
-    layout_axes_row([ax_p1, ax_p2, ax_ps], widths=[1.10, 1.38, 0.82], gaps=[0.028, 0.018])
-    layout_axes_row([ax_q1, ax_q2, ax_q3], widths=[1.10, 1.38, 0.82], gaps=[0.028, 0.018])
     if note_ax is not None:
         note_ax.set_position((ax_q2.get_position().x0, ax_q2.get_position().y0 - 0.065, ax_q2.get_position().width, 0.05))
 

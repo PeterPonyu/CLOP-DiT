@@ -24,13 +24,13 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .direct_layout import bind_figure_region
 from .style import (
     COLORS, FONT_HEATMAP_CELL, FONT_SMALL, FONT_TITLE,
     abbreviate_cell_type, add_panel_label,
     quality_color, save_with_vcd, set_adaptive_ytick_labels, style_axes,
 )
-from .explicit_positioning import add_axes_next_to, layout_axes_row
-from .panel_geometry import apply_layout_rect
+from .explicit_positioning import add_axes_next_to
 from src.utils.paths import FIG_DIR
 
 logger = logging.getLogger(__name__)
@@ -163,12 +163,12 @@ def plot_text_cell_heatmap(
     labels_sorted = [labels[i] for i in sort_order]
 
     fig = plt.figure(figsize=(15.2, 9.1))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.22, 0.84, 0.66], wspace=0.46)
     # Title moved to LaTeX caption
-    apply_layout_rect(fig, (0.03, 0.10, 0.98, 0.95))
+    layout = bind_figure_region(fig, (0.03, 0.10, 0.98, 0.95))
+    ax1_rect, ax2_rect, ax3_rect = layout.split_cols([1.18, 0.90, 0.72], gap=[0.040, 0.020])
 
     # ── F1: Clustered heatmap with annotations ──
-    ax1 = fig.add_subplot(gs[0])
+    ax1 = ax1_rect.add_axes(fig)
     add_panel_label(ax1, chr(ord('a') + label_offset), x=-0.10, y=1.05)
     cmap = mcolors.LinearSegmentedColormap.from_list(
         "custom_heat",
@@ -244,7 +244,7 @@ def plot_text_cell_heatmap(
     style_axes(ax1, kind="heatmap")
 
     # ── F2: Per-type alignment bars with threshold bands ──
-    ax2 = fig.add_subplot(gs[1])
+    ax2 = ax2_rect.add_axes(fig)
     add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.10, y=1.05)
     sorted_idx_asc = np.argsort(diag)
     d_asc = diag[sorted_idx_asc]
@@ -309,7 +309,7 @@ def plot_text_cell_heatmap(
     style_axes(ax2, kind="bar")
 
     # ── F3: Distribution comparison with statistics ──
-    ax3 = fig.add_subplot(gs[2])
+    ax3 = ax3_rect.add_axes(fig)
     add_panel_label(ax3, chr(ord('a') + label_offset + 2), x=-0.10, y=1.05)
 
     # Histograms with concise legend entries
@@ -397,10 +397,6 @@ def plot_text_cell_heatmap(
     )
 
     style_axes(ax3, kind="default")
-
-    layout_axes_row([ax1, ax2, ax3], widths=[1.18, 0.90, 0.72], gaps=[0.040, 0.020])
-    pos1 = ax1.get_position()
-    cax.set_position((pos1.x1 + 0.012, pos1.y0 + 0.015, 0.011, pos1.height * 0.52))
 
     if save:
         path = Path(output_dir) / "fig07_text_cell_alignment.png"

@@ -38,9 +38,8 @@ def combine_panels_pdf(
             if not png_path.exists():
                 continue
             img = plt.imread(str(png_path))
-            fig_tmp, ax_tmp = plt.subplots(
-                figsize=(img.shape[1] / 100, img.shape[0] / 100)
-            )
+            fig_tmp = plt.figure(figsize=(img.shape[1] / 100, img.shape[0] / 100))
+            ax_tmp = fig_tmp.add_axes((0.0, 0.0, 1.0, 1.0))
             ax_tmp.imshow(img)
             ax_tmp.axis("off")
             pdf.savefig(fig_tmp, **get_export_savefig_kwargs(fig_tmp, dpi=100, pad_inches=0.02))

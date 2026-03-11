@@ -20,8 +20,8 @@ from typing import Callable, Dict, List, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .explicit_positioning import add_axes_next_to, add_shared_legend_axes, layout_axes_row
-from .panel_geometry import apply_layout_rect
+from .direct_layout import bind_figure_region
+from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
 from .style import COLORS, FONT_DENSE_YTICK, abbreviate_cell_type, add_panel_label, quality_color, save_with_vcd
 
 logger = logging.getLogger(__name__)
@@ -83,12 +83,14 @@ def plot_expression_correlation(
     spearman_rho = metrics["gene_correlation"]["spearman_rho"]
 
     fig = plt.figure(figsize=(12.0, 7.5))
-    gs = fig.add_gridspec(2, 2, wspace=0.54, hspace=0.42)
     # Note: Figure-level title removed per revision requirements; stats moved to caption
-    apply_layout_rect(fig, (0.05, 0.12, 0.98, 0.95))
+    layout = bind_figure_region(fig, (0.05, 0.12, 0.98, 0.95))
+    top_row, bottom_row = layout.split_rows(2, hspace=0.42)
+    top_left, top_right = top_row.split_cols([0.86, 1.14], gap=0.040)
+    bottom_left, bottom_right = bottom_row.split_cols([1.00, 1.00], gap=0.018)
 
     # -- H1: Density scatter with residual coloring --
-    ax1 = fig.add_subplot(gs[0, 0])
+    ax1 = top_left.add_axes(fig)
     abs_res = np.abs(residuals)
     sc = ax1.scatter(real_means, gen_means, c=abs_res, cmap="magma_r",
                      s=18, alpha=0.7, edgecolors="none",
@@ -134,7 +136,7 @@ def plot_expression_correlation(
                          color="#333")
 
     # -- H2: Per-type Pearson r lollipop chart --
-    ax2 = fig.add_subplot(gs[0, 1])
+    ax2 = top_right.add_axes(fig)
     per_type = metrics.get("per_type_expression_fidelity", {})
     if per_type:
         type_names_sorted = sorted(per_type.keys(),
@@ -186,7 +188,7 @@ def plot_expression_correlation(
     add_panel_label(ax2, 'b', x=-0.10, y=1.05)
 
     # -- H3: Marker gene expression with error bars --
-    ax3 = fig.add_subplot(gs[1, 0])
+    ax3 = bottom_left.add_axes(fig)
     marker_dict = metrics.get("marker_genes", {})
     selected_cats: List[str] = []
     selected_genes: List[List[str]] = []
@@ -248,7 +250,7 @@ def plot_expression_correlation(
     add_panel_label(ax3, 'c', x=-0.10, y=1.05)
 
     # -- H4: Residual distribution --
-    ax4 = fig.add_subplot(gs[1, 1])
+    ax4 = bottom_right.add_axes(fig)
     ax4.hist(residuals, bins=60, color=COLORS["real"], alpha=0.7, edgecolor="white",
              density=True)
     ax4.tick_params(axis='x', labelsize=10, rotation=30)
@@ -270,10 +272,6 @@ def plot_expression_correlation(
              transform=ax4.transAxes, ha="right", va="top", fontsize=10,
              bbox=dict(boxstyle="round,pad=0.4", fc="white", ec="none", alpha=0.9))
 
-    layout_axes_row([ax1, ax2], widths=[0.86, 1.14], gaps=[0.040])
-    layout_axes_row([ax3, ax4], widths=[1.00, 1.00], gaps=[0.018])
-    cbar_width = ax1.get_position().width * 0.30
-    cax.set_position((ax1.get_position().x1 - cbar_width, ax1.get_position().y0 - 0.070, cbar_width, 0.018))
     if 'legend_handles_c' in locals() and legend_handles_c:
         legend_ax = add_shared_legend_axes(
             fig,

@@ -24,8 +24,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from src.visualization.direct_layout import bind_figure_region
 from src.visualization.explicit_positioning import add_axes_next_to
-from src.visualization.panel_geometry import apply_layout_rect
 from src.visualization.style import apply_style, COLORS, FONT_TITLE, FONT_LABEL, add_panel_label, save_with_vcd
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -162,11 +162,13 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     mantel_vals = [v["mantel_r"] for v in per_type_results.values()]
 
     fig = plt.figure(figsize=(13.8, 9.8))
-    gs = fig.add_gridspec(2, 2, height_ratios=[0.92, 1.08], wspace=0.34, hspace=0.30)
-    apply_layout_rect(fig, (0.06, 0.08, 0.98, 0.96))
+    layout = bind_figure_region(fig, (0.06, 0.08, 0.98, 0.96))
+    top_row, bottom_row = layout.split_rows([0.92, 1.08], hspace=0.30)
+    top_left, top_right = top_row.split_cols(2, wspace=0.34)
+    bottom_left, bottom_right = bottom_row.split_cols(2, wspace=0.34)
 
     # ── Panel (a): Distribution with null baseline ──
-    ax = fig.add_subplot(gs[0, 0])
+    ax = top_left.add_axes(fig)
     add_panel_label(ax, 'a', x=-0.10, y=1.05)
 
     # Compute null baseline: permuted gene labels within each type
@@ -240,7 +242,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     R_real = _corr_matrix(real_sub[r_mask][:, :50])
     R_gen = _corr_matrix(gen_sub[g_mask][:, :50])
 
-    ax2 = fig.add_subplot(gs[0, 1])
+    ax2 = top_right.add_axes(fig)
     add_panel_label(ax2, 'b', x=-0.10, y=1.05)
     diff = R_gen - R_real
     im = ax2.imshow(diff, cmap="RdBu_r", vmin=-0.5, vmax=0.5, aspect="auto")
@@ -278,7 +280,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     R_real_w = _corr_matrix(real_sub[r_mask][:, :50])
     R_gen_w = _corr_matrix(gen_sub[g_mask][:, :50])
 
-    ax3 = fig.add_subplot(gs[1, 0])
+    ax3 = bottom_left.add_axes(fig)
     add_panel_label(ax3, 'c', x=-0.10, y=1.05)
     diff_w = R_gen_w - R_real_w
     im2 = ax3.imshow(diff_w, cmap="RdBu_r", vmin=-0.5, vmax=0.5, aspect="auto")
@@ -306,7 +308,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
 
     # ── Panel (d): Replace non-informative cell-count panel ──
     # Use Mantel r vs per-type mean expression variance (biological heterogeneity)
-    ax4 = fig.add_subplot(gs[1, 1])
+    ax4 = bottom_right.add_axes(fig)
     add_panel_label(ax4, 'd', x=-0.10, y=1.05)
 
     # Compute mean expression variance per type as a proxy for heterogeneity

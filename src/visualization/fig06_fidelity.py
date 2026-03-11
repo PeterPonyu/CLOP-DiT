@@ -19,13 +19,13 @@ from typing import Callable, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .direct_layout import bind_figure_region
 from .style import (
     COLORS, FONT_HEATMAP_CELL, FONT_LEGEND, FONT_SMALL,
     abbreviate_cell_type, add_panel_label,
     quality_color, save_with_vcd, set_adaptive_ytick_labels, style_axes,
 )
-from .explicit_positioning import add_axes_next_to, layout_axes_row
-from .panel_geometry import apply_layout_rect
+from .explicit_positioning import add_axes_next_to
 from src.utils.paths import FIG_DIR
 
 logger = logging.getLogger(__name__)
@@ -104,15 +104,14 @@ def plot_per_type_generation(
     fd_mean = float(np.nanmean(fd_array)) if fd_valid.any() else float("nan")
 
     fig = plt.figure(figsize=(14.0, 6.9))
-    gs_g = fig.add_gridspec(1, 3, wspace=0.46, width_ratios=[1.1, 1.25, 0.9])
-    apply_layout_rect(fig, (0.03, 0.08, 0.98, 0.94))
+    layout = bind_figure_region(fig, (0.03, 0.08, 0.98, 0.94))
+    g1_rect, g2_rect, g3_rect = layout.split_cols([1.08, 1.22, 0.82], gap=[0.020, 0.042])
     summary = data.get("summary", {})
     # Title moved to LaTeX caption
 
     # G1: Centroid cosine (sorted)
     from matplotlib.ticker import MaxNLocator
-    ax = fig.add_subplot(gs_g[0])
-    ax_g1 = ax
+    ax = g1_rect.add_axes(fig)
     add_panel_label(ax, chr(ord('a') + label_offset), x=-0.10, y=1.05)
     sorted_idx = np.argsort(cosines)
     sorted_cos = [cosines[i] for i in sorted_idx]
@@ -140,8 +139,7 @@ def plot_per_type_generation(
     style_axes(ax, kind="bar")
 
     # G2: Frechet outlier profile
-    ax = fig.add_subplot(gs_g[1])
-    ax_g2 = ax
+    ax = g2_rect.add_axes(fig)
     add_panel_label(ax, chr(ord('a') + label_offset + 1), x=-0.10, y=1.05)
     if fd_valid.any():
         fd_idx = np.where(fd_valid)[0][np.argsort(fd_array[fd_valid])]
@@ -170,8 +168,7 @@ def plot_per_type_generation(
         )
 
     # G3: Cosine vs abundance with FD bubble size and diversity color
-    ax = fig.add_subplot(gs_g[2])
-    ax_g3 = ax
+    ax = g3_rect.add_axes(fig)
     add_panel_label(ax, chr(ord('a') + label_offset + 2), x=-0.10, y=1.05)
     fd_for_size = np.where(fd_valid, fd_array, np.nanmedian(fd_array[fd_valid]) if fd_valid.any() else 1.0)
     fd_min = float(np.nanmin(fd_for_size)) if np.isfinite(fd_for_size).any() else 0.0
@@ -254,11 +251,6 @@ def plot_per_type_generation(
     ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
     ax.set_xlim(x_vals.min() - 0.10, x_vals.max() + 0.10)
     style_axes(ax, kind="scatter")
-
-    layout_axes_row([ax_g1, ax_g2, ax_g3], widths=[1.08, 1.22, 0.82], gaps=[0.020, 0.042])
-    if cax is not None:
-        pos = ax_g3.get_position()
-        cax.set_position((pos.x1 + 0.012, pos.y0 + 0.012, 0.010, pos.height * 0.34))
 
     if save:
         path = Path(output_dir) / "fig06_per_type_fidelity.png"

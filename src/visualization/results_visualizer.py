@@ -39,6 +39,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Shared style infrastructure (centralised in style.py)
+from .direct_layout import bind_figure_region
 from .style import (
     apply_style,
     set_figure_suptitle,
@@ -585,18 +586,20 @@ class ResultsVisualizer:
         images = [(l_path.stem, l_image), ("fig14_expression_diversity", k_image)]
 
         fig = plt.figure(figsize=(13.6, 8.6), dpi=self.dpi)
-        gs = fig.add_gridspec(2, 2, height_ratios=[1.0, 1.0], wspace=0.04, hspace=0.14)
+        layout = bind_figure_region(fig, (0.02, 0.04, 0.98, 0.96))
+        top_row, bottom_row = layout.split_rows([1.0, 1.0], hspace=0.14)
+        top_left, top_right = top_row.split_cols(2, wspace=0.04)
         # suptitle removed per revision; title information moved to LaTeX caption
 
         for col, (_, image) in enumerate(images):
-            ax = fig.add_subplot(gs[0, col])
+            ax = [top_left, top_right][col].add_axes(fig)
             ax.imshow(_trim_whitespace(image), aspect="auto")
             ax.set_xticks([])
             ax.set_yticks([])
             ax.set_frame_on(False)
             ax.axis("off")
 
-        ax_bottom = fig.add_subplot(gs[1, :])
+        ax_bottom = bottom_row.add_axes(fig)
         violin_fig = plot_diversity_distributions_violin(
             cache_dir=str(self.cache),
             div_metrics_path=div_metrics_path,

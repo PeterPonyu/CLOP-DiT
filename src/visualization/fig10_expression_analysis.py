@@ -20,8 +20,8 @@ from typing import Callable, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .explicit_positioning import add_shared_legend_axes, layout_axes_row
-from .panel_geometry import apply_layout_rect
+from .direct_layout import bind_figure_region
+from .explicit_positioning import add_shared_legend_axes
 from .style import COLORS, add_colorbar_safe, add_panel_label, quality_color, save_with_vcd
 
 logger = logging.getLogger(__name__)
@@ -75,12 +75,14 @@ def plot_expression_analysis(
     overall = metrics.get("overall", {})
 
     fig = plt.figure(figsize=(10.1, 7.5))
-    gs = fig.add_gridspec(2, 2, wspace=0.48, hspace=0.42)
-    apply_layout_rect(fig, (0.04, 0.08, 0.98, 0.96))
+    layout = bind_figure_region(fig, (0.04, 0.08, 0.98, 0.96))
+    top_row, bottom_row = layout.split_rows(2, hspace=0.42)
+    top_left, top_right = top_row.split_cols([1.00, 1.02], gap=0.040)
+    bottom_left, bottom_right = bottom_row.split_cols([1.02, 0.98], gap=0.030)
     # Note: Figure-level title removed per revision requirements; stats moved to caption
 
     # -- I1: CV scatter (real vs gen) with gene labels --
-    ax1 = fig.add_subplot(gs[0, 0])
+    ax1 = top_left.add_axes(fig)
     real_cv = real.std(axis=0) / (np.abs(real.mean(axis=0)) + 1e-8)
     gen_cv = gen.std(axis=0) / (np.abs(gen.mean(axis=0)) + 1e-8)
     cv_diff = np.abs(gen_cv - real_cv)
@@ -120,7 +122,7 @@ def plot_expression_analysis(
     add_panel_label(ax1, 'a', x=-0.10, y=1.05)
 
     # -- I2: Expression range with percentile bands --
-    ax2 = fig.add_subplot(gs[0, 1])
+    ax2 = top_right.add_axes(fig)
     real_means = real.mean(axis=0)
     gen_means = gen.mean(axis=0)
     sort_idx = np.argsort(real_means)
@@ -150,7 +152,7 @@ def plot_expression_analysis(
     add_panel_label(ax2, 'b', x=-0.10, y=1.05)
 
     # -- I3: Per-cell std as overlaid smooth histograms --
-    ax3 = fig.add_subplot(gs[1, 0])
+    ax3 = bottom_left.add_axes(fig)
     real_cell_std = real.std(axis=1)
     gen_cell_std = gen.std(axis=1)
     real_cell_mean = real.mean(axis=1)
@@ -183,7 +185,7 @@ def plot_expression_analysis(
              bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="none", alpha=0.9))
 
     # -- I4: Top variable genes ranked bar chart --
-    ax4 = fig.add_subplot(gs[1, 1])
+    ax4 = bottom_right.add_axes(fig)
     real_stds = real.std(axis=0)
     gen_stds = gen.std(axis=0)
     valid_mask = real_stds > 1e-4
@@ -220,8 +222,6 @@ def plot_expression_analysis(
                      fontweight="normal")
             placed_annotations.append((r, i))
 
-    layout_axes_row([ax1, ax2], widths=[1.00, 1.02], gaps=[0.040])
-    layout_axes_row([ax3, ax4], widths=[1.02, 0.98], gaps=[0.030])
     if legend_handles_c:
         legend_ax = add_shared_legend_axes(
             fig,

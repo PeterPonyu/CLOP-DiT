@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from src.visualization.direct_layout import bind_figure_region
 from src.visualization.style import apply_style
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -48,11 +49,11 @@ def _arrow(ax, start, end, color="#555", lw=1.2, style="->"):
 
 def make_figure():
     apply_style()
-    fig, ax = plt.subplots(1, 1, figsize=(10.6, 7.0))
+    fig = plt.figure(figsize=(10.6, 7.0))
+    ax = bind_figure_region(fig, (0.01, 0.01, 0.99, 0.99)).add_axes(fig)
     ax.set_xlim(-0.12, 10.36)
     ax.set_ylim(-0.22, 7.18)
     ax.axis("off")
-    fig.subplots_adjust(left=0.01, right=0.99, top=0.99, bottom=0.01)
 
     # Title
     ax.text(5.0, 6.96, "Evaluation Pipeline Schematic", fontsize=15,
