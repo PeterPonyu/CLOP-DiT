@@ -89,7 +89,7 @@ def plot_panel_m(
     def _short_mode(name: str) -> str:
         return name.split(" (")[0]
 
-    def plot_one(ax, mask, title, alpha=0.30, size=8, *, show_ylabel=True):
+    def plot_one(ax, mask, title, alpha=0.45, size=8, *, show_ylabel=True):
         for tid in selected_types:
             tmask = mask & (combined_labels == tid)
             ax.scatter(coords[tmask, 0], coords[tmask, 1],
@@ -111,7 +111,7 @@ def plot_panel_m(
     real_mask_bool = combined_source == "Real"
     plot_one(axes[0], real_mask_bool,
              f"Real (n={n_real})",
-             alpha=0.20, size=4)
+             alpha=0.35, size=4)
 
     mode_counts = mode_counts or {}
     for i, mode_name in enumerate(mode_diversity.keys()):

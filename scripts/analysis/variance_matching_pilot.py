@@ -173,17 +173,15 @@ def main():
     )
     from scipy import stats as scipy_stats
 
-    fig = plt.figure(figsize=(17.4, 11.4))
+    fig = plt.figure(figsize=(14.0, 10.0))
     layout = bind_figure_region(fig, (0.11, 0.08, 0.97, 0.96))
     # Uses the repository's direct rectangle layout engine, not GridSpec or
     # matplotlib's automatic/constrained layout.
     # - split_rows(..., hspace=...) controls the vertical gap between rows.
     # - split_cols(..., wspace=...) controls the horizontal gap between columns.
-    # The user's intended translation is: larger vertical row gap, smaller
-    # left-right column gaps.
-    top_row, bottom_row = layout.split_rows([1.20, 0.92], hspace=0.18)
-    top_left, top_right = top_row.split_cols([1.2, 1.0], wspace=0.24)
-    bottom_left, bottom_right = bottom_row.split_cols([1.16, 1.04], wspace=0.30)
+    top_row, bottom_row = layout.split_rows([1.20, 0.92], hspace=0.22)
+    top_left, top_right = top_row.split_cols([1.2, 1.0], wspace=0.20)
+    bottom_left, bottom_right = bottom_row.split_cols([1.16, 1.04], wspace=0.26)
 
     # ── Panel (a): SWD per Cell Type (sorted bar chart) ──
     sorted_results = sorted(results, key=lambda r: r["swd"], reverse=True)
@@ -210,7 +208,7 @@ def main():
         else:
             thin_labels.append("")
     ax.set_yticks(range(n_types))
-    ax.set_yticklabels(thin_labels, fontsize=8)
+    ax.set_yticklabels(thin_labels, fontsize=9)
     ax.invert_yaxis()
 
     # Mean + 1σ threshold lines
@@ -223,12 +221,12 @@ def main():
     for i, r in enumerate(sorted_results):
         if r["swd"] > swd_mean + swd_std:
             ax.text(r["swd"] + 0.0003, i, f"n={r['n_real']:,}",
-                    fontsize=7, va="center", color="#666")
+                    fontsize=8, va="center", color="#666")
 
     ax.legend(fontsize=FONT_ANNOTATION, frameon=False,
               loc="lower right")
     style_axes(ax, "bar", xlabel="SWD", title="Latent SWD per Cell Type")
-    ax.set_xlabel("SWD", fontsize=FONT_LABEL - 1)
+    ax.set_xlabel("SWD", fontsize=FONT_LABEL)
     ax.xaxis.labelpad = -1
     ax.xaxis.set_label_coords(0.5, -0.045)
 
@@ -267,7 +265,7 @@ def main():
     style_axes(ax2, "default",
                xlabel="Variance ratio (gen/real)",
                title="Per-Type Latent Variance Ratio")
-    ax2.set_xlabel("Variance ratio (gen/real)", fontsize=FONT_LABEL - 1)
+    ax2.set_xlabel("Variance ratio (gen/real)", fontsize=FONT_LABEL)
     ax2.xaxis.labelpad = -1
     ax2.xaxis.set_label_coords(0.5, -0.045)
 
@@ -379,7 +377,7 @@ def main():
     ax4.set_title("SWD vs. Training Cell Count", fontsize=FONT_TITLE - 2, pad=0, y=0.985)
 
     fig_path = output_dir / "variance_matching_pilot.png"
-    save_with_vcd(fig, fig_path, dpi=300, layout_rect=(0.08, 0.04, 0.98, 0.96))
+    save_with_vcd(fig, fig_path, dpi=300, layout_rect=(0.08, 0.05, 0.98, 0.96))
     print(f"\n[var_pilot] Figure saved to {fig_path}")
 
     # Also save to results/figures/ with the article-delivery basename

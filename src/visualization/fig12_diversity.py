@@ -59,7 +59,7 @@ def plot_diagnostics(
 
     # ── Figure 12: Diversity Diagnostics (4 subplots) ──
     fig = plt.figure(figsize=(12.8, 8.7))
-    layout = bind_figure_region(fig, (0.14, 0.17, 0.988, 0.92))
+    layout = bind_figure_region(fig, (0.12, 0.14, 0.988, 0.92))
     top_row, bottom_row = layout.split_rows(2, hspace=0.46)
     top_left, top_right = top_row.split_cols([1.00, 1.00], gap=0.048)
     bottom_left, bottom_right = bottom_row.split_cols([0.92, 1.02], gap=0.074)

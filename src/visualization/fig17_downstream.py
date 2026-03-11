@@ -419,7 +419,7 @@ def plot_clustering_and_classifier_merged(
     apply_style()
 
     fig = plt.figure(figsize=(16.0, 10.2))
-    layout = bind_figure_region(fig, (0.03, 0.10, 0.98, 0.96))
+    layout = bind_figure_region(fig, (0.03, 0.09, 0.98, 0.96))
     top_row, bottom_row = layout.split_rows([0.98, 1.10], hspace=0.34)
     top_rects = top_row.split_cols([1.10, 1.34, 0.82], gap=[0.060, 0.050])
     bottom_rects = bottom_row.split_cols([1.10, 1.34, 0.82], gap=[0.060, 0.050])
@@ -553,7 +553,7 @@ def plot_clustering_and_classifier_merged(
         ax_q2.text(0.5, 0.5, "No per-type data", ha="center", va="center",
                    transform=ax_q2.transAxes)
 
-    ax_q3 = bottom_rects[2].add_axes(fig)
+    ax_q3 = bottom_rects[2].inset(top=0.04).add_axes(fig)
     add_panel_label(ax_q3, 'f', x=-0.12, y=1.05)
     disc_proba = classifier_data.get("_disc_proba")
     disc_y = classifier_data.get("_disc_y")

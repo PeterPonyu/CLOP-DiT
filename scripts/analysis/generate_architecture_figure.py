@@ -165,7 +165,7 @@ def create_architecture_figure(output_dir=None):
         output_dir = Path(FIG_DIR)
     output_dir = Path(output_dir)
     fig = plt.figure(figsize=(10.0, 3.8))
-    ax = bind_figure_region(fig, (0.03, 0.04, 0.98, 0.84)).add_axes(fig)
+    ax = bind_figure_region(fig, (0.03, 0.02, 0.96, 0.86)).add_axes(fig)
     ax.set_xlim(-0.20, 7.95)
     ax.set_ylim(-0.18, 3.15)
     ax.axis("off")

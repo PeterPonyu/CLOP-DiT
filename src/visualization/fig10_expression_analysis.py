@@ -76,7 +76,7 @@ def plot_expression_analysis(
     overall = metrics.get("overall", {})
 
     fig = plt.figure(figsize=(10.4, 7.7))
-    layout = bind_figure_region(fig, (0.10, 0.08, 0.985, 0.93))
+    layout = bind_figure_region(fig, (0.08, 0.08, 0.985, 0.93))
     top_row, bottom_row = layout.split_rows(2, hspace=0.52)
     top_left, top_right = top_row.split_cols([1.00, 1.02], gap=0.050)
     bottom_left, bottom_right = bottom_row.split_cols([1.02, 0.98], gap=0.060)
