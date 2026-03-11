@@ -127,10 +127,6 @@ HEIGHT_COMPACT_MIN: float = 4.0          # never shrink below this many inches
 # ── Semantic integrity (label preservation) ────────────────────────────
 MIN_LABEL_DISPLAY_CHARS: int = 12        # never shorten a label below this
 
-# ── Tight-bbox tolerance ─────────────────────────────────────────────
-TIGHT_BBOX_PAD_INCHES: float = 0.08      # must match save_with_vcd pad_inches
-TIGHT_BBOX_ENABLED: bool = True           # use tight bbox for truncation checks
-
 # ── Cross-axes text overlap (Pass 32) ────────────────────────────
 CROSS_AXES_TEXT_OVERLAP_TOL_PX: float = 2.0   # shrink before overlap test
 CROSS_AXES_TEXT_OVERLAP_MIN_PX2: float = 10.0 # minimum area to report

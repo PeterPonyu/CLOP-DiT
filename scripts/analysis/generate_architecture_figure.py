@@ -382,7 +382,7 @@ def create_architecture_figure(output_dir=None):
                (dit_bx + dit_bw * 0.35, dit_by),
                color=C_SHARED, linewidth=1.0)
 
-    adaln_box_x = cond_bx + cond_bw / 2 + 0.45
+    adaln_box_x = cond_bx + cond_bw / 2 + 0.58
     adaln_box_y = cond_by + cond_bh + 0.10
     adaln_box = FancyBboxPatch(
         (adaln_box_x, adaln_box_y), 0.42, 0.17,

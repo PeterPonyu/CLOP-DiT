@@ -103,11 +103,11 @@ def plot_benchmark_panel(
     fig = plt.figure(figsize=(16.2, 9.6))
     layout = bind_figure_region(fig, (0.08, 0.16, 0.96, 0.95))
     top_row, bottom_row = layout.split_rows([1.05, 1.12], hspace=0.32)
-    top_left, top_right = top_row.split_cols(2, wspace=0.52)
-    bottom_left, bottom_right = bottom_row.split_cols(2, wspace=0.52)
+    top_left, top_right = top_row.split_cols(2, wspace=0.44)
+    bottom_left, bottom_right = bottom_row.split_cols([1.04, 0.96], wspace=0.28)
 
     # ── S1: Heatmap (methods x metrics) ──
-    ax1 = top_left.add_axes(fig)
+    ax1 = top_left.inset(left=0.04).add_axes(fig)
     add_panel_label(ax1, 'a', x=-0.12, y=1.08)
     metric_labels = [m[1] for m in heatmap_metrics]
     metric_keys = [m[0] for m in heatmap_metrics]
@@ -142,7 +142,7 @@ def plot_benchmark_panel(
     cmap = matplotlib.colormaps.get_cmap("PiYG")
     im = ax1.imshow(norm, cmap=cmap, aspect="auto", vmin=0, vmax=1)
 
-    short_method_names = [abbreviate_cell_type(n, 20) for n in method_names]
+    short_method_names = [abbreviate_cell_type(n, 14) for n in method_names]
     ax1.set_xticks(range(len(metric_labels)))
     ax1.set_xticklabels(metric_labels, rotation=20, ha="right", fontsize=8)
     ax1.set_yticks(range(n_methods))
@@ -170,14 +170,14 @@ def plot_benchmark_panel(
     style_axes(ax1, "heatmap", title="Metrics Comparison Heatmap")
 
     # ── S2: Composite score bars ──
-    ax2 = top_right.add_axes(fig)
+    ax2 = top_right.inset(left=0.05, right=0.01).add_axes(fig)
     add_panel_label(ax2, 'b', x=-0.12, y=1.08)
     composite_common = report.get("composite_score_common_metrics_only", composite)
     sorted_methods = sorted(composite_common.keys(), key=lambda k: composite_common.get(k, 0.0), reverse=True)
     scores = [composite[m] for m in sorted_methods]
     scores_common = [composite_common.get(m, 0.0) for m in sorted_methods]
     bar_colors = [METHOD_COLORS.get(m, COLORS["neutral"]) for m in sorted_methods]
-    short_sorted = [abbreviate_cell_type(m, 20) for m in sorted_methods]
+    short_sorted = [abbreviate_cell_type(m, 16) for m in sorted_methods]
 
     ranked_labels = []
     for i, name in enumerate(short_sorted):

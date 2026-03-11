@@ -105,17 +105,17 @@ def plot_per_type_generation(
 
     fig = plt.figure(figsize=(14.0, 6.9))
     layout = bind_figure_region(fig, (0.16, 0.10, 0.965, 0.90))
-    g1_slot, g2_slot, g3_slot = layout.split_cols([1.00, 1.30, 0.72], gap=[0.022, 0.034])
+    g1_slot, g2_slot, g3_slot = layout.split_cols([1.00, 1.18, 0.76], gap=[0.024, 0.038])
     g1_rect = g1_slot.inset(right=0.004)
-    g2_rect = g2_slot.inset(left=0.110, right=0.014)
-    g3_rect = g3_slot.inset(left=0.014, right=0.016)
+    g2_rect = g2_slot.inset(left=0.148, right=0.018)
+    g3_rect = g3_slot.inset(left=0.020, right=0.018)
     summary = data.get("summary", {})
     # Title moved to LaTeX caption
 
     # G1: Centroid cosine (sorted)
     from matplotlib.ticker import MaxNLocator
     ax = g1_rect.add_axes(fig)
-    add_panel_label(ax, chr(ord('a') + label_offset), x=-0.14, y=1.05)
+    add_panel_label(ax, chr(ord('a') + label_offset), x=-0.14, y=1.06)
     sorted_idx = np.argsort(cosines)
     sorted_cos = [cosines[i] for i in sorted_idx]
     sorted_names_cos = [short_names[i] for i in sorted_idx]
@@ -143,7 +143,7 @@ def plot_per_type_generation(
 
     # G2: Frechet outlier profile
     ax = g2_rect.add_axes(fig)
-    add_panel_label(ax, chr(ord('a') + label_offset + 1), x=-0.14, y=1.05)
+    add_panel_label(ax, chr(ord('a') + label_offset + 1), x=-0.14, y=1.06)
     if fd_valid.any():
         fd_idx = np.where(fd_valid)[0][np.argsort(fd_array[fd_valid])]
         fd_vals = fd_array[fd_idx]
@@ -172,7 +172,7 @@ def plot_per_type_generation(
 
     # G3: Cosine vs abundance with FD bubble size and diversity color
     ax = g3_rect.add_axes(fig)
-    add_panel_label(ax, chr(ord('a') + label_offset + 2), x=-0.22, y=1.00)
+    add_panel_label(ax, chr(ord('a') + label_offset + 2), x=-0.30, y=1.06)
     fd_for_size = np.where(fd_valid, fd_array, np.nanmedian(fd_array[fd_valid]) if fd_valid.any() else 1.0)
     fd_min = float(np.nanmin(fd_for_size)) if np.isfinite(fd_for_size).any() else 0.0
     fd_ptp = float(np.nanmax(fd_for_size) - fd_min) if np.isfinite(fd_for_size).any() else 1.0

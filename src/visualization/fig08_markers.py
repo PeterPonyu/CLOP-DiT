@@ -142,7 +142,7 @@ def plot_marker_gene_comparison(
 
     fig = plt.figure(figsize=(10.8, 8.4))
     layout = bind_figure_region(fig, (0.11, 0.10, 0.98, 0.92))
-    top_row, bottom_row = layout.split_rows(2, hspace=0.90)
+    top_row, bottom_row = layout.split_rows(2, hspace=0.72)
     top_left, top_right = top_row.split_cols([1.0, 1.28], wspace=0.52)
     bottom_left, bottom_right = bottom_row.split_cols([1.0, 1.28], wspace=0.52)
 
@@ -226,23 +226,39 @@ def plot_marker_gene_comparison(
         ax2.axvline(x=n_markers, color="#666", linewidth=1.6, linestyle="-")
         ax2.axvline(x=n_markers - 0.5, color="black", linewidth=1.5, zorder=5)
         ax2.set_title("")
-        ax2.text(n_markers / 2 - 0.5, -1.2, "Real", ha="center", fontsize=11, color=COLORS["real"])
+        ax2.text(
+            n_markers / 2 - 0.5,
+            -0.34,
+            "Real",
+            transform=ax2.get_xaxis_transform(),
+            ha="center",
+            va="top",
+            fontsize=10,
+            color=COLORS["real"],
+        )
         ax2.text(
             n_markers + 0.5 + n_markers / 2 - 0.5,
-            -1.2,
+            -0.34,
             "Generated",
+            transform=ax2.get_xaxis_transform(),
             ha="center",
+            va="top",
             fontsize=11,
             color=COLORS["generated"],
         )
         add_colorbar_safe(im, ax=ax2, label="Expr.", shrink=0.6, pad=0.05)
         add_panel_label(ax2, "b", x=-0.24, y=1.01)
-
-        legend_ax = add_shared_legend_axes(
-            fig,
-            (ax1.get_position().x0, ax1.get_position().y1 + 0.040, ax2.get_position().x1 - ax1.get_position().x0, 0.030),
+        ax1.legend(
+            handles_top,
+            labels_top,
+            fontsize=9,
+            loc="upper center",
+            bbox_to_anchor=(0.50, -0.16),
+            frameon=False,
+            ncol=2,
+            handlelength=1.3,
+            columnspacing=0.8,
         )
-        legend_ax.legend(handles_top, labels_top, fontsize=10, loc="center", frameon=False, ncol=2)
 
         ax3 = bottom_left.add_axes(fig)
         diff = gen_heat - real_heat

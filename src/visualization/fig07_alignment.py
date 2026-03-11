@@ -172,7 +172,7 @@ def plot_text_cell_heatmap(
 
     # ── F1: Clustered heatmap with annotations ──
     ax1 = ax1_rect.add_axes(fig)
-    add_panel_label(ax1, chr(ord('a') + label_offset), x=-0.14, y=1.02)
+    add_panel_label(ax1, chr(ord('a') + label_offset), x=-0.14, y=1.06)
     cmap = mcolors.LinearSegmentedColormap.from_list(
         "custom_heat",
         [
@@ -241,7 +241,7 @@ def plot_text_cell_heatmap(
 
     # ── F2: Per-type alignment bars with threshold bands ──
     ax2 = ax2_rect.add_axes(fig)
-    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.24, y=0.98)
+    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.24, y=1.06)
     sorted_idx_asc = np.argsort(diag)
     d_asc = diag[sorted_idx_asc]
     labels_asc = [labels[i] for i in sorted_idx_asc]
@@ -306,7 +306,7 @@ def plot_text_cell_heatmap(
 
     # ── F3: Distribution comparison with statistics ──
     ax3 = ax3_rect.add_axes(fig)
-    add_panel_label(ax3, chr(ord('a') + label_offset + 2), x=-0.14, y=1.02)
+    add_panel_label(ax3, chr(ord('a') + label_offset + 2), x=-0.14, y=1.06)
 
     # Histograms with concise legend entries
     ax3.hist(

@@ -59,18 +59,22 @@ def plot_diagnostics(
 
     # ── Figure 12: Diversity Diagnostics (4 subplots) ──
     fig = plt.figure(figsize=(12.8, 9.0))
-    layout = bind_figure_region(fig, (0.14, 0.18, 0.988, 0.95))
-    top_row, bottom_row = layout.split_rows(2, hspace=0.78)
-    top_left, top_right = top_row.split_cols([1.00, 1.00], gap=0.072)
-    bottom_left, bottom_right = bottom_row.split_cols([1.02, 0.98], gap=0.070)
+    layout = bind_figure_region(fig, (0.14, 0.18, 0.988, 0.92))
+    top_row, bottom_row = layout.split_rows(2, hspace=0.62)
+    top_left, top_right = top_row.split_cols([1.00, 1.00], gap=0.058)
+    bottom_left, bottom_right = bottom_row.split_cols([0.90, 1.04], gap=0.092)
+    top_left = top_left.inset(right=0.006)
+    top_right = top_right.inset(left=0.006)
+    bottom_left = bottom_left.inset(right=0.030)
+    bottom_right = bottom_right.inset(left=0.024)
     axes = np.array([
         [top_left.add_axes(fig), top_right.add_axes(fig)],
         [bottom_left.add_axes(fig), bottom_right.add_axes(fig)],
     ], dtype=object)
-    add_panel_label(axes[0, 0], 'a', x=-0.16, y=1.03)
-    add_panel_label(axes[0, 1], 'b', x=-0.14, y=1.03)
-    add_panel_label(axes[1, 0], 'c', x=-0.16, y=1.03)
-    add_panel_label(axes[1, 1], 'd', x=-0.22, y=1.00)
+    add_panel_label(axes[0, 0], 'a', x=-0.16, y=1.08)
+    add_panel_label(axes[0, 1], 'b', x=-0.14, y=1.08)
+    add_panel_label(axes[1, 0], 'c', x=-0.16, y=1.08)
+    add_panel_label(axes[1, 1], 'd', x=-0.22, y=1.08)
 
     ax = axes[0, 0]
     t1 = all_results.get("test1_intratype_diversity", {}).get("per_type", {})
@@ -120,7 +124,7 @@ def plot_diagnostics(
         norms = [t3[k]["mean_norm"] for k in cfg_vals]
 
         color = COLORS["real"]
-        ax.plot(scales, divs, "o-", color=color, lw=2, markersize=8, label="Diversity")
+        ax.plot(scales, divs, "o-", color=color, lw=2, markersize=8, label="Div.")
         ax.set_xlabel("CFG Scale")
         ax.set_ylabel("Mean Intra-Type Diversity", color=color)
         ax.tick_params(axis="y", labelcolor=color)
@@ -128,16 +132,16 @@ def plot_diagnostics(
         ax2 = ax.twinx()
         color2 = COLORS["generated"]
         ax2.plot(scales, norms, "s--", color=color2, lw=2, markersize=8, label="Norm")
-        ax2.set_ylabel("")
+        ax2.set_ylabel("Mean Norm", color=color2)
         ax2.tick_params(axis="y", labelcolor=color2)
         ax2.tick_params(axis="x", which="both", bottom=False, labelbottom=False)
         ax2.yaxis.labelpad = 10
+        ax2.yaxis.set_major_locator(plt.MaxNLocator(nbins=4, prune="upper"))
 
         ax.set_title("CFG Scale vs Diversity & Norm")
         ax.xaxis.set_major_locator(plt.MaxNLocator(nbins=4, prune="both"))
         lines1, labels1 = ax.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
-        # Labels will be collected into the figure-level legend below
     else:
         ax.set_title("CFG Scale vs Diversity")
 

@@ -90,7 +90,7 @@ def plot_expression_correlation(
     bottom_left, bottom_right = bottom_row.split_cols([1.00, 1.00], gap=0.032)
 
     # -- H1: Density scatter with residual coloring --
-    ax1 = top_left.add_axes(fig)
+    ax1 = top_left.inset(right=0.028).add_axes(fig)
     abs_res = np.abs(residuals)
     sc = ax1.scatter(real_means, gen_means, c=abs_res, cmap="magma_r",
                      s=18, alpha=0.7, edgecolors="none",
@@ -110,17 +110,19 @@ def plot_expression_correlation(
     cax = add_axes_next_to(
         fig,
         ax1,
-        side="bottom",
-        width=ax1.get_position().width * 0.30,
-        height=0.018,
-        pad=0.060,
-        align="right",
+        side="right",
+        width=0.008,
+        height=ax1.get_position().height * 0.28,
+        pad=0.010,
+        align="top",
+        y_offset=-0.045,
     )
-    cbar = fig.colorbar(sc, cax=cax, orientation="horizontal")
+    cbar = fig.colorbar(sc, cax=cax)
     cbar.set_label("|Resid|", fontsize=9)
-    cbar.ax.tick_params(labelsize=8, length=2)
+    cbar.ax.tick_params(labelsize=8, length=2, pad=1)
+    cbar.set_ticks([0.5, 1.5])
     from .style import set_scientific_tickformat
-    set_scientific_tickformat(cbar.ax, axis="x", scilimits=(-2, 2))
+    set_scientific_tickformat(cbar.ax, axis="y", scilimits=(-2, 2))
     add_panel_label(ax1, 'a', x=-0.12, y=1.08)
 
     # Annotate outlier genes with staggered offsets
@@ -135,7 +137,7 @@ def plot_expression_correlation(
                          color="#333")
 
     # -- H2: Per-type Pearson r lollipop chart --
-    ax2 = top_right.add_axes(fig)
+    ax2 = top_right.inset(left=0.17, right=0.05).add_axes(fig)
     per_type = metrics.get("per_type_expression_fidelity", {})
     if per_type:
         type_names_sorted = sorted(per_type.keys(),

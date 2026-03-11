@@ -22,7 +22,7 @@ import numpy as np
 
 from .direct_layout import bind_figure_region
 from .explicit_positioning import add_shared_legend_axes
-from .style import COLORS, add_colorbar_safe, add_panel_label, quality_color, save_with_vcd
+from .style import COLORS, add_colorbar_safe, add_panel_label, quality_color, save_with_vcd, set_scientific_tickformat
 
 logger = logging.getLogger(__name__)
 
@@ -99,17 +99,29 @@ def plot_expression_analysis(
     ax1.set_title("Per-Gene Variability (CV)", fontsize=12)
     add_colorbar_safe(sc, ax=ax1, label="|\u0394CV|", shrink=0.50, pad=0.03, aspect=16)
 
-    # Annotate top 3 divergent genes with staggered offsets
-    top_cv_idx = np.argsort(cv_diff)[-2:]
-    _offsets_cv = [(-85, -40), (30, 30), (-90, 30)]
-    for j, i in enumerate(top_cv_idx):
-        if i < len(gene_names):
-            ax1.annotate(gene_names[i], (real_cv[i], gen_cv[i]),
-                         fontsize=10, xytext=_offsets_cv[j % len(_offsets_cv)],
-                         textcoords="offset points",
-                         arrowprops=dict(arrowstyle="->", lw=0.5, color="#555"),
-                         color="#333",
-                         bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.8))
+    # Annotate the most divergent genes with a manual staggered placement strategy.
+    top_cv_idx = np.argsort(cv_diff)[-6:]
+    _offsets_cv = [(-90, -42), (34, 32), (-88, 30), (38, -36), (-74, 44), (58, 10)]
+    _placed = []
+    _min_sep = max(0.08 * hi, 0.12)
+    for j, i in enumerate(top_cv_idx[np.argsort(cv_diff[top_cv_idx])[::-1]]):
+        if i >= len(gene_names):
+            continue
+        x_pt = real_cv[i]
+        y_pt = gen_cv[i]
+        if any(abs(x_pt - px) < _min_sep and abs(y_pt - py) < _min_sep for px, py in _placed):
+            continue
+        ax1.annotate(
+            gene_names[i],
+            (x_pt, y_pt),
+            fontsize=10,
+            xytext=_offsets_cv[j % len(_offsets_cv)],
+            textcoords="offset points",
+            arrowprops=dict(arrowstyle="->", lw=0.5, color="#555"),
+            color="#333",
+            bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.8),
+        )
+        _placed.append((x_pt, y_pt))
 
     cv_corr = np.corrcoef(real_cv, gen_cv)[0, 1]
     ax1.legend(fontsize=10, frameon=False)
@@ -119,6 +131,7 @@ def plot_expression_analysis(
     from matplotlib.ticker import MaxNLocator
     ax1.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
     ax1.yaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
+    set_scientific_tickformat(ax1, axis="both", scilimits=(-2, 2))
     add_panel_label(ax1, 'a', x=-0.12, y=1.08)
 
     # -- I2: Expression range with percentile bands --

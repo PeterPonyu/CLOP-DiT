@@ -13,7 +13,6 @@ from .vcd_core import (
     _ArtistInfo,
     _collect_artists,
     _fig_bbox,
-    _tight_bbox,
     _safe_bbox,
     _overlap_area,
     _is_colorbar_axes,
@@ -91,8 +90,6 @@ from .vcd_config import (
     MAX_NUMERIC_BAR_LABELS,
     MAX_ANNOTATIONS_COMPLEXITY,
     COMPLEXITY_SCORE_THRESHOLD,
-    TIGHT_BBOX_PAD_INCHES,
-    TIGHT_BBOX_ENABLED,
     CROSS_AXES_TEXT_OVERLAP_TOL_PX,
     CROSS_AXES_TEXT_OVERLAP_MIN_PX2,
     PANEL_LABEL_PLACEMENT_MARGIN_PX,
@@ -144,13 +141,12 @@ def detect_all_conflicts(
         return []
 
     fig_bb = _fig_bbox(fig)
-    tight_bb = _tight_bbox(fig, renderer, TIGHT_BBOX_PAD_INCHES) if TIGHT_BBOX_ENABLED else fig_bb
     infos = _collect_artists(fig, renderer)
 
     issues = []
     # ── Layer 2: figure-level passes (1-11) ──
     issues.extend(_check_text_overlaps(infos, text_overlap_tol_px))
-    issues.extend(_check_truncation(infos, fig_bb, border_tol_px, fig=fig, renderer=renderer, tight_bb=tight_bb))
+    issues.extend(_check_truncation(infos, fig_bb, border_tol_px, fig=fig, renderer=renderer))
     issues.extend(_check_artist_content_overlap(infos, artist_overlap_min_px2))
     issues.extend(_check_text_vs_artist_overlap(
         infos, text_overlap_tol_px, text_artist_overlap_min_px2))
@@ -159,7 +155,7 @@ def detect_all_conflicts(
     # Passes 8-10
     issues.extend(_check_cross_panel_spillover(fig, renderer))
     issues.extend(_check_panel_label_overlap(fig, renderer, infos))
-    issues.extend(_check_legend_spillover(fig, renderer, tight_bb=tight_bb))
+    issues.extend(_check_legend_spillover(fig, renderer))
     # Pass 11
     issues.extend(_check_legend_vs_other_panel_content(fig, renderer, infos))
     issues.extend(_check_legend_vs_legend(fig, renderer))
@@ -168,7 +164,7 @@ def detect_all_conflicts(
     issues.extend(_check_legend_vs_own_content(fig, renderer, infos))
     issues.extend(_check_fig_legend_vs_subplot_content(fig, renderer, infos))
     issues.extend(_check_colorbar_internal(fig, renderer))
-    issues.extend(_check_legend_internal(fig, renderer, tight_bb=tight_bb))
+    issues.extend(_check_legend_internal(fig, renderer))
     # Pass 16: significance brackets
     issues.extend(_check_significance_brackets(fig, renderer, border_tol_px))
     # Pass 17: colorbar-vs-data overlap
@@ -316,8 +312,7 @@ def print_conflict_summary(
         if len(issues) > max_items:
             print(f"    ... and {len(issues) - max_items} more")
     elif n_info > 0:
-        print(f"  INFO{tag}: 0 warnings, {n_info} info "
-              f"(likely auto-fixed by bbox_inches='tight')")
+        print(f"  INFO{tag}: 0 warnings, {n_info} info")
     elif label:
         print(f"  OK{tag}: no conflicts detected (all layers clean)")
 

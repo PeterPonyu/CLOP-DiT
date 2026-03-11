@@ -114,7 +114,7 @@ def plot_embedding_space_merged(
     row = 0
 
     if has_b:
-        b_slots = row_regions[row].split_cols([0.96, 0.96, 1.16], gap=[0.024, 0.028])
+        b_slots = row_regions[row].split_cols([0.96, 0.92, 1.12], gap=[0.030, 0.034])
         proj_text = np.load(proj_text_path)
         cell_proj = np.load(proj_cell_path)
         if gid_text_path.exists() and proj_text.shape[0] != group_ids.shape[0]:
@@ -150,7 +150,7 @@ def plot_embedding_space_merged(
 
         ax_b0 = b_slots[0].inset(right=0.004).add_axes(fig)
         ax = ax_b0
-        add_panel_label(ax, 'a', x=-0.12, y=1.08)
+        add_panel_label(ax, 'a', x=-0.12, y=1.04)
         for i, (x, y) in enumerate(proto_coords):
             color = TYPE_PALETTE[i % len(TYPE_PALETTE)]
             ax.scatter(x, y, c=[color], s=120, marker="D", edgecolors="black",
@@ -158,10 +158,12 @@ def plot_embedding_space_merged(
         ax.set_title("Text Prototypes (CLOP space)")
         ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
         style_axes(ax, kind="umap")
+        ax.xaxis.set_major_locator(MaxNLocator(nbins=2, symmetric=True, prune="both"))
+        ax.yaxis.set_major_locator(MaxNLocator(nbins=2, symmetric=True, prune="both"))
 
-        ax_b1 = b_slots[1].inset(right=0.004).add_axes(fig)
+        ax_b1 = b_slots[1].inset(left=0.024, right=0.010).add_axes(fig)
         ax = ax_b1
-        add_panel_label(ax, 'b', x=-0.14, y=1.08)
+        add_panel_label(ax, 'b', x=-0.14, y=1.04)
         for t in unique_types:
             mask = gids_sub == t
             color = TYPE_PALETTE[int(t) % len(TYPE_PALETTE)]
@@ -174,10 +176,12 @@ def plot_embedding_space_merged(
         ax.set_title(f"Cell + Prototype Overlay ({len(s_idx)} cells)")
         ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
         style_axes(ax, kind="umap")
+        ax.xaxis.set_major_locator(MaxNLocator(nbins=2, symmetric=True, prune="both"))
+        ax.yaxis.set_major_locator(MaxNLocator(nbins=2, symmetric=True, prune="both"))
 
-        ax_b2 = b_slots[2].inset(left=0.072, right=0.014).add_axes(fig)
+        ax_b2 = b_slots[2].inset(left=0.126, right=0.070).add_axes(fig)
         ax = ax_b2
-        add_panel_label(ax, 'c', x=-0.12, y=1.08)
+        add_panel_label(ax, 'c', x=-0.12, y=1.04)
         so = np.argsort(type_counts)[::-1]
         bar_c = [TYPE_PALETTE[t % len(TYPE_PALETTE)] for t in unique_types[so]]
         y_pos = np.arange(n_types)
@@ -190,6 +194,8 @@ def plot_embedding_space_merged(
         ax.set_xlabel("Cells")
         ax.set_title("Cells per Type")
         style_axes(ax, kind="bar")
+        ax.xaxis.set_major_locator(MaxNLocator(nbins=2, prune="upper"))
+        ax.margins(x=0.08)
         row += 1
 
     if has_e:
@@ -450,7 +456,7 @@ def plot_clop_embedding_space(
     ax_b1.set_xlabel("UMAP 1")
     ax_b1.set_ylabel("UMAP 2")
 
-    ax_b2 = ax_rect_3.add_axes(fig)
+    ax_b2 = ax_rect_3.inset(right=0.090).add_axes(fig)
     add_panel_label(ax_b2, 'c', x=-0.12, y=1.02)
     for t in unique_types:
         mask = gids_sub == t
@@ -468,8 +474,9 @@ def plot_clop_embedding_space(
     ax_b2.set_title("Cell + Prototype Overlay")
     ax_b2.set_xlabel("UMAP 1")
     ax_b2.set_ylabel("UMAP 2")
-    ax_b2.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
+    ax_b2.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="upper"))
     ax_b2.yaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
+    ax_b2.margins(x=0.08)
 
     if save:
         path = Path(output_dir) / "fig04_clop_embedding_umap.png"

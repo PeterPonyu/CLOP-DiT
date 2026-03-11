@@ -105,8 +105,8 @@ def plot_baseline_comparison(
 
     fig = plt.figure(figsize=(15.2, 6.2))
     ax_rect_1, ax_rect_2, ax_rect_3 = bind_figure_region(fig, (0.04, 0.16, 0.98, 0.91)).split_cols(
-        [1.18, 1.02, 1.18],
-        gap=[0.050, 0.050],
+        [1.20, 0.86, 1.20],
+        gap=[0.060, 0.060],
     )
 
     # ── O1: Grouped bar chart ──
@@ -126,7 +126,7 @@ def plot_baseline_comparison(
     style_axes(ax, "bar", title="Key Metrics Comparison", ylabel="Value")
 
     # ── O2: Ranked dot plot (normalised scores) ──
-    ax2 = ax_rect_2.add_axes(fig)
+    ax2 = ax_rect_2.inset(left=0.020, right=0.030).add_axes(fig)
     add_panel_label(ax2, 'b', x=-0.12, y=1.02)
 
     # Normalise each metric to [0,1] with direction awareness
