@@ -41,27 +41,6 @@ def _fig_bbox(fig) -> Bbox:
     return Bbox.from_bounds(0, 0, w * dpi, h * dpi)
 
 
-def _tight_bbox(fig, renderer, pad_inches: float = 0.08) -> Bbox:
-    """Figure bounding box as saved with ``bbox_inches='tight'``.
-
-    This represents the *actual* visible area in the saved PNG/PDF, which
-    is larger than ``_fig_bbox`` when elements (suptitles, figure legends)
-    extend beyond the raw canvas.  VCD truncation checks should compare
-    against this bbox to avoid false positives on intentionally-positioned
-    elements that ``bbox_inches='tight'`` will capture.
-    """
-    try:
-        tbb = fig.get_tightbbox(renderer)
-        if tbb is not None and tbb.width > 0 and tbb.height > 0:
-            pad_px = pad_inches * fig.dpi
-            return Bbox.from_extents(
-                tbb.x0 - pad_px, tbb.y0 - pad_px,
-                tbb.x1 + pad_px, tbb.y1 + pad_px)
-    except Exception:
-        pass
-    return _fig_bbox(fig)  # fallback to raw canvas
-
-
 def _overlap_area(a: Bbox, b: Bbox) -> float:
     """Pixel area of intersection between two Bboxes (0 if no overlap)."""
     x0 = max(a.x0, b.x0)

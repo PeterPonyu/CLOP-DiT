@@ -54,15 +54,15 @@ def plot_panel_m(
     _fw = 15.0  # Fixed width for reproducible layout
     has_row3 = full_dim_data is not None and len(full_dim_data) > 0
     if has_row3:
-        fig = plt.figure(figsize=(_fw, 12.9))
-        row_regions = bind_figure_region(fig, (0.06, 0.08, 0.97, 0.95)).split_rows([1.82, 1.06, 1.00], hspace=0.40)
+        fig = plt.figure(figsize=(_fw, 12.1))
+        row_regions = bind_figure_region(fig, (0.06, 0.08, 0.97, 0.95)).split_rows([1.62, 1.00, 0.96], hspace=0.28)
     else:
-        fig = plt.figure(figsize=(_fw, 8.2))
-        row_regions = bind_figure_region(fig, (0.06, 0.08, 0.97, 0.95)).split_rows([1.80, 1.00], hspace=0.36)
+        fig = plt.figure(figsize=(_fw, 7.8))
+        row_regions = bind_figure_region(fig, (0.06, 0.08, 0.97, 0.95)).split_rows([1.60, 0.96], hspace=0.24)
     top_widths = [1.0] * n_modes
     if n_modes > 1:
         top_widths[-1] = 1.04
-    axes = [region.add_axes(fig) for region in row_regions[0].split_cols(top_widths, wspace=0.46)]
+    axes = [region.add_axes(fig) for region in row_regions[0].split_cols(top_widths, wspace=0.36)]
 
     # Panel labels: placed with enough clearance for single-line titles
     _panel_label_y = 1.07
@@ -89,7 +89,7 @@ def plot_panel_m(
                        edgecolors="white", linewidths=0.2,
                        label=type_to_name[tid])
         ax.set_title(title, fontsize=FONT_TITLE - 1, pad=10)
-        ax.set_xlabel("PC1", fontsize=FONT_LABEL)
+        ax.set_xlabel("", fontsize=FONT_LABEL)
         if show_ylabel:
             ax.set_ylabel("PC2", fontsize=FONT_LABEL)
         else:
@@ -117,13 +117,13 @@ def plot_panel_m(
         )
 
     # ── Row 2: Quantitative summaries ──
-    bottom_regions = row_regions[1].split_cols([1.08, 1.02, 0.92], wspace=0.38)
+    bottom_regions = row_regions[1].split_cols([1.08, 1.02, 0.92], wspace=0.28)
     ax_b1 = bottom_regions[0].add_axes(fig)
     add_panel_label(ax_b1, 'b', x=-0.18, y=_panel_label_y)
     ax_b2 = bottom_regions[1].add_axes(fig)
-    add_panel_label(ax_b2, 'c', x=-0.18, y=_panel_label_y)
+    add_panel_label(ax_b2, 'c', x=-0.28, y=1.10)
     ax_b3 = bottom_regions[2].add_axes(fig)
-    add_panel_label(ax_b3, 'd', x=-0.24, y=_panel_label_y)
+    add_panel_label(ax_b3, 'd', x=-0.32, y=1.10)
 
     # Build per-type real centroids in 2D for shift summaries.
     real_centroids = {}
@@ -184,7 +184,7 @@ def plot_panel_m(
     ax_b2.set_xticklabels([_short_mode(m) for m in div_labels],
                            rotation=0, ha="center", fontsize=FONT_TICK)
     ax_b2.set_ylabel("Within-type diversity", fontsize=FONT_LABEL)
-    ax_b2.set_title("Diversity by Mode", fontsize=FONT_TITLE, y=0.96, pad=1)
+    ax_b2.set_title("Diversity by Mode", fontsize=FONT_TITLE, y=0.90, pad=0)
 
     if per_type_shift_distributions:
         ax_b3.boxplot(
@@ -209,7 +209,7 @@ def plot_panel_m(
         from sklearn.decomposition import PCA as _PCA
         from sklearn.neighbors import KNeighborsClassifier
 
-        row3_regions = row_regions[2].split_cols([0.95, 1.15, 0.90], wspace=0.42)
+        row3_regions = row_regions[2].split_cols([0.95, 1.15, 0.90], wspace=0.32)
         ax_c1 = row3_regions[0].add_axes(fig)
         add_panel_label(ax_c1, 'e', x=-0.20, y=_panel_label_y)
         ax_c2 = row3_regions[1].add_axes(fig)
@@ -356,13 +356,13 @@ def plot_panel_m(
         leg = _ax.get_legend()
         if leg is not None:
             leg.remove()
-    legend_bottom = ax_b1.get_position().y1 + 0.022
-    legend_ax = add_shared_legend_axes(fig, (0.08, legend_bottom, 0.84, 0.042))
+    legend_bottom = ax_b1.get_position().y1 + 0.008
+    legend_ax = add_shared_legend_axes(fig, (0.16, legend_bottom, 0.68, 0.038))
     legend_ax.legend(
         handles, labels, loc="center",
-        ncol=min(len(handles), 8), fontsize=FONT_TICK_DENSE,
-        markerscale=1.5, frameon=False,
-        columnspacing=0.4, handletextpad=0.3,
+        ncol=min(len(handles), 8), fontsize=FONT_TICK_DENSE - 1,
+        markerscale=2.4, frameon=False,
+        columnspacing=0.4, handletextpad=0.28,
     )
 
     path = output_dir / "fig11_conditioning_umap.png"

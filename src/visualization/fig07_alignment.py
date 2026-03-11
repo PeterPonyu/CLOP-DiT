@@ -291,12 +291,12 @@ def plot_text_cell_heatmap(
     )
     # Place median label below the bar area to avoid colliding with the mean label
     ax2.text(
-        0.98, 0.98,
-        f"\u03bc={mean_diag:.3f}\nmed={median_diag:.3f}",
+        0.98, 0.02,
+        f"\u03bc={mean_diag:.3f} | med={median_diag:.3f}",
         transform=ax2.transAxes,
         ha="right",
-        va="top",
-        fontsize=FONT_SMALL,
+        va="bottom",
+        fontsize=FONT_SMALL - 1,
         color=COLORS["annotation_dark"],
         bbox=dict(boxstyle="round,pad=0.24", facecolor="white", edgecolor="none", alpha=0.85),
         zorder=10,
@@ -361,7 +361,7 @@ def plot_text_cell_heatmap(
     ax3.tick_params(axis="both", labelsize=10)
 
     # Legend — place in empty region without frame
-    ax3.legend(fontsize=10, frameon=False, loc="lower center", bbox_to_anchor=(0.5, 1.03), ncol=1)
+    ax3.legend(fontsize=10, frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=1)
 
     # Add gridlines for readability
     ax3.grid(True, axis="both", alpha=0.2, linewidth=0.4)

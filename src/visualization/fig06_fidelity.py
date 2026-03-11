@@ -227,11 +227,14 @@ def plot_per_type_generation(
         x_line = np.linspace(x_vals.min(), x_vals.max(), 100)
         ax.plot(x_line, slope * x_line + intercept, color=COLORS["trend_dark"], linestyle="--", linewidth=1.3, label="Trend")
 
-    worst_idx = np.argsort(cos_array)[:2]
-    label_offsets = [(-34, -12), (10, -10), (-30, 10), (12, 10), (16, -18)]
-    for rank, i in enumerate(worst_idx):
+    candidate_idx = np.argsort(cos_array)[:10]
+    label_offsets = [(-34, -12), (10, -10), (-30, 10), (12, 10), (16, -18), (-22, 18)]
+    annotated = 0
+    for rank, i in enumerate(candidate_idx):
+        if annotated >= 5:
+            break
         if cos_array[i] < 0.94:
-            if x_vals[i] > np.quantile(x_vals, 0.75):
+            if x_vals[i] > np.quantile(x_vals, 0.88) and annotated >= 3:
                 continue
             x_offset, y_offset = label_offsets[rank % len(label_offsets)]
             if x_vals[i] > np.median(x_vals):
@@ -248,6 +251,7 @@ def plot_per_type_generation(
                 bbox=dict(boxstyle="round,pad=0.16", facecolor="white",
                           edgecolor="none", alpha=0.75),
             )
+            annotated += 1
     ax.set_xlabel("log10(Number of Real Cells)")
     ax.set_ylabel("Centroid Cosine Similarity")
     ax.set_title("Fidelity vs Abundance")

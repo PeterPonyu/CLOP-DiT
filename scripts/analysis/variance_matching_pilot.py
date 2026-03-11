@@ -173,21 +173,21 @@ def main():
     )
     from scipy import stats as scipy_stats
 
-    fig = plt.figure(figsize=(17, 11.2))
-    layout = bind_figure_region(fig, (0.08, 0.08, 0.98, 0.96))
+    fig = plt.figure(figsize=(17.4, 11.4))
+    layout = bind_figure_region(fig, (0.13, 0.08, 0.97, 0.96))
     top_row, bottom_row = layout.split_rows([1.20, 0.92], hspace=0.30)
     top_left, top_right = top_row.split_cols([1.2, 1.0], wspace=0.34)
-    bottom_left, bottom_right = bottom_row.split_cols([1.2, 1.0], wspace=0.34)
+    bottom_left, bottom_right = bottom_row.split_cols([1.16, 1.04], wspace=0.46)
 
     # ── Panel (a): SWD per Cell Type (sorted bar chart) ──
     sorted_results = sorted(results, key=lambda r: r["swd"], reverse=True)
-    names = [abbreviate_cell_type(r["name"], max_len=24) for r in sorted_results]
+    names = [abbreviate_cell_type(r["name"], max_len=18) for r in sorted_results]
     swds = [r["swd"] for r in sorted_results]
     n_reals_sorted = [r["n_real"] for r in sorted_results]
     swd_mean = np.mean(swds)
     swd_std = np.std(swds)
 
-    ax = top_left.add_axes(fig)
+    ax = top_left.inset(left=0.02, right=0.01).add_axes(fig)
     add_panel_label(ax, 'a', x=-0.10, y=1.05)
 
     # Color: orange for outliers (>mean+1σ), blue otherwise; add legend
@@ -224,7 +224,7 @@ def main():
     style_axes(ax, "bar", xlabel="SWD (lower is better)", title="Latent SWD per Cell Type")
 
     # ── Panel (b): Variance Ratio — strip + box plot ──
-    ax2 = top_right.add_axes(fig)
+    ax2 = top_right.inset(left=0.02, right=0.02).add_axes(fig)
     add_panel_label(ax2, 'b', x=-0.10, y=1.05)
 
     vr_arr = np.array(var_ratios)
@@ -260,7 +260,7 @@ def main():
                title="Per-Type Latent Variance Ratio")
 
     # ── Panel (c): Per-Dimension Variance Correlation — ECDF + box ──
-    ax3 = bottom_left.add_axes(fig)
+    ax3 = bottom_left.inset(right=0.02).add_axes(fig)
     add_panel_label(ax3, 'c', x=-0.10, y=1.05)
 
     vc_arr = np.array(var_corrs)
@@ -294,7 +294,7 @@ def main():
                title="Dimension-Wise Variance Correlation")
 
     # ── Panel (d): SWD vs. Training Cell Count ──
-    ax4 = bottom_right.add_axes(fig)
+    ax4 = bottom_right.inset(left=0.05, right=0.06).add_axes(fig)
     add_panel_label(ax4, 'd', x=-0.10, y=1.05)
 
     n_reals = np.array([r["n_real"] for r in results])
@@ -303,6 +303,14 @@ def main():
     ax4.scatter(n_reals, swd_arr, c=COLORS["real"], alpha=0.55, s=35,
                 edgecolors="white", linewidth=0.4, zorder=3)
     ax4.set_xscale("log")
+    x_min = max(1.0, float(n_reals.min()) * 0.85)
+    x_max = float(n_reals.max()) * 1.12
+    ax4.set_xlim(x_min, x_max)
+    min_exp = int(np.floor(np.log10(x_min)))
+    max_exp = int(np.ceil(np.log10(x_max)))
+    major_ticks = [10**e for e in range(min_exp, max_exp + 1) if x_min <= 10**e <= x_max]
+    if major_ticks:
+        ax4.set_xticks(major_ticks)
 
     # Regression line + stats
     log_n = np.log10(n_reals + 1)
@@ -363,6 +371,11 @@ def main():
         dst = fig_dir / f"fig19_variance_matching_pilot{suffix}"
         if src.exists():
             shutil.copy(src, dst)
+    src_live = output_dir / "_live_vcd" / "variance_matching_pilot.json"
+    if src_live.exists():
+        dst_live_dir = fig_dir / "_live_vcd"
+        dst_live_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy(src_live, dst_live_dir / "fig19_variance_matching_pilot.json")
     print(f"[var_pilot] Copied to {fig_dir / 'fig19_variance_matching_pilot.pdf'}")
     plt.close()
 

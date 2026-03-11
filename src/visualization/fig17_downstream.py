@@ -418,9 +418,9 @@ def plot_clustering_and_classifier_merged(
     """Merged figure: clustering + classifier alignment (former P + Q)."""
     apply_style()
 
-    fig = plt.figure(figsize=(16.0, 10.8))
+    fig = plt.figure(figsize=(16.0, 10.2))
     layout = bind_figure_region(fig, (0.03, 0.10, 0.98, 0.96))
-    top_row, bottom_row = layout.split_rows([1, 1.05], hspace=0.58)
+    top_row, bottom_row = layout.split_rows([1, 1.05], hspace=0.42)
     top_rects = top_row.split_cols([1.10, 1.34, 0.82], gap=[0.060, 0.050])
     bottom_rects = bottom_row.split_cols([1.10, 1.34, 0.82], gap=[0.060, 0.050])
     # Title moved to LaTeX caption

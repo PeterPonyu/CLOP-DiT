@@ -96,6 +96,24 @@ from .vcd_config import (
 )
 
 
+def _issue_sort_key(issue: dict) -> tuple[int, str, str]:
+    severity_rank = {
+        "warning": 0,
+        "info": 1,
+    }
+    severity = str(issue.get("severity", "info")).lower()
+    return (
+        severity_rank.get(severity, 2),
+        str(issue.get("type", "")),
+        str(issue.get("detail", "")),
+    )
+
+
+def sort_issues(issues: list[dict]) -> list[dict]:
+    """Return issues in a stable severity/type/detail order."""
+    return sorted(issues, key=_issue_sort_key)
+
+
 def detect_all_conflicts(
     fig,
     label: str = "",
@@ -242,6 +260,8 @@ def detect_all_conflicts(
         fig, renderer,
         margin_px=PANEL_LABEL_PLACEMENT_MARGIN_PX))
 
+    issues = sort_issues(issues)
+
     # Two-layer per-axes summary
     per_ax = _per_axes_summary(fig, renderer, infos)
 
@@ -324,9 +344,12 @@ def detect_conflicts_in_file(
     label: str = "",
     verbose: bool = True,
 ) -> list[dict]:
-    """Placeholder: conflict detection requires a live Figure object."""
-    print(f"  NOTE: Conflict detection requires a live Figure object. "
-          f"Call detect_all_conflicts(fig) in the generator for '{png_path}'.")
+    """File-path audit is not implemented; live figure-time audit is authoritative."""
+    if verbose:
+        print(
+            "  NOTE: file-path VCD audit is not implemented; "
+            f"use detect_all_conflicts(fig) during generation for '{png_path}'."
+        )
     return []
 
 
@@ -364,6 +387,7 @@ __all__ = [
     "detect_conflicts_in_file",
     "summarize_issues",
     "print_conflict_summary",
+    "sort_issues",
     "FigurePolicy",
     "DEFAULT_POLICY",
     "Action",

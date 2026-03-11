@@ -16,6 +16,7 @@ Provides:
 from __future__ import annotations
 
 import json
+from collections import Counter
 from pathlib import Path
 from typing import Optional
 
@@ -544,30 +545,12 @@ def save_with_vcd(
             if str(_scripts) not in sys.path:
                 sys.path.insert(0, str(_scripts))
             from vcd import detect_all_conflicts
-            issues = detect_all_conflicts(fig, label=basename, verbose=True)
-            live_vcd_payload["warnings"] = [
-                str(x) for x in issues
-                if str(x.get("severity", "")).lower() == "warning"
-            ]
-            live_vcd_payload["info"] = [
-                str(x) for x in issues
-                if str(x.get("severity", "")).lower() != "warning"
-            ]
-            if issues:
-                n_warn = sum(1 for x in issues if x.get("severity") == "warning")
-                if n_warn > 0:
-                    try:
-                        from vcd.vcd_actions import diagnose
-                        actions = diagnose(issues)
-                        top_actions = ", ".join(a.action_type for a in actions[:4])
-                    except Exception:
-                        top_actions = ""
-                    _logging.getLogger(__name__).warning(
-                        "%s: %d visual conflict warning(s)%s",
-                        basename,
-                        n_warn,
-                        f" | suggested actions: {top_actions}" if top_actions else "",
-                    )
+            issues = detect_all_conflicts(fig, label=basename, verbose=False)
+            warnings_only, info_only, issue_counts = _summarize_vcd_issues(issues)
+            live_vcd_payload["warnings"] = [_format_vcd_issue(x) for x in warnings_only]
+            live_vcd_payload["info"] = [_format_vcd_issue(x) for x in info_only]
+            live_vcd_payload["counts_by_type"] = dict(issue_counts)
+            _log_vcd_issues(_logging.getLogger(__name__), basename, warnings_only, info_only, issue_counts)
         except Exception as exc:
             live_vcd_payload["error"] = str(exc)
 
@@ -600,24 +583,56 @@ def run_vcd_check(fig: plt.Figure, label: str) -> None:
         if str(_scripts) not in sys.path:
             sys.path.insert(0, str(_scripts))
         from vcd import detect_all_conflicts
-        issues = detect_all_conflicts(fig, label=label, verbose=True)
-        if issues:
-            n_warn = sum(1 for x in issues if x.get("severity") == "warning")
-            if n_warn > 0:
-                try:
-                    from vcd.vcd_actions import diagnose
-                    actions = diagnose(issues)
-                    top_actions = ", ".join(a.action_type for a in actions[:4])
-                except Exception:
-                    top_actions = ""
-                _logging.getLogger(__name__).warning(
-                    "%s: %d visual conflict warning(s)%s",
-                    label,
-                    n_warn,
-                    f" | suggested actions: {top_actions}" if top_actions else "",
-                )
+        issues = detect_all_conflicts(fig, label=label, verbose=False)
+        warnings_only, info_only, issue_counts = _summarize_vcd_issues(issues)
+        _log_vcd_issues(_logging.getLogger(__name__), label, warnings_only, info_only, issue_counts)
     except Exception:
         pass
+
+
+def _format_vcd_issue(issue: dict) -> str:
+    issue_type = str(issue.get("type", "issue"))
+    detail = str(issue.get("detail", "")).strip()
+    return f"[{issue_type}] {detail}" if detail else f"[{issue_type}]"
+
+
+def _summarize_vcd_issues(issues: list[dict]) -> tuple[list[dict], list[dict], Counter]:
+    warnings_only = [x for x in issues if str(x.get("severity", "")).lower() == "warning"]
+    info_only = [x for x in issues if str(x.get("severity", "")).lower() != "warning"]
+    issue_counts = Counter(str(x.get("type", "unknown")) for x in issues)
+    return warnings_only, info_only, issue_counts
+
+
+def _format_vcd_type_counts(issue_counts: Counter, max_items: int = 4) -> str:
+    if not issue_counts:
+        return "none"
+    items = sorted(issue_counts.items(), key=lambda item: (-item[1], item[0]))
+    head = ", ".join(f"{name}={count}" for name, count in items[:max_items])
+    if len(items) > max_items:
+        head += f", +{len(items) - max_items} more"
+    return head
+
+
+def _log_vcd_issues(logger, label: str, warnings_only: list[dict], info_only: list[dict], issue_counts: Counter) -> None:
+    status = "PASS" if not warnings_only else ("WARN" if len(warnings_only) < 3 else "FAIL")
+    log_fn = logger.info if not warnings_only else logger.warning
+    log_fn(
+        "VCD[live][%s] %s warn=%d info=%d types=%s",
+        label,
+        status,
+        len(warnings_only),
+        len(info_only),
+        _format_vcd_type_counts(issue_counts),
+    )
+    for idx, issue in enumerate(warnings_only[:3], start=1):
+        logger.warning(
+            "  [%d/%d] %s",
+            idx,
+            len(warnings_only),
+            _format_vcd_issue(issue)[:220],
+        )
+    if len(warnings_only) > 3:
+        logger.warning("  ... +%d more warning(s)", len(warnings_only) - 3)
 
 
 def quality_color(value: float, thresholds: tuple = (0.8, 0.5)) -> str:

@@ -25,6 +25,15 @@ from .style import COLORS, FONT_LEGEND_DENSE, FONT_LABEL, FONT_TITLE, SUPTITLE_Y
 logger = logging.getLogger(__name__)
 
 
+LOSS_LEGEND_KW = {
+    "loc": "upper center",
+    "bbox_to_anchor": (0.50, -0.18),
+    "fontsize": FONT_LEGEND_DENSE,
+    "frameon": False,
+    "ncol": 2,
+}
+
+
 def _add_training_phase_bands(ax: plt.Axes, max_epoch: int) -> None:
     """Annotate three coarse training phases for readability."""
     if max_epoch < 12:
@@ -385,13 +394,7 @@ def plot_training_dynamics_combined(
         ax_a1.set_xlabel("Epoch", fontsize=11)
         ax_a1.set_ylabel("Contrastive Loss", fontsize=11)
         ax_a1.set_title("CLOP Loss", fontsize=12)
-        ax_a1.legend(
-            loc="upper center",
-            bbox_to_anchor=(0.50, -0.16),
-            fontsize=FONT_LEGEND_DENSE,
-            frameon=False,
-            ncol=2,
-        )
+        ax_a1.legend(**LOSS_LEGEND_KW)
         ax_a1.set_xlim(0, max(epochs) * 1.08)
         ax_a1.locator_params(axis='x', nbins=3)
         ax_a1.yaxis.set_major_locator(MaxNLocator(nbins=4, prune='both'))
@@ -474,7 +477,7 @@ def plot_training_dynamics_combined(
         _ymin = max(min(_arr) * 0.6, 1e-5)
         _ymax = max(_arr) * 2.5
         ax_c1.set_ylim(_ymin, _ymax)
-        ax_c1.legend(fontsize=FONT_LEGEND_DENSE, loc="upper right", frameon=False)
+        ax_c1.legend(**LOSS_LEGEND_KW)
         ax_c1.set_xlim(0, max(epochs) * 1.02)
         ax_c1.xaxis.set_major_locator(MaxNLocator(nbins=4, integer=True, prune="both"))
         _lo_exp = math.ceil(math.log10(_ymin * 1.01))

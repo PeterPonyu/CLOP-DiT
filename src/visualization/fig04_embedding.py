@@ -39,6 +39,29 @@ from src.utils.paths import FIG_DIR
 logger = logging.getLogger(__name__)
 
 
+def _set_umap_limits_from_points(ax: plt.Axes, coords: np.ndarray, pad_frac: float = 0.05) -> None:
+    """Tighten UMAP axes to the authored data extent with a small breathing margin."""
+    pts = np.asarray(coords)
+    if pts.size == 0 or pts.ndim != 2 or pts.shape[1] != 2:
+        return
+    x_min, y_min = np.nanmin(pts, axis=0)
+    x_max, y_max = np.nanmax(pts, axis=0)
+    dx = max(float(x_max - x_min), 1e-6)
+    dy = max(float(y_max - y_min), 1e-6)
+    ax.set_xlim(x_min - dx * pad_frac, x_max + dx * pad_frac)
+    ax.set_ylim(y_min - dy * pad_frac, y_max + dy * pad_frac)
+
+
+def _set_interior_umap_ticks(ax: plt.Axes, n_ticks: int = 2) -> None:
+    """Use interior tick locations so neighboring UMAP panels do not collide at the borders."""
+    x0, x1 = ax.get_xlim()
+    y0, y1 = ax.get_ylim()
+    if np.isfinite([x0, x1]).all() and x1 > x0:
+        ax.set_xticks(np.linspace(x0, x1, n_ticks + 2)[1:-1])
+    if np.isfinite([y0, y1]).all() and y1 > y0:
+        ax.set_yticks(np.linspace(y0, y1, n_ticks + 2)[1:-1])
+
+
 # ──────────────────────────────────────────────────────────────────────
 # Primary merged figure: B + E  (Article Fig 4)
 # ──────────────────────────────────────────────────────────────────────
@@ -158,8 +181,8 @@ def plot_embedding_space_merged(
         ax.set_title("Text Prototypes (CLOP space)")
         ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
         style_axes(ax, kind="umap")
-        ax.xaxis.set_major_locator(MaxNLocator(nbins=2, symmetric=True, prune="both"))
-        ax.yaxis.set_major_locator(MaxNLocator(nbins=2, symmetric=True, prune="both"))
+        _set_umap_limits_from_points(ax, proto_coords, pad_frac=0.04)
+        _set_interior_umap_ticks(ax)
 
         ax_b1 = b_slots[1].inset(left=0.024, right=0.010).add_axes(fig)
         ax = ax_b1
@@ -176,10 +199,10 @@ def plot_embedding_space_merged(
         ax.set_title(f"Cell + Prototype Overlay ({len(s_idx)} cells)")
         ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
         style_axes(ax, kind="umap")
-        ax.xaxis.set_major_locator(MaxNLocator(nbins=2, symmetric=True, prune="both"))
-        ax.yaxis.set_major_locator(MaxNLocator(nbins=2, symmetric=True, prune="both"))
+        _set_umap_limits_from_points(ax, np.vstack([cell_coords, proto_coords]), pad_frac=0.03)
+        _set_interior_umap_ticks(ax)
 
-        ax_b2 = b_slots[2].inset(left=0.126, right=0.070).add_axes(fig)
+        ax_b2 = b_slots[2].inset(left=0.126, right=0.100).add_axes(fig)
         ax = ax_b2
         add_panel_label(ax, 'c', x=-0.12, y=1.04)
         so = np.argsort(type_counts)[::-1]
@@ -194,8 +217,10 @@ def plot_embedding_space_merged(
         ax.set_xlabel("Cells")
         ax.set_title("Cells per Type")
         style_axes(ax, kind="bar")
-        ax.xaxis.set_major_locator(MaxNLocator(nbins=2, prune="upper"))
-        ax.margins(x=0.08)
+        ax.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
+        ax.margins(x=0.14)
+        x0, x1 = ax.get_xlim()
+        ax.set_xticks(np.linspace(x0, x1, 4)[1:-1])
         row += 1
 
     if has_e:
@@ -455,8 +480,10 @@ def plot_clop_embedding_space(
     ax_b1.set_title("69 Text Prototypes (CLOP space)")
     ax_b1.set_xlabel("UMAP 1")
     ax_b1.set_ylabel("UMAP 2")
+    _set_umap_limits_from_points(ax_b1, proto_coords, pad_frac=0.04)
+    _set_interior_umap_ticks(ax_b1)
 
-    ax_b2 = ax_rect_3.inset(right=0.090).add_axes(fig)
+    ax_b2 = ax_rect_3.inset(right=0.120).add_axes(fig)
     add_panel_label(ax_b2, 'c', x=-0.12, y=1.02)
     for t in unique_types:
         mask = gids_sub == t
@@ -474,8 +501,8 @@ def plot_clop_embedding_space(
     ax_b2.set_title("Cell + Prototype Overlay")
     ax_b2.set_xlabel("UMAP 1")
     ax_b2.set_ylabel("UMAP 2")
-    ax_b2.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="upper"))
-    ax_b2.yaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
+    _set_umap_limits_from_points(ax_b2, np.vstack([cell_coords, proto_coords]), pad_frac=0.03)
+    _set_interior_umap_ticks(ax_b2)
     ax_b2.margins(x=0.08)
 
     if save:

@@ -58,11 +58,11 @@ def plot_diagnostics(
     apply_style()
 
     # ── Figure 12: Diversity Diagnostics (4 subplots) ──
-    fig = plt.figure(figsize=(12.8, 9.0))
-    layout = bind_figure_region(fig, (0.14, 0.18, 0.988, 0.92))
-    top_row, bottom_row = layout.split_rows(2, hspace=0.62)
-    top_left, top_right = top_row.split_cols([1.00, 1.00], gap=0.058)
-    bottom_left, bottom_right = bottom_row.split_cols([0.90, 1.04], gap=0.092)
+    fig = plt.figure(figsize=(12.8, 8.7))
+    layout = bind_figure_region(fig, (0.14, 0.17, 0.988, 0.92))
+    top_row, bottom_row = layout.split_rows(2, hspace=0.46)
+    top_left, top_right = top_row.split_cols([1.00, 1.00], gap=0.048)
+    bottom_left, bottom_right = bottom_row.split_cols([0.92, 1.02], gap=0.074)
     top_left = top_left.inset(right=0.006)
     top_right = top_right.inset(left=0.006)
     bottom_left = bottom_left.inset(right=0.030)
@@ -140,8 +140,10 @@ def plot_diagnostics(
 
         ax.set_title("CFG Scale vs Diversity & Norm")
         ax.xaxis.set_major_locator(plt.MaxNLocator(nbins=4, prune="both"))
-        lines1, labels1 = ax.get_legend_handles_labels()
-        lines2, labels2 = ax2.get_legend_handles_labels()
+        ax.text(0.03, 0.05, "● Div.", transform=ax.transAxes,
+            fontsize=8.5, color=COLORS["real"], ha="left", va="bottom")
+        ax.text(0.03, 0.13, "■ Norm", transform=ax.transAxes,
+            fontsize=8.5, color=COLORS["generated"], ha="left", va="bottom")
     else:
         ax.set_title("CFG Scale vs Diversity")
 

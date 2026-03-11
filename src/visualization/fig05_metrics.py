@@ -528,7 +528,7 @@ def plot_metrics_summary(
             for bar, val in zip(bars_clop, bar_vals):
                 ax2.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.02,
                          f"{val:.3f}", ha="center", va="bottom",
-                         fontsize=FONT_ANNOTATION, fontweight="bold",
+                         fontsize=FONT_ANNOTATION, fontweight="normal",
                          color=COLORS["real"], zorder=8)
             for bar, val in zip(bars_gauss, baseline_vals):
                 ax2.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.02,

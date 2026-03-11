@@ -171,8 +171,8 @@ def plot_baseline_comparison(
                xlabel="Normalised Value")
 
     # ── O3: Absolute delta bar chart (CLOP-DiT minus baseline) ──
-    ax3 = ax_rect_3.add_axes(fig)
-    add_panel_label(ax3, 'c', x=-0.12, y=1.02)
+    ax3 = ax_rect_3.inset(left=0.10, right=0.02).add_axes(fig)
+    add_panel_label(ax3, 'c', x=-0.18, y=1.02)
 
     clop_vals = methods["CLOP-DiT"]
     bl_names = [bl for bl in baselines]

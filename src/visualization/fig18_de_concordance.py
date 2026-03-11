@@ -168,14 +168,16 @@ def plot_de_concordance_panel(
         cax = add_axes_next_to(
             fig,
             ax,
-            side="bottom",
-            width=ax.get_position().width * 0.34,
-            height=0.022,
-            pad=0.05,
-            align="center",
+            side="right",
+            width=0.010,
+            height=ax.get_position().height * 0.44,
+            pad=0.014,
+            align="top",
+            y_offset=-0.01,
         )
-        cbar = fig.colorbar(sc, cax=cax, orientation="horizontal")
-        cbar.set_label(cbar_label, fontsize=FONT_ANNOTATION)
+        cbar = fig.colorbar(sc, cax=cax)
+        cbar.set_label("")
+        cbar.ax.set_title("")
         cbar.ax.tick_params(labelsize=FONT_HEATMAP_CELL)
 
         # Small legend (sign-disagreement + y=x) inside lower-left; sparse there
@@ -192,6 +194,7 @@ def plot_de_concordance_panel(
         sub_line = abbreviate_cell_type(first_key.replace("_", " "), max_len=38)
 
     style_axes(ax, "scatter", xlabel="Real logFC", ylabel="Generated logFC")
+    ax.xaxis.labelpad = 10
     ax.set_title(f"Effect-Size Concordance\n{sub_line}",
                  fontsize=FONT_TITLE - 1, pad=4)
     ax.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))

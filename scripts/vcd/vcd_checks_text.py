@@ -7,7 +7,7 @@ import re
 from matplotlib.text import Text
 from matplotlib.transforms import Bbox
 
-from .vcd_core import _ArtistInfo, _safe_bbox, _shrink, _overlap_area, _sides_outside, _artist_label
+from .vcd_core import _ArtistInfo, _safe_bbox, _shrink, _overlap_area, _sides_outside, _artist_label, _is_colorbar_axes
 
 
 def _check_text_overlaps(infos: list[_ArtistInfo], tol_px: float = 2.5):
@@ -100,7 +100,10 @@ def _check_text_vs_artist_overlap(
 
 def _check_cross_panel_spillover(fig, renderer, tol_px=5.0):
     """Pass 8: Detect content from one axes spilling into an adjacent axes."""
-    axes_list = [ax for ax in fig.get_axes() if not getattr(ax, '_is_legend_cell', False)]
+    axes_list = [
+        ax for ax in fig.get_axes()
+        if not getattr(ax, '_is_legend_cell', False) and not _is_colorbar_axes(ax)
+    ]
     if len(axes_list) < 2:
         return []
 
@@ -126,6 +129,13 @@ def _check_cross_panel_spillover(fig, renderer, tol_px=5.0):
                         continue
                     if getattr(ax_j, '_is_legend_cell', False):
                         continue
+                    if (
+                        abs(bb_i.x0 - bb_j.x0) < 1.0
+                        and abs(bb_i.y0 - bb_j.y0) < 1.0
+                        and abs(bb_i.x1 - bb_j.x1) < 1.0
+                        and abs(bb_i.y1 - bb_j.y1) < 1.0
+                    ):
+                        continue  # twinx/twiny axes share the same panel region
                     area = _overlap_area(child_bb, bb_j)
                     if area > 50:
                         txt = getattr(child, "_text", "")[:30]

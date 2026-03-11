@@ -238,56 +238,114 @@ def run_diversity_figures():
 
 
 def run_vcd_on_figures(pdf_list: list[Path]) -> dict:
-    """Run the Visual Conflict Detector on each PDF (rendered to a figure)."""
-    try:
-        from vcd import detect_conflicts_in_file, summarize_issues
-    except ImportError as e:
-        log.warning("VCD unavailable: %s — skipping VCD pass", e)
-        return {}
+    """Collect live figure-time VCD sidecars and emit a consolidated final summary.
 
+    The live generator audit is the source of truth. A separate post-export
+    PDF-file audit is not implemented for this pipeline, so the regeneration
+    log and saved markdown now report that state explicitly instead of printing
+    placeholder PASS lines from a stubbed checker.
+    """
+    live_vcd = load_live_vcd_results(FIG_DIR)
     vcd_results: dict = {}
-    total_warn = total_info = 0
-    failures = []
+    total_warn = 0
+    total_info = 0
+    files_with_warnings = 0
+    missing_live = []
 
     for pdf in sorted(pdf_list):
         if not pdf.exists():
-            log.warning("VCD skip (missing): %s", pdf.name)
+            log.warning("VCD skip (missing figure): %s", pdf.name)
             continue
-        try:
-            issues = detect_conflicts_in_file(str(pdf))
-            warnings  = [i for i in issues if getattr(i, "level", "").upper() in ("WARNING","WARN","ERROR","CRITICAL")]
-            info_only = [i for i in issues if getattr(i, "level", "").upper() in ("INFO","HINT","LOW")]
-            total_warn += len(warnings)
-            total_info += len(info_only)
-            vcd_results[pdf.name] = {
-                "warnings": [str(i) for i in warnings],
-                "info": [str(i) for i in info_only],
-                "total": len(issues)
-            }
-            level = "PASS" if not warnings else ("WARN" if len(warnings) < 3 else "FAIL")
-            log.info("[VCD %-35s]  %s  warn=%d info=%d",
-                     pdf.name[:35], level, len(warnings), len(info_only))
-            if warnings:
-                for w in warnings[:5]:
-                    log.info("    %s", str(w)[:120])
-                if len(warnings) > 5:
-                    log.info("    ... +%d more", len(warnings) - 5)
-                failures.append((pdf.name, warnings))
-        except Exception as exc:
-            log.error("VCD error on %s: %s", pdf.name, exc)
-            vcd_results[pdf.name] = {"error": str(exc)}
 
-    log.info("── VCD summary: total_warnings=%d  total_info=%d  files_with_warnings=%d ──",
-             total_warn, total_info, len(failures))
+        live_payload = live_vcd.get(pdf.stem)
+        if not live_payload:
+            missing_live.append(pdf.name)
+            entry = {
+                "warnings": [],
+                "info": [],
+                "total": 0,
+                "audit_source": "missing-live-sidecar",
+                "live_error": "No live VCD sidecar found for this figure",
+            }
+            vcd_results[pdf.name] = entry
+            _log_vcd_entry(pdf.name, entry)
+            continue
+
+        warnings = list(live_payload.get("warnings", []))
+        info_only = list(live_payload.get("info", []))
+        entry = {
+            "warnings": warnings,
+            "info": info_only,
+            "total": len(warnings) + len(info_only),
+            "audit_source": "live-generator",
+            "live_error": live_payload.get("error"),
+            "counts_by_type": live_payload.get("counts_by_type", {}),
+        }
+        vcd_results[pdf.name] = entry
+        total_warn += len(warnings)
+        total_info += len(info_only)
+        if warnings:
+            files_with_warnings += 1
+        _log_vcd_entry(pdf.name, entry)
+
+    log.info(
+        "── VCD final summary: source=live-generator total_warnings=%d total_info=%d files_with_warnings=%d missing_live=%d pdf_audit=skipped ──",
+        total_warn,
+        total_info,
+        files_with_warnings,
+        len(missing_live),
+    )
     vcd_results["__summary__"] = {
         "total_warnings": total_warn,
         "total_info": total_info,
-        "files_with_warnings": len(failures),
-        "pdf_total_warnings": total_warn,
-        "pdf_total_info": total_info,
-        "pdf_files_with_warnings": len(failures),
+        "files_with_warnings": files_with_warnings,
+        "live_total_warnings": total_warn,
+        "live_total_info": total_info,
+        "live_files_with_warnings": files_with_warnings,
+        "pdf_audit_ran": False,
+        "pdf_total_warnings": 0,
+        "pdf_total_info": 0,
+        "pdf_files_with_warnings": 0,
+        "figures_missing_live_audit": missing_live,
+        "live_sidecar_count": len(live_vcd),
     }
     return vcd_results
+
+
+def _format_vcd_type_counts(type_counts: dict, max_items: int = 4) -> str:
+    if not type_counts:
+        return "none"
+    items = sorted(type_counts.items(), key=lambda item: (-item[1], item[0]))
+    head = ", ".join(f"{name}={count}" for name, count in items[:max_items])
+    if len(items) > max_items:
+        head += f", +{len(items) - max_items} more"
+    return head
+
+
+def _log_vcd_entry(name: str, entry: dict) -> None:
+    warnings = list(entry.get("warnings", []))
+    info_only = list(entry.get("info", []))
+    error = entry.get("live_error") or entry.get("error")
+    source = entry.get("audit_source", "unknown")
+    type_counts = entry.get("counts_by_type", {}) or {}
+    status = "ERROR" if error else ("PASS" if not warnings else ("WARN" if len(warnings) < 3 else "FAIL"))
+    log_fn = log.error if error else (log.info if not warnings else log.warning)
+    log_fn(
+        "[VCD %-35s]  %s  source=%s warn=%d info=%d types=%s",
+        name[:35],
+        status,
+        source,
+        len(warnings),
+        len(info_only),
+        _format_vcd_type_counts(type_counts),
+    )
+    if error:
+        log.error("    %s", str(error)[:220])
+        return
+    for item in warnings[:3]:
+        log.warning("    %s", str(item)[:180])
+    if len(warnings) > 3:
+        log.warning("    ... +%d more", len(warnings) - 3)
 
 
 def load_live_vcd_results(fig_dir: Path) -> dict[str, dict]:
@@ -364,21 +422,36 @@ def save_vcd_report(vcd: dict):
 
     md_lines = ["# VCD Report — " + time.strftime("%Y-%m-%d %H:%M"), ""]
     summary = vcd.get("__summary__", {})
+    pdf_audit_ran = bool(summary.get("pdf_audit_ran", False))
     md_lines += [
         f"**Total warnings:** {summary.get('total_warnings', '?')}",
         f"**Files with warnings:** {summary.get('files_with_warnings', '?')}",
         f"**Live generator warnings:** {summary.get('live_total_warnings', summary.get('total_warnings', '?'))}",
-        f"**Post-export PDF warnings:** {summary.get('pdf_total_warnings', '?')}",
+        (
+            f"**Post-export PDF warnings:** {summary.get('pdf_total_warnings', '?')}"
+            if pdf_audit_ran
+            else "**Post-export PDF audit:** skipped (live generator audit is the source of truth)"
+        ),
         "",
         "## Per-Figure",
         "",
     ]
+    missing_live = summary.get("figures_missing_live_audit", []) or []
+    if missing_live:
+        md_lines.extend([
+            f"**Figures missing live audit:** {', '.join(missing_live)}",
+            "",
+        ])
     for name, data in vcd.items():
         if name.startswith("__"):
             continue
         w = data.get("warnings", [])
         md_lines.append(f"### {name}")
-        if not w:
+        md_lines.append(f"- Source: {data.get('audit_source', 'unknown')}")
+        audit_error = data.get("live_error") or data.get("error")
+        if audit_error:
+            md_lines.append(f"- AUDIT ERROR: {str(audit_error)[:200]}")
+        elif not w:
             md_lines.append("- PASS (0 warnings)")
         else:
             for item in w:
@@ -495,8 +568,6 @@ def main():
     # 8. VCD pass
     if not args.no_vcd:
         vcd = run_vcd_on_figures(all_pdfs)
-        live_vcd = load_live_vcd_results(FIG_DIR)
-        vcd = merge_live_vcd_results(vcd, live_vcd)
         save_vcd_report(vcd)
     else:
         log.info("VCD skipped (--no-vcd)")

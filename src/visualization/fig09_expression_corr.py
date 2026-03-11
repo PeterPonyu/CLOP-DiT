@@ -92,9 +92,10 @@ def plot_expression_correlation(
     # -- H1: Density scatter with residual coloring --
     ax1 = top_left.inset(right=0.028).add_axes(fig)
     abs_res = np.abs(residuals)
+    resid_vmax = float(np.percentile(abs_res, 95)) if len(abs_res) else 1.0
     sc = ax1.scatter(real_means, gen_means, c=abs_res, cmap="magma_r",
                      s=18, alpha=0.7, edgecolors="none",
-                     vmin=0, vmax=np.percentile(abs_res, 95))
+                     vmin=0, vmax=resid_vmax)
     lo = min(real_means.min(), gen_means.min()) - 0.2
     hi = max(real_means.max(), gen_means.max()) + 0.2
     ax1.plot([lo, hi], [lo, hi], color=COLORS["bad"], linestyle="--", lw=1.5,
@@ -111,30 +112,47 @@ def plot_expression_correlation(
         fig,
         ax1,
         side="right",
-        width=0.008,
-        height=ax1.get_position().height * 0.28,
-        pad=0.010,
+        width=0.012,
+        height=ax1.get_position().height * 0.40,
+        pad=0.012,
         align="top",
-        y_offset=-0.045,
+        y_offset=-0.018,
     )
     cbar = fig.colorbar(sc, cax=cax)
+    if getattr(cbar, "solids", None) is not None:
+        try:
+            cbar.solids.set_edgecolor("face")
+        except Exception:
+            pass
     cbar.set_label("|Resid|", fontsize=9)
     cbar.ax.tick_params(labelsize=8, length=2, pad=1)
-    cbar.set_ticks([0.5, 1.5])
-    from .style import set_scientific_tickformat
-    set_scientific_tickformat(cbar.ax, axis="y", scilimits=(-2, 2))
+    cbar.set_ticks(np.linspace(0, resid_vmax, 3))
     add_panel_label(ax1, 'a', x=-0.12, y=1.08)
 
     # Annotate outlier genes with staggered offsets
-    outlier_idx = np.argsort(abs_res)[-2:]
-    _offsets = [(-80, -35), (45, 40), (-85, 25)]
-    for j, i in enumerate(outlier_idx):
-        if i < len(gene_names):
-            ax1.annotate(gene_names[i], (real_means[i], gen_means[i]),
-                         fontsize=11, xytext=_offsets[j % len(_offsets)],
-                         textcoords="offset points",
-                         arrowprops=dict(arrowstyle="->", lw=0.5, color="#555"),
-                         color="#333")
+    outlier_idx = np.argsort(abs_res)[-5:][np.argsort(abs_res[np.argsort(abs_res)[-5:]])[::-1]]
+    label_slots = [
+        (0.03, 0.94, "left"),
+        (0.03, 0.76, "left"),
+        (0.03, 0.58, "left"),
+        (0.97, 0.94, "right"),
+        (0.97, 0.76, "right"),
+    ]
+    for i, (slot_x, slot_y, ha) in zip(outlier_idx, label_slots):
+        if i >= len(gene_names):
+            continue
+        ax1.annotate(
+            gene_names[i],
+            (real_means[i], gen_means[i]),
+            fontsize=9.5,
+            xytext=(slot_x, slot_y),
+            textcoords="axes fraction",
+            ha=ha,
+            va="center",
+            arrowprops=dict(arrowstyle="->", lw=0.5, color="#555"),
+            color="#333",
+            bbox=dict(boxstyle="round,pad=0.18", fc="white", ec="none", alpha=0.85),
+        )
 
     # -- H2: Per-type Pearson r lollipop chart --
     ax2 = top_right.inset(left=0.17, right=0.05).add_axes(fig)

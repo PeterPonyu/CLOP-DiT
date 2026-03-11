@@ -200,7 +200,7 @@ def plot_expression_analysis(
     ax3.yaxis.set_major_locator(MaxNLocator(nbins=4, prune="upper"))
 
     # -- I4: Top variable genes ranked bar chart --
-    ax4 = bottom_right.add_axes(fig)
+    ax4 = bottom_right.inset(left=0.12, right=0.02).add_axes(fig)
     real_stds = real.std(axis=0)
     gen_stds = gen.std(axis=0)
     valid_mask = real_stds > 1e-4
@@ -226,7 +226,7 @@ def plot_expression_analysis(
     ax4.set_yticklabels(names_show, fontsize=10, ha="right")
     ax4.set_xlabel("Std Ratio (Gen / Real, clipped at 5\u00d7)", fontsize=11)
     ax4.set_title("Most Divergent Genes\n(over- & under-dispersed)", fontsize=11, pad=10)
-    add_panel_label(ax4, 'd', x=-0.24, y=1.00)
+    add_panel_label(ax4, 'd', x=-0.30, y=1.00)
     placed_annotations: list = []
     for i, r in enumerate(ratios_show):
         # Skip annotations within 0.05 of an already-placed one to avoid overlap
