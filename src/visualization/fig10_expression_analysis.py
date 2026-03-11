@@ -19,6 +19,7 @@ from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.patches import ConnectionPatch
 
 from .direct_layout import bind_figure_region
 from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
@@ -111,29 +112,53 @@ def plot_expression_analysis(
     cbar1.set_label("|\u0394CV|", fontsize=9)
     cbar1.ax.tick_params(labelsize=8, length=2, pad=1)
 
-    # Annotate the most divergent genes with a manual staggered placement strategy.
+    # Annotate the most divergent genes with the same compact callout style used in Fig 9.
     top_cv_idx = np.argsort(cv_diff)[-6:]
-    _offsets_cv = [(-60, -24), (24, 24), (-58, 22), (28, -24), (-48, 30), (38, 8)]
-    _placed = []
-    _min_sep = max(0.08 * hi, 0.12)
-    for j, i in enumerate(top_cv_idx[np.argsort(cv_diff[top_cv_idx])[::-1]]):
+    top_cv_idx = top_cv_idx[np.argsort(cv_diff[top_cv_idx])[::-1]]
+    sorted_by_y = sorted(top_cv_idx, key=lambda idx: gen_cv[idx], reverse=True)
+    left_slots = [(0.12, 0.88, "left"), (0.12, 0.66, "left"), (0.12, 0.44, "left")]
+    right_slots = [(0.88, 0.84, "right"), (0.88, 0.62, "right"), (0.88, 0.40, "right")]
+    label_plan = []
+    for idx, slot in zip(sorted_by_y[::2], left_slots):
+        label_plan.append((idx, *slot))
+    for idx, slot in zip(sorted_by_y[1::2], right_slots):
+        label_plan.append((idx, *slot))
+
+    for i, slot_x, slot_y, ha in label_plan:
         if i >= len(gene_names):
             continue
-        x_pt = real_cv[i]
-        y_pt = gen_cv[i]
-        if any(abs(x_pt - px) < _min_sep and abs(y_pt - py) < _min_sep for px, py in _placed):
-            continue
-        ax1.annotate(
+        ax1.text(
+            slot_x,
+            slot_y,
             gene_names[i],
-            (x_pt, y_pt),
-            fontsize=10,
-            xytext=_offsets_cv[j % len(_offsets_cv)],
-            textcoords="offset points",
-            arrowprops=dict(arrowstyle="->", lw=0.5, color="#555"),
+            transform=ax1.transAxes,
+            fontsize=8.0,
+            ha=ha,
+            va="center",
             color="#333",
-            bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.8),
+            bbox=dict(boxstyle="round,pad=0.10", fc="white", ec="none", alpha=0.86),
+            zorder=6,
+            clip_on=False,
         )
-        _placed.append((x_pt, y_pt))
+        connector_x = slot_x + (0.02 if ha == "left" else -0.02)
+        connector = ConnectionPatch(
+            xyA=(real_cv[i], gen_cv[i]),
+            coordsA=ax1.transData,
+            xyB=(connector_x, slot_y),
+            coordsB=ax1.transAxes,
+            axesA=ax1,
+            axesB=ax1,
+            arrowstyle="-",
+            lw=0.55,
+            color="#666",
+            alpha=0.65,
+            shrinkA=0,
+            shrinkB=0,
+            connectionstyle=f"arc3,rad={0.12 if ha == 'left' else -0.12}",
+        )
+        connector.set_zorder(2)
+        connector.set_clip_on(False)
+        ax1.add_artist(connector)
 
     cv_corr = np.corrcoef(real_cv, gen_cv)[0, 1]
     ax1.legend(fontsize=10, frameon=False)

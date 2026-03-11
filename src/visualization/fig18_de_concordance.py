@@ -201,7 +201,7 @@ def plot_de_concordance_panel(
 
     # ── Panel (b): concordance heatmap ──
     ax2 = ax_rect_b.add_axes(fig)
-    add_panel_label(ax2, 'b', x=-0.10, y=1.04)
+    add_panel_label(ax2, 'b', x=-0.12, y=1.03)
 
     metric_names = ["Pears. r", "Spear. \u03c1", "Jacc.@50", "Sign agr."]
     metric_tick_labels = ["Pears.\nr", "Spear.\n\u03c1", "Jacc.\n50", "Sign\nagr."]
@@ -243,6 +243,7 @@ def plot_de_concordance_panel(
     cbar2 = fig.colorbar(im, cax=cax2)
     cbar2.ax.tick_params(labelsize=FONT_HEATMAP_CELL)
     style_axes(ax2, "heatmap", title="Concordance Across Contrasts")
+    ax2.set_title("Concordance Across Contrasts", x=0.60, pad=6)
 
     # ── Panel (c): grouped bar chart ──
     ax3 = ax_rect_c.add_axes(fig)

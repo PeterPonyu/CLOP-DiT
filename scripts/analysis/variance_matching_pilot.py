@@ -175,7 +175,10 @@ def main():
 
     fig = plt.figure(figsize=(17.4, 11.4))
     layout = bind_figure_region(fig, (0.13, 0.08, 0.97, 0.96))
-    top_row, bottom_row = layout.split_rows([1.20, 0.92], hspace=0.15)
+    # Uses the repository's direct rectangle layout engine, not GridSpec or
+    # matplotlib's automatic/constrained layout. Keep the row gap small but
+    # shorten label/title footprints enough to prevent cross-row collisions.
+    top_row, bottom_row = layout.split_rows([1.20, 0.92], hspace=0.12)
     top_left, top_right = top_row.split_cols([1.2, 1.0], wspace=0.34)
     bottom_left, bottom_right = bottom_row.split_cols([1.16, 1.04], wspace=0.46)
 
@@ -221,7 +224,8 @@ def main():
 
     ax.legend(fontsize=FONT_ANNOTATION, frameon=False,
               loc="lower right")
-    style_axes(ax, "bar", xlabel="SWD (lower is better)", title="Latent SWD per Cell Type")
+    style_axes(ax, "bar", xlabel="SWD", title="Latent SWD per Cell Type")
+    ax.xaxis.labelpad = 2
 
     # ── Panel (b): Variance Ratio — strip + box plot ──
     ax2 = top_right.inset(left=0.02, right=0.02).add_axes(fig)
@@ -256,8 +260,9 @@ def main():
     ax2.set_yticks([])
     ax2.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="lower left")
     style_axes(ax2, "default",
-               xlabel="Variance Ratio (gen/real); <1 = under-dispersed",
+               xlabel="Variance ratio (gen/real)",
                title="Per-Type Latent Variance Ratio")
+    ax2.xaxis.labelpad = 2
 
     # ── Panel (c): Per-Dimension Variance Correlation — ECDF + box ──
     ax3 = bottom_left.inset(right=0.02).add_axes(fig)
@@ -289,9 +294,11 @@ def main():
     ax3.set_ylim(0, 1.05)
     ax3.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="upper left")
     style_axes(ax3, "default",
-               xlabel="Per-Dimension Variance Correlation (real vs. gen)",
+               xlabel="Per-dim variance corr. (real vs gen)",
                ylabel="Cumulative Proportion",
                title="Dimension-Wise Variance Correlation")
+    ax3.xaxis.labelpad = 2
+    ax3.set_title("Dimension-Wise Variance Correlation", pad=4)
 
     # ── Panel (d): SWD vs. Training Cell Count ──
     ax4 = bottom_right.inset(left=0.05, right=0.06).add_axes(fig)
@@ -354,9 +361,11 @@ def main():
 
     ax4.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="upper right")
     style_axes(ax4, "scatter",
-               xlabel="Training Cell Count (log scale)",
+               xlabel="Training cells (log scale)",
                ylabel="Sliced Wasserstein Distance",
                title="SWD vs. Training Cell Count")
+    ax4.xaxis.labelpad = 2
+    ax4.set_title("SWD vs. Training Cell Count", pad=4)
 
     fig_path = output_dir / "variance_matching_pilot.png"
     save_with_vcd(fig, fig_path, dpi=300, layout_rect=(0.08, 0.04, 0.98, 0.96))
