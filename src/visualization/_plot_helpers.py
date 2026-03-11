@@ -82,6 +82,7 @@ def plot_confusion_matrix(
     max_labels: int = 30,
     colorbar: bool = True,
     colorbar_orientation: str = "horizontal",
+    colorbar_pad: float = 0.10,
     title: str = "Confusion Matrix",
 ) -> plt.cm.ScalarMappable:
     """Render normalized confusion matrix with adaptive tick labels.
@@ -127,7 +128,7 @@ def plot_confusion_matrix(
 
     if colorbar:
         add_colorbar_safe(im, ax=ax, label="Recall",
-                          shrink=0.50, pad=0.10,
+                          shrink=0.50, pad=colorbar_pad,
                           orientation=colorbar_orientation, aspect=20)
 
     style_axes(ax, "heatmap", title=title,

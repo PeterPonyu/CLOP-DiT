@@ -40,7 +40,6 @@ def plot_panel_l(
     ax1 = bind_figure_region(fig, (0.10, 0.30, 0.92, 0.90)).add_axes(fig)
     # Title moved to LaTeX caption
     # set_figure_suptitle(fig, "Noise-Scale Trade-off (CFG=1.5)", fontsize=11)
-    add_panel_label(ax1, 'a', x=-0.12, y=1.02)
 
     color_fd = COLORS["real"]
     color_cos = COLORS["baseline_gauss"]

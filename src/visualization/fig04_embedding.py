@@ -202,9 +202,9 @@ def plot_embedding_space_merged(
         _set_umap_limits_from_points(ax, np.vstack([cell_coords, proto_coords]), pad_frac=0.03)
         _set_interior_umap_ticks(ax)
 
-        ax_b2 = b_slots[2].inset(left=0.126, right=0.100).add_axes(fig)
+        ax_b2 = b_slots[2].inset(left=0.126, right=0.148).add_axes(fig)
         ax = ax_b2
-        add_panel_label(ax, 'c', x=-0.12, y=1.04)
+        add_panel_label(ax, 'c', x=-0.18, y=1.06)
         so = np.argsort(type_counts)[::-1]
         bar_c = [TYPE_PALETTE[t % len(TYPE_PALETTE)] for t in unique_types[so]]
         y_pos = np.arange(n_types)
@@ -215,7 +215,7 @@ def plot_embedding_space_merged(
         set_dense_tick_labels(ax, axis="y", max_labels=14, fontsize=FONT_DENSE_YTICK, rotation=0)
         ax.invert_yaxis()
         ax.set_xlabel("Cells")
-        ax.set_title("Cells per Type")
+        ax.set_title("Cells per Type", x=0.58)
         style_axes(ax, kind="bar")
         ax.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
         ax.margins(x=0.14)

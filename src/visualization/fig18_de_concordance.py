@@ -67,7 +67,7 @@ def plot_de_concordance_panel(
 
     # ── Panel (a): effect-size weighted logFC scatter ──
     ax = ax_rect_a.add_axes(fig)
-    add_panel_label(ax, 'a', x=-0.16, y=1.03)
+    add_panel_label(ax, 'a', x=-0.16, y=1.04)
 
     first_key = contrasts[0]
     first = de_data[first_key]
@@ -172,8 +172,8 @@ def plot_de_concordance_panel(
             width=0.010,
             height=ax.get_position().height * 0.44,
             pad=0.014,
-            align="top",
-            y_offset=-0.01,
+            align="bottom",
+            y_offset=0.02,
         )
         cbar = fig.colorbar(sc, cax=cax)
         cbar.set_label("")
@@ -202,7 +202,7 @@ def plot_de_concordance_panel(
 
     # ── Panel (b): concordance heatmap ──
     ax2 = ax_rect_b.add_axes(fig)
-    add_panel_label(ax2, 'b', x=-0.14, y=1.03)
+    add_panel_label(ax2, 'b', x=-0.14, y=1.04)
 
     metric_names = ["Pears. r", "Spear. \u03c1", "Jacc.@50", "Sign agr."]
     metric_keys  = ["logfc_pearson_r", "logfc_spearman_rho",
@@ -246,7 +246,7 @@ def plot_de_concordance_panel(
 
     # ── Panel (c): grouped bar chart ──
     ax3 = ax_rect_c.add_axes(fig)
-    add_panel_label(ax3, 'c', x=-0.22, y=1.03)
+    add_panel_label(ax3, 'c', x=-0.22, y=1.04)
 
     x        = np.arange(n_contrasts)
     n_metrics = len(metric_names)

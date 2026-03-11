@@ -185,13 +185,13 @@ def plot_text_cell_heatmap(
         sim_sorted, cmap=cmap, vmin=-0.1, vmax=1.0,
         aspect="auto", interpolation="nearest",
     )
-    step_x = max(4, int(np.ceil(n_types / 10)))
+    step_x = max(10, int(np.ceil(n_types / 5)))
     step_y = max(4, int(np.ceil(n_types / 14)))
     _xtl = [labels_sorted[i] if i % step_x == 0 else "" for i in range(n_types)]
     _ytl = [labels_sorted[i] if i % step_y == 0 else "" for i in range(n_types)]
     ax1.set_xticks(range(n_types))
     ax1.set_yticks(range(n_types))
-    ax1.set_xticklabels(_xtl, rotation=75, fontsize=9, ha="right")
+    ax1.set_xticklabels(_xtl, rotation=55, fontsize=9, ha="right")
     ax1.set_yticklabels(_ytl, fontsize=10, ha="right")
     ax1.set_ylabel("Cell Type (text prototypes)", fontsize=11)
     ax1.set_title("Cosine Similarity (sorted by diagonal)", fontsize=12)
@@ -361,7 +361,7 @@ def plot_text_cell_heatmap(
     ax3.tick_params(axis="both", labelsize=10)
 
     # Legend — place in empty region without frame
-    ax3.legend(fontsize=10, frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=1)
+    ax3.legend(fontsize=10, frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=1)
 
     # Add gridlines for readability
     ax3.grid(True, axis="both", alpha=0.2, linewidth=0.4)

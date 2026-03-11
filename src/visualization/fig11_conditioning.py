@@ -54,11 +54,11 @@ def plot_panel_m(
     _fw = 15.0  # Fixed width for reproducible layout
     has_row3 = full_dim_data is not None and len(full_dim_data) > 0
     if has_row3:
-        fig = plt.figure(figsize=(_fw, 12.1))
-        row_regions = bind_figure_region(fig, (0.06, 0.08, 0.97, 0.95)).split_rows([1.62, 1.00, 0.96], hspace=0.28)
+        fig = plt.figure(figsize=(_fw, 11.9))
+        row_regions = bind_figure_region(fig, (0.06, 0.08, 0.97, 0.95)).split_rows([1.48, 1.02, 0.98], hspace=0.28)
     else:
-        fig = plt.figure(figsize=(_fw, 7.8))
-        row_regions = bind_figure_region(fig, (0.06, 0.08, 0.97, 0.95)).split_rows([1.60, 0.96], hspace=0.24)
+        fig = plt.figure(figsize=(_fw, 7.6))
+        row_regions = bind_figure_region(fig, (0.06, 0.08, 0.97, 0.95)).split_rows([1.46, 0.98], hspace=0.24)
     top_widths = [1.0] * n_modes
     if n_modes > 1:
         top_widths[-1] = 1.04
@@ -81,7 +81,7 @@ def plot_panel_m(
     def _short_mode(name: str) -> str:
         return name.split(" (")[0]
 
-    def plot_one(ax, mask, title, alpha=0.4, size=8, *, show_ylabel=True):
+    def plot_one(ax, mask, title, alpha=0.30, size=8, *, show_ylabel=True):
         for tid in selected_types:
             tmask = mask & (combined_labels == tid)
             ax.scatter(coords[tmask, 0], coords[tmask, 1],
@@ -103,7 +103,7 @@ def plot_panel_m(
     real_mask_bool = combined_source == "Real"
     plot_one(axes[0], real_mask_bool,
              f"Real (n={n_real})",
-             alpha=0.2, size=4)
+             alpha=0.14, size=4)
 
     mode_counts = mode_counts or {}
     for i, mode_name in enumerate(mode_diversity.keys()):
@@ -121,9 +121,9 @@ def plot_panel_m(
     ax_b1 = bottom_regions[0].add_axes(fig)
     add_panel_label(ax_b1, 'b', x=-0.18, y=_panel_label_y)
     ax_b2 = bottom_regions[1].add_axes(fig)
-    add_panel_label(ax_b2, 'c', x=-0.28, y=1.10)
+    add_panel_label(ax_b2, 'c', x=-0.18, y=1.03)
     ax_b3 = bottom_regions[2].add_axes(fig)
-    add_panel_label(ax_b3, 'd', x=-0.32, y=1.10)
+    add_panel_label(ax_b3, 'd', x=-0.20, y=1.03)
 
     # Build per-type real centroids in 2D for shift summaries.
     real_centroids = {}
@@ -199,7 +199,7 @@ def plot_panel_m(
         )
         ax_b3.tick_params(axis="x", labelrotation=0, labelsize=FONT_TICK)
         ax_b3.set_ylabel("Per-type centroid shift", fontsize=FONT_LABEL)
-        ax_b3.set_title("Shift Distribution", fontsize=FONT_TITLE)
+        ax_b3.set_title("Shift Distribution", fontsize=FONT_TITLE, y=0.92, pad=0)
     else:
         ax_b3.text(0.5, 0.5, "No shift distribution data", ha="center", va="center", transform=ax_b3.transAxes)
         ax_b3.set_title("Shift Distribution", fontsize=FONT_TITLE)
@@ -356,8 +356,8 @@ def plot_panel_m(
         leg = _ax.get_legend()
         if leg is not None:
             leg.remove()
-    legend_bottom = ax_b1.get_position().y1 + 0.008
-    legend_ax = add_shared_legend_axes(fig, (0.16, legend_bottom, 0.68, 0.038))
+    legend_bottom = ax_b1.get_position().y1 + 0.026
+    legend_ax = add_shared_legend_axes(fig, (0.15, legend_bottom, 0.70, 0.028))
     legend_ax.legend(
         handles, labels, loc="center",
         ncol=min(len(handles), 8), fontsize=FONT_TICK_DENSE - 1,

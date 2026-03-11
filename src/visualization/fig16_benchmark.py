@@ -213,7 +213,7 @@ def plot_benchmark_panel(
 
     # ── S3: Grouped bar chart for key metrics ──
     ax3 = bottom_left.add_axes(fig)
-    add_panel_label(ax3, 'c', x=-0.12, y=1.08)
+    add_panel_label(ax3, 'c', x=-0.125, y=1.08)
     key_metrics = [
         ("frechet_distance",     "FD \u2193"),
         ("mean_centroid_cosine", "Cent Cos \u2191"),

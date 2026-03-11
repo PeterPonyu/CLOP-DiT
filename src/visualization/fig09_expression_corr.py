@@ -105,7 +105,8 @@ def plot_expression_correlation(
     ax1.set_xlabel("Real Mean Expression", fontsize=11)
     ax1.set_ylabel("Generated Mean Expression", fontsize=11)
     ax1.set_title("Per-Gene Correlation", fontsize=12)
-    from matplotlib.ticker import MaxNLocator as _MaxNLoc
+    from matplotlib.patches import ConnectionPatch
+    from matplotlib.ticker import MaxNLocator as _MaxNLoc, ScalarFormatter as _ScalarFormatter
     ax1.xaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
     ax1.yaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
     cax = add_axes_next_to(
@@ -127,32 +128,60 @@ def plot_expression_correlation(
     cbar.set_label("|Resid|", fontsize=9)
     cbar.ax.tick_params(labelsize=8, length=2, pad=1)
     cbar.set_ticks(np.linspace(0, resid_vmax, 3))
+    cbar_fmt = _ScalarFormatter(useMathText=True)
+    cbar_fmt.set_scientific(True)
+    cbar_fmt.set_powerlimits((-2, 2))
+    cbar.ax.yaxis.set_major_formatter(cbar_fmt)
+    cbar.update_ticks()
     add_panel_label(ax1, 'a', x=-0.12, y=1.08)
 
     # Annotate outlier genes with staggered offsets
-    outlier_idx = np.argsort(abs_res)[-5:][np.argsort(abs_res[np.argsort(abs_res)[-5:]])[::-1]]
-    label_slots = [
-        (0.03, 0.94, "left"),
-        (0.03, 0.76, "left"),
-        (0.03, 0.58, "left"),
-        (0.97, 0.94, "right"),
-        (0.97, 0.76, "right"),
-    ]
-    for i, (slot_x, slot_y, ha) in zip(outlier_idx, label_slots):
+    outlier_idx = np.argsort(abs_res)[-5:]
+    outlier_idx = outlier_idx[np.argsort(abs_res[outlier_idx])[::-1]]
+    sorted_by_y = sorted(outlier_idx, key=lambda idx: gen_means[idx], reverse=True)
+    left_slots = [(0.02, 0.94, "left"), (0.02, 0.66, "left"), (0.02, 0.38, "left")]
+    right_slots = [(0.98, 0.88, "right"), (0.98, 0.56, "right")]
+    label_plan = []
+    for idx, slot in zip(sorted_by_y[::2], left_slots):
+        label_plan.append((idx, *slot))
+    for idx, slot in zip(sorted_by_y[1::2], right_slots):
+        label_plan.append((idx, *slot))
+
+    for i, slot_x, slot_y, ha in label_plan:
         if i >= len(gene_names):
             continue
-        ax1.annotate(
+        ax1.text(
+            slot_x,
+            slot_y,
             gene_names[i],
-            (real_means[i], gen_means[i]),
-            fontsize=9.5,
-            xytext=(slot_x, slot_y),
-            textcoords="axes fraction",
+            transform=ax1.transAxes,
+            fontsize=8.0,
             ha=ha,
             va="center",
-            arrowprops=dict(arrowstyle="->", lw=0.5, color="#555"),
             color="#333",
-            bbox=dict(boxstyle="round,pad=0.18", fc="white", ec="none", alpha=0.85),
+            bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="none", alpha=0.88),
+            zorder=6,
+            clip_on=False,
         )
+        connector_x = slot_x + (0.01 if ha == "left" else -0.01)
+        connector = ConnectionPatch(
+            xyA=(real_means[i], gen_means[i]),
+            coordsA=ax1.transData,
+            xyB=(connector_x, slot_y),
+            coordsB=ax1.transAxes,
+            axesA=ax1,
+            axesB=ax1,
+            arrowstyle="-",
+            lw=0.55,
+            color="#666",
+            alpha=0.65,
+            shrinkA=0,
+            shrinkB=0,
+            connectionstyle="arc3,rad=0.0",
+        )
+        connector.set_zorder(2)
+        connector.set_clip_on(False)
+        ax1.add_artist(connector)
 
     # -- H2: Per-type Pearson r lollipop chart --
     ax2 = top_right.inset(left=0.17, right=0.05).add_axes(fig)

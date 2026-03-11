@@ -231,8 +231,26 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
                ylabel="Density",
                title="Gene-Gene Correlation Preservation")
 
-    # ── Panel (b): Best-preserved cell type ──
+    # Shared color scale: tighten to the observed central range so structure is visible
     best_type = max(per_type_results, key=lambda k: per_type_results[k]["mantel_r"])
+    worst_type = min(per_type_results, key=lambda k: per_type_results[k]["mantel_r"])
+
+    best_mask_real = real_labels == best_type
+    best_mask_gen = gen_labels == best_type
+    worst_mask_real = real_labels == worst_type
+    worst_mask_gen = gen_labels == worst_type
+    best_diff_preview = _corr_matrix(gen_sub[best_mask_gen][:, :50]) - _corr_matrix(real_sub[best_mask_real][:, :50])
+    worst_diff_preview = _corr_matrix(gen_sub[worst_mask_gen][:, :50]) - _corr_matrix(real_sub[worst_mask_real][:, :50])
+    combined_abs = np.concatenate(
+        [
+            np.abs(best_diff_preview[np.isfinite(best_diff_preview)]),
+            np.abs(worst_diff_preview[np.isfinite(worst_diff_preview)]),
+        ]
+    )
+    heatmap_abs_scale = float(np.nanpercentile(combined_abs, 97)) if combined_abs.size else 0.5
+    heatmap_abs_scale = max(heatmap_abs_scale, 0.08)
+
+    # ── Panel (b): Best-preserved cell type ──
     best_name = abbreviate_cell_type(_type_names.get(best_type, f"Type {best_type}"), max_len=35)
     best_r = per_type_results[best_type]["mantel_r"]
     best_rmse = per_type_results[best_type]["rmse"]
@@ -245,7 +263,15 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     ax2 = top_right.add_axes(fig)
     add_panel_label(ax2, 'b', x=-0.12, y=1.08)
     diff = R_gen - R_real
-    im = ax2.imshow(diff, cmap="RdBu_r", vmin=-0.5, vmax=0.5, aspect="auto")
+    im = ax2.imshow(
+        diff,
+        cmap="RdBu_r",
+        vmin=-heatmap_abs_scale,
+        vmax=heatmap_abs_scale,
+        aspect="auto",
+        interpolation="nearest",
+        alpha=1.0,
+    )
     ax2.set_title(f"Best: {best_name}", fontsize=FONT_TITLE)
     ax2.set_xlabel("Gene index (top 50 HVG)", fontsize=FONT_LABEL)
     ax2.set_ylabel("Gene index", fontsize=FONT_LABEL)
@@ -267,11 +293,11 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
         y_offset=0.01,
     )
     cb2 = fig.colorbar(im, cax=cax2)
-    cb2.set_label("Δ corr (gen − real)", fontsize=FONT_LABEL - 1)
+    cb2.set_label("")
+    cb2.ax.set_title("Δr", fontsize=FONT_SMALL, pad=2)
     cb2.ax.tick_params(labelsize=FONT_HEATMAP_CELL - 1)
 
     # ── Panel (c): Worst-preserved cell type ──
-    worst_type = min(per_type_results, key=lambda k: per_type_results[k]["mantel_r"])
     worst_name = abbreviate_cell_type(_type_names.get(worst_type, f"Type {worst_type}"), max_len=35)
     worst_r = per_type_results[worst_type]["mantel_r"]
     worst_rmse = per_type_results[worst_type]["rmse"]
@@ -284,7 +310,15 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     ax3 = bottom_left.add_axes(fig)
     add_panel_label(ax3, 'c', x=-0.12, y=1.08)
     diff_w = R_gen_w - R_real_w
-    im2 = ax3.imshow(diff_w, cmap="RdBu_r", vmin=-0.5, vmax=0.5, aspect="auto")
+    im2 = ax3.imshow(
+        diff_w,
+        cmap="RdBu_r",
+        vmin=-heatmap_abs_scale,
+        vmax=heatmap_abs_scale,
+        aspect="auto",
+        interpolation="nearest",
+        alpha=1.0,
+    )
     ax3.set_title(f"Worst: {worst_name}", fontsize=FONT_TITLE)
     ax3.set_xlabel("Gene index (top 50 HVG)", fontsize=FONT_LABEL)
     ax3.set_ylabel("Gene index", fontsize=FONT_LABEL)
@@ -305,7 +339,8 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
         y_offset=0.01,
     )
     cb3 = fig.colorbar(im2, cax=cax3)
-    cb3.set_label("Δ corr (gen − real)", fontsize=FONT_LABEL - 1)
+    cb3.set_label("")
+    cb3.ax.set_title("Δr", fontsize=FONT_SMALL, pad=2)
     cb3.ax.tick_params(labelsize=FONT_HEATMAP_CELL - 1)
 
     # ── Panel (d): Replace non-informative cell-count panel ──

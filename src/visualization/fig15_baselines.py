@@ -126,7 +126,7 @@ def plot_baseline_comparison(
     style_axes(ax, "bar", title="Key Metrics Comparison", ylabel="Value")
 
     # ── O2: Ranked dot plot (normalised scores) ──
-    ax2 = ax_rect_2.inset(left=0.020, right=0.030).add_axes(fig)
+    ax2 = ax_rect_2.inset(left=0.020, right=0.010).add_axes(fig)
     add_panel_label(ax2, 'b', x=-0.12, y=1.02)
 
     # Normalise each metric to [0,1] with direction awareness

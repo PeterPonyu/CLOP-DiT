@@ -58,8 +58,8 @@ def plot_expression_diversity_panel(
     fig = plt.figure(figsize=(7.6, 4.9))
     left_rect, right_rect = bind_figure_region(fig, (0.08, 0.16, 0.98, 0.90)).split_cols(2, wspace=0.38)
     axes = [left_rect.add_axes(fig), right_rect.add_axes(fig)]
-    add_panel_label(axes[0], chr(ord('a') + label_offset), x=-0.14, y=1.00)
-    add_panel_label(axes[1], chr(ord('a') + label_offset + 1), x=-0.24, y=0.96)
+    add_panel_label(axes[0], chr(ord('a') + label_offset), x=-0.04, y=1.05)
+    add_panel_label(axes[1], chr(ord('a') + label_offset + 1), x=-0.04, y=1.05)
 
     ax = axes[0]
     labels = ["Cell Std\n(across genes)", "Gene Std\n(across cells)"]
@@ -86,7 +86,7 @@ def plot_expression_diversity_panel(
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
     ax.set_ylabel("Standard Deviation")
-    ax.set_title("Expression Variability Summary")
+    ax.set_title("Expression Variability Summary", x=0.58)
     ax.legend(frameon=False)
 
     ax = axes[1]

@@ -420,7 +420,7 @@ def plot_clustering_and_classifier_merged(
 
     fig = plt.figure(figsize=(16.0, 10.2))
     layout = bind_figure_region(fig, (0.03, 0.10, 0.98, 0.96))
-    top_row, bottom_row = layout.split_rows([1, 1.05], hspace=0.42)
+    top_row, bottom_row = layout.split_rows([1, 1.05], hspace=0.38)
     top_rects = top_row.split_cols([1.10, 1.34, 0.82], gap=[0.060, 0.050])
     bottom_rects = bottom_row.split_cols([1.10, 1.34, 0.82], gap=[0.060, 0.050])
     # Title moved to LaTeX caption
@@ -509,8 +509,13 @@ def plot_clustering_and_classifier_merged(
     add_panel_label(ax_q1, 'd', x=-0.08, y=1.05)
     if cm is not None:
         cm = np.array(cm)
-        plot_confusion_matrix(ax_q1, cm, class_names or None,
-                              title="Confusion Matrix")
+        plot_confusion_matrix(
+            ax_q1,
+            cm,
+            class_names or None,
+            title="Confusion Matrix",
+            colorbar_pad=0.18,
+        )
         if cm.shape[0] > 30:
             tick_step = max(4, cm.shape[0] // 3)
             tick_positions = list(range(0, cm.shape[0], tick_step))

@@ -175,7 +175,7 @@ def main():
 
     fig = plt.figure(figsize=(17.4, 11.4))
     layout = bind_figure_region(fig, (0.13, 0.08, 0.97, 0.96))
-    top_row, bottom_row = layout.split_rows([1.20, 0.92], hspace=0.30)
+    top_row, bottom_row = layout.split_rows([1.20, 0.92], hspace=0.18)
     top_left, top_right = top_row.split_cols([1.2, 1.0], wspace=0.34)
     bottom_left, bottom_right = bottom_row.split_cols([1.16, 1.04], wspace=0.46)
 
