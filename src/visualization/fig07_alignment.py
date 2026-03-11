@@ -112,7 +112,7 @@ def plot_text_cell_heatmap(
 
     sim_matrix = text_centroids @ cell_centroids.T
 
-    x_labels = [abbreviate_cell_type(type_names.get(int(t), f"T{t}"), max_len=15) for t in unique_types]
+    x_labels = [abbreviate_cell_type(type_names.get(int(t), f"T{t}"), max_len=13) for t in unique_types]
     y_labels = [abbreviate_cell_type(type_names.get(int(t), f"T{t}"), max_len=22) for t in unique_types]
     diag = np.diag(sim_matrix)
     mean_diag = diag.mean()
@@ -189,13 +189,13 @@ def plot_text_cell_heatmap(
         aspect="auto", interpolation="nearest",
     )
     im.set_rasterized(True)
-    step_x = max(8, int(np.ceil(n_types / 7)))
+    step_x = max(8, int(np.ceil(n_types / 8)))
     step_y = max(4, int(np.ceil(n_types / 14)))
     _xtl = [x_labels_sorted[i] if i % step_x == 0 else "" for i in range(n_types)]
     _ytl = [y_labels_sorted[i] if i % step_y == 0 else "" for i in range(n_types)]
     ax1.set_xticks(range(n_types))
     ax1.set_yticks(range(n_types))
-    ax1.set_xticklabels(_xtl, rotation=48, fontsize=8.0, ha="right")
+    ax1.set_xticklabels(_xtl, rotation=55, fontsize=7.5, ha="right")
     ax1.set_yticklabels(_ytl, fontsize=10, ha="right")
     ax1.set_ylabel("Cell Type (text prototypes)", fontsize=11)
     ax1.set_title("Cosine Similarity (sorted by diagonal)", fontsize=12)

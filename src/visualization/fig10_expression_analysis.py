@@ -103,7 +103,7 @@ def plot_expression_analysis(
         ax1,
         side="right",
         width=0.012,
-        height=ax1.get_position().height * 0.46,
+        height=ax1.get_position().height * 0.36,
         pad=0.014,
         align="bottom",
         y_offset=0.016,

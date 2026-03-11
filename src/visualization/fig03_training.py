@@ -104,7 +104,7 @@ def plot_clop_training(
     epochs = np.arange(1, len(h["train_loss"]) + 1)
 
     fig = plt.figure(figsize=(7.3, 5.7))
-    layout = bind_figure_region(fig, (0.08, 0.10, 0.97, 0.94))
+    layout = bind_figure_region(fig, (0.06, 0.10, 0.98, 0.94))
     top_row, bottom_row = layout.split_rows(2, hspace=0.34)
     top_left, top_right = top_row.split_cols(2, wspace=0.34)
     bottom_left, bottom_right = bottom_row.split_cols(2, wspace=0.34)
@@ -244,7 +244,7 @@ def plot_dit_training(
     epochs = np.arange(1, len(h["train_loss"]) + 1)
 
     fig = plt.figure(figsize=(9.5, 6.3))
-    layout = bind_figure_region(fig, (0.08, 0.10, 0.97, 0.94))
+    layout = bind_figure_region(fig, (0.06, 0.10, 0.98, 0.94))
     top_row, bottom_row = layout.split_rows(2, hspace=0.34)
     top_left, top_right = top_row.split_cols(2, wspace=0.34)
     bottom_left, bottom_right = bottom_row.split_cols(2, wspace=0.34)
@@ -374,7 +374,7 @@ def plot_training_dynamics_combined(
 
     apply_style()
     fig = plt.figure(figsize=(14.4, 8.2))
-    layout = bind_figure_region(fig, (0.08, 0.16, 0.95, 0.86))
+    layout = bind_figure_region(fig, (0.08, 0.16, 0.96, 0.86))
     top_row, bottom_row = layout.split_rows([1, 1], hspace=0.55)
     top_cols = top_row.split_cols([1.0, 1.0, 1.0, 1.2], wspace=0.42)
     bottom_cols = bottom_row.split_cols([1.0, 1.0, 1.0, 1.2], wspace=0.42)

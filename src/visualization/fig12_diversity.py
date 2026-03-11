@@ -163,7 +163,7 @@ def plot_diagnostics(
         _type_labels_d = [abbreviate_cell_type(type_names.get(int(k), f"Type {k}"), 12)
                           for k in type_ids]
         _displayed_labels = [label if i % 2 == 0 else "" for i, label in enumerate(_type_labels_d)]
-        ax.set_xticklabels(_displayed_labels, fontsize=8, rotation=65, ha="right")
+        ax.set_xticklabels(_displayed_labels, fontsize=8, rotation=45, ha="right")
         ax.set_xlabel("Cell Type")
         ax.set_ylabel("Intra-Type Div.")
         gain = t5["summary"]["mean_diversity_gain"]

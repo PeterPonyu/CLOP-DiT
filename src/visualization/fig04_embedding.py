@@ -197,7 +197,7 @@ def plot_embedding_space_merged(
 
         ax_b1 = b_slots[1].inset(left=0.034, right=0.018).add_axes(fig)
         ax = ax_b1
-        add_panel_label(ax, 'b', x=-0.14, y=1.04)
+        add_panel_label(ax, 'b', x=-0.18, y=1.04)
         for t in unique_types:
             mask = gids_sub == t
             color = TYPE_PALETTE[int(t) % len(TYPE_PALETTE)]

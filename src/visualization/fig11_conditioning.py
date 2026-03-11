@@ -63,18 +63,18 @@ def plot_panel_m(
     has_row3 = full_dim_data is not None and len(full_dim_data) > 0
     if has_row3:
         fig = plt.figure(figsize=(_fw, 11.9))
-        row_regions = bind_figure_region(fig, (0.06, 0.08, 0.97, 0.95)).split_rows([1.48, 1.02, 0.98], hspace=0.28)
+        row_regions = bind_figure_region(fig, (0.05, 0.08, 0.97, 0.95)).split_rows([1.48, 1.02, 0.98], hspace=0.28)
     else:
         fig = plt.figure(figsize=(_fw, 7.6))
-        row_regions = bind_figure_region(fig, (0.06, 0.08, 0.97, 0.95)).split_rows([1.46, 0.98], hspace=0.24)
+        row_regions = bind_figure_region(fig, (0.05, 0.08, 0.97, 0.95)).split_rows([1.46, 0.98], hspace=0.24)
     top_widths = [1.0] * n_modes
     if n_modes > 1:
         top_widths[-1] = 1.04
     axes = [region.add_axes(fig) for region in row_regions[0].split_cols(top_widths, wspace=0.36)]
 
     # Panel labels: placed with enough clearance for single-line titles
-    _panel_label_y = 1.07
-    add_panel_label(axes[0], 'a', x=-0.12, y=_panel_label_y)
+    _panel_label_y = 1.09
+    add_panel_label(axes[0], 'a', x=-0.14, y=_panel_label_y)
 
     type_to_color = {tid: TYPE_PALETTE[i % len(TYPE_PALETTE)] for i, tid in enumerate(selected_types)}
     type_to_name = {
@@ -372,7 +372,7 @@ def plot_panel_m(
     legend_ax = add_shared_legend_axes(fig, (0.15, legend_bottom, 0.70, 0.028))
     legend_ax.legend(
         handles, labels, loc="center",
-        ncol=min(len(handles), 8), fontsize=FONT_TICK_DENSE - 1,
+        ncol=min(len(handles), 8), fontsize=FONT_TICK_DENSE,
         markerscale=2.4, frameon=False,
         columnspacing=0.4, handletextpad=0.28,
     )

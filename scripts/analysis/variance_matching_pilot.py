@@ -174,13 +174,16 @@ def main():
     from scipy import stats as scipy_stats
 
     fig = plt.figure(figsize=(17.4, 11.4))
-    layout = bind_figure_region(fig, (0.13, 0.08, 0.97, 0.96))
+    layout = bind_figure_region(fig, (0.11, 0.08, 0.97, 0.96))
     # Uses the repository's direct rectangle layout engine, not GridSpec or
-    # matplotlib's automatic/constrained layout. Keep the row gap small but
-    # shorten label/title footprints enough to prevent cross-row collisions.
-    top_row, bottom_row = layout.split_rows([1.20, 0.92], hspace=0.12)
-    top_left, top_right = top_row.split_cols([1.2, 1.0], wspace=0.34)
-    bottom_left, bottom_right = bottom_row.split_cols([1.16, 1.04], wspace=0.46)
+    # matplotlib's automatic/constrained layout.
+    # - split_rows(..., hspace=...) controls the vertical gap between rows.
+    # - split_cols(..., wspace=...) controls the horizontal gap between columns.
+    # The user's intended translation is: larger vertical row gap, smaller
+    # left-right column gaps.
+    top_row, bottom_row = layout.split_rows([1.20, 0.92], hspace=0.18)
+    top_left, top_right = top_row.split_cols([1.2, 1.0], wspace=0.24)
+    bottom_left, bottom_right = bottom_row.split_cols([1.16, 1.04], wspace=0.30)
 
     # ── Panel (a): SWD per Cell Type (sorted bar chart) ──
     sorted_results = sorted(results, key=lambda r: r["swd"], reverse=True)
@@ -225,7 +228,9 @@ def main():
     ax.legend(fontsize=FONT_ANNOTATION, frameon=False,
               loc="lower right")
     style_axes(ax, "bar", xlabel="SWD", title="Latent SWD per Cell Type")
-    ax.xaxis.labelpad = 2
+    ax.set_xlabel("SWD", fontsize=FONT_LABEL - 1)
+    ax.xaxis.labelpad = -1
+    ax.xaxis.set_label_coords(0.5, -0.045)
 
     # ── Panel (b): Variance Ratio — strip + box plot ──
     ax2 = top_right.inset(left=0.02, right=0.02).add_axes(fig)
@@ -262,7 +267,9 @@ def main():
     style_axes(ax2, "default",
                xlabel="Variance ratio (gen/real)",
                title="Per-Type Latent Variance Ratio")
-    ax2.xaxis.labelpad = 2
+    ax2.set_xlabel("Variance ratio (gen/real)", fontsize=FONT_LABEL - 1)
+    ax2.xaxis.labelpad = -1
+    ax2.xaxis.set_label_coords(0.5, -0.045)
 
     # ── Panel (c): Per-Dimension Variance Correlation — ECDF + box ──
     ax3 = bottom_left.inset(right=0.02).add_axes(fig)
@@ -297,8 +304,8 @@ def main():
                xlabel="Per-dim variance corr. (real vs gen)",
                ylabel="Cumulative Proportion",
                title="Dimension-Wise Variance Correlation")
-    ax3.xaxis.labelpad = 2
-    ax3.set_title("Dimension-Wise Variance Correlation", pad=4)
+    ax3.xaxis.labelpad = 1
+    ax3.set_title("Dimension-Wise Variance Correlation", fontsize=FONT_TITLE - 2, pad=0, y=0.985)
 
     # ── Panel (d): SWD vs. Training Cell Count ──
     ax4 = bottom_right.inset(left=0.05, right=0.06).add_axes(fig)
@@ -354,8 +361,12 @@ def main():
     top3 = np.argsort(swd_arr)[-3:]
     for idx in top3:
         lbl = abbreviate_cell_type(results[idx]["name"], max_len=18)
+        xoff = 8 if n_reals[idx] <= np.median(n_reals) else -8
+        yoff = -10 if swd_arr[idx] >= np.percentile(swd_arr, 75) else 6
         ax4.annotate(lbl, (n_reals[idx], swd_arr[idx]),
-                     fontsize=7, xytext=(8, 6), textcoords="offset points",
+                     fontsize=7, xytext=(xoff, yoff), textcoords="offset points",
+                     ha="left" if xoff > 0 else "right",
+                     va="top" if yoff < 0 else "bottom",
                      arrowprops=dict(arrowstyle="->", lw=0.5, color="#888"),
                      color=COLORS["annotation_dark"])
 
@@ -364,8 +375,8 @@ def main():
                xlabel="Training cells (log scale)",
                ylabel="Sliced Wasserstein Distance",
                title="SWD vs. Training Cell Count")
-    ax4.xaxis.labelpad = 2
-    ax4.set_title("SWD vs. Training Cell Count", pad=4)
+    ax4.xaxis.labelpad = 1
+    ax4.set_title("SWD vs. Training Cell Count", fontsize=FONT_TITLE - 2, pad=0, y=0.985)
 
     fig_path = output_dir / "variance_matching_pilot.png"
     save_with_vcd(fig, fig_path, dpi=300, layout_rect=(0.08, 0.04, 0.98, 0.96))

@@ -125,8 +125,8 @@ def plot_expression_correlation(
             cbar.solids.set_edgecolor("face")
         except Exception:
             pass
-    cbar.set_label("|Resid|", fontsize=9)
-    cbar.ax.tick_params(labelsize=8, length=2, pad=1)
+    cbar.set_label("|Resid|", fontsize=8)
+    cbar.ax.tick_params(labelsize=7, length=2, pad=1)
     cbar.set_ticks(np.linspace(0, resid_vmax, 3))
     cbar_fmt = _ScalarFormatter(useMathText=True)
     cbar_fmt.set_scientific(True)

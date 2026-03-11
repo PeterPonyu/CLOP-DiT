@@ -83,7 +83,7 @@ def plot_expression_diversity_panel(
                 y_offset = 1.02
             ann_y = max_h * y_offset
             annotation_tops.append(ann_y)
-            ax.text(_bi, ann_y, f"ratio={ratio:.2f}",
+            ax.text(_bi, ann_y + 0.02, f"ratio={ratio:.2f}",
                     ha="center", fontsize=8, fontweight="normal",
                     color=COLORS["annotation_dark"])
     if annotation_tops:

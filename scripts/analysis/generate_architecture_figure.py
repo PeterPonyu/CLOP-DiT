@@ -191,9 +191,9 @@ def create_architecture_figure(output_dir=None):
                   C_DECODE_DARK, alpha=0.15, label_color="black")
 
     # Panel labels (figure margin, outside the main axes content)
-    fig.text(0.05, 0.905, "(a)", ha="left", va="top", fontsize=14, fontweight="bold", color="black")
-    fig.text(0.44, 0.905, "(b)", ha="left", va="top", fontsize=14, fontweight="bold", color="black")
-    fig.text(0.70, 0.905, "(c)", ha="left", va="top", fontsize=14, fontweight="bold", color="black")
+    fig.text(0.05, 0.885, "(a)", ha="left", va="top", fontsize=14, fontweight="bold", color="black")
+    fig.text(0.44, 0.885, "(b)", ha="left", va="top", fontsize=14, fontweight="bold", color="black")
+    fig.text(0.70, 0.885, "(c)", ha="left", va="top", fontsize=14, fontweight="bold", color="black")
 
     ax.text(1.68, 2.80, "train: align text and cell latents",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=2)
