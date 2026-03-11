@@ -80,8 +80,8 @@ def plot_expression_diversity_panel(
                 y_offset = 1.07
             else:
                 y_offset = 1.02
-            ax.text(_bi, max_h * y_offset, f"ratio={ratio:.2f}",
-                    ha="center", fontsize=10, fontweight="normal",
+                ax.text(_bi, max_h * y_offset, f"ratio={ratio:.2f}",
+                    ha="center", fontsize=8, fontweight="normal",
                     color=COLORS["annotation_dark"])
     ax.set_xticks(x)
     ax.set_xticklabels(labels)

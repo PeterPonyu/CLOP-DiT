@@ -115,9 +115,9 @@ def plot_expression_correlation(
         side="right",
         width=0.012,
         height=ax1.get_position().height * 0.40,
-        pad=0.012,
-        align="top",
-        y_offset=-0.018,
+        pad=0.014,
+        align="bottom",
+        y_offset=0.018,
     )
     cbar = fig.colorbar(sc, cax=cax)
     if getattr(cbar, "solids", None) is not None:
@@ -131,17 +131,18 @@ def plot_expression_correlation(
     cbar_fmt = _ScalarFormatter(useMathText=True)
     cbar_fmt.set_scientific(True)
     cbar_fmt.set_powerlimits((0, 0))
-    cbar.ax.yaxis.set_major_formatter(cbar_fmt)
-    cbar.ax.yaxis.get_offset_text().set_fontsize(8)
+    cbar.formatter = cbar_fmt
     cbar.update_ticks()
+    cbar.ax.yaxis.get_offset_text().set_fontsize(8)
+    cbar.ax.yaxis.get_offset_text().set_visible(True)
     add_panel_label(ax1, 'a', x=-0.12, y=1.08)
 
     # Annotate outlier genes with staggered offsets
     outlier_idx = np.argsort(abs_res)[-5:]
     outlier_idx = outlier_idx[np.argsort(abs_res[outlier_idx])[::-1]]
     sorted_by_y = sorted(outlier_idx, key=lambda idx: gen_means[idx], reverse=True)
-    left_slots = [(0.08, 0.90, "left"), (0.08, 0.64, "left"), (0.08, 0.40, "left")]
-    right_slots = [(0.92, 0.84, "right"), (0.92, 0.56, "right")]
+    left_slots = [(0.13, 0.88, "left"), (0.13, 0.62, "left"), (0.13, 0.40, "left")]
+    right_slots = [(0.87, 0.82, "right"), (0.87, 0.56, "right")]
     label_plan = []
     for idx, slot in zip(sorted_by_y[::2], left_slots):
         label_plan.append((idx, *slot))

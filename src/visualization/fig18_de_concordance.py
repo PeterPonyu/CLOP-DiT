@@ -161,7 +161,6 @@ def plot_de_concordance_panel(
             transform=ax.transAxes, ha="right", va="top",
             fontsize=FONT_ANNOTATION,
             color=COLORS["neutral"],
-            bbox=dict(boxstyle="round,pad=0.25", fc="white", ec="none", alpha=0.88),
         )
 
         # Horizontal colorbar below scatter

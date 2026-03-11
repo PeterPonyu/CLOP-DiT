@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .direct_layout import bind_figure_region
-from .explicit_positioning import add_shared_legend_axes
+from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
 from .style import COLORS, add_colorbar_safe, add_panel_label, quality_color, save_with_vcd, set_scientific_tickformat
 
 logger = logging.getLogger(__name__)
@@ -97,7 +97,19 @@ def plot_expression_analysis(
     ax1.set_xlabel("Real CV (std/|mean|)", fontsize=11)
     ax1.set_ylabel("Generated CV", fontsize=11)
     ax1.set_title("Per-Gene Variability (CV)", fontsize=12)
-    add_colorbar_safe(sc, ax=ax1, label="|\u0394CV|", shrink=0.50, pad=0.03, aspect=16)
+    cax1 = add_axes_next_to(
+        fig,
+        ax1,
+        side="right",
+        width=0.012,
+        height=ax1.get_position().height * 0.46,
+        pad=0.014,
+        align="bottom",
+        y_offset=0.016,
+    )
+    cbar1 = fig.colorbar(sc, cax=cax1)
+    cbar1.set_label("|\u0394CV|", fontsize=9)
+    cbar1.ax.tick_params(labelsize=8, length=2, pad=1)
 
     # Annotate the most divergent genes with a manual staggered placement strategy.
     top_cv_idx = np.argsort(cv_diff)[-6:]

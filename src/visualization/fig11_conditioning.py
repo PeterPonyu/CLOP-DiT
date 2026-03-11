@@ -28,6 +28,14 @@ from .style import (
 logger = logging.getLogger(__name__)
 
 
+def _adjust_axes_rect(ax: plt.Axes, *, dx: float = 0.0, width_scale: float = 1.0) -> None:
+    """Apply a small horizontal nudge/resize in figure coordinates."""
+    pos = ax.get_position()
+    new_x0 = pos.x0 + dx
+    new_w = pos.width * width_scale
+    ax.set_position([new_x0, pos.y0, new_w, pos.height])
+
+
 def plot_panel_m(
     coords: np.ndarray,
     combined_labels: np.ndarray,
@@ -123,7 +131,9 @@ def plot_panel_m(
     ax_b2 = bottom_regions[1].add_axes(fig)
     add_panel_label(ax_b2, 'c', x=-0.18, y=1.03)
     ax_b3 = bottom_regions[2].add_axes(fig)
-    add_panel_label(ax_b3, 'd', x=-0.20, y=1.03)
+    add_panel_label(ax_b3, 'd', x=-0.10, y=1.06)
+    _adjust_axes_rect(ax_b1, width_scale=0.90)
+    _adjust_axes_rect(ax_b3, dx=ax_b3.get_position().width * 0.08, width_scale=0.92)
 
     # Build per-type real centroids in 2D for shift summaries.
     real_centroids = {}
@@ -169,10 +179,10 @@ def plot_panel_m(
         ax_b1.set_xticklabels([_short_mode(m) for m in shift_labels],
                                rotation=0, ha="center", fontsize=FONT_TICK)
         ax_b1.set_ylabel("Mean centroid shift (PC units)", fontsize=FONT_LABEL)
-        ax_b1.set_title("Centroid Shift", fontsize=FONT_TITLE)
+        ax_b1.set_title("Centroid Shift", fontsize=FONT_TITLE, x=0.58)
     else:
         ax_b1.text(0.5, 0.5, "No centroid shift data", ha="center", va="center", transform=ax_b1.transAxes)
-        ax_b1.set_title("Centroid Shift", fontsize=FONT_TITLE)
+        ax_b1.set_title("Centroid Shift", fontsize=FONT_TITLE, x=0.58)
 
     div_labels = ["Real"] + list(mode_diversity.keys())
     div_values = [real_diversity] + [mode_diversity[m] for m in mode_diversity.keys()]
@@ -216,6 +226,8 @@ def plot_panel_m(
         add_panel_label(ax_c2, 'f', x=-0.12, y=_panel_label_y)
         ax_c3 = row3_regions[2].add_axes(fig)
         add_panel_label(ax_c3, 'g', x=-0.20, y=_panel_label_y)
+        _adjust_axes_rect(ax_c1, width_scale=0.90)
+        _adjust_axes_rect(ax_c3, dx=ax_c3.get_position().width * 0.08, width_scale=0.92)
 
         # PCA reduce full-dim data for KNN
         pca_full = _PCA(n_components=30, random_state=42)
