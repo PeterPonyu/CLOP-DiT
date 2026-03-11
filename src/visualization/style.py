@@ -16,6 +16,7 @@ Provides:
 from __future__ import annotations
 
 import json
+import os
 from collections import Counter
 from pathlib import Path
 from typing import Optional
@@ -375,6 +376,18 @@ def add_colorbar_safe(
     return cbar
 
 
+def is_vcd_enabled(default: bool = True) -> bool:
+    """Return whether live VCD checks should run for figure generation.
+
+    Controlled by the ``CLOPDIT_ENABLE_VCD`` environment variable.
+    Truthy values: 1/true/yes/on; falsy values: 0/false/no/off.
+    """
+    raw = os.getenv("CLOPDIT_ENABLE_VCD")
+    if raw is None:
+        return default
+    return raw.strip().lower() not in {"0", "false", "no", "off"}
+
+
 def _safe_artist_bbox(artist, renderer) -> Bbox | None:
     """Return a display-coordinate bbox for a visible artist when possible."""
     if artist is None or not getattr(artist, "get_visible", lambda: True)():
@@ -520,6 +533,7 @@ def save_with_vcd(
         "info": [],
         "error": None,
     }
+    effective_run_vcd = bool(run_vcd) and is_vcd_enabled(default=True)
 
     # 1) Apply style_axes to all axes (if not already styled by caller)
     for ax in fig.get_axes():
@@ -538,7 +552,7 @@ def save_with_vcd(
     save_kw = get_export_savefig_kwargs(fig, dpi=dpi, layout_rect=layout_rect)
 
     # 3) Run VCD (strict mode)
-    if run_vcd:
+    if effective_run_vcd:
         try:
             import sys
             _scripts = Path(__file__).resolve().parent.parent.parent / "scripts"
@@ -553,6 +567,9 @@ def save_with_vcd(
             _log_vcd_issues(_logging.getLogger(__name__), basename, warnings_only, info_only, issue_counts)
         except Exception as exc:
             live_vcd_payload["error"] = str(exc)
+    else:
+        live_vcd_payload["skipped"] = True
+        live_vcd_payload["skip_reason"] = "disabled by run_vcd flag or CLOPDIT_ENABLE_VCD=0"
 
     live_vcd_payload["total_warnings"] = len(live_vcd_payload["warnings"])
     live_vcd_payload["total_info"] = len(live_vcd_payload["info"])
@@ -576,6 +593,9 @@ save_panel = save_with_vcd
 def run_vcd_check(fig: plt.Figure, label: str) -> None:
     """Run visual conflict detection on a figure without saving. Used before PIL composition."""
     import logging as _logging
+
+    if not is_vcd_enabled(default=True):
+        return
 
     try:
         import sys

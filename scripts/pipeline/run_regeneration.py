@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import shutil
 import sys
 import time
@@ -43,6 +44,13 @@ log = logging.getLogger("regenerate")
 
 CLOP_HIST = REPO / "models" / "checkpoints" / "CLOP" / "versions" / "v9.3" / "clop_history.json"
 DIT_HIST  = REPO / "models" / "checkpoints" / "DiT" / "versions" / "v2.0" / "dit_history.json"
+
+
+def _env_flag(name: str, default: bool = True) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() not in {"0", "false", "no", "off"}
 
 
 def run_results_visualizer():
@@ -506,16 +514,19 @@ def run_latex_build():
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Regenerate all 20 article figures + VCD + optional PDF rebuild")
-    parser.add_argument("--no-vcd",    action="store_true", help="Skip VCD pass")
+    parser.add_argument("--no-vcd",    action="store_true", help="Skip live VCD during generation and final VCD reporting")
     parser.add_argument("--skip-arch", action="store_true", help="Skip architecture figure (Fig 1)")
     parser.add_argument("--no-delivery", action="store_true", help="Skip article_delivery (symlinks)")
     parser.add_argument("--build-pdf", action="store_true", help="Rebuild LaTeX article PDF after figures")
     args = parser.parse_args()
 
     t0 = time.time()
+    vcd_enabled = (not args.no_vcd) and _env_flag("CLOPDIT_ENABLE_VCD", True)
+    os.environ["CLOPDIT_ENABLE_VCD"] = "1" if vcd_enabled else "0"
     log.info("=" * 70)
     log.info("CLOP-DiT Figure Regeneration Pipeline (20 figures) — %s", time.strftime("%Y-%m-%d"))
     log.info("=" * 70)
+    log.info("Live VCD during generation: %s", "enabled" if vcd_enabled else "disabled")
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     live_vcd_dir = FIG_DIR / "_live_vcd"
     if live_vcd_dir.exists():
@@ -566,11 +577,11 @@ def main():
         log.info("  ✓ %s", p.name)
 
     # 8. VCD pass
-    if not args.no_vcd:
+    if vcd_enabled:
         vcd = run_vcd_on_figures(all_pdfs)
         save_vcd_report(vcd)
     else:
-        log.info("VCD skipped (--no-vcd)")
+        log.info("VCD skipped (--no-vcd or CLOPDIT_ENABLE_VCD=0)")
 
     # 9. Article delivery (symlinks)
     if not args.no_delivery:

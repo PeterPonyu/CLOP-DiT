@@ -103,7 +103,7 @@ def plot_panel_m(
     real_mask_bool = combined_source == "Real"
     plot_one(axes[0], real_mask_bool,
              f"Real (n={n_real})",
-             alpha=0.14, size=4)
+             alpha=0.20, size=4)
 
     mode_counts = mode_counts or {}
     for i, mode_name in enumerate(mode_diversity.keys()):
@@ -209,7 +209,7 @@ def plot_panel_m(
         from sklearn.decomposition import PCA as _PCA
         from sklearn.neighbors import KNeighborsClassifier
 
-        row3_regions = row_regions[2].split_cols([0.95, 1.15, 0.90], wspace=0.32)
+        row3_regions = row_regions[2].split_cols([0.98, 1.00, 0.94], wspace=0.34)
         ax_c1 = row3_regions[0].add_axes(fig)
         add_panel_label(ax_c1, 'e', x=-0.20, y=_panel_label_y)
         ax_c2 = row3_regions[1].add_axes(fig)

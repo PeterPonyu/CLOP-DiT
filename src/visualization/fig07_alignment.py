@@ -111,7 +111,8 @@ def plot_text_cell_heatmap(
 
     sim_matrix = text_centroids @ cell_centroids.T
 
-    labels = [abbreviate_cell_type(type_names.get(int(t), f"T{t}"), max_len=22) for t in unique_types]
+    x_labels = [abbreviate_cell_type(type_names.get(int(t), f"T{t}"), max_len=15) for t in unique_types]
+    y_labels = [abbreviate_cell_type(type_names.get(int(t), f"T{t}"), max_len=22) for t in unique_types]
     diag = np.diag(sim_matrix)
     mean_diag = diag.mean()
     std_diag = diag.std()
@@ -160,7 +161,8 @@ def plot_text_cell_heatmap(
     # Reorder by diagonal similarity for visual clarity
     sort_order = np.argsort(-diag)
     sim_sorted = sim_matrix[sort_order][:, sort_order]
-    labels_sorted = [labels[i] for i in sort_order]
+    x_labels_sorted = [x_labels[i] for i in sort_order]
+    y_labels_sorted = [y_labels[i] for i in sort_order]
 
     fig = plt.figure(figsize=(15.2, 9.1))
     # Title moved to LaTeX caption
@@ -185,13 +187,13 @@ def plot_text_cell_heatmap(
         sim_sorted, cmap=cmap, vmin=-0.1, vmax=1.0,
         aspect="auto", interpolation="nearest",
     )
-    step_x = max(10, int(np.ceil(n_types / 5)))
+    step_x = max(8, int(np.ceil(n_types / 7)))
     step_y = max(4, int(np.ceil(n_types / 14)))
-    _xtl = [labels_sorted[i] if i % step_x == 0 else "" for i in range(n_types)]
-    _ytl = [labels_sorted[i] if i % step_y == 0 else "" for i in range(n_types)]
+    _xtl = [x_labels_sorted[i] if i % step_x == 0 else "" for i in range(n_types)]
+    _ytl = [y_labels_sorted[i] if i % step_y == 0 else "" for i in range(n_types)]
     ax1.set_xticks(range(n_types))
     ax1.set_yticks(range(n_types))
-    ax1.set_xticklabels(_xtl, rotation=55, fontsize=9, ha="right")
+    ax1.set_xticklabels(_xtl, rotation=48, fontsize=8.0, ha="right")
     ax1.set_yticklabels(_ytl, fontsize=10, ha="right")
     ax1.set_ylabel("Cell Type (text prototypes)", fontsize=11)
     ax1.set_title("Cosine Similarity (sorted by diagonal)", fontsize=12)
@@ -244,7 +246,7 @@ def plot_text_cell_heatmap(
     add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.24, y=1.06)
     sorted_idx_asc = np.argsort(diag)
     d_asc = diag[sorted_idx_asc]
-    labels_asc = [labels[i] for i in sorted_idx_asc]
+    labels_asc = [y_labels[i] for i in sorted_idx_asc]
 
     # Draw threshold bands (background shading for quality tiers)
     ax2.axvspan(0.9, 1.08, color=COLORS["good"], alpha=0.06, zorder=0)

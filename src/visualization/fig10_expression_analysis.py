@@ -101,7 +101,7 @@ def plot_expression_analysis(
 
     # Annotate the most divergent genes with a manual staggered placement strategy.
     top_cv_idx = np.argsort(cv_diff)[-6:]
-    _offsets_cv = [(-90, -42), (34, 32), (-88, 30), (38, -36), (-74, 44), (58, 10)]
+    _offsets_cv = [(-60, -24), (24, 24), (-58, 22), (28, -24), (-48, 30), (38, 8)]
     _placed = []
     _min_sep = max(0.08 * hi, 0.12)
     for j, i in enumerate(top_cv_idx[np.argsort(cv_diff[top_cv_idx])[::-1]]):
@@ -226,7 +226,7 @@ def plot_expression_analysis(
     ax4.set_yticklabels(names_show, fontsize=10, ha="right")
     ax4.set_xlabel("Std Ratio (Gen / Real, clipped at 5\u00d7)", fontsize=11)
     ax4.set_title("Most Divergent Genes\n(over- & under-dispersed)", fontsize=11, pad=10)
-    add_panel_label(ax4, 'd', x=-0.30, y=1.00)
+    add_panel_label(ax4, 'd', x=-0.30, y=1.08)
     placed_annotations: list = []
     for i, r in enumerate(ratios_show):
         # Skip annotations within 0.05 of an already-placed one to avoid overlap

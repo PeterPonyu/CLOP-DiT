@@ -17,7 +17,7 @@ from typing import Callable, Dict, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import FuncFormatter, MaxNLocator
 
 from .direct_layout import bind_figure_region
 from .style import (
@@ -60,6 +60,17 @@ def _set_interior_umap_ticks(ax: plt.Axes, n_ticks: int = 2) -> None:
         ax.set_xticks(np.linspace(x0, x1, n_ticks + 2)[1:-1])
     if np.isfinite([y0, y1]).all() and y1 > y0:
         ax.set_yticks(np.linspace(y0, y1, n_ticks + 2)[1:-1])
+
+
+def _format_cell_count_tick(value: float, _pos: int) -> str:
+    """Compact formatter for cell-count axes so narrow bar panels stay readable."""
+    value = float(value)
+    if abs(value) >= 1000:
+        text = f"{value / 1000:.1f}k"
+        return text.replace(".0k", "k")
+    if abs(value) >= 1:
+        return f"{int(round(value))}"
+    return "0"
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -202,7 +213,7 @@ def plot_embedding_space_merged(
         _set_umap_limits_from_points(ax, np.vstack([cell_coords, proto_coords]), pad_frac=0.03)
         _set_interior_umap_ticks(ax)
 
-        ax_b2 = b_slots[2].inset(left=0.126, right=0.148).add_axes(fig)
+        ax_b2 = b_slots[2].inset(left=0.126, right=0.090).add_axes(fig)
         ax = ax_b2
         add_panel_label(ax, 'c', x=-0.18, y=1.06)
         so = np.argsort(type_counts)[::-1]
@@ -217,10 +228,10 @@ def plot_embedding_space_merged(
         ax.set_xlabel("Cells")
         ax.set_title("Cells per Type", x=0.58)
         style_axes(ax, kind="bar")
-        ax.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
+        ax.xaxis.set_major_locator(MaxNLocator(nbins=3, integer=True, prune="both"))
+        ax.xaxis.set_major_formatter(FuncFormatter(_format_cell_count_tick))
+        ax.tick_params(axis="x", labelsize=10)
         ax.margins(x=0.14)
-        x0, x1 = ax.get_xlim()
-        ax.set_xticks(np.linspace(x0, x1, 4)[1:-1])
         row += 1
 
     if has_e:
@@ -264,6 +275,8 @@ def plot_embedding_space_merged(
             ax.set_title(f"Real ({len(r_sub)} cells)")
             ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
             style_axes(ax, kind="umap")
+            _set_umap_limits_from_points(ax, rc, pad_frac=0.04)
+            _set_interior_umap_ticks(ax, n_ticks=2)
 
             ax_e1 = e_slots[1].inset(right=0.004).add_axes(fig)
             ax = ax_e1
@@ -280,8 +293,10 @@ def plot_embedding_space_merged(
             ax.set_title(f"Generated ({len(g_sub)} cells)")
             ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
             style_axes(ax, kind="umap")
+            _set_umap_limits_from_points(ax, gc, pad_frac=0.04)
+            _set_interior_umap_ticks(ax, n_ticks=2)
 
-            ax_e2 = e_slots[2].inset(right=0.020).add_axes(fig)
+            ax_e2 = e_slots[2].inset(right=0.040).add_axes(fig)
             ax = ax_e2
             add_panel_label(ax, 'f', x=-0.12, y=1.08)
             all_types = np.unique(np.concatenate([r_gids, g_gids])) if g_gids is not None else np.unique(r_gids)
@@ -311,6 +326,8 @@ def plot_embedding_space_merged(
             ax.set_title("Type-Colored Overlay")
             ax.set_xlabel("UMAP 1"); ax.set_ylabel("UMAP 2")
             style_axes(ax, kind="umap")
+            _set_umap_limits_from_points(ax, np.vstack([rc, gc]), pad_frac=0.04)
+            _set_interior_umap_ticks(ax, n_ticks=1)
     if save:
         path = Path(output_dir) / "fig04_embedding_space.png"
         if save_panel_fn is not None:
