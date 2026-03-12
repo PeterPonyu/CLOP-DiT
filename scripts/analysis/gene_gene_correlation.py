@@ -165,7 +165,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     layout = bind_figure_region(fig, (0.08, 0.08, 0.93, 0.94))
     top_row, bottom_row = layout.split_rows([0.92, 1.08], hspace=0.30)
     top_left, top_right = top_row.split_cols(2, wspace=0.34)
-    bottom_left, bottom_right = bottom_row.split_cols(2, wspace=0.34)
+    bottom_left, bottom_right = bottom_row.split_cols([0.92, 1.08], wspace=0.34)
 
     # ── Panel (a): Distribution with null baseline ──
     ax = top_left.add_axes(fig)
@@ -388,7 +388,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
             t_id = type_labels_d[idx]
             lbl = abbreviate_cell_type(_type_names.get(t_id, f"Type {t_id}"), max_len=18)
             ax4.annotate(lbl, (type_het[idx], type_mantel[idx]),
-                         fontsize=7, xytext=(8, 6), textcoords="offset points",
+                         fontsize=9, xytext=(8, 6), textcoords="offset points",
                          arrowprops=dict(arrowstyle="->", lw=0.5, color="#888"),
                          color=COLORS["annotation_dark"])
     else:

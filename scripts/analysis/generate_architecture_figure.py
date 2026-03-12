@@ -180,10 +180,10 @@ def create_architecture_figure(output_dir=None):
     gap = 0.12
 
     # Stage backgrounds
-    draw_stage_bg(ax, (-0.05, -0.05), 3.40, 3.00,
+    draw_stage_bg(ax, (-0.05, -0.05), 3.65, 3.00,
                   "Stage 1: CLOP Alignment",
                   C_TEXT_DARK, alpha=0.15, label_color="black")
-    draw_stage_bg(ax, (3.60, -0.05), 2.40, 3.00,
+    draw_stage_bg(ax, (3.60, -0.05), 2.50, 3.00,
                   "Stage 2: DiT Generation",
                   C_GEN_DARK, alpha=0.15, label_color="black")
     draw_stage_bg(ax, (6.10, -0.05), 1.35, 3.00,

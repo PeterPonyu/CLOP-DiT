@@ -15,7 +15,7 @@ class TestArticleFigureManifest:
     def _article_tex_basenames() -> set[str]:
         tex_path = Path(__file__).parent.parent / "articles" / "clop_dit_biology.tex"
         tex = tex_path.read_text()
-        matches = re.findall(r"\\includegraphics\[[^\]]*\]\{figures/([^}]+)\.jpg\}", tex)
+        matches = re.findall(r"\\includegraphics\[[^\]]*\]\{figures/([^}]+)\.pdf\}", tex)
         return set(matches)
 
     def test_manifest_length(self):

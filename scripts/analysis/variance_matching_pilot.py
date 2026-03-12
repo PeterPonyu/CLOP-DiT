@@ -306,7 +306,7 @@ def main():
     ax3.set_title("Dimension-Wise Variance Correlation", fontsize=FONT_TITLE - 2, pad=0, y=0.985)
 
     # ── Panel (d): SWD vs. Training Cell Count ──
-    ax4 = bottom_right.inset(left=0.05, right=0.06).add_axes(fig)
+    ax4 = bottom_right.inset(left=0.05, right=0.02).add_axes(fig)
     add_panel_label(ax4, 'd', x=-0.06, y=1.04)
 
     n_reals = np.array([r["n_real"] for r in results])

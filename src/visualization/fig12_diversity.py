@@ -65,7 +65,7 @@ def plot_diagnostics(
     bottom_left, bottom_right = bottom_row.split_cols([0.92, 1.02], gap=0.074)
     top_left = top_left.inset(right=0.006)
     top_right = top_right.inset(left=0.006)
-    bottom_left = bottom_left.inset(right=0.030)
+    bottom_left = bottom_left.inset(right=0.030, bottom=-0.04)
     bottom_right = bottom_right.inset(left=0.024)
     axes = np.array([
         [top_left.add_axes(fig), top_right.add_axes(fig)],

@@ -218,11 +218,11 @@ def plot_baseline_comparison(
         ax3.axhline(y=sep_y, color="#DDD", linewidth=1, linestyle="--")
 
     legend_ax_a = add_shared_legend_axes(fig, (ax.get_position().x0, 0.03, ax.get_position().width, 0.06))
-    legend_ax_a.legend(handles_a, labels_a, fontsize=8, loc="center",
+    legend_ax_a.legend(handles_a, labels_a, fontsize=9, loc="center",
                        ncol=min(n_methods, 3), frameon=False)
 
     legend_ax_b = add_shared_legend_axes(fig, (ax2.get_position().x0, 0.005, ax2.get_position().width, 0.06))
-    legend_ax_b.legend(handles_b, labels_b, fontsize=7, loc="center",
+    legend_ax_b.legend(handles_b, labels_b, fontsize=8, loc="center",
                        frameon=False, ncol=4, handletextpad=0.3, columnspacing=0.6)
 
     style_axes(ax3, "bar", title="CLOP-DiT Advantage (\u0394 metric)",

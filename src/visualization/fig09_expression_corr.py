@@ -125,7 +125,7 @@ def plot_expression_correlation(
             cbar.solids.set_edgecolor("face")
         except Exception:
             pass
-    cbar.set_label("|Resid|", fontsize=6)
+    cbar.set_label("|Resid|", fontsize=9)
     cbar.set_ticks(np.linspace(0, resid_vmax, 3))
     cbar_fmt = _ScalarFormatter(useMathText=True)
     cbar_fmt.set_scientific(True)
@@ -133,8 +133,8 @@ def plot_expression_correlation(
     cbar.formatter = cbar_fmt
     cbar.update_ticks()
     # Apply tick styling AFTER update_ticks() which rebuilds tick label objects
-    cbar.ax.tick_params(labelsize=5, length=2, pad=1)
-    cbar.ax.yaxis.get_offset_text().set_fontsize(5)
+    cbar.ax.tick_params(labelsize=7, length=2, pad=1)
+    cbar.ax.yaxis.get_offset_text().set_fontsize(7)
     cbar.ax.yaxis.get_offset_text().set_visible(True)
     add_panel_label(ax1, 'a', x=-0.12, y=1.08)
 
@@ -158,7 +158,7 @@ def plot_expression_correlation(
             slot_y,
             gene_names[i],
             transform=ax1.transAxes,
-            fontsize=8.0,
+            fontsize=9.5,
             ha=ha,
             va="center",
             color="#333",

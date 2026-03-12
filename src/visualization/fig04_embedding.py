@@ -315,8 +315,8 @@ def plot_embedding_space_merged(
                             gc[gm, 0], gc[gm, 1], c=[color], s=10, alpha=0.40,
                             marker="^", edgecolors="black", linewidths=0.2, rasterized=True
                         )
-            ax.scatter([], [], c=COLORS["real"], s=26, marker="o", label="Real")
-            ax.scatter([], [], c=COLORS["generated"], s=30, marker="^", label="Generated")
+            ax.scatter([], [], c="gray", s=26, marker="o", edgecolors="white", linewidths=0.3, label="Real")
+            ax.scatter([], [], c="gray", s=30, marker="^", edgecolors="black", linewidths=0.3, label="Generated")
             ax.legend(
                 markerscale=2.0,
                 fontsize=FONT_LEGEND,
