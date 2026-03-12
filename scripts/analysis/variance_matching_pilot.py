@@ -384,7 +384,7 @@ def main():
     fig_dir = project_root / "results" / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
     import shutil
-    for suffix in (".pdf", ".jpg"):
+    for suffix in (".pdf",):
         src = output_dir / f"variance_matching_pilot{suffix}"
         dst = fig_dir / f"fig19_variance_matching_pilot{suffix}"
         if src.exists():

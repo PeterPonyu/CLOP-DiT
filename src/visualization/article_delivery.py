@@ -110,7 +110,7 @@ _TARGET_SUFFIXES = {".pdf", ".jpg", ".jpeg", ".png"}
 _TARGET_KEEP_NAMES = {"README.md"}
 
 
-def expected_source_artifacts(*, keep_preview: bool = True) -> set[str]:
+def expected_source_artifacts(*, keep_preview: bool = False) -> set[str]:
     """Return the canonical generated figure artifacts in ``results/figures``."""
     suffixes = {".pdf"}
     if keep_preview:

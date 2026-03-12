@@ -136,7 +136,7 @@ def draw_stage_bg(ax, xy, w, h, label, color, alpha=0.10, label_color=None):
     x, y = xy
     bg = FancyBboxPatch(
         (x, y), w, h,
-        boxstyle="round,pad=0.04",
+        boxstyle="round,pad=0.01",
         facecolor=color,
         edgecolor="none",
         linewidth=0,
@@ -180,13 +180,13 @@ def create_architecture_figure(output_dir=None):
     gap = 0.12
 
     # Stage backgrounds
-    draw_stage_bg(ax, (-0.05, -0.05), 3.65, 3.00,
+    draw_stage_bg(ax, (-0.05, -0.05), 3.55, 3.00,
                   "Stage 1: CLOP Alignment",
                   C_TEXT_DARK, alpha=0.15, label_color="black")
-    draw_stage_bg(ax, (3.60, -0.05), 2.50, 3.00,
+    draw_stage_bg(ax, (3.60, -0.05), 2.48, 3.00,
                   "Stage 2: DiT Generation",
                   C_GEN_DARK, alpha=0.15, label_color="black")
-    draw_stage_bg(ax, (6.10, -0.05), 1.35, 3.00,
+    draw_stage_bg(ax, (6.18, -0.05), 1.27, 3.00,
                   "Stage 3: Decoding",
                   C_DECODE_DARK, alpha=0.15, label_color="black")
 
@@ -195,7 +195,7 @@ def create_architecture_figure(output_dir=None):
             clip_on=False, zorder=10)
     ax.text(3.60, 3.10, "(b)", ha="left", va="bottom", fontsize=14, fontweight="bold", color="black",
             clip_on=False, zorder=10)
-    ax.text(6.10, 3.10, "(c)", ha="left", va="bottom", fontsize=14, fontweight="bold", color="black",
+    ax.text(6.18, 3.10, "(c)", ha="left", va="bottom", fontsize=14, fontweight="bold", color="black",
             clip_on=False, zorder=10)
 
     ax.text(1.68, 2.80, "train: align text and cell latents",

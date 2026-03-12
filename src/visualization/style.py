@@ -583,9 +583,7 @@ def save_with_vcd(
     with open(live_vcd_dir / f"{basename}.json", "w") as f:
         json.dump(live_vcd_payload, f, indent=2)
 
-    # 4) Save JPEG + PDF with identical deterministic settings.
-    jpg_path = path.with_suffix(".jpg")
-    fig.savefig(jpg_path, **save_kw)
+    # 4) Save PDF with deterministic settings.
     fig.savefig(path.with_suffix(".pdf"), **save_kw)
 
     if close:
