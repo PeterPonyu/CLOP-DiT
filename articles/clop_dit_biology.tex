@@ -127,12 +127,12 @@ $^{1}$ \quad State Key Laboratory of Trauma and Chemical Poisoning, Institute of
 %\secondnote{These authors contributed equally to this work.}
 % The commands \thirdnote{} till \eighthnote{} are available for further notes.
 
-%\simplesumm{} % Simple summary
+\simplesumm{CLOP-DiT is a computational pipeline that generates synthetic single-cell gene expression profiles from structured biological descriptions (cell type, tissue, organism, marker genes, and disease context). It first learns to align text descriptions with real cell data in a shared mathematical space, then uses a diffusion model to generate new cell states matching a given description. The generated cells capture correct cell-type identity and marker gene patterns, but do not yet reproduce the full cell-to-cell variability seen in real single-cell experiments. This work demonstrates that text-guided single-cell generation is feasible as a proof of concept, opening directions for future simulation and hypothesis-generation tools in biology.}
 
 %\conference{} % An extended version of a conference paper
 
 % Abstract (Do not insert blank lines, i.e. \\) 
-\abstract{Generating synthetic single-cell states from structured biological descriptors could support simulation and hypothesis generation, but practical utility remains unproven. We present CLOP-DiT, a two-stage pipeline that combines Contrastive Language--Omics Pretraining (CLOP) with a conditional Diffusion Transformer (DiT) trained by flow matching. CLOP aligns BiomedBERT text embeddings and scGPT cell embeddings in a shared 512-dimensional space, and DiT then samples scGPT latents conditioned on a fixed five-field template comprising cell type, tissue, organism, marker genes, and disease context. The method should therefore be interpreted as structured-metadata conditioning rather than free-form natural-language generation. Across 69 deduplicated cell types from 80 GEO datasets (220,304 cells), CLOP expands inter-type separation from 0.006 to 0.778 in cosine distance, and CLOP-DiT achieves 36.9\% KNN accuracy and 81.0\% steering in a high-fidelity regime (CFG = 2.0, Euler solver). A high-diversity regime (CFG = 1.0, Midpoint solver) reaches a diversity ratio of 0.93 at 80.7\% steering, and three independent runs confirm stable steering and diversity estimates. A frozen scGPT decoder can map generated latents back to gene expression, but this mapping is many-to-one; accordingly, latent-space metrics are the primary indicators of generative quality. Decoder-reconstructed mean expression is highly concordant with real data (Pearson $r > 0.999$), yet this concordance primarily reflects the decoder's consistency rather than faithful generation: any latent near the training manifold decodes to a similar expression profile. Per-gene variance correlation is near zero and within-type gene--gene correlation structure is weakly preserved, indicating substantial loss of cell-to-cell heterogeneity. Downstream analyses show partial transfer into clustering, classifier transfer, and differential-expression workflows, but generated cells remain distinguishable from real data (discriminator AUC 0.656). External marker validation against PanglaoDB and CellMarker~2.0 supports the biological plausibility of the conditioning markers. A conditioning field ablation shows that removing marker genes from prompts reduces steering accuracy from 99.8\% to 62.4\% (metadata-only), and a swap-label permutation test confirms that generation follows the conditioning signal in 100\% of tested pairs, providing causal evidence against pure leakage. However, residual leakage cannot be fully excluded. A pilot rare-cell augmentation study was negative, and on the primary common-metrics-only benchmark the Gaussian baseline outperforms CLOP-DiT. All results are restricted to in-distribution human and mouse cancer/developmental datasets; no stringent out-of-distribution generalization test has been conducted. CLOP-DiT therefore establishes the feasibility of structured-metadata-conditioned single-cell latent generation, but not yet its practical utility for downstream biology.}
+\abstract{We present CLOP-DiT, a pipeline that combines Contrastive Language--Omics Pretraining (CLOP) with a conditional Diffusion Transformer (DiT) trained by flow matching to generate single-cell latent states from structured biological metadata. CLOP aligns BiomedBERT text embeddings and scGPT cell embeddings in a shared 512-dimensional space; DiT then samples latents conditioned on a five-field template (cell type, tissue, organism, marker genes, disease). Across 69 cell types from 80 GEO datasets (220{,}304 cells), CLOP-DiT achieves 36.9\% KNN accuracy and 81.0\% steering (CFG\,=\,2.0), while a high-diversity regime reaches diversity ratio 0.93 at 80.7\% steering (CFG\,=\,1.0). A frozen scGPT decoder maps generated latents to gene expression with high mean concordance (Pearson $r > 0.999$), but per-gene variance correlation is near zero, indicating loss of cell-to-cell heterogeneity. Conditioning-field ablation confirms marker genes are the dominant steering signal, reducing accuracy from 99.8\% to 62.4\% upon removal. External validation against PanglaoDB and CellMarker~2.0 supports biological plausibility. However, generated cells remain distinguishable from real data (discriminator AUC 0.656), a Gaussian baseline outperforms CLOP-DiT on common metrics, and a pilot rare-cell augmentation study was negative. CLOP-DiT establishes the feasibility of structured-metadata-conditioned single-cell latent generation but not yet its practical utility for downstream biology.}
 
 % Keywords
 \keyword{single-cell RNA-seq; generative model; diffusion transformer; contrastive learning; structured-metadata conditioning; flow matching; latent generation; foundation model} 
@@ -777,58 +777,24 @@ The following abbreviations are used in this manuscript:
 \noindent
 \begin{tabular}{@{}ll}
 AdaLN & Adaptive Layer Normalization\\
-ALL & Acute Lymphoblastic Leukemia\\
-ALS & Amyotrophic Lateral Sclerosis\\
-AML & Acute Myeloid Leukemia\\
-AMP & Automatic Mixed Precision\\
-ARI & Adjusted Rand Index\\
-ASD & Autism Spectrum Disorder\\
-AUC & Area Under Curve\\
-BCC & Basal Cell Carcinoma\\
-BERT & Bidirectional Encoder Representations from Transformers\\
-CE & Cross-Entropy\\
 CFG & Classifier-free guidance\\
-CI & Confidence Interval\\
-CLIP & Contrastive Language-Image Pre-training\\
 CLOP & Contrastive Language-Omics Pretraining\\
-CRISPR & Clustered Regularly Interspaced Short Palindromic Repeats\\
-CUDA & Compute Unified Device Architecture\\
 DE & Differential expression\\
 DiT & Diffusion Transformer\\
 DivR & Diversity Ratio\\
 EMA & Exponential Moving Average\\
-ESC & Embryonic Stem Cell\\
 FD & Fr\'{e}chet Distance\\
-FP16 & Half-Precision Floating Point\\
-GAN & Generative Adversarial Network\\
-GELU & Gaussian Error Linear Unit\\
 GEO & Gene Expression Omnibus\\
-GPU & Graphics Processing Unit\\
-HBV & Hepatitis B Virus\\
-IFN & Interferon\\
 InfoNCE & Info Noise-Contrastive Estimation\\
 KNN & $k$-Nearest Neighbor\\
 LinAcc & Linear Classifier Accuracy\\
 logFC & Log Fold Change\\
 LoRA & Low-Rank Adaptation\\
-LPS & Lipopolysaccharide\\
-LR & Learning Rate\\
-MLP & Multi-Layer Perceptron\\
-MSE & Mean Squared Error\\
-NK & Natural Killer\\
-NMI & Normalized Mutual Information\\
 ODE & Ordinary Differential Equation\\
 OOD & Out-of-Distribution\\
-PBMC & Peripheral Blood Mononuclear Cell\\
-PCA & Principal Component Analysis\\
-ReLU & Rectified Linear Unit\\
-ROC & Receiver Operating Characteristic\\
 scGPT & Single-cell Generative Pre-trained Transformer\\
 scRNA-seq & Single-cell RNA sequencing\\
 SigLIP & Sigmoid Loss for Language-Image Pre-training\\
-UMAP & Uniform Manifold Approximation and Projection\\
-VAE & Variational Autoencoder\\
-VRAM & Video Random Access Memory\\
 ZCA & Zero-phase Component Analysis
 \end{tabular}
 }
