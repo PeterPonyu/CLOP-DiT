@@ -57,7 +57,6 @@ def plot_text_cell_heatmap(
         bootstrap CI annotation
     """
     from matplotlib.ticker import MaxNLocator
-    from mpl_toolkits.axes_grid1.inset_locator import inset_axes
     import matplotlib.patheffects as mpe
 
     if output_dir is None:
@@ -228,8 +227,7 @@ def plot_text_cell_heatmap(
 
     # Inset: zoomed view of top-left diagonal corner (best-aligned types)
     n_inset = min(6, n_types)
-    ax_inset = inset_axes(ax1, width="24%", height="24%", loc="upper right",
-                          borderpad=1.5)
+    ax_inset = ax1.inset_axes([0.68, 0.68, 0.24, 0.24])  # native inset (PDF-safe)
     im_inset = ax_inset.imshow(
         sim_sorted[:n_inset, :n_inset], cmap=cmap, vmin=-0.1, vmax=1.0,
         aspect="auto", interpolation="nearest",

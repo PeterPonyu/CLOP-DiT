@@ -37,7 +37,7 @@ def plot_panel_l(
 
     apply_style()
     fig = plt.figure(figsize=(8.2, 5.0))
-    ax1 = bind_figure_region(fig, (0.10, 0.30, 0.92, 0.95)).add_axes(fig)
+    ax1 = bind_figure_region(fig, (0.10, 0.22, 0.92, 0.95)).add_axes(fig)
     # Title moved to LaTeX caption
     # set_figure_suptitle(fig, "Noise-Scale Trade-off (CFG=1.5)", fontsize=11)
 
@@ -84,7 +84,7 @@ def plot_panel_l(
 
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
-    legend_ax = add_shared_legend_axes(fig, (0.10, 0.08, 0.80, 0.08))
+    legend_ax = add_shared_legend_axes(fig, (0.10, 0.02, 0.80, 0.08))
     legend_ax.legend(
         lines1 + lines2,
         labels1 + labels2,

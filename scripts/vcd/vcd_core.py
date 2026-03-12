@@ -126,6 +126,10 @@ def _collect_artists(fig, renderer) -> list[_ArtistInfo]:
         pfx = "cbar" if is_cbar else ""
         aid = id(ax)
 
+        # Skip axis labels and ticks on invisible axes (e.g. legend cells
+        # created by add_shared_legend_axes with set_axis_off()).
+        _collect_axis_text = ax.axison
+
         # ── Text artists ───────────────────────────────────────────────
         # Titles
         for title_obj in [ax.title, ax._left_title, ax._right_title]:
@@ -137,33 +141,34 @@ def _collect_artists(fig, renderer) -> list[_ArtistInfo]:
                         _artist_label(title_obj, f"{pfx}title"),
                         "text", aid))
 
-        # Axis labels
-        for lbl, hint in [(ax.xaxis.label, f"{pfx}xlabel"),
-                          (ax.yaxis.label, f"{pfx}ylabel")]:
-            if lbl.get_text().strip():
-                bb = _safe_bbox(lbl, renderer)
-                if bb:
-                    infos.append(_ArtistInfo(lbl, bb,
-                                             _artist_label(lbl, hint),
-                                             "text", aid))
+        if _collect_axis_text:
+            # Axis labels
+            for lbl, hint in [(ax.xaxis.label, f"{pfx}xlabel"),
+                              (ax.yaxis.label, f"{pfx}ylabel")]:
+                if lbl.get_text().strip():
+                    bb = _safe_bbox(lbl, renderer)
+                    if bb:
+                        infos.append(_ArtistInfo(lbl, bb,
+                                                 _artist_label(lbl, hint),
+                                                 "text", aid))
 
-        # Tick labels
-        for tl in ax.get_xticklabels():
-            if tl.get_text().strip():
-                bb = _safe_bbox(tl, renderer)
-                if bb:
-                    infos.append(_ArtistInfo(
-                        tl, bb,
-                        _artist_label(tl, "cbar_tick" if is_cbar else "xtick"),
-                        "text", aid))
-        for tl in ax.get_yticklabels():
-            if tl.get_text().strip():
-                bb = _safe_bbox(tl, renderer)
-                if bb:
-                    infos.append(_ArtistInfo(
-                        tl, bb,
-                        _artist_label(tl, "cbar_tick" if is_cbar else "ytick"),
-                        "text", aid))
+            # Tick labels
+            for tl in ax.get_xticklabels():
+                if tl.get_text().strip():
+                    bb = _safe_bbox(tl, renderer)
+                    if bb:
+                        infos.append(_ArtistInfo(
+                            tl, bb,
+                            _artist_label(tl, "cbar_tick" if is_cbar else "xtick"),
+                            "text", aid))
+            for tl in ax.get_yticklabels():
+                if tl.get_text().strip():
+                    bb = _safe_bbox(tl, renderer)
+                    if bb:
+                        infos.append(_ArtistInfo(
+                            tl, bb,
+                            _artist_label(tl, "cbar_tick" if is_cbar else "ytick"),
+                            "text", aid))
 
         if not is_cbar:
             # Manual ax.text() objects
