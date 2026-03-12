@@ -45,7 +45,15 @@ def _check_truncation(infos: list[_ArtistInfo], fig_bb: Bbox, tol_px: float = 3.
             # (e.g., radar plot wedge patches)
             if overshoot > 10000:
                 continue
-            if overshoot < tol_px + 4:
+            # Tick labels and axis spines near figure borders produce
+            # small pixel overshoots that are invisible in the final
+            # exported PDF.  Use a more generous info threshold for
+            # these elements to reduce false-positive warnings.
+            is_border_element = any(
+                k in a.tag for k in ("xtick", "ytick", "Spine")
+            )
+            info_threshold = tol_px + 10 if is_border_element else tol_px + 4
+            if overshoot < info_threshold:
                 sev = "info"
             elif a.kind == "text":
                 sev = "warning"

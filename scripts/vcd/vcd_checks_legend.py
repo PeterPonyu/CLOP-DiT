@@ -7,7 +7,11 @@ from .vcd_core import _ArtistInfo, _safe_bbox, _shrink, _fig_bbox, _overlap_area
 
 
 def _iter_legends(fig, renderer):
-    """Yield visible legend objects with display bboxes and owner ids."""
+    """Yield (legend, bbox, owner_id, is_dedicated) for visible legends.
+
+    *is_dedicated* is True when the legend lives on a dedicated helper
+    axes (marked ``_is_legend_cell``) rather than a data-plotting axes.
+    """
     seen_ids: set[int] = set()
     for ax in fig.get_axes():
         legend = ax.get_legend()
@@ -17,8 +21,9 @@ def _iter_legends(fig, renderer):
         if leg_bb is None:
             continue
         seen_ids.add(id(legend))
-        owner_id = id(fig) if getattr(ax, '_is_legend_cell', False) else id(ax)
-        yield legend, leg_bb, owner_id
+        is_dedicated = bool(getattr(ax, '_is_legend_cell', False))
+        owner_id = id(fig) if is_dedicated else id(ax)
+        yield legend, leg_bb, owner_id, is_dedicated
 
     for legend in getattr(fig, "legends", []) or []:
         if id(legend) in seen_ids or not legend.get_visible():
@@ -27,7 +32,7 @@ def _iter_legends(fig, renderer):
         if leg_bb is None:
             continue
         seen_ids.add(id(legend))
-        yield legend, leg_bb, id(fig)
+        yield legend, leg_bb, id(fig), False
 
     for child in fig.get_children():
         if hasattr(child, 'get_texts') and hasattr(child, '_legend_box') and id(child) not in seen_ids:
@@ -37,7 +42,7 @@ def _iter_legends(fig, renderer):
             if leg_bb is None:
                 continue
             seen_ids.add(id(child))
-            yield child, leg_bb, id(fig)
+            yield child, leg_bb, id(fig), False
 
 
 def _check_legend_spillover(fig, renderer, tol_px=5.0, tight_bb=None):
@@ -428,9 +433,9 @@ def _check_legend_vs_legend(fig, renderer, min_overlap_px2=60.0):
     issues: list[dict] = []
     legends = list(_iter_legends(fig, renderer))
     for i in range(len(legends)):
-        leg_i, bb_i, owner_i = legends[i]
+        leg_i, bb_i, owner_i, _ = legends[i]
         for j in range(i + 1, len(legends)):
-            leg_j, bb_j, owner_j = legends[j]
+            leg_j, bb_j, owner_j, _ = legends[j]
             if owner_i == owner_j:
                 continue
             area = _overlap_area(bb_i, bb_j)
@@ -451,7 +456,7 @@ def _check_legend_vs_other_artists(fig, renderer, infos, min_overlap_px2=60.0):
     if not legends:
         return issues
 
-    for legend, leg_bb, owner_id in legends:
+    for legend, leg_bb, owner_id, is_dedicated in legends:
         own_text_ids = {id(txt) for txt in legend.get_texts()}
         for info in infos:
             if info.artist is legend or id(info.artist) in own_text_ids:
@@ -478,7 +483,20 @@ def _check_legend_vs_other_artists(fig, renderer, infos, min_overlap_px2=60.0):
             frac = area / target_area
             same_owner = owner_id == info.ax_id and info.ax_id is not None
 
-            if same_owner and info.kind == "line" and frac < 0.30:
+            # Dedicated legend axes (shared legends created by
+            # add_shared_legend_axes) are deliberately positioned near
+            # the axis labels / ticks of a neighbouring data axes.
+            # Overlap with those elements is an intentional layout
+            # choice, not a design error — use a generous threshold.
+            is_adjacent_label = (
+                is_dedicated
+                and info.kind == "text"
+                and any(k in info.tag for k in ("xlabel", "ylabel", "xtick", "ytick"))
+            )
+
+            if is_adjacent_label and frac < 0.80:
+                severity = "info"
+            elif same_owner and info.kind == "line" and frac < 0.30:
                 severity = "info"
             elif same_owner and info.kind == "collection" and frac < 0.15:
                 severity = "info"
