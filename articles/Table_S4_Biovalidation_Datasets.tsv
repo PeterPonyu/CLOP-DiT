@@ -1,6 +1,0 @@
-Index	GEO_Accession	Dataset_Key	Organism	Tissue	Description	Reference_h5ad	Validation_Purpose
-1	GSE123902	GSE123902_LungAdreHmCancer	Homo sapiens	Lung	Lung adenocarcinoma tumor microenvironment	data/processed_h5ad/GSE123902_LungAdreHmCancer_processed.h5ad	Marker gene correlation, expression distribution fidelity, GO enrichment
-2	GSE183904	GSE183904_GastricHmCancer	Homo sapiens	Gastric	Gastric cancer tumor microenvironment	data/processed_h5ad/GSE183904_GastricHmCancer_processed.h5ad	Marker gene correlation, expression distribution fidelity, GO enrichment
-3	GSE123813	GSE123813_bccHmCancer	Homo sapiens	Skin	Basal cell carcinoma of the skin	data/processed_h5ad/GSE123813_bccHmCancer_processed.h5ad	Marker gene correlation, expression distribution fidelity, GO enrichment
-4	GSE98638	GSE98638_TcellLiverHmCancer	Homo sapiens	Liver	T cell landscape of hepatocellular carcinoma	data/processed_h5ad/GSE98638_TcellLiverHmCancer_processed.h5ad	Marker gene correlation, expression distribution fidelity, GO enrichment
-5	GSE132509	GSE132509_acutelymluekPBMCHmCancer	Homo sapiens	Blood	Acute myeloid leukemia peripheral blood mononuclear cells	data/processed_h5ad/GSE132509_acutelymluekPBMCHmCancer_processed.h5ad	Marker gene correlation, expression distribution fidelity, GO enrichment
