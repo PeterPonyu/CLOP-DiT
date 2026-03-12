@@ -2,7 +2,7 @@
 %  For support, please attach all files needed for compiling as well as the log file, and specify your operating system, LaTeX version, and LaTeX editor.
 
 %=================================================================
-\documentclass[biology,article,submit,pdftex,oneauthor]{Definitions/mdpi}
+\documentclass[biology,article,submit,pdftex,moreauthors]{Definitions/mdpi}
 %\documentclass[preprints,article,submit,pdftex,moreauthors]{Definitions/mdpi} 
 % For posting an early version of this manuscript as a preprint, you may use "preprints" as the journal. Changing "submit" to "accept" before posting will remove line numbers.
 
@@ -106,26 +106,25 @@
 %\newcommand{\orcidauthorB}{0000-0000-0000-000X} % Add \orcidB{} behind the author's name
 
 % Authors, for the paper (add full first names)
-\Author{Zeyu Fu $^{1,}$*\orcidA{}}
+\Author{Zeyu Fu $^{1,\dagger}$\orcidA{}, Jiawei Fu $^{2,\dagger}$, Chunlin Chen $^{3,\dagger}$, Keyang Zhang $^{4}$, Junping Wang $^{1,}$*, Tianfei Ran $^{2,}$* and Song Wang $^{1,}$*}
 
 %\longauthorlist{yes}
 
 % MDPI internal command: Authors, for metadata in PDF
-\AuthorNames{Zeyu Fu}
+\AuthorNames{Zeyu Fu, Jiawei Fu, Chunlin Chen, Keyang Zhang, Junping Wang, Tianfei Ran and Song Wang}
 
-% Affiliations / Addresses (from MDPI Biology 14/6/679 — scRL; Zeyu Fu affiliation)
-\address[1]{%
-$^{1}$ \quad State Key Laboratory of Trauma and Chemical Poisoning, Institute of Combined Injury, Chongqing Engineering Research Center for Nanomedicine, College of Preventive Medicine, Army Medical University, Chongqing 400038, China; zeyu.fu@tmmu.edu.cn}
+% Affiliations / Addresses
+\address{%
+$^{1}$ \quad State Key Laboratory of Trauma and Chemical Poisoning, Institute of Combined Injury, Chongqing Engineering Research Center for Nanomedicine, College of Preventive Medicine, Army Medical University, Chongqing 400038, China\\
+$^{2}$ \quad Department of Orthopedics, Xinqiao Hospital, Army Medical University, Chongqing 400037, China\\
+$^{3}$ \quad Department of Rehabilitation Medicine, The First Affiliated Hospital, Sun Yat-sen University, Guangzhou 510080, China\\
+$^{4}$ \quad School of Medicine, Sun Yat-sen University, Shenzhen 518107, China}
 
-% Contact information of the corresponding author
-\corres{Correspondence: zeyu.fu@tmmu.edu.cn.}
+% Contact information of the corresponding authors
+\corres{Correspondence: wangjunping@tmmu.edu.cn (J.W.); rantianfei@tmmu.edu.cn (T.R.); swang1981@tmmu.edu.cn (S.W.)}
 
-% Current address and/or shared authorship
-%\firstnote{Current address: Affiliation.}  
-% Current address should not be the same as any items in the Affiliation section.
-
-%\secondnote{These authors contributed equally to this work.}
-% The commands \thirdnote{} till \eighthnote{} are available for further notes.
+% Equal contribution note
+\firstnote{These authors contributed equally to this work.}
 
 \simplesumm{CLOP-DiT is a computational pipeline that generates synthetic single-cell gene expression profiles from structured biological descriptions (cell type, tissue, organism, marker genes, and disease context). It first learns to align text descriptions with real cell data in a shared mathematical space, then uses a diffusion model to generate new cell states matching a given description. The generated cells capture correct cell-type identity and marker gene patterns, but do not yet reproduce the full cell-to-cell variability seen in real single-cell experiments. This work demonstrates that text-guided single-cell generation is feasible as a proof of concept, opening directions for future simulation and hypothesis-generation tools in biology.}
 
@@ -739,9 +738,9 @@ We introduced CLOP-DiT, a two-stage pipeline for structured-metadata-conditioned
 %}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\authorcontributions{Z.F.: conceptualization, methodology, software, validation, formal analysis, investigation, resources, data curation, writing---original draft preparation, writing---review and editing, visualization. The author has read and agreed to the published version of the manuscript.}
+\authorcontributions{Z.F.: conceptualization, methodology, software, validation, formal analysis, investigation, resources, data curation, writing---original draft preparation, writing---review and editing, visualization; J.F.: methodology, validation, formal analysis, investigation, writing---review and editing; C.C.: methodology, validation, formal analysis, investigation, writing---review and editing; K.Z.: formal analysis, investigation; J.W.: supervision, project administration, funding acquisition, writing---review and editing; T.R.: supervision, project administration, writing---review and editing; S.W.: supervision, project administration, funding acquisition, writing---review and editing. All authors have read and agreed to the published version of the manuscript.}
 
-\funding{This research received no external funding.}
+\funding{This work was supported by the National Key Research and Development Program of China (Grant No.~2024YFA1107101), the Ministry of Science and Technology of the People\textquotesingle s Republic of China, and the National Key Laboratory of Trauma and Chemical Poisoning (Grant No.~2024K004).}
 
 \institutionalreview{Ethical review and approval were waived for this study, as only publicly available, de-identified data from the Gene Expression Omnibus (GEO) were analyzed; all datasets were deposited by their original investigators under institutional ethical approvals as required by GEO submission policy. No new human subjects research, animal experiments, or clinical interventions were conducted.}
 
@@ -760,9 +759,9 @@ We introduced CLOP-DiT, a two-stage pipeline for structured-metadata-conditioned
 %% Only for journal Nursing Reports
 %\useofartificialintelligence{Please describe in detail any and all uses of artificial intelligence (AI) or AI-assisted tools used in the preparation of the manuscript. This may include, but is not limited to, language translation, language editing and grammar, or generating text. Alternatively, please state that “AI or AI-assisted tools were not used in drafting any aspect of this manuscript”.}
 
-\acknowledgments{The author acknowledges the developers and communities behind scGPT, BiomedBERT, and the Gene Expression Omnibus (GEO) for providing open-access tools and datasets that made this work possible.}
+\acknowledgments{The authors acknowledge the developers and communities behind scGPT, BiomedBERT, and the Gene Expression Omnibus (GEO) for providing open-access tools and datasets that made this work possible.}
 
-\conflictsofinterest{The author declares no conflicts of interest.}
+\conflictsofinterest{The authors declare no conflicts of interest.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Optional
@@ -880,125 +879,125 @@ Time sampling     & ---                & Logit-normal ($\mu{=}0, \sigma{=}1$) \\
 
 \section[\appendixname~\thesection]{Supplementary Tables}\label{app:suppl-tables}
 
-% Table S1: All 80 GEO Dataset Identifiers
+% Table S1: All 80 GEO Dataset Identifiers (data from Table_S1_GEO_Accessions.tsv)
 {\footnotesize
 \renewcommand{\arraystretch}{0.9}
-\begin{longtable}{rlp{5.5cm}rr}
-\caption{All 80 GEO datasets used in CLOP-DiT training and validation. Datasets were preprocessed to 2{,}000 highly variable genes per dataset. Split: Train or held-out Validation (study-level, seed 42).\label{tab:s1_datasets}} \\
+\begin{longtable}{rllp{4.2cm}rr}
+\caption{All 80 GEO datasets used in CLOP-DiT training and validation. Datasets were preprocessed to 2{,}000 highly variable genes per dataset. Split: Train or held-out Validation (study-level, seed 42). Hs: \textit{Homo sapiens}; Mm: \textit{Mus musculus}.\label{tab:s1_datasets}} \\
 \toprule
-\# & Accession & Description & $n_{\text{cells}}$ & Split \\
+\# & Accession & Organism & Description & $n_{\text{cells}}$ & Split \\
 \midrule
 \endfirsthead
 \toprule
-\# & Accession & Description & $n_{\text{cells}}$ & Split \\
+\# & Accession & Organism & Description & $n_{\text{cells}}$ & Split \\
 \midrule
 \endhead
 \midrule
-\multicolumn{5}{r}{\textit{Continued on next page}} \\
+\multicolumn{6}{r}{\textit{Continued on next page}} \\
 \endfoot
 \bottomrule
 \endlastfoot
-  1 & GSE103867 & scRNA-seq (H.~sapiens) & 2,787 & Val \\
-  2 & GSE110686 & scRNA-seq (H.~sapiens) & 2,992 & Train \\
-  3 & GSE115571 & Mouse cells, LPS stimulation & 442 & Train \\
-  4 & GSE117988 & PBMCs from patients & 2,638 & Train \\
-  5 & GSE117988 & Merkel cell carcinoma tumor & 2,990 & Train \\
-  6 & GSE120505 & Aged blood cells & 3,000 & Train \\
-  7 & GSE123813 & Human basal cell carcinoma & 3,000 & Train \\
-  8 & GSE123813 & Human cutaneous squamous cell carcinoma & 3,000 & Train \\
-  9 & GSE123902 & Human lung adenocarcinoma & 2,753 & Train \\
-  10 & GSE124310 & Human multiple myeloma bone marrow & 2,833 & Train \\
-  11 & GSE130148 & Human fetal lung development & 3,000 & Train \\
-  12 & GSE132509 & Pediatric bone marrow mononuclear cells & 2,984 & Train \\
-  13 & GSE138709 & Human intrahepatic cholangiocarcinoma & 2,891 & Train \\
-  14 & GSE142653 & Human pituitary gland development & 2,885 & Train \\
-  15 & GSE143423 & Human leptomeningeal brain metastasis & 3,000 & Train \\
-  16 & GSE143423 & Triple-neg.\ breast cancer brain met. & 2,332 & Train \\
-  17 & GSE145929 & Adult mouse prostate & 2,830 & Train \\
-  18 & GSE145929 & Adult mouse urethra & 2,745 & Train \\
-  19 & GSE148218 & Human bone marrow, ALL & 2,807 & Train \\
-  20 & GSE149655 & Human early-stage lung adenocarcinoma & 2,087 & Train \\
-  21 & GSE155109 & Endothelial cells, breast cancer & 3,000 & Train \\
-  22 & GSE155109 & Stromal cells, breast cancer & 3,000 & Train \\
-  23 & GSE163558 & Human stomach cancer & 2,467 & Train \\
-  24 & GSE165784 & Human retina development & 2,622 & Train \\
-  25 & GSE165844 & Mouse LSK hematopoietic progenitors & 2,881 & Train \\
-  26 & GSE167597 & Mouse spinal cord development & 3,000 & Val \\
-  27 & GSE168181 & Human breast cancer tissue & 2,863 & Train \\
-  28 & GSE175975 & scRNA-seq (H.~sapiens) & 2,728 & Train \\
-  29 & GSE183904 & Human gastric cancer & 3,000 & Val \\
-  30 & GSE189070 & Mouse astrocytes, spinal cord injury & 2,960 & Train \\
-  31 & GSE189357 & Human lung adenocarcinoma & 2,886 & Train \\
-  32 & GSE192857 & hESC differentiation time-series & 2,696 & Train \\
-  33 & GSE212502 & Human forebrain organoids & 3,000 & Train \\
-  34 & GSE213740 & Human ascending aortic wall & 2,704 & Val \\
-  35 & GSE220913 & Human HL-60 cell lines, CFTR & 2,972 & Train \\
-  36 & GSE222002 & T cells from human cancer & 2,962 & Train \\
-  37 & GSE222369 & NK cells, human lymphoma & 2,778 & Train \\
-  38 & GSE225600 & Human breast cancer tumor & 2,333 & Train \\
-  39 & GSE225857 & Colorectal cancer liver metastases & 2,986 & Train \\
-  40 & GSE226131 & Aged mouse hematopoietic stem cells & 2,608 & Train \\
-  41 & GSE226762 & scRNA-seq (H.~sapiens) & 830 & Val \\
-  42 & GSE227644 & scRNA-seq (H.~sapiens) & 3,000 & Train \\
-  43 & GSE227719 & Mouse KrasG12D/P53 lung organoids & 2,990 & Train \\
-  44 & GSE228499 & Human breast cancer & 2,448 & Train \\
-  45 & GSE235787 & B cells, ALL & 2,798 & Train \\
-  46 & GSE236565 & Mouse splenic CD4+ T cells & 2,556 & Train \\
-  47 & GSE248214 & scRNA-seq (H.~sapiens) & 2,998 & Train \\
-  48 & GSE253355 & Human bone marrow niche & 2,835 & Train \\
-  49 & GSE262288 & Metastatic breast cancer & 2,321 & Train \\
-  50 & GSE272187 & scRNA-seq (H.~sapiens) & 2,639 & Train \\
-  51 & GSE275119 & Mouse dental tissue development & 2,963 & Train \\
-  52 & GSE277740 & Mouse thalamus, SBS vs DNBSEQ & 2,644 & Val \\
-  53 & GSE279781 & scRNA-seq (H.~sapiens) & 2,654 & Train \\
-  54 & GSE280847 & CD45+ leukocytes, mouse MC38 tumor & 2,864 & Train \\
-  55 & GSE283205 & Hepatoblastoma tumor tissue & 2,994 & Train \\
-  56 & GSE283397 & Human CD8+ T cells, chronic HBV & 2,856 & Train \\
-  57 & GSE288211 & Mouse pancreatic islets, Zzef1 KO & 2,724 & Train \\
-  58 & GSE289611 & Human pulmonary pleomorphic carcinoma & 2,983 & Train \\
-  59 & GSE291166 & Mouse mesenteric lymph node & 2,901 & Train \\
-  60 & GSE299623 & scRNA-seq (H.~sapiens) & 2,991 & Train \\
-  61 & GSE300862 & Mouse Kras/Trp53 lung adenocarcinoma & 2,716 & Val \\
-  62 & GSE302433 & Mouse B16F10 melanoma, ZDHHC13 & 2,953 & Val \\
-  63 & GSE303309 & Brain CD45+ immune cells, Alzheimer's & 2,999 & Train \\
-  64 & GSE306567 & Mouse ESCs and neural progenitors & 2,454 & Train \\
-  65 & GSE306676 & Mouse spinal cord, SOD1-G93A ALS & 2,959 & Train \\
-  66 & GSE307261 & Human B and T cells, melanoma & 2,921 & Train \\
-  67 & GSE307774 & Mouse colorectal tumors, Kras/Braf & 2,505 & Train \\
-  68 & GSE308428 & Mouse hippocampal microglia, ASD & 2,991 & Train \\
-  69 & GSE309368 & Human myeloid cells, healthy donors & 1,361 & Train \\
-  70 & GSE315628 & scRNA-seq (M.~musculus) & 2,895 & Train \\
-  71 & GSE318353 & scRNA-seq (H.~sapiens) & 2,964 & Train \\
-  72 & GSE98638 & Human hepatocellular carcinoma T cells & 3,000 & Train \\
-  73 & GSE120446 & Bone marrow, hematopoietic development & 2,890 & Train \\
-  74 & GSE104323 & Dentate gyrus, brain development & 3,000 & Train \\
-  75 & GSE75748 & Endoderm differentiation & 2,531 & Train \\
-  76 & GSE144024 & Human embryonic stem cells & 3,000 & Train \\
-  77 & GSE72857 & Hematopoiesis & 3,000 & Train \\
-  78 & GSE226824 & IFN-treated hematopoietic progenitors & 2,739 & Train \\
-  79 & GSE141259 & Lung development & 3,000 & Train \\
-  80 & GSE139369 & Human hematopoiesis (Setty et al.) & 2,995 & Train \\
+  1 & GSE103867 & Hs & scRNA-seq (GEO-DataHub) & 2,787 & Val \\
+  2 & GSE110686 & Hs & scRNA-seq (GEO-DataHub) & 2,992 & Train \\
+  3 & GSE115571 & Mm & Mouse cells, LPS stimulation & 442 & Train \\
+  4 & GSE117988 & Hs & PBMCs, Merkel cell carcinoma & 2,638 & Train \\
+  5 & GSE117988 & Hs & Merkel cell carcinoma tumor & 2,990 & Train \\
+  6 & GSE120505 & Hs & Aged blood cells & 3,000 & Train \\
+  7 & GSE123813 & Hs & Basal cell carcinoma skin & 3,000 & Train \\
+  8 & GSE123813 & Hs & Cutaneous squamous cell carcinoma & 3,000 & Train \\
+  9 & GSE123902 & Hs & Lung adenocarcinoma & 2,753 & Train \\
+  10 & GSE124310 & Hs & Multiple myeloma bone marrow & 2,833 & Train \\
+  11 & GSE130148 & Hs & Fetal lung development & 3,000 & Train \\
+  12 & GSE132509 & Hs & Pediatric ALL bone marrow & 2,984 & Train \\
+  13 & GSE138709 & Hs & Intrahepatic cholangiocarcinoma & 2,891 & Train \\
+  14 & GSE142653 & Hs & Pituitary gland development & 2,885 & Train \\
+  15 & GSE143423 & Hs & Leptomeningeal brain metastasis & 3,000 & Train \\
+  16 & GSE143423 & Hs & Triple-neg.\ breast cancer brain met. & 2,332 & Train \\
+  17 & GSE145929 & Mm & Adult mouse prostate & 2,830 & Train \\
+  18 & GSE145929 & Mm & Adult mouse urethra & 2,745 & Train \\
+  19 & GSE148218 & Hs & Bone marrow, ALL & 2,807 & Train \\
+  20 & GSE149655 & Hs & Early-stage lung adenocarcinoma & 2,087 & Train \\
+  21 & GSE155109 & Hs & Endothelial cells, breast cancer & 3,000 & Train \\
+  22 & GSE155109 & Hs & Stromal cells, breast cancer & 3,000 & Train \\
+  23 & GSE163558 & Hs & Stomach cancer & 2,467 & Train \\
+  24 & GSE165784 & Hs & Retina development & 2,622 & Train \\
+  25 & GSE165844 & Mm & LSK hematopoietic progenitors & 2,881 & Train \\
+  26 & GSE167597 & Mm & Spinal cord development & 3,000 & Val \\
+  27 & GSE168181 & Hs & Breast cancer tissue & 2,863 & Train \\
+  28 & GSE175975 & Hs & scRNA-seq (GEO-DataHub) & 2,728 & Train \\
+  29 & GSE183904 & Hs & Gastric cancer & 3,000 & Val \\
+  30 & GSE189070 & Mm & Astrocytes, spinal cord injury & 2,960 & Train \\
+  31 & GSE189357 & Hs & Lung adenocarcinoma & 2,886 & Train \\
+  32 & GSE192857 & Hs & hESC differentiation time-series & 2,696 & Train \\
+  33 & GSE212502 & Hs & Forebrain organoids & 3,000 & Train \\
+  34 & GSE213740 & Hs & Ascending aortic wall dissection & 2,704 & Val \\
+  35 & GSE220913 & Hs & HL-60 cell lines, CFTR & 2,972 & Train \\
+  36 & GSE222002 & Hs & T cells from cancer & 2,962 & Train \\
+  37 & GSE222369 & Hs & NK cells, lymphoma & 2,778 & Train \\
+  38 & GSE225600 & Hs & Breast cancer tumor & 2,333 & Train \\
+  39 & GSE225857 & Hs & Colorectal cancer liver metastases & 2,986 & Train \\
+  40 & GSE226131 & Mm & Aged hematopoietic stem cells & 2,608 & Train \\
+  41 & GSE226762 & Hs & scRNA-seq (GEO-DataHub) & 830 & Val \\
+  42 & GSE227644 & Hs & scRNA-seq (GEO-DataHub) & 3,000 & Train \\
+  43 & GSE227719 & Mm & KrasG12D/P53 lung organoids & 2,990 & Train \\
+  44 & GSE228499 & Hs & Breast cancer & 2,448 & Train \\
+  45 & GSE235787 & Hs & B cells, ALL & 2,798 & Train \\
+  46 & GSE236565 & Mm & Splenic CD4+ T cells & 2,556 & Train \\
+  47 & GSE248214 & Hs & scRNA-seq (GEO-DataHub) & 2,998 & Train \\
+  48 & GSE253355 & Hs & Bone marrow niche & 2,835 & Train \\
+  49 & GSE262288 & Hs & Metastatic breast cancer & 2,321 & Train \\
+  50 & GSE272187 & Hs & scRNA-seq (GEO-DataHub) & 2,639 & Train \\
+  51 & GSE275119 & Mm & Dental tissue development & 2,963 & Train \\
+  52 & GSE277740 & Mm & Thalamus, SBS vs DNBSEQ & 2,644 & Val \\
+  53 & GSE279781 & Hs & scRNA-seq (GEO-DataHub) & 2,654 & Train \\
+  54 & GSE280847 & Mm & CD45+ leukocytes, MC38 tumor & 2,864 & Train \\
+  55 & GSE283205 & Hs & Hepatoblastoma tumor tissue & 2,994 & Train \\
+  56 & GSE283397 & Hs & CD8+ T cells, CLL & 2,856 & Train \\
+  57 & GSE288211 & Mm & Pancreatic islets, Zzef1 KO & 2,724 & Train \\
+  58 & GSE289611 & Hs & Pulmonary pleomorphic carcinoma & 2,983 & Train \\
+  59 & GSE291166 & Mm & Mesenteric lymph node & 2,901 & Train \\
+  60 & GSE299623 & Hs & scRNA-seq (GEO-DataHub) & 2,991 & Train \\
+  61 & GSE300862 & Mm & Kras/Trp53 lung adenocarcinoma & 2,716 & Val \\
+  62 & GSE302433 & Mm & B16F10 melanoma, ZDHHC13 & 2,953 & Val \\
+  63 & GSE303309 & Mm & Brain CD45+ immune cells, AD & 2,999 & Train \\
+  64 & GSE306567 & Mm & ESCs and neural progenitors & 2,454 & Train \\
+  65 & GSE306676 & Mm & Spinal cord, SOD1-G93A ALS & 2,959 & Train \\
+  66 & GSE307261 & Hs & B and T cells, melanoma & 2,921 & Train \\
+  67 & GSE307774 & Mm & Colorectal tumors, Kras/Braf & 2,505 & Train \\
+  68 & GSE308428 & Mm & Hippocampal microglia, ASD & 2,991 & Train \\
+  69 & GSE309368 & Hs & Myeloid cells, oral SCC & 1,361 & Train \\
+  70 & GSE315628 & Mm & scRNA-seq (GEO-DataHub) & 2,895 & Train \\
+  71 & GSE318353 & Hs & scRNA-seq (GEO-DataHub) & 2,964 & Train \\
+  72 & GSE98638  & Hs & HCC T cell landscape & 3,000 & Train \\
+  73 & GSE120446 & Hs & Bone marrow, hematopoietic dev. & 2,890 & Train \\
+  74 & GSE104323 & Mm & Dentate gyrus, brain development & 3,000 & Train \\
+  75 & GSE75748  & Hs & Endoderm differentiation & 2,531 & Train \\
+  76 & GSE144024 & Hs & Human embryonic stem cells & 3,000 & Train \\
+  77 & GSE72857  & Mm & Hematopoiesis & 3,000 & Train \\
+  78 & GSE226824 & Hs & IFN-treated HSPCs & 2,739 & Train \\
+  79 & GSE141259 & Mm & Lung development & 3,000 & Train \\
+  80 & GSE139369 & Hs & Hematopoiesis (Setty et al.) & 2,995 & Train \\
 \midrule
-  & \textbf{Total} & & \textbf{220,304} & \\
+  & \textbf{Total} & & & \textbf{220,304} & \\
 \end{longtable}
 }% end footnotesize for Table S1
 
-% Table S2: 8 Held-out Validation Datasets
+% Table S2: 8 Held-out Validation Datasets (data from Table_S2_Validation_Datasets.tsv)
 \begin{table}[htbp]
 \centering
-\caption{The 8 held-out validation datasets (study-level split, seed 42, val\_split = 0.1). No cells from these studies were seen during CLOP or DiT training.\label{tab:s2_validation}}
-\begin{tabular}{rlp{5.5cm}r}
+\caption{The 8 held-out validation datasets (study-level split, seed 42, val\_split = 0.1). No cells from these studies were seen during CLOP or DiT training. Hs: \textit{Homo sapiens}; Mm: \textit{Mus musculus}.\label{tab:s2_validation}}
+\begin{tabular}{rllp{4.5cm}r}
 \toprule
-\# & Accession & Description & $n_{\text{cells}}$ \\
+\# & Accession & Organism & Description & $n_{\text{cells}}$ \\
 \midrule
-  1 & GSE103867 & scRNA-seq (H.~sapiens) & 2,787 \\
-  2 & GSE167597 & Mouse spinal cord development & 3,000 \\
-  3 & GSE183904 & Human gastric cancer & 3,000 \\
-  4 & GSE213740 & Human ascending aortic wall & 2,704 \\
-  5 & GSE226762 & scRNA-seq (H.~sapiens) & 830 \\
-  6 & GSE277740 & Mouse thalamus, SBS vs DNBSEQ & 2,644 \\
-  7 & GSE300862 & Mouse Kras/Trp53 lung adenocarcinoma & 2,716 \\
-  8 & GSE302433 & Mouse B16F10 melanoma, ZDHHC13 & 2,953 \\
+  1 & GSE103867 & Hs & scRNA-seq (GEO-DataHub) & 2,787 \\
+  2 & GSE167597 & Mm & Mouse spinal cord development & 3,000 \\
+  3 & GSE183904 & Hs & Gastric cancer & 3,000 \\
+  4 & GSE213740 & Hs & Ascending aortic wall dissection & 2,704 \\
+  5 & GSE226762 & Hs & scRNA-seq (GEO-DataHub) & 830 \\
+  6 & GSE277740 & Mm & Thalamus, SBS vs DNBSEQ & 2,644 \\
+  7 & GSE300862 & Mm & Kras/Trp53 lung adenocarcinoma & 2,716 \\
+  8 & GSE302433 & Mm & B16F10 melanoma, ZDHHC13 & 2,953 \\
 \midrule
   & \textbf{Total} & & \textbf{20,634} \\
 \bottomrule
@@ -1067,15 +1066,15 @@ CFG & Solver & Steps & KNN-1 & KNN-5 & Steer. & DivR & LinAcc & FD \\
 
 \clearpage   % prevent Table S4 from being truncated at a page break
 
-% Table S4: 5 Biological Validation Datasets
+% Table S4: 5 Biological Validation Datasets (data from Table_S4_Biovalidation_Datasets.tsv)
 \begin{table}[htbp]
 \centering
 \caption{The 5 biological validation datasets used for marker gene correlation, expression distribution fidelity, and Gene Ontology enrichment analysis (Section~\ref{sec:cross-dataset}). These datasets were selected to span diverse human cancer tissue types and immune cell populations. \textbf{Four of the five datasets are from the training split; only GSE183904 is held-out (Table~S2). This analysis therefore primarily evaluates in-distribution decoder-reconstructed fidelity, not out-of-distribution generalization.}}
 \label{tab:s4_biovalidation}
 \small
-\begin{tabularx}{\textwidth}{rlllcr}
+\begin{tabularx}{\textwidth}{rllXcr}
 \toprule
-\# & GEO Accession & Tissue & Description & Split & $n_{\text{cells}}$ \\
+\# & Accession & Tissue & Description & Split & $n_{\text{cells}}$ \\
 \midrule
   1 & GSE123902 & Lung & Lung adenocarcinoma TME & Train & 2,753 \\
   2 & GSE183904 & Gastric & Gastric cancer TME & Val & 3,000 \\
@@ -1086,6 +1085,8 @@ CFG & Solver & Steps & KNN-1 & KNN-5 & Steer. & DivR & LinAcc & FD \\
   & \textbf{Total} & & & & \textbf{14,737} \\
 \bottomrule
 \end{tabularx}
+\vspace{4pt}
+{\footnotesize All datasets are \textit{Homo sapiens}. Validation purpose for each: marker gene correlation, expression distribution fidelity, and GO enrichment.}
 \end{table}
 
 % Table S5: Bootstrap 95% Confidence Intervals
