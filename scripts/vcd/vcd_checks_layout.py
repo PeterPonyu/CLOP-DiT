@@ -545,10 +545,15 @@ def _check_panel_label_placement(fig, renderer, margin_px=5.0):
     """
     issues: list[dict] = []
 
-    # Collect axes bboxes (exclude colorbars)
+    # Collect axes bboxes (exclude colorbars and invisible/off axes)
     ax_bboxes: list[tuple[int, Bbox]] = []
     for idx, ax in enumerate(fig.get_axes()):
         if _is_colorbar_axes(ax):
+            continue
+        # Skip axes that have been turned off (e.g. single-axes diagrams
+        # where the entire figure is one canvas).  Panel labels drawn in
+        # data coords inside such an axes are intentional.
+        if not ax.axison:
             continue
         bb = _safe_bbox(ax, renderer)
         if bb:

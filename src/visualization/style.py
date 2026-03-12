@@ -405,8 +405,11 @@ def _safe_artist_bbox(artist, renderer) -> Bbox | None:
 def _collect_export_bboxes(fig: plt.Figure, renderer) -> list[Bbox]:
     """Collect display-coordinate bboxes that should contribute to export cropping."""
     boxes: list[Bbox] = []
-    width_px, height_px = fig.canvas.get_width_height()
-    boxes.append(Bbox.from_extents(0, 0, width_px, height_px))
+    # Only use the full canvas as a baseline when no tighter content exists.
+    # This lets figures opt into tight cropping by setting fig._clop_tight_crop = True.
+    if not getattr(fig, "_clop_tight_crop", False):
+        width_px, height_px = fig.canvas.get_width_height()
+        boxes.append(Bbox.from_extents(0, 0, width_px, height_px))
 
     for ax in fig.get_axes():
         if not ax.get_visible():
@@ -541,6 +544,9 @@ def save_with_vcd(
         if not ax.axison:
             continue
         if getattr(ax, "_clop_styled", False):
+            continue
+        # Skip colorbar axes — their tick styling is set by the figure script
+        if hasattr(ax, '_colorbar_info') or getattr(ax, '_colorbar', None) is not None:
             continue
         if hasattr(ax, "name") and ax.name == "polar":
             style_axes(ax, kind="polar")

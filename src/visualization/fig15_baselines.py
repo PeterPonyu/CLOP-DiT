@@ -104,7 +104,7 @@ def plot_baseline_comparison(
     directions = ["lower", "higher", "higher", "higher"]
 
     fig = plt.figure(figsize=(15.2, 6.2))
-    ax_rect_1, ax_rect_2, ax_rect_3 = bind_figure_region(fig, (0.04, 0.16, 0.98, 0.91)).split_cols(
+    ax_rect_1, ax_rect_2, ax_rect_3 = bind_figure_region(fig, (0.04, 0.13, 0.98, 0.91)).split_cols(
         [1.20, 0.86, 1.20],
         gap=[0.060, 0.060],
     )

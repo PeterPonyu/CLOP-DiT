@@ -419,7 +419,7 @@ def plot_clustering_and_classifier_merged(
     apply_style()
 
     fig = plt.figure(figsize=(16.0, 10.2))
-    layout = bind_figure_region(fig, (0.03, 0.09, 0.98, 0.96))
+    layout = bind_figure_region(fig, (0.03, 0.08, 0.98, 0.96))
     top_row, bottom_row = layout.split_rows([0.98, 1.10], hspace=0.34)
     top_rects = top_row.split_cols([1.10, 1.34, 0.82], gap=[0.060, 0.050])
     bottom_rects = bottom_row.split_cols([1.10, 1.34, 0.82], gap=[0.060, 0.050])
@@ -571,7 +571,7 @@ def plot_clustering_and_classifier_merged(
             fig,
             output_dir / "fig17_downstream_pq.png",
             dpi,
-            layout_rect=(0.02, 0.03, 0.98, 0.95),
+            layout_rect=(0.02, 0.01, 0.98, 0.96),
         )
         logger.info(f"Saved merged P+Q \u2192 {path}")
     return fig

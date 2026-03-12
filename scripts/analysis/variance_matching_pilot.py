@@ -174,7 +174,7 @@ def main():
     from scipy import stats as scipy_stats
 
     fig = plt.figure(figsize=(14.0, 10.0))
-    layout = bind_figure_region(fig, (0.11, 0.08, 0.97, 0.96))
+    layout = bind_figure_region(fig, (0.11, 0.06, 0.99, 0.96))
     # Uses the repository's direct rectangle layout engine, not GridSpec or
     # matplotlib's automatic/constrained layout.
     # - split_rows(..., hspace=...) controls the vertical gap between rows.
@@ -227,8 +227,8 @@ def main():
               loc="lower right")
     style_axes(ax, "bar", xlabel="SWD", title="Latent SWD per Cell Type")
     ax.set_xlabel("SWD", fontsize=FONT_LABEL)
-    ax.xaxis.labelpad = -1
-    ax.xaxis.set_label_coords(0.5, -0.045)
+    ax.xaxis.labelpad = 2
+    ax.xaxis.set_label_coords(0.5, -0.06)
 
     # ── Panel (b): Variance Ratio — strip + box plot ──
     ax2 = top_right.inset(left=0.02, right=0.02).add_axes(fig)
@@ -266,8 +266,8 @@ def main():
                xlabel="Variance ratio (gen/real)",
                title="Per-Type Latent Variance Ratio")
     ax2.set_xlabel("Variance ratio (gen/real)", fontsize=FONT_LABEL)
-    ax2.xaxis.labelpad = -1
-    ax2.xaxis.set_label_coords(0.5, -0.045)
+    ax2.xaxis.labelpad = 2
+    ax2.xaxis.set_label_coords(0.5, -0.06)
 
     # ── Panel (c): Per-Dimension Variance Correlation — ECDF + box ──
     ax3 = bottom_left.inset(right=0.02).add_axes(fig)
@@ -377,7 +377,7 @@ def main():
     ax4.set_title("SWD vs. Training Cell Count", fontsize=FONT_TITLE - 2, pad=0, y=0.985)
 
     fig_path = output_dir / "variance_matching_pilot.png"
-    save_with_vcd(fig, fig_path, dpi=300, layout_rect=(0.08, 0.05, 0.98, 0.96))
+    save_with_vcd(fig, fig_path, dpi=300, layout_rect=(0.08, 0.03, 0.99, 0.96))
     print(f"\n[var_pilot] Figure saved to {fig_path}")
 
     # Also save to results/figures/ with the article-delivery basename

@@ -162,7 +162,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     mantel_vals = [v["mantel_r"] for v in per_type_results.values()]
 
     fig = plt.figure(figsize=(13.8, 9.8))
-    layout = bind_figure_region(fig, (0.08, 0.08, 0.93, 0.92))
+    layout = bind_figure_region(fig, (0.08, 0.08, 0.93, 0.94))
     top_row, bottom_row = layout.split_rows([0.92, 1.08], hspace=0.30)
     top_left, top_right = top_row.split_cols(2, wspace=0.34)
     bottom_left, bottom_right = bottom_row.split_cols(2, wspace=0.34)
@@ -406,7 +406,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
                title="Preservation vs. Expression Heterogeneity")
 
     out_path = FIG_DIR / "fig20_gene_gene_correlation.png"
-    save_with_vcd(fig, out_path, dpi=300, layout_rect=(0.02, 0.04, 0.98, 0.96))
+    save_with_vcd(fig, out_path, dpi=300, layout_rect=(0.02, 0.04, 0.98, 0.97))
     plt.close(fig)
     print(f"Saved figure to {out_path}")
 

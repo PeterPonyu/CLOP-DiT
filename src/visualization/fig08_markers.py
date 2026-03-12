@@ -141,7 +141,7 @@ def plot_marker_gene_comparison(
     n_sel_types = len(selected_type_ids)
 
     fig = plt.figure(figsize=(10.8, 8.4))
-    layout = bind_figure_region(fig, (0.11, 0.10, 0.98, 0.94))
+    layout = bind_figure_region(fig, (0.11, 0.10, 0.98, 0.97))
     top_row, bottom_row = layout.split_rows(2, hspace=0.54)
     top_left, top_right = top_row.split_cols([1.0, 1.28], wspace=0.52)
     bottom_left, bottom_right = bottom_row.split_cols([1.0, 1.28], wspace=0.52)

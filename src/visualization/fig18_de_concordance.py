@@ -57,7 +57,7 @@ def plot_de_concordance_panel(
     n_contrasts = len(contrasts)
 
     fig = plt.figure(figsize=(15.8, 6.8))
-    panel_a, panel_b, panel_c = bind_figure_region(fig, (0.06, 0.14, 0.98, 0.94)).split_cols(
+    panel_a, panel_b, panel_c = bind_figure_region(fig, (0.06, 0.10, 0.98, 0.94)).split_cols(
         [1.26, 0.92, 0.98],
         gap=[0.060, 0.055],
     )

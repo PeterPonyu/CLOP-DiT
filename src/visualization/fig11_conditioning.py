@@ -63,10 +63,10 @@ def plot_panel_m(
     has_row3 = full_dim_data is not None and len(full_dim_data) > 0
     if has_row3:
         fig = plt.figure(figsize=(_fw, 11.9))
-        row_regions = bind_figure_region(fig, (0.05, 0.08, 0.97, 0.95)).split_rows([1.48, 1.02, 0.98], hspace=0.28)
+        row_regions = bind_figure_region(fig, (0.05, 0.05, 0.97, 0.95)).split_rows([1.48, 1.02, 0.98], hspace=0.28)
     else:
         fig = plt.figure(figsize=(_fw, 7.6))
-        row_regions = bind_figure_region(fig, (0.05, 0.08, 0.97, 0.95)).split_rows([1.46, 0.98], hspace=0.24)
+        row_regions = bind_figure_region(fig, (0.05, 0.05, 0.97, 0.95)).split_rows([1.46, 0.98], hspace=0.24)
     top_widths = [1.0] * n_modes
     if n_modes > 1:
         top_widths[-1] = 1.04

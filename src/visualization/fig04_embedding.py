@@ -142,7 +142,7 @@ def plot_embedding_space_merged(
     apply_style()
     n_rows = (1 if has_b else 0) + (1 if has_e else 0)
     fig = plt.figure(figsize=(14.8, 5.2 * n_rows))
-    layout = bind_figure_region(fig, (0.05, 0.07, 0.985, 0.96))
+    layout = bind_figure_region(fig, (0.05, 0.07, 0.97, 0.96))
     row_regions = layout.split_rows(n_rows, hspace=0.30)
     # suptitle removed per revision; title information moved to LaTeX caption
     row = 0

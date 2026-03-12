@@ -101,7 +101,7 @@ def plot_benchmark_panel(
     ]
 
     fig = plt.figure(figsize=(16.2, 9.6))
-    layout = bind_figure_region(fig, (0.08, 0.16, 0.96, 0.95))
+    layout = bind_figure_region(fig, (0.05, 0.10, 0.96, 0.95))
     top_row, bottom_row = layout.split_rows([1.05, 1.12], hspace=0.32)
     top_left, top_right = top_row.split_cols(2, wspace=0.44)
     bottom_left, bottom_right = bottom_row.split_cols([1.04, 0.96], wspace=0.28)
@@ -295,6 +295,6 @@ def plot_benchmark_panel(
                         ncol=min(n_methods, 4), frameon=False, columnspacing=0.8)
 
     if save:
-        path = save_with_vcd(fig, output_dir / "fig16_benchmark.png", dpi, layout_rect=(0.08, 0.16, 0.98, 0.95))
+        path = save_with_vcd(fig, output_dir / "fig16_benchmark.png", dpi, layout_rect=(0.05, 0.08, 0.98, 0.95))
         logger.info(f"Saved Fig 16 \u2192 {path}")
     return fig

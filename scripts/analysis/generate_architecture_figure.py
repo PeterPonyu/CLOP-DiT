@@ -164,10 +164,10 @@ def create_architecture_figure(output_dir=None):
         from src.utils.paths import FIG_DIR
         output_dir = Path(FIG_DIR)
     output_dir = Path(output_dir)
-    fig = plt.figure(figsize=(10.0, 3.8))
-    ax = bind_figure_region(fig, (0.03, 0.02, 0.96, 0.86)).add_axes(fig)
-    ax.set_xlim(-0.20, 7.95)
-    ax.set_ylim(-0.18, 3.15)
+    fig = plt.figure(figsize=(10.0, 3.6))
+    ax = bind_figure_region(fig, (0.01, 0.02, 0.99, 0.97)).add_axes(fig)
+    ax.set_xlim(-0.20, 7.65)
+    ax.set_ylim(-0.18, 3.18)
     ax.axis("off")
     ax.set_xticks([])
     ax.set_yticks([])
@@ -190,10 +190,13 @@ def create_architecture_figure(output_dir=None):
                   "Stage 3: Decoding",
                   C_DECODE_DARK, alpha=0.15, label_color="black")
 
-    # Panel labels (figure margin, outside the main axes content)
-    fig.text(0.05, 0.885, "(a)", ha="left", va="top", fontsize=14, fontweight="bold", color="black")
-    fig.text(0.44, 0.885, "(b)", ha="left", va="top", fontsize=14, fontweight="bold", color="black")
-    fig.text(0.70, 0.885, "(c)", ha="left", va="top", fontsize=14, fontweight="bold", color="black")
+    # Panel labels (data coordinates — track stage backgrounds regardless of bind_figure_region)
+    ax.text(-0.05, 3.10, "(a)", ha="left", va="bottom", fontsize=14, fontweight="bold", color="black",
+            clip_on=False, zorder=10)
+    ax.text(3.60, 3.10, "(b)", ha="left", va="bottom", fontsize=14, fontweight="bold", color="black",
+            clip_on=False, zorder=10)
+    ax.text(6.10, 3.10, "(c)", ha="left", va="bottom", fontsize=14, fontweight="bold", color="black",
+            clip_on=False, zorder=10)
 
     ax.text(1.68, 2.80, "train: align text and cell latents",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=2)

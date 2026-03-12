@@ -373,8 +373,8 @@ def plot_training_dynamics_combined(
         return None
 
     apply_style()
-    fig = plt.figure(figsize=(14.4, 8.2))
-    layout = bind_figure_region(fig, (0.08, 0.14, 0.955, 0.86))
+    fig = plt.figure(figsize=(14.4, 7.8))
+    layout = bind_figure_region(fig, (0.06, 0.12, 0.955, 0.94))
     top_row, bottom_row = layout.split_rows([1, 1], hspace=0.55)
     top_cols = top_row.split_cols([1.0, 1.0, 1.0, 1.2], wspace=0.42)
     bottom_cols = bottom_row.split_cols([1.0, 1.0, 1.0, 1.2], wspace=0.42)
