@@ -1,9 +1,9 @@
 """Article figure delivery — single source of truth for the 20 MDPI article figures.
 
-Verify JPEG/PDF figure pairs exist in a source directory and create symlinks
-(or copies) in the article figures directory so LaTeX can include the JPEG
-assets while keeping sibling PDFs alongside them. The manifest below is the
-canonical list; scripts and docs should reference this module.
+Verify PDF figure assets exist in a source directory and copy them
+to the article figures directory so LaTeX can include the PDF
+assets directly. The manifest below is the canonical list;
+scripts and docs should reference this module.
 
 Usage:
     python -m src.visualization.article_delivery              # verify + symlink
@@ -101,9 +101,9 @@ ARTICLE_FIGURE_PRODUCERS: List[Tuple[str, str]] = [
 ]
 
 _N_FIGURES = len(ARTICLE_FIGURE_BASENAMES)
-_ARTICLE_INCLUDE_SUFFIX = ".jpg"
-_SOURCE_REQUIRED_SUFFIXES = (".pdf", ".jpg")
-_TARGET_DELIVERY_SUFFIXES = (".jpg", ".pdf")
+_ARTICLE_INCLUDE_SUFFIX = ".pdf"
+_SOURCE_REQUIRED_SUFFIXES = (".pdf",)
+_TARGET_DELIVERY_SUFFIXES = (".pdf",)
 _PREVIEW_SUFFIXES = {".jpg"}
 _SOURCE_SUFFIXES = {".pdf", ".jpg", ".jpeg", ".png"}
 _TARGET_SUFFIXES = {".pdf", ".jpg", ".jpeg", ".png"}
@@ -176,23 +176,23 @@ def deliver_figures(
     source_dir: Path,
     target_dir: Path,
     *,
-    symlink: bool = True,
+    symlink: bool = False,
     check_only: bool = False,
     cleanup: bool = False,
     keep_preview: bool = True,
 ) -> bool:
-    """Verify all article figure assets exist in source_dir and optionally link/copy to target_dir.
+    """Verify all article figure PDFs exist in source_dir and optionally copy to target_dir.
 
     Parameters
     ----------
-    source_dir : directory containing the generated figure pairs (e.g. results/figures)
+    source_dir : directory containing the generated figures (e.g. results/figures)
     target_dir : directory for the article (e.g. articles/figures)
     symlink : if True, create symlinks; if False, copy files (ignored when check_only=True)
     check_only : if True, only verify presence in source_dir; do not modify target_dir
 
     Returns
     -------
-    True if all required JPEG/PDF pairs are present (and, when not check_only,
+    True if all required PDFs are present (and, when not check_only,
     successfully linked/copied).
     """
     source_dir = Path(source_dir).resolve()
@@ -249,17 +249,18 @@ def _default_dirs():
 def main() -> int:
     default_source, default_target = _default_dirs()
     parser = argparse.ArgumentParser(
-        description="Verify article JPEG/PDF figure pairs and create symlinks (or copies) in the article figures directory."
+        description="Verify article PDF figures and copy them to the article figures directory."
     )
     parser.add_argument(
         "--check-only",
         action="store_true",
-        help=f"Only verify all {_N_FIGURES} JPEG/PDF figure pairs exist in source dir; do not create symlinks/copies",
+        help=f"Only verify all {_N_FIGURES} PDF figures exist in source dir; do not copy",
     )
     parser.add_argument(
         "--copy",
         action="store_true",
-        help="Copy files instead of creating symlinks (default: symlink)",
+        default=True,
+        help="Copy files instead of creating symlinks (default: copy)",
     )
     parser.add_argument(
         "--no-cleanup",
@@ -284,15 +285,15 @@ def main() -> int:
     target = args.target_dir if args.target_dir is not None else default_target
 
     if args.check_only:
-        print(f"Checking {_N_FIGURES} article figure pairs in {source}...")
-        ok = deliver_figures(source, target, symlink=True, check_only=True)
+        print(f"Checking {_N_FIGURES} article figure PDFs in {source}...")
+        ok = deliver_figures(source, target, symlink=False, check_only=True)
         if ok:
-            print(f"  All {_N_FIGURES} JPEG/PDF figure pairs present.")
+            print(f"  All {_N_FIGURES} PDF figures present.")
         else:
             print("Run 'bash scripts/regenerate_report.sh' to generate them.", file=sys.stderr)
         return 0 if ok else 1
 
-    print(f"Checking {_N_FIGURES} article figure pairs in {source}...")
+    print(f"Checking {_N_FIGURES} article figure PDFs in {source}...")
     ok = deliver_figures(
         source,
         target,
@@ -303,12 +304,12 @@ def main() -> int:
     if not ok:
         print("Run 'bash scripts/regenerate_report.sh' to generate them.", file=sys.stderr)
         return 1
-    print(f"  All {_N_FIGURES} JPEG/PDF figure pairs present.")
+    print(f"  All {_N_FIGURES} PDF figures present.")
     mode = "copied" if args.copy else "symlinked"
-    print(f"  {_N_FIGURES} figure pairs {mode} in {target}.")
+    print(f"  {_N_FIGURES} PDF figures {mode} to {target}.")
     print("")
     print(
-        f"All {_N_FIGURES} article figure pairs verified and {'copied' if args.copy else 'symlinked'}; "
+        f"All {_N_FIGURES} article PDF figures verified and {mode}; "
         f"LaTeX should include the {_ARTICLE_INCLUDE_SUFFIX} assets."
     )
     return 0

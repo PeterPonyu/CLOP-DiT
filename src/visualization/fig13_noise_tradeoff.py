@@ -36,7 +36,7 @@ def plot_panel_l(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     apply_style()
-    fig = plt.figure(figsize=(8.2, 5.0))
+    fig = plt.figure(figsize=(8.2, 4.5))
     ax1 = bind_figure_region(fig, (0.10, 0.22, 0.92, 0.95)).add_axes(fig)
     # Title moved to LaTeX caption
     # set_figure_suptitle(fig, "Noise-Scale Trade-off (CFG=1.5)", fontsize=11)

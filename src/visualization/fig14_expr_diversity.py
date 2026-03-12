@@ -55,7 +55,7 @@ def plot_expression_diversity_panel(
     apply_style()
 
     o = t6_data["overall"]
-    fig = plt.figure(figsize=(7.6, 4.9))
+    fig = plt.figure(figsize=(7.6, 4.3))
     left_rect, right_rect = bind_figure_region(fig, (0.08, 0.10, 0.98, 0.90)).split_cols(2, wspace=0.38)
     axes = [left_rect.add_axes(fig), right_rect.add_axes(fig)]
     add_panel_label(axes[0], chr(ord('a') + label_offset), x=-0.04, y=1.05)

@@ -473,11 +473,11 @@ def save_vcd_report(vcd: dict):
 
 
 def run_article_delivery():
-    """Create symlinks in articles/figures/ and verify submission package."""
+    """Copy PDF figures to articles/figures/ and verify submission package."""
     log.info("── Running article_delivery.py ──")
     import subprocess, sys
     result = subprocess.run(
-        [sys.executable, str(REPO / "src" / "visualization" / "article_delivery.py")],
+        [sys.executable, str(REPO / "src" / "visualization" / "article_delivery.py"), "--copy"],
         capture_output=True, text=True, cwd=str(REPO)
     )
     for line in result.stdout.splitlines():

@@ -138,8 +138,8 @@ def draw_stage_bg(ax, xy, w, h, label, color, alpha=0.10, label_color=None):
         (x, y), w, h,
         boxstyle="round,pad=0.04",
         facecolor=color,
-        edgecolor=color,
-        linewidth=1.0,
+        edgecolor="none",
+        linewidth=0,
         alpha=alpha,
         zorder=0,
     )
