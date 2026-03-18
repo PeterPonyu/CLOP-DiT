@@ -131,7 +131,7 @@ def plot_panel_m(
     ax_b2 = bottom_regions[1].add_axes(fig)
     add_panel_label(ax_b2, 'c', x=-0.18, y=1.03)
     ax_b3 = bottom_regions[2].add_axes(fig)
-    add_panel_label(ax_b3, 'd', x=-0.10, y=1.06)
+    add_panel_label(ax_b3, 'd', x=-0.14, y=1.05)
     _adjust_axes_rect(ax_b1, width_scale=0.90)
     _adjust_axes_rect(ax_b3, dx=ax_b3.get_position().width * 0.08, width_scale=0.92)
 
@@ -210,6 +210,7 @@ def plot_panel_m(
         ax_b3.tick_params(axis="x", labelrotation=0, labelsize=FONT_TICK)
         ax_b3.set_ylabel("Per-type centroid shift", fontsize=FONT_LABEL)
         ax_b3.set_title("Shift Distribution", fontsize=FONT_TITLE, y=0.92, pad=0)
+        ax_b3.yaxis.set_major_locator(MaxNLocator(nbins=4, prune='upper'))
     else:
         ax_b3.text(0.5, 0.5, "No shift distribution data", ha="center", va="center", transform=ax_b3.transAxes)
         ax_b3.set_title("Shift Distribution", fontsize=FONT_TITLE)

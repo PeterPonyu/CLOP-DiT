@@ -373,8 +373,8 @@ def plot_training_dynamics_combined(
         return None
 
     apply_style()
-    fig = plt.figure(figsize=(14.4, 7.8))
-    layout = bind_figure_region(fig, (0.06, 0.12, 0.955, 0.94))
+    fig = plt.figure(figsize=(14.4, 8.2))
+    layout = bind_figure_region(fig, (0.06, 0.10, 0.955, 0.90))
     top_row, bottom_row = layout.split_rows([1, 1], hspace=0.55)
     top_cols = top_row.split_cols([1.0, 1.0, 1.0, 1.2], wspace=0.42)
     bottom_cols = bottom_row.split_cols([1.0, 1.0, 1.0, 1.2], wspace=0.42)
@@ -397,7 +397,8 @@ def plot_training_dynamics_combined(
         ax_a1.legend(**LOSS_LEGEND_KW)
         ax_a1.set_xlim(0, max(epochs) * 1.08)
         ax_a1.locator_params(axis='x', nbins=3)
-        ax_a1.yaxis.set_major_locator(MaxNLocator(nbins=4, prune='both'))
+        ax_a1.yaxis.set_major_locator(MaxNLocator(nbins=3, prune='both'))
+        ax_a1.tick_params(axis='y', which='both', pad=2)
         _add_training_phase_bands(ax_a1, int(max(epochs)))
         add_panel_label(ax_a1, 'a', x=-0.12, y=1.08)
 

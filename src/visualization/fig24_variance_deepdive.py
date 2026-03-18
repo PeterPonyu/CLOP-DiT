@@ -112,7 +112,9 @@ def plot_variance_deepdive(
     ax_a.text(0.05, 0.92, f"r = {r:.3f}\nn = {valid.sum()} genes",
               transform=ax_a.transAxes, fontsize=FONT_LEGEND_DENSE,
               va="top", color=COLORS["annotation_dark"])
-    add_panel_label(ax_a, "a", x=-0.12, y=1.06)
+    ax_a.locator_params(axis='x', nbins=4)
+    ax_a.locator_params(axis='y', nbins=4)
+    add_panel_label(ax_a, "a", x=-0.14, y=1.08)
 
     # ── Panel (b): Histogram of variance ratios ──
     ax_b = cols[1].add_axes(fig)
@@ -157,12 +159,13 @@ def plot_variance_deepdive(
               color=COLORS["generated"], alpha=0.85)
 
     ax_c.set_yticks(y_pos)
-    ax_c.set_yticklabels(labels, fontsize=FONT_LEGEND_DENSE - 1)
+    ax_c.set_yticklabels(labels, fontsize=FONT_LEGEND_DENSE - 2)
     ax_c.invert_yaxis()
     ax_c.set_xlabel("Per-gene variance", fontsize=FONT_LABEL)
     ax_c.set_title(f"Top-{top_n} Under-dispersed Genes", fontsize=FONT_TITLE)
     ax_c.legend(fontsize=FONT_LEGEND_DENSE, loc="lower right")
-    add_panel_label(ax_c, "c", x=-0.18, y=1.06)
+    ax_c.locator_params(axis='x', nbins=4)
+    add_panel_label(ax_c, "c", x=-0.20, y=1.08)
 
     set_figure_suptitle(fig, "Per-Gene Variance Analysis: Real vs Generated", y=0.98)
 

@@ -76,9 +76,9 @@ def plot_ood_showcase(
         return None
 
     # Figure with two panels
-    fig = plt.figure(figsize=(14.0, 6.0))
-    layout = bind_figure_region(fig, (0.06, 0.10, 0.96, 0.90))
-    left, right = layout.split_cols([1, 1], wspace=0.35)
+    fig = plt.figure(figsize=(16.0, 6.0))
+    layout = bind_figure_region(fig, (0.04, 0.08, 0.97, 0.88))
+    left, right = layout.split_cols([1, 1], wspace=0.45)
 
     # ── Panel (a): Novel cell types ──
     ax_a = left.add_axes(fig)
@@ -95,8 +95,8 @@ def plot_ood_showcase(
 
     for i, (type_name, info) in enumerate(novel_types.items()):
         prompt = info.get("prompt", "")
-        # Truncate prompt for display
-        excerpt = prompt[:80] + "…" if len(prompt) > 80 else prompt
+        # Truncate prompt for display (keep short to avoid cross-panel spillover)
+        excerpt = prompt[:55] + "\u2026" if len(prompt) > 55 else prompt
 
         color = COLORS["real"]
         ax_a.text(0.0, i, type_name, fontsize=FONT_LABEL - 1, va="center",
@@ -128,7 +128,7 @@ def plot_ood_showcase(
 
     for i, (prompt_id, info) in enumerate(free_form.items()):
         ff_prompt = info.get("free_form_prompt", "")
-        excerpt = ff_prompt[:70] + "…" if len(ff_prompt) > 70 else ff_prompt
+        excerpt = ff_prompt[:50] + "…" if len(ff_prompt) > 50 else ff_prompt
 
         display_id = prompt_id.replace("_", " ")
         ax_b.text(0.0, i, display_id, fontsize=FONT_LABEL - 1, va="center",

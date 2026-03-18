@@ -163,8 +163,8 @@ def plot_ablation_heatmap(
                    markersize=7, label=cat.capitalize())
         for cat, c in seen.items()
     ]
-    ax.legend(handles=legend_handles, loc="upper left", bbox_to_anchor=(0, -0.12),
-              ncol=min(len(seen), 4), fontsize=FONT_LEGEND_DENSE, frameon=False)
+    ax.legend(handles=legend_handles, loc="lower left", bbox_to_anchor=(0, 0.01),
+              ncol=min(len(seen), 3), fontsize=FONT_LEGEND_DENSE, frameon=False)
 
     cbar = fig.colorbar(im, ax=ax, shrink=0.6, pad=0.02)
     cbar.set_label("Normalized score (higher = better)", fontsize=FONT_LABEL - 1)
