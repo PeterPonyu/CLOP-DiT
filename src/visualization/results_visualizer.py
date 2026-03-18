@@ -767,6 +767,27 @@ class ResultsVisualizer:
         # ── Merged: L+K Diversity & Trade-off ──
         # NOTE: Legacy composite not in article manifest — skipped.
 
+        # ── Part V: Extended analyses (Figs 21–24) ──
+        fig_abl = self.plot_ablation_heatmap()
+        if fig_abl:
+            saved.append(self.output / "fig21_ablation_heatmap.pdf")
+            plt.close(fig_abl)
+
+        fig_ms = self.plot_multi_seed_robustness()
+        if fig_ms:
+            saved.append(self.output / "fig22_multi_seed_robustness.pdf")
+            plt.close(fig_ms)
+
+        fig_ood = self.plot_ood_showcase()
+        if fig_ood:
+            saved.append(self.output / "fig23_ood_showcase.pdf")
+            plt.close(fig_ood)
+
+        fig_var = self.plot_variance_deepdive()
+        if fig_var:
+            saved.append(self.output / "fig24_variance_deepdive.pdf")
+            plt.close(fig_var)
+
         # ── Combine into multi-page PDF ──
         if saved:
             from .report import combine_panels_pdf

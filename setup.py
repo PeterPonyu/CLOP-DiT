@@ -25,6 +25,7 @@ setup(
         "seaborn>=0.12.0",
         "umap-learn>=0.5.0",
         "Pillow>=9.0.0",
+        "torchdiffeq>=0.2.3",
         "pyyaml>=6.0",
         "tqdm>=4.65.0",
     ],

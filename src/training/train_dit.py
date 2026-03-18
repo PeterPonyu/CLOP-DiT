@@ -456,6 +456,12 @@ class DiTTrainer:
         -------
         trainer : DiTTrainer
         """
+        from .reproducibility import seed_everything
+        seed_everything(
+            seed=config.get("seed", 42),
+            deterministic=config.get("deterministic", False),
+        )
+
         model = DiT1D(
             latent_dim=config.get("latent_dim", 512),
             hidden_dim=config.get("hidden_dim", 384),

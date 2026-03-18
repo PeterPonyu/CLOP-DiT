@@ -26,29 +26,31 @@ import numpy as np
 from .direct_layout import bind_figure_region
 from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
 from .style import COLORS, abbreviate_cell_type, add_colorbar_safe, add_panel_label, save_with_vcd
+from src.utils.paths import load_marker_genes
 
 logger = logging.getLogger(__name__)
 
+# ──────────────────────────────────────────────────────────────
+# Module-level constants (loaded from configs/marker_genes.yaml)
+# ──────────────────────────────────────────────────────────────
 
-# ──────────────────────────────────────────────────────────────
-# Module-level constants (biologically meaningful marker panels)
-# ──────────────────────────────────────────────────────────────
+_marker_cfg = load_marker_genes()
 
 # Biologically meaningful markers covering major lineages
-MARKER_PANEL_GENES: Dict[str, List[str]] = {
+MARKER_PANEL_GENES: Dict[str, List[str]] = _marker_cfg.get("marker_panel_genes", {
     "CD8+ T": ["CD8A", "GZMB"],
     "Myeloid": ["CD68", "CD163"],
     "Epithelial": ["EPCAM", "KRT8"],
     "Stromal": ["COL1A1", "COL1A2"],
-}
+})
 
 # Representative types to show per-type breakdown
-MARKER_PANEL_TYPES: List[str] = [
+MARKER_PANEL_TYPES: List[str] = _marker_cfg.get("marker_panel_types", [
     "CD8+ cytotoxic T lymphocytes",
     "Tumor-associated macrophages",
     "Epithelial tumor cells",
     "Fibroblasts and mesenchymal stromal cell",
-]
+])
 
 
 # ──────────────────────────────────────────────────────────────

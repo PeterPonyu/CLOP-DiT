@@ -24,8 +24,12 @@ from matplotlib.patches import ConnectionPatch
 from .direct_layout import bind_figure_region
 from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
 from .style import COLORS, add_colorbar_safe, add_panel_label, quality_color, save_with_vcd, set_scientific_tickformat
+from src.utils.paths import load_thresholds
 
 logger = logging.getLogger(__name__)
+
+_viz_thresh = load_thresholds().get("visualization", {})
+_RATIO_QUALITY_BANDS = tuple(_viz_thresh.get("ratio_quality_bands", [0.9, 0.7]))
 
 
 # ──────────────────────────────────────────────────────────────
@@ -253,8 +257,8 @@ def plot_expression_analysis(
     ratios_show = clipped_ratio[top_diff_idx]
     names_show = [gene_names[i] if i < len(gene_names) else f"G{i}"
                   for i in top_diff_idx]
-    # Std ratio thresholds (0.9, 1.1) good band; (0.7, 0.9)/(1.1, 1.3) warn
-    colors_i4 = [quality_color(min(r, 1 / (r + 1e-8)), (0.9, 0.7)) for r in ratios_show]
+    # Std ratio quality bands (from configs/thresholds.yaml → visualization.ratio_quality_bands)
+    colors_i4 = [quality_color(min(r, 1 / (r + 1e-8)), _RATIO_QUALITY_BANDS) for r in ratios_show]
     ax4.barh(range(n_show), ratios_show, color=colors_i4, height=0.7,
              edgecolor="white", linewidth=0.3)
     ax4.axvline(x=1.0, color="#333", linestyle="-", linewidth=1.5)

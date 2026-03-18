@@ -26,9 +26,12 @@ from .style import (
     quality_color, save_with_vcd, set_adaptive_ytick_labels, style_axes,
 )
 from .explicit_positioning import add_axes_next_to
-from src.utils.paths import FIG_DIR
+from src.utils.paths import FIG_DIR, load_thresholds
 
 logger = logging.getLogger(__name__)
+
+_viz_thresh = load_thresholds().get("visualization", {})
+_COSINE_QUALITY_BANDS = tuple(_viz_thresh.get("cosine_quality_bands", [0.9, 0.7]))
 
 
 def plot_per_type_generation(
@@ -120,13 +123,13 @@ def plot_per_type_generation(
     sorted_cos = [cosines[i] for i in sorted_idx]
     sorted_names_cos = [short_names[i] for i in sorted_idx]
     sorted_type_ids = [type_ids[i] for i in sorted_idx]
-    # Thresholds (0.9, 0.7): centroid cosine quality bands per FIGURE_PRESENTATION_POLICY
+    # Centroid cosine quality bands (from configs/thresholds.yaml → visualization.cosine_quality_bands)
     colors = []
     for v, t_id in zip(sorted_cos, sorted_type_ids):
         if t_id is not None and int(t_id) in collapsed_type_ids:
             colors.append(COLORS["bad"])
         else:
-            colors.append(quality_color(v, (0.9, 0.7)))
+            colors.append(quality_color(v, _COSINE_QUALITY_BANDS))
     ax.barh(range(len(sorted_cos)), sorted_cos, color=colors, height=0.8)
     set_adaptive_ytick_labels(ax, sorted_names_cos, max_visible=25, fontsize=FONT_HEATMAP_CELL)
     ax.set_xlabel("Centroid Cosine Similarity")

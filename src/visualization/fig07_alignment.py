@@ -32,7 +32,10 @@ from .style import (
     quality_color, save_with_vcd, set_adaptive_ytick_labels, style_axes,
 )
 from .explicit_positioning import add_axes_next_to
-from src.utils.paths import FIG_DIR
+from src.utils.paths import FIG_DIR, load_thresholds
+
+_viz_thresh = load_thresholds().get("visualization", {})
+_COSINE_QUALITY_BANDS = tuple(_viz_thresh.get("cosine_quality_bands", [0.9, 0.7]))
 
 logger = logging.getLogger(__name__)
 
@@ -254,8 +257,8 @@ def plot_text_cell_heatmap(
     ax2.axvspan(0.7, 0.9, color=COLORS["warn"], alpha=0.06, zorder=0)
     ax2.axvspan(0.0, 0.7, color=COLORS["bad"], alpha=0.06, zorder=0)
 
-    # Thresholds (0.9, 0.7): alignment quality bands per FIGURE_PRESENTATION_POLICY
-    color_map = [quality_color(v, (0.9, 0.7)) for v in d_asc]
+    # Alignment quality bands (from configs/thresholds.yaml → visualization.cosine_quality_bands)
+    color_map = [quality_color(v, _COSINE_QUALITY_BANDS) for v in d_asc]
     ax2.barh(range(n_types), d_asc, color=color_map, height=0.8,
              edgecolor="white", linewidth=0.3)
     set_adaptive_ytick_labels(ax2, labels_asc, max_visible=18, fontsize=10)

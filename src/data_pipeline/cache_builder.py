@@ -230,6 +230,7 @@ class LatentCacheBuilder:
         subcluster_metadata_file: Optional[Union[str, Path]] = None,
         deduplicate: bool = True,
         use_variants: bool = False,
+        incremental: bool = False,
     ) -> Dict:
         """Build the complete latent cache from processed h5ad files and metadata.
 
@@ -254,12 +255,23 @@ class LatentCacheBuilder:
         use_variants : bool
             If True and subcluster_metadata has 'text_variants', encode all
             variants and store in text_variant_embeddings_unique.npy.
+        incremental : bool
+            If True, skip h5ad files that were already processed in a previous
+            build (detected via cache_dir/processed_datasets.json). New datasets
+            are appended to the existing cache.
 
         Returns
         -------
         manifest : dict
             Cache statistics.
         """
+        # ── Incremental mode: load previous state ──────────────────────────
+        processed_file = self.cache_dir / "processed_datasets.json"
+        prev_processed: Dict[str, float] = {}
+        if incremental and processed_file.exists():
+            with open(processed_file) as f:
+                prev_processed = json.load(f)
+            logger.info(f"Incremental mode: {len(prev_processed)} datasets already cached")
         # Load structured metadata
         with open(metadata_file) as f:
             metadata = json.load(f)
@@ -285,6 +297,13 @@ class LatentCacheBuilder:
         for h5ad_path in h5ad_files:
             h5ad_path = Path(h5ad_path)
             dataset_id = h5ad_path.stem.replace("_processed", "")
+
+            # ── Incremental skip: if file hasn't changed, reuse cached result ──
+            if incremental and dataset_id in prev_processed:
+                file_mtime = h5ad_path.stat().st_mtime
+                if file_mtime <= prev_processed[dataset_id]:
+                    logger.info(f"  Skipping {dataset_id} (unchanged since last build)")
+                    continue
 
             logger.info(f"Processing {dataset_id}...")
 
@@ -388,6 +407,9 @@ class LatentCacheBuilder:
             all_cell_emb.append(cell_emb)
             all_text_emb.append(text_emb)
             all_sample_ids.append(sample_ids)
+
+            # Track processing time for incremental mode
+            prev_processed[dataset_id] = h5ad_path.stat().st_mtime
 
             logger.info(f"  {dataset_id}: {cell_emb.shape[0]} cells, text='{text_desc[:60]}...'")
 
@@ -493,6 +515,10 @@ class LatentCacheBuilder:
 
         with open(self.cache_dir / "manifest.json", "w") as f:
             json.dump(manifest, f, indent=2)
+
+        # Save incremental state for future builds
+        with open(processed_file, "w") as f:
+            json.dump(prev_processed, f, indent=2)
 
         logger.info(f"Cache built: {manifest}")
         return manifest

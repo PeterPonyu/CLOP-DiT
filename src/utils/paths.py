@@ -116,3 +116,24 @@ def load_thresholds() -> dict:
     else:
         _thresholds_cache = {}
     return _thresholds_cache
+
+
+_marker_genes_cache = None
+
+def load_marker_genes():
+    """Load marker gene panel configuration from configs/marker_genes.yaml.
+
+    Returns a dict with keys 'marker_panel_genes' and 'marker_panel_types'.
+    Falls back to empty dicts if the config file is missing.
+    """
+    global _marker_genes_cache
+    if _marker_genes_cache is not None:
+        return _marker_genes_cache
+    marker_path = CONFIG_DIR / "marker_genes.yaml"
+    if marker_path.exists():
+        import yaml
+        with open(marker_path) as f:
+            _marker_genes_cache = yaml.safe_load(f) or {}
+    else:
+        _marker_genes_cache = {}
+    return _marker_genes_cache

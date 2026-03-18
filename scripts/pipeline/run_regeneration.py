@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-run_regeneration.py — Regenerate all 20 article figures from cached JSON results,
+run_regeneration.py — Regenerate all 24 article figures from cached JSON results,
 run VCD on every output, refresh symlinks, and optionally rebuild the LaTeX PDF.
 
 Usage:
@@ -513,7 +513,7 @@ def run_latex_build():
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description="Regenerate all 20 article figures + VCD + optional PDF rebuild")
+    parser = argparse.ArgumentParser(description="Regenerate all 24 article figures + VCD + optional PDF rebuild")
     parser.add_argument("--no-vcd",    action="store_true", help="Skip live VCD during generation and final VCD reporting")
     parser.add_argument("--skip-arch", action="store_true", help="Skip architecture figure (Fig 1)")
     parser.add_argument("--no-delivery", action="store_true", help="Skip article_delivery (symlinks)")
@@ -524,7 +524,7 @@ def main():
     vcd_enabled = (not args.no_vcd) and _env_flag("CLOPDIT_ENABLE_VCD", True)
     os.environ["CLOPDIT_ENABLE_VCD"] = "1" if vcd_enabled else "0"
     log.info("=" * 70)
-    log.info("CLOP-DiT Figure Regeneration Pipeline (20 figures) — %s", time.strftime("%Y-%m-%d"))
+    log.info("CLOP-DiT Figure Regeneration Pipeline (24 figures) — %s", time.strftime("%Y-%m-%d"))
     log.info("=" * 70)
     log.info("Live VCD during generation: %s", "enabled" if vcd_enabled else "disabled")
     FIG_DIR.mkdir(parents=True, exist_ok=True)

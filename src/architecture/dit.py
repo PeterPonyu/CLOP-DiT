@@ -24,6 +24,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.utils.checkpoint import checkpoint as torch_checkpoint
 from typing import Optional, Tuple
 
 
@@ -367,6 +368,7 @@ class DiT1D(nn.Module):
         cond_drop_prob: float = 0.1,
         attn_drop: float = 0.0,
         proj_drop: float = 0.1,
+        gradient_checkpointing: bool = False,
     ):
         super().__init__()
         assert latent_dim % num_tokens == 0, \
@@ -376,6 +378,7 @@ class DiT1D(nn.Module):
         self.hidden_dim = hidden_dim
         self.num_tokens = num_tokens
         self.token_dim = latent_dim // num_tokens
+        self.gradient_checkpointing = gradient_checkpointing
 
         # --- Input projection: token_dim → hidden_dim ---
         self.input_proj = nn.Linear(self.token_dim, hidden_dim)
@@ -447,7 +450,10 @@ class DiT1D(nn.Module):
 
         # Transformer blocks
         for block in self.blocks:
-            x = block(x, combined_cond)
+            if self.gradient_checkpointing and self.training:
+                x = torch_checkpoint(block, x, combined_cond, use_reentrant=False)
+            else:
+                x = block(x, combined_cond)
 
         # Final projection: (B, num_tokens, token_dim)
         x = self.final_layer(x, combined_cond)

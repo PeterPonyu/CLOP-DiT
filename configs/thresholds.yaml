@@ -43,3 +43,12 @@ generation:
 visualization:
   wcag_min_contrast_ratio: 4.5   # WCAG AA contrast ratio minimum
   vcd_overlap_iou_threshold: 0.1 # IoU threshold for text overlap detection
+
+  # Quality-color band thresholds for per-type bar charts
+  # quality_color(value, (high, low)): green if v >= high, yellow if v >= low, red otherwise
+  cosine_quality_bands: [0.9, 0.7]        # Fig 6/7: centroid cosine quality bands
+  diversity_ratio_bands: [0.5, 0.8, 1.2]  # Fig 12: collapse / warn / good / over-diverse
+  memorization_threshold: 0.01            # Fig 12: nearest-neighbour cosine distance floor
+  expression_corr_bands: [0.9999, 0.999]  # Fig 9: per-type expression correlation bands
+  downstream_bands: [0.3, 0.15]           # Fig 17: downstream metric quality bands
+  ratio_quality_bands: [0.9, 0.7]         # Fig 10: mean-expression ratio quality bands

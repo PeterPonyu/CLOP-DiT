@@ -1,0 +1,106 @@
+{
+  "CD8+ T cells": [
+    {
+      "variant_type": "original",
+      "text": "CD8+ cytotoxic T lymphocytes from human lung adenocarcinoma tumor microenvironment. Tumor-infiltrating CD8+ T cells expressing cytotoxic effector molecules."
+    },
+    {
+      "variant_type": "context_shuffled",
+      "text": "Tumor-infiltrating CD8+ T cells expressing cytotoxic effector molecules. CD8+ cytotoxic T lymphocytes from human lung adenocarcinoma tumor microenvironment."
+    },
+    {
+      "variant_type": "marker_dropped",
+      "text": "Tumor-infiltrating CD8+ T cells expressing cytotoxic effector molecules."
+    },
+    {
+      "variant_type": "concise",
+      "text": "CD8+ cytotoxic T lymphocytes from human lung adenocarcinoma tumor microenvironment."
+    },
+    {
+      "variant_type": "synonym_replaced",
+      "text": "CD8+ cell-killing T lymphocytes from human lung adenocarcinoma tumor microenvironment. Tumor-infiltrating CD8+ T cells positive for cytotoxic effector molecules."
+    },
+    {
+      "variant_type": "tissue_swapped",
+      "text": "CD8+ cytotoxic T lymphocytes from human pancreatic tissue tumor microenvironment. Tumor-infiltrating CD8+ T cells expressing cytotoxic effector molecules."
+    }
+  ],
+  "Macrophages": [
+    {
+      "variant_type": "original",
+      "text": "Tumor-associated macrophages from human lung adenocarcinoma. Myeloid macrophage populations in the cancer microenvironment."
+    },
+    {
+      "variant_type": "context_shuffled",
+      "text": "Myeloid macrophage populations in the cancer microenvironment. Tumor-associated macrophages from human lung adenocarcinoma."
+    },
+    {
+      "variant_type": "marker_dropped",
+      "text": "Myeloid macrophage populations in the cancer microenvironment."
+    },
+    {
+      "variant_type": "concise",
+      "text": "Tumor-associated macrophages from human lung adenocarcinoma."
+    },
+    {
+      "variant_type": "synonym_replaced",
+      "text": "Tumor-associated tissue macrophages from human lung adenocarcinoma. Myeloid macrophage populations in the cancer microenvironment."
+    },
+    {
+      "variant_type": "tissue_swapped",
+      "text": "Tumor-associated macrophages from mouse lung tissue. Myeloid macrophage populations in the cancer microenvironment."
+    }
+  ],
+  "Epithelial cells": [
+    {
+      "variant_type": "original",
+      "text": "Malignant epithelial cells from human lung adenocarcinoma. Cancer cells of epithelial origin with tumor-associated expression programs."
+    },
+    {
+      "variant_type": "context_shuffled",
+      "text": "Cancer cells of epithelial origin with tumor-associated expression programs. Malignant epithelial cells from human lung adenocarcinoma."
+    },
+    {
+      "variant_type": "marker_dropped",
+      "text": "Cancer cells of epithelial origin with tumor-associated expression programs."
+    },
+    {
+      "variant_type": "concise",
+      "text": "Malignant epithelial cells from human lung adenocarcinoma."
+    },
+    {
+      "variant_type": "synonym_replaced",
+      "text": "Malignant epithelial populations from human lung adenocarcinoma. Cancer cells of epithelial origin with tumor-associated expression programs."
+    },
+    {
+      "variant_type": "tissue_swapped",
+      "text": "Malignant epithelial cells from human peripheral blood. Cancer cells of epithelial origin with tumor-associated expression programs."
+    }
+  ],
+  "NK cells": [
+    {
+      "variant_type": "original",
+      "text": "Natural killer cells infiltrating human lung adenocarcinoma. Innate lymphoid NK cells with cytotoxic activity in the tumor microenvironment."
+    },
+    {
+      "variant_type": "context_shuffled",
+      "text": "Innate lymphoid NK cells with cytotoxic activity in the tumor microenvironment. Natural killer cells infiltrating human lung adenocarcinoma."
+    },
+    {
+      "variant_type": "marker_dropped",
+      "text": "Innate lymphoid NK cells with cytotoxic activity in the tumor microenvironment."
+    },
+    {
+      "variant_type": "concise",
+      "text": "Natural killer cells infiltrating human lung adenocarcinoma."
+    },
+    {
+      "variant_type": "synonym_replaced",
+      "text": "Natural killer cells infiltrating human lung adenocarcinoma. Innate lymphoid NK cells with cytolytic activity in the tumour niche."
+    },
+    {
+      "variant_type": "tissue_swapped",
+      "text": "Natural killer cells infiltrating human kidney tissue. Innate lymphoid NK cells with cytotoxic activity in the tumor microenvironment."
+    }
+  ]
+}

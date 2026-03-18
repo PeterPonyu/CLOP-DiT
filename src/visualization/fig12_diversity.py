@@ -18,8 +18,13 @@ from .direct_layout import bind_figure_region
 from .explicit_positioning import add_shared_legend_axes
 from .style import COLORS, FONT_DENSE_YTICK, apply_style, save_with_vcd, add_panel_label, abbreviate_cell_type
 from .fig14_expr_diversity import plot_expression_diversity_panel
+from src.utils.paths import load_thresholds
 
 logger = logging.getLogger(__name__)
+
+_viz_thresh = load_thresholds().get("visualization", {})
+_DIVERSITY_BANDS = _viz_thresh.get("diversity_ratio_bands", [0.5, 0.8, 1.2])
+_MEMORIZATION_THRESH = _viz_thresh.get("memorization_threshold", 0.01)
 
 
 def plot_diagnostics(
@@ -85,7 +90,7 @@ def plot_diagnostics(
         sorted_names = [abbreviate_cell_type(names[i], 14) for i in sorted_idx]
         sorted_divs = [div_ratios[i] for i in sorted_idx]
 
-        colors = [COLORS["bad"] if d < 0.5 else COLORS["warn"] if d < 0.8 else COLORS["good"] if d < 1.2 else COLORS["real"]
+        colors = [COLORS["bad"] if d < _DIVERSITY_BANDS[0] else COLORS["warn"] if d < _DIVERSITY_BANDS[1] else COLORS["good"] if d < _DIVERSITY_BANDS[2] else COLORS["real"]
                   for d in sorted_divs]
         ax.barh(range(len(sorted_divs)), sorted_divs, color=colors, height=0.8)
         ax.set_yticks(range(len(sorted_divs)))
@@ -93,7 +98,7 @@ def plot_diagnostics(
         _ytl_j1 = [n if i % _step_j1 == 0 else "" for i, n in enumerate(sorted_names)]
         ax.set_yticklabels(_ytl_j1, fontsize=8)
         ax.axvline(x=1.0, color="black", ls="--", lw=1, alpha=0.5, label="ratio=1 (equal)")
-        ax.axvline(x=0.5, color="red", ls=":", lw=1, alpha=0.5, label="ratio=0.5 (collapse)")
+        ax.axvline(x=_DIVERSITY_BANDS[0], color="red", ls=":", lw=1, alpha=0.5, label=f"ratio={_DIVERSITY_BANDS[0]} (collapse)")
         ax.set_xlabel("Diversity Ratio (gen / real)")
         summary = all_results["test1_intratype_diversity"]["summary"]
         ax.set_title("Intra-Type Diversity Ratio")
@@ -110,7 +115,7 @@ def plot_diagnostics(
         ax.bar(labels, vals, color=[COLORS["bad"], COLORS["warn"], COLORS["good"], COLORS["real"], COLORS["warn"], COLORS["bad"]],
                alpha=0.8, edgecolor="white")
         ax.set_ylabel("Cosine Distance to Nearest Real Cell")
-        ax.axhline(y=0.01, color="red", ls=":", alpha=0.5, label="memorization threshold")
+        ax.axhline(y=_MEMORIZATION_THRESH, color="red", ls=":", alpha=0.5, label="memorization threshold")
         ax.set_title("Nearest-Neighbour Distance")
     else:
         ax.set_title("Nearest-Neighbour Distance")

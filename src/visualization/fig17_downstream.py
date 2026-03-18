@@ -40,6 +40,10 @@ from .style import (
     style_axes,
 )
 from ._plot_helpers import plot_umap_overlay, plot_confusion_matrix, plot_roc_curve
+from src.utils.paths import load_thresholds
+
+_viz_thresh = load_thresholds().get("visualization", {})
+_DOWNSTREAM_BANDS = tuple(_viz_thresh.get("downstream_bands", [0.3, 0.15]))
 from src.utils.paths import RESULTS_DIR, FIG_DIR
 
 logger = logging.getLogger(__name__)
@@ -203,7 +207,7 @@ def plot_clustering_panel(
         sorted_types = sorted(mixing.keys(), key=lambda k: mixing[k])
         vals = [mixing[t] for t in sorted_types]
         short_names = [t[:25] for t in sorted_types]
-        bar_colors = [quality_color(v, (0.3, 0.15)) for v in vals]
+        bar_colors = [quality_color(v, _DOWNSTREAM_BANDS) for v in vals]
 
         y_pos = np.arange(len(sorted_types))
         ax2.barh(y_pos, vals, color=bar_colors, height=0.7, edgecolor="white", linewidth=0.5)
@@ -449,7 +453,7 @@ def plot_clustering_and_classifier_merged(
         sorted_types = sorted(mixing.keys(), key=lambda k: mixing[k])
         vals = [mixing[t] for t in sorted_types]
         short_names = [abbreviate_cell_type(t, 20) for t in sorted_types]
-        bar_colors = [quality_color(v, (0.3, 0.15)) for v in vals]
+        bar_colors = [quality_color(v, _DOWNSTREAM_BANDS) for v in vals]
         y_pos = np.arange(len(sorted_types))
         ax_p2.barh(y_pos, vals, color=bar_colors, height=0.7,
                    edgecolor="white", linewidth=0.5)

@@ -23,6 +23,10 @@ import numpy as np
 from .direct_layout import bind_figure_region
 from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
 from .style import COLORS, FONT_DENSE_YTICK, abbreviate_cell_type, add_panel_label, quality_color, save_with_vcd
+from src.utils.paths import load_thresholds
+
+_viz_thresh = load_thresholds().get("visualization", {})
+_EXPR_CORR_BANDS = tuple(_viz_thresh.get("expression_corr_bands", [0.9999, 0.999]))
 
 logger = logging.getLogger(__name__)
 
@@ -211,8 +215,8 @@ def plot_expression_correlation(
         ax2.axvspan(0.999, 0.9999, alpha=0.08, color=COLORS["warn"])
         ax2.axvspan(min_r - 0.001, 0.999, alpha=0.08, color=COLORS["bad"])
 
-        # Pearson r thresholds (0.9999, 0.999) per FIGURE_PRESENTATION_POLICY
-        colors_h2 = [quality_color(r, (0.9999, 0.999)) for r in type_rs]
+        # Pearson r quality bands (from configs/thresholds.yaml → visualization.expression_corr_bands)
+        colors_h2 = [quality_color(r, _EXPR_CORR_BANDS) for r in type_rs]
         ax2.hlines(y_pos, min_r - 0.0005, type_rs, color="#DDD", linewidth=0.8, zorder=1)
         ax2.scatter(type_rs, y_pos, c=colors_h2, s=30, zorder=3, edgecolors="white",
                     linewidths=0.5)

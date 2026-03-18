@@ -1,0 +1,27 @@
+# marker_genes.yaml — Biologically meaningful marker gene panels
+#
+# Used by fig08_markers.py for marker gene comparison figures.
+# Edit this file to add or modify marker panels without touching code.
+# Import via: from src.utils.paths import load_marker_genes
+
+# Maps lineage labels → list of marker genes
+marker_panel_genes:
+  "CD8+ T":
+    - CD8A
+    - GZMB
+  "Myeloid":
+    - CD68
+    - CD163
+  "Epithelial":
+    - EPCAM
+    - KRT8
+  "Stromal":
+    - COL1A1
+    - COL1A2
+
+# Representative cell types for per-type breakdown panels
+marker_panel_types:
+  - "CD8+ cytotoxic T lymphocytes"
+  - "Tumor-associated macrophages"
+  - "Epithelial tumor cells"
+  - "Fibroblasts and mesenchymal stromal cell"

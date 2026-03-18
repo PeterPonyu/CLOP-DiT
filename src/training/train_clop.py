@@ -604,6 +604,12 @@ class CLOPTrainer:
         -------
         trainer : CLOPTrainer
         """
+        from .reproducibility import seed_everything
+        seed_everything(
+            seed=config.get("seed", 42),
+            deterministic=config.get("deterministic", False),
+        )
+
         # Resolve per-modality preprocessing
         preprocess_text = config.get("preprocess_text_method", "whiten") != "none"
         preprocess_cell = config.get("preprocess_cell_method", "whiten") != "none"
