@@ -79,6 +79,9 @@ class CLOPTrainer:
         temp_lr_multiplier: float = 10.0,
         mixup_alpha: float = 0.0,
         rdrop_weight: float = 0.0,
+        temp_schedule: str = "none",
+        temp_schedule_max: float = 20.0,
+        temp_schedule_min: float = 10.0,
     ):
         self.model = model.to(device)
         self.train_loader = train_loader
@@ -90,6 +93,11 @@ class CLOPTrainer:
         self.log_interval = log_interval
         self.save_dir = Path(save_dir)
         self.save_dir.mkdir(parents=True, exist_ok=True)
+
+        # Temperature schedule (overrides learned temperature when active)
+        self.temp_schedule = temp_schedule
+        self.temp_schedule_max = temp_schedule_max
+        self.temp_schedule_min = temp_schedule_min
 
         # Optimizer — separate LR for temperature/bias (loss params learn faster)
         loss_params = [p for p in model.criterion.parameters() if p.requires_grad]
@@ -122,6 +130,32 @@ class CLOPTrainer:
         self.early_stopping_patience = early_stopping_patience
         self.history = {"train_loss": [], "val_loss": [], "val_acc": [], "temperature": []}
 
+    def _apply_temp_schedule(self, epoch: int):
+        """Apply temperature schedule if configured.
+
+        Cosine annealing from temp_max → temp_min over training epochs.
+        Directly sets the loss criterion's log_temperature parameter.
+        """
+        import math
+        if self.temp_schedule == "none" or self.temp_schedule is None:
+            return
+        if not hasattr(self.model.criterion, 'log_temperature'):
+            return
+
+        progress = epoch / max(self.num_epochs, 1)  # 0 → 1
+        if self.temp_schedule == "cosine":
+            # Cosine annealing: starts at max, ends at min
+            temp = self.temp_schedule_min + 0.5 * (self.temp_schedule_max - self.temp_schedule_min) * (
+                1 + math.cos(math.pi * progress)
+            )
+        elif self.temp_schedule == "linear":
+            temp = self.temp_schedule_max + (self.temp_schedule_min - self.temp_schedule_max) * progress
+        else:
+            return
+
+        with torch.no_grad():
+            self.model.criterion.log_temperature.fill_(math.log(max(temp, 1e-6)))
+
     def train_epoch(self, epoch: int) -> Dict:
         """Train for one epoch.
 
@@ -129,6 +163,7 @@ class CLOPTrainer:
         -------
         metrics : dict
         """
+        self._apply_temp_schedule(epoch)
         self.model.train()
         total_loss = 0
         total_acc = 0
@@ -686,6 +721,9 @@ class CLOPTrainer:
             temp_lr_multiplier=config.get("temp_lr_multiplier", 10.0),
             mixup_alpha=config.get("mixup_alpha", 0.0),
             rdrop_weight=config.get("rdrop_weight", 0.0),
+            temp_schedule=config.get("temp_schedule", "none"),
+            temp_schedule_max=config.get("temp_schedule_max", 20.0),
+            temp_schedule_min=config.get("temp_schedule_min", 10.0),
         )
 
     def project_and_save(

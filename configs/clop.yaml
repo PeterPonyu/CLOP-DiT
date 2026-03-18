@@ -54,6 +54,12 @@ use_amp: true
 early_stopping_patience: 0
 temp_lr_multiplier: 0.0
 
+# Temperature schedule (overrides fixed temperature when active)
+# Options: "none" (default), "cosine", "linear"
+temp_schedule: "none"
+temp_schedule_max: 20.0
+temp_schedule_min: 10.0
+
 # Preprocessing
 preprocess_text_method: "whiten"
 preprocess_cell_method: "whiten"

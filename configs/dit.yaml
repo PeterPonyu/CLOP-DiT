@@ -45,6 +45,15 @@ time_sampling_std: 1.0
 inference_steps: 20    # v2: increased from 4 for higher quality
 cfg_scale: 3.0         # Guidance scale
 
+# Variance-matching regularization (Eq. 7)
+# Penalizes disagreement between real and predicted per-dim variance
+variance_loss_weight: 0.1  # λ_var; 0 = disabled, 0.1 recommended
+
+# Adaptive ODE solver (alternative to fixed-step Euler)
+adaptive_solver: false          # If true, use dopri5 (RK45) at inference
+adaptive_solver_atol: 1.0e-5
+adaptive_solver_rtol: 1.0e-5
+
 # scGPT (for decoding)
 scgpt_model_dir: "models/scgpt_pancancer"  # v0.3: pan-cancer pretrained
 

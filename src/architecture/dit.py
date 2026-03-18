@@ -204,12 +204,12 @@ class DiTBlock(nn.Module):
         self.norm1 = nn.LayerNorm(hidden_dim, elementwise_affine=False, eps=1e-6)
         self.norm2 = nn.LayerNorm(hidden_dim, elementwise_affine=False, eps=1e-6)
 
-        self.attn = nn.MultiheadAttention(
-            embed_dim=hidden_dim,
-            num_heads=num_heads,
-            dropout=attn_drop,
-            batch_first=True,
-        )
+        # Use F.scaled_dot_product_attention for automatic Flash/Memory-efficient dispatch
+        self.num_heads = num_heads
+        self.head_dim = hidden_dim // num_heads
+        self.qkv_proj = nn.Linear(hidden_dim, 3 * hidden_dim)
+        self.out_proj = nn.Linear(hidden_dim, hidden_dim)
+        self.attn_drop_p = attn_drop
         self.attn_proj_drop = nn.Dropout(proj_drop)
 
         mlp_hidden = int(hidden_dim * mlp_ratio)
@@ -240,10 +240,19 @@ class DiTBlock(nn.Module):
         """
         gamma1, beta1, alpha1, gamma2, beta2, alpha2 = self.adaln(x, cond)
 
-        # --- Self-Attention with AdaLN ---
+        # --- Self-Attention with AdaLN (Flash/SDPA dispatch) ---
         h = self.norm1(x)
         h = self._modulate(h, gamma1, beta1)
-        h, _ = self.attn(h, h, h)
+        B, L, D = h.shape
+        qkv = self.qkv_proj(h).reshape(B, L, 3, self.num_heads, self.head_dim)
+        qkv = qkv.permute(2, 0, 3, 1, 4)  # (3, B, H, L, d)
+        q, k, v = qkv.unbind(0)
+        h = F.scaled_dot_product_attention(
+            q, k, v,
+            dropout_p=self.attn_drop_p if self.training else 0.0,
+        )  # (B, H, L, d)
+        h = h.transpose(1, 2).reshape(B, L, D)
+        h = self.out_proj(h)
         h = self.attn_proj_drop(h)
         x = x + alpha1 * h
 
@@ -580,6 +589,55 @@ class DiT1D(nn.Module):
             z = z + v2 * dt
 
         return z
+
+    @torch.no_grad()
+    def sample_adaptive(
+        self,
+        cond: torch.Tensor,
+        cfg_scale: float = 3.0,
+        atol: float = 1e-5,
+        rtol: float = 1e-5,
+        device: Optional[torch.device] = None,
+    ) -> torch.Tensor:
+        """Generate cell embeddings via adaptive ODE solver (dopri5 / RK45).
+
+        Uses torchdiffeq for adaptive step-size integration from t=0 to t=1.
+        Falls back to 20-step Euler if torchdiffeq is unavailable.
+
+        Parameters
+        ----------
+        cond : (B, cond_dim) condition vectors
+        cfg_scale : float
+            Classifier-free guidance scale.
+        atol : float
+            Absolute tolerance for the adaptive solver.
+        rtol : float
+            Relative tolerance for the adaptive solver.
+        device : torch.device, optional
+
+        Returns
+        -------
+        z_1 : (B, latent_dim) generated cell embeddings
+        """
+        if device is None:
+            device = next(self.parameters()).device
+
+        B = cond.shape[0]
+        z0 = torch.randn(B, self.latent_dim, device=device)
+
+        try:
+            from torchdiffeq import odeint
+
+            def velocity_fn(t_scalar, z):
+                t = torch.full((B,), t_scalar.item(), device=device)
+                return self.forward_with_cfg(z, t, cond, cfg_scale=cfg_scale)
+
+            t_span = torch.tensor([0.0, 1.0], device=device)
+            z_traj = odeint(velocity_fn, z0, t_span, atol=atol, rtol=rtol, method="dopri5")
+            return z_traj[-1]
+        except ImportError:
+            # Fallback to Euler
+            return self.sample(cond, num_steps=20, cfg_scale=cfg_scale, device=device)
 
     def count_parameters(self) -> dict:
         """Return parameter counts by component."""

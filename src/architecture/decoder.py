@@ -9,10 +9,15 @@ v0.3: Uses scGPT's generate() method which properly:
     3. Runs through full transformer_encoder
     4. Applies ExprDecoder to get per-gene expression values
 
+v0.4: Adds LoRA adapters for fine-tuning frozen scGPT layers.
+    Enables targeted fine-tuning of the decoder's last transformer layers
+    without full retraining, improving reconstruction of generated embeddings.
+
 This module handles:
     1. Loading pretrained scGPT weights (via standalone scgpt_embed)
     2. Encoding real cells to embeddings (for training data preparation)
     3. Decoding generated embeddings back to expression vectors via generate()
+    4. LoRA-based fine-tuning of decoder layers (v0.4)
 
 The pretrained weights (scGPT pan-cancer / whole-human) should be placed in:
     models/scgpt_pancancer/ or models/scgpt_human/
@@ -20,6 +25,7 @@ The pretrained weights (scGPT pan-cancer / whole-human) should be placed in:
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
 from typing import Optional, List, Union, Dict
 from pathlib import Path
@@ -223,3 +229,109 @@ class LinearDecoder(nn.Module):
         expression : (B, num_genes)
         """
         return self.output_act(self.net(cell_emb))
+
+
+# ============================================================================
+#  LoRA Adapter for scGPT Fine-Tuning
+# ============================================================================
+
+class LoRALinear(nn.Module):
+    """Low-Rank Adaptation (LoRA) wrapper for a frozen linear layer.
+
+    Adds a trainable low-rank decomposition: W' = W + BA where
+    B ∈ R^{out×r}, A ∈ R^{r×in} with rank r << min(in, out).
+
+    Parameters
+    ----------
+    original_linear : nn.Linear
+        The frozen pretrained linear layer.
+    rank : int
+        LoRA rank.
+    alpha : float
+        LoRA scaling factor. Effective scale = alpha / rank.
+    """
+
+    def __init__(self, original_linear: nn.Linear, rank: int = 8, alpha: float = 16.0):
+        super().__init__()
+        self.original = original_linear
+        in_features = original_linear.in_features
+        out_features = original_linear.out_features
+
+        # Freeze original weights
+        for p in self.original.parameters():
+            p.requires_grad = False
+
+        # Low-rank adapters
+        self.lora_A = nn.Parameter(torch.randn(rank, in_features) * 0.01)
+        self.lora_B = nn.Parameter(torch.zeros(out_features, rank))
+        self.scale = alpha / rank
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        base_out = self.original(x)
+        lora_out = F.linear(F.linear(x, self.lora_A), self.lora_B) * self.scale
+        return base_out + lora_out
+
+
+def apply_lora_to_model(model: nn.Module, target_modules: List[str],
+                         rank: int = 8, alpha: float = 16.0,
+                         num_last_layers: int = 2) -> nn.Module:
+    """Apply LoRA adapters to specific linear layers in the last N transformer layers.
+
+    Parameters
+    ----------
+    model : nn.Module
+        The scGPT TransformerModel.
+    target_modules : list of str
+        Names of submodules to adapt (e.g., ['out_proj', 'linear1', 'linear2']).
+    rank : int
+        LoRA rank.
+    alpha : float
+        LoRA alpha scaling.
+    num_last_layers : int
+        Number of last transformer layers to apply LoRA to.
+
+    Returns
+    -------
+    model : nn.Module with LoRA adapters applied.
+    """
+    # Find transformer encoder layers
+    encoder_layers = None
+    if hasattr(model, 'transformer_encoder') and hasattr(model.transformer_encoder, 'layers'):
+        encoder_layers = list(model.transformer_encoder.layers)
+    elif hasattr(model, 'encoder') and hasattr(model.encoder, 'layers'):
+        encoder_layers = list(model.encoder.layers)
+
+    if encoder_layers is None:
+        logger.warning("Could not find transformer encoder layers for LoRA injection")
+        return model
+
+    # Apply to last N layers
+    target_layers = encoder_layers[-num_last_layers:]
+    n_adapted = 0
+
+    for layer in target_layers:
+        for name in target_modules:
+            # Navigate to the target submodule
+            parts = name.split('.')
+            parent = layer
+            for part in parts[:-1]:
+                if hasattr(parent, part):
+                    parent = getattr(parent, part)
+                else:
+                    parent = None
+                    break
+
+            if parent is None:
+                continue
+
+            attr_name = parts[-1]
+            if hasattr(parent, attr_name):
+                original = getattr(parent, attr_name)
+                if isinstance(original, nn.Linear):
+                    lora_layer = LoRALinear(original, rank=rank, alpha=alpha)
+                    setattr(parent, attr_name, lora_layer)
+                    n_adapted += 1
+
+    logger.info(f"Applied LoRA (rank={rank}, alpha={alpha}) to {n_adapted} layers "
+                f"in last {num_last_layers} transformer blocks")
+    return model

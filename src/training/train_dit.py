@@ -99,6 +99,7 @@ class DiTTrainer:
         # Inference config (settable from config)
         self.inference_steps = kwargs.get("inference_steps", 20)
         self.cfg_scale = kwargs.get("cfg_scale", 3.0)
+        self.variance_loss_weight = kwargs.get("variance_loss_weight", 0.0)
         self.save_dir.mkdir(parents=True, exist_ok=True)
 
         # Optimizer
@@ -184,11 +185,11 @@ class DiTTrainer:
             e_param.data.mul_(self.ema_decay).add_(s_param.data, alpha=1 - self.ema_decay)
 
     def compute_loss(self, batch: Dict) -> torch.Tensor:
-        """Compute flow matching MSE loss.
+        """Compute flow matching MSE loss with optional variance-matching regularization.
 
         Parameters
         ----------
-        batch : dict with keys 'z_t', 't', 'v_target', 'cond'
+        batch : dict with keys 'z_t', 't', 'v_target', 'cond', 'z_1'
 
         Returns
         -------
@@ -201,6 +202,19 @@ class DiTTrainer:
 
         v_pred = self.model(z_t, t, cond)
         loss = F.mse_loss(v_pred, v_target)
+
+        # Variance-matching regularization (Eq. 7 in manuscript)
+        # Encourages generated embeddings to preserve per-dimension variance
+        if self.variance_loss_weight > 0 and "z_1" in batch:
+            z_1 = batch["z_1"].to(self.device)
+            # Reconstruct z_1 estimate from flow: z_1_hat = z_t + (1 - t) * v_pred
+            t_expand = t.unsqueeze(-1)  # (B, 1)
+            z_1_hat = z_t + (1 - t_expand) * v_pred
+            # Per-dimension variance matching
+            var_real = z_1.var(dim=0)      # (latent_dim,)
+            var_pred = z_1_hat.var(dim=0)  # (latent_dim,)
+            var_loss = F.mse_loss(var_pred, var_real)
+            loss = loss + self.variance_loss_weight * var_loss
 
         return loss
 
@@ -489,6 +503,7 @@ class DiTTrainer:
             eval_interval=config.get("eval_interval", 10),
             inference_steps=config.get("inference_steps", 20),
             cfg_scale=config.get("cfg_scale", 3.0),
+            variance_loss_weight=config.get("variance_loss_weight", 0.0),
         )
 
         # Resume from checkpoint if specified

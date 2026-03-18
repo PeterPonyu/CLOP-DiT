@@ -1,0 +1,26 @@
+# Decoder Fine-Tuning Configuration — v0.4
+# LoRA adapters for scGPT decoder last layers
+
+# scGPT model
+scgpt_model_dir: "models/scgpt_pancancer"
+cache_dir: "data/cached_latents_v5.2"
+
+# LoRA hyperparameters
+lora_rank: 8           # Low-rank dimension (8-16 typical)
+lora_alpha: 16.0       # Scaling factor (alpha/rank = effective scale)
+num_last_layers: 2     # Fine-tune last 2 transformer layers
+target_modules:        # Linear modules to adapt within each layer
+  - "out_proj"
+  - "linear1"
+  - "linear2"
+
+# Training
+batch_size: 32
+lr: 1.0e-4
+weight_decay: 0.01
+num_epochs: 20
+grad_clip: 1.0
+
+# System
+device: "cuda"
+save_dir: "models/checkpoints"

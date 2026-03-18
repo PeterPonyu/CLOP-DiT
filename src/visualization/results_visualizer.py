@@ -776,6 +776,56 @@ class ResultsVisualizer:
         logger.info(f"Done — {len(saved)} files generated in {self.output}/")
         return saved
 
+    # ──────────────────────────────────────────────────────────────
+    # NEW: Figs 21–24 — Ablation, Multi-seed, OOD, Variance
+    # ──────────────────────────────────────────────────────────────
+
+    def plot_ablation_heatmap(self, save: bool = True) -> Optional[plt.Figure]:
+        """Fig 21: Ablation comparison heatmap."""
+        from .fig21_ablation_heatmap import plot_ablation_heatmap as _plot
+        return _plot(
+            ablation_path=str(RESULTS_DIR / "ablations" / "all_summaries.json"),
+            output_dir=self.output,
+            dpi=self.dpi,
+            save=save,
+            save_panel_fn=lambda fig, name, *a, **kw: self._save_panel(fig, name),
+        )
+
+    def plot_multi_seed_robustness(self, save: bool = True) -> Optional[plt.Figure]:
+        """Fig 22: Multi-seed robustness."""
+        from .fig22_multi_seed import plot_multi_seed_robustness as _plot
+        return _plot(
+            report_path=str(RESULTS_DIR / "multi_seed" / "multi_seed_report.json"),
+            output_dir=self.output,
+            dpi=self.dpi,
+            save=save,
+            save_panel_fn=lambda fig, name, *a, **kw: self._save_panel(fig, name),
+        )
+
+    def plot_ood_showcase(self, save: bool = True) -> Optional[plt.Figure]:
+        """Fig 23: OOD generation showcase."""
+        from .fig23_ood_showcase import plot_ood_showcase as _plot
+        return _plot(
+            ood_path=str(RESULTS_DIR / "ood_evaluation" / "ood_results.json"),
+            output_dir=self.output,
+            dpi=self.dpi,
+            save=save,
+            save_panel_fn=lambda fig, name, *a, **kw: self._save_panel(fig, name),
+        )
+
+    def plot_variance_deepdive(self, save: bool = True) -> Optional[plt.Figure]:
+        """Fig 24: Per-gene variance deep-dive."""
+        from .fig24_variance_deepdive import plot_variance_deepdive as _plot
+        return _plot(
+            real_expr_path=str(RESULTS_DIR / "real_expression.npy"),
+            gen_expr_path=str(RESULTS_DIR / "generated_expression.npy"),
+            gene_names_path=str(RESULTS_DIR / "expression_gene_names.json"),
+            output_dir=self.output,
+            dpi=self.dpi,
+            save=save,
+            save_panel_fn=lambda fig, name, *a, **kw: self._save_panel(fig, name),
+        )
+
 
 
 # ──────────────────────────────────────────────────────────────

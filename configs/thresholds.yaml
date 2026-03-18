@@ -1,0 +1,45 @@
+# thresholds.yaml — Centralized quality thresholds and evaluation constants
+#
+# All numeric cutoffs used across analysis, evaluation, and visualization
+# should be defined here rather than hardcoded in scripts.
+# Import via: from src.utils.paths import load_thresholds
+
+# ──────────────────────────────────────────────────────────────
+# Statistical significance
+# ──────────────────────────────────────────────────────────────
+statistics:
+  pval_threshold: 0.05           # Default significance level
+  lfc_downreg: -0.5              # Log2 fold-change cutoff for downregulated genes
+  bonferroni_correction: true     # Apply Bonferroni by default
+
+# ──────────────────────────────────────────────────────────────
+# Data preparation
+# ──────────────────────────────────────────────────────────────
+data_prep:
+  enrichment_pval: 0.05          # Hypergeometric enrichment significance
+  enrichment_top_k: 5            # Top-k enriched pathways per database
+  background_size: 2000          # Typical HVG count for background
+
+# ──────────────────────────────────────────────────────────────
+# Evaluation quality gates
+# ──────────────────────────────────────────────────────────────
+evaluation:
+  min_val_proto_acc_epoch5: 0.10  # Sanity check: proto acc > this by epoch 5
+  umap_min_dist: 0.1             # UMAP min_dist for embedding visualizations
+  ecs_threshold: 0.3             # Elastic cell similarity threshold (scGPT)
+  cosine_identity_threshold: 0.9999  # Identical embedding detection
+
+# ──────────────────────────────────────────────────────────────
+# Generation quality
+# ──────────────────────────────────────────────────────────────
+generation:
+  variance_underdispersion_log2: -1.0  # log2(gen_var/real_var) below this = under-dispersed
+  min_diversity_ratio: 0.3       # Minimum acceptable diversity ratio
+  max_frechet_distance: 10.0     # Upper bound for Fréchet distance warning
+
+# ──────────────────────────────────────────────────────────────
+# Visualization
+# ──────────────────────────────────────────────────────────────
+visualization:
+  wcag_min_contrast_ratio: 4.5   # WCAG AA contrast ratio minimum
+  vcd_overlap_iou_threshold: 0.1 # IoU threshold for text overlap detection

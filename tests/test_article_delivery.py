@@ -20,7 +20,7 @@ class TestArticleFigureManifest:
 
     def test_manifest_length(self):
         from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
-        assert len(ARTICLE_FIGURE_BASENAMES) == 20
+        assert len(ARTICLE_FIGURE_BASENAMES) == 24
 
     def test_manifest_contains_expected_basenames(self):
         from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
@@ -45,6 +45,10 @@ class TestArticleFigureManifest:
             "fig18_de_concordance",
             "fig19_variance_matching_pilot",
             "fig20_gene_gene_correlation",
+            "fig21_ablation_heatmap",
+            "fig22_multi_seed_robustness",
+            "fig23_ood_showcase",
+            "fig24_variance_deepdive",
         }
         for name in expected:
             assert name in ARTICLE_FIGURE_BASENAMES, f"Missing basename: {name}"

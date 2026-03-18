@@ -91,3 +91,28 @@ ARTICLE_DIR = _resolve_path(
     _pipeline.get("article_dir", "articles")
 ) if _pipeline else (PROJECT_ROOT / "articles")
 ARTICLE_TEX = _pipeline.get("article_tex", "clop_dit_biology.tex") if _pipeline else "clop_dit_biology.tex"
+
+
+# ──────────────────────────────────────────────────────────────
+# Centralized thresholds
+# ──────────────────────────────────────────────────────────────
+_thresholds_cache: dict | None = None
+
+
+def load_thresholds() -> dict:
+    """Load centralized quality thresholds from configs/thresholds.yaml.
+
+    Returns nested dict with sections: statistics, data_prep, evaluation,
+    generation, visualization.  Falls back to empty dict on error.
+    """
+    global _thresholds_cache
+    if _thresholds_cache is not None:
+        return _thresholds_cache
+    thresholds_path = CONFIG_DIR / "thresholds.yaml"
+    if thresholds_path.exists():
+        import yaml
+        with open(thresholds_path) as f:
+            _thresholds_cache = yaml.safe_load(f) or {}
+    else:
+        _thresholds_cache = {}
+    return _thresholds_cache
