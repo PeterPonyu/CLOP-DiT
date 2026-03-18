@@ -93,3 +93,20 @@ Thumbs.db
 
 # === Environment ===
 .env
+
+# === Articles & cover letters (not for remote) ===
+articles/
+articles_elsevier/
+articles_elsevier copy/
+articles.zip
+cover_letter.md
+cover_letter.pdf
+
+# === Intermediate project markdown files ===
+PIPELINE.md
+CONTRIBUTING.md
+REPRODUCIBILITY.md
+VERSIONS.md
+
+# === Fetched reference articles ===
+references/
