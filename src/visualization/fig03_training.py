@@ -373,8 +373,8 @@ def plot_training_dynamics_combined(
         return None
 
     apply_style()
-    fig = plt.figure(figsize=(14.4, 8.2))
-    layout = bind_figure_region(fig, (0.06, 0.10, 0.955, 0.90))
+    fig = plt.figure(figsize=(14.4, 8.6))
+    layout = bind_figure_region(fig, (0.06, 0.10, 0.955, 0.87))
     top_row, bottom_row = layout.split_rows([1, 1], hspace=0.55)
     top_cols = top_row.split_cols([1.0, 1.0, 1.0, 1.2], wspace=0.42)
     bottom_cols = bottom_row.split_cols([1.0, 1.0, 1.0, 1.2], wspace=0.42)
@@ -544,7 +544,7 @@ def plot_training_dynamics_combined(
         ax_c4.set_ylabel("Remaining Loss Gap", fontsize=11)
         ax_c4.set_title("Convergence Comparison", fontsize=12)
         ax_c4.set_xlim(0, 100)
-        ax_c4.set_ylim(-0.05, 1.05)
+        ax_c4.set_ylim(0, 1.05)
         ax_c4.legend(fontsize=FONT_LEGEND_DENSE, loc="upper right", frameon=False)
         ax_c4.locator_params(axis='x', nbins=4)
         ax_c4.locator_params(axis='y', nbins=4)

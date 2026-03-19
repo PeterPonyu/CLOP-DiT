@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 class TestArticleFigureManifest:
-    """Canonical list of 20 article figures."""
+    """Canonical list of 30 article figures."""
 
     @staticmethod
     def _article_tex_basenames() -> set[str]:
@@ -20,7 +20,7 @@ class TestArticleFigureManifest:
 
     def test_manifest_length(self):
         from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
-        assert len(ARTICLE_FIGURE_BASENAMES) == 24
+        assert len(ARTICLE_FIGURE_BASENAMES) == 30
 
     def test_manifest_contains_expected_basenames(self):
         from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
@@ -49,6 +49,12 @@ class TestArticleFigureManifest:
             "fig22_multi_seed_robustness",
             "fig23_ood_showcase",
             "fig24_variance_deepdive",
+            "fig25_cross_dataset",
+            "fig26_expanded_de",
+            "fig27_ood_robustness",
+            "fig28_marker_completeness",
+            "fig29_embedding_augmentation",
+            "fig30_validation_summary",
         }
         for name in expected:
             assert name in ARTICLE_FIGURE_BASENAMES, f"Missing basename: {name}"

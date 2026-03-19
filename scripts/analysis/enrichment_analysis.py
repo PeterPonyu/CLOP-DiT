@@ -40,11 +40,13 @@ RESULTS = ROOT / "results"
 FIG_DIR = RESULTS / "figures"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
-# Contrasts used in DE concordance (same as Fig 18)
-CONTRASTS = [
-    ("CD8+ T cells", "CD4+ T cells"),
-    ("Resident macrophages", "Monocytes"),
-    ("Epithelial tumor cells", "Fibroblasts"),
+# Contrasts used in DE concordance (same as Fig 18).
+# Labels in the expression arrays are *integer IDs* that map to full captions
+# in ``data/cached_latents_v5.2/text_captions_deduplicated.json``.
+CONTRASTS_BY_ID = [
+    (0, 6, "CD8+ T cells vs CD4+ T cells"),
+    (5, 7, "Macrophages vs Monocytes"),
+    (8, 3, "Epithelial cells vs Fibroblasts"),
 ]
 
 TOP_DE_GENES = 100
@@ -59,11 +61,11 @@ GO_LIBRARIES = ["GO_Biological_Process_2023", "GO_Molecular_Function_2023"]
 
 
 def _load_expression_data():
-    """Load real and generated expression with labels."""
+    """Load real and generated expression with labels (integer IDs)."""
     real = np.load(RESULTS / "real_expression.npy")
-    real_labels = np.load(RESULTS / "real_expression_labels.npy", allow_pickle=True)
+    real_labels = np.load(RESULTS / "real_expression_labels.npy", allow_pickle=True).astype(int)
     gen = np.load(RESULTS / "generated_expression.npy")
-    gen_labels = np.load(RESULTS / "generated_expression_labels.npy", allow_pickle=True)
+    gen_labels = np.load(RESULTS / "generated_expression_labels.npy", allow_pickle=True).astype(int)
 
     # Gene names
     gene_names_path = RESULTS / "expression_gene_names.json"
@@ -79,16 +81,16 @@ def _load_expression_data():
 def _wilcoxon_de(
     expr: np.ndarray,
     labels: np.ndarray,
-    group_a: str,
-    group_b: str,
+    group_a_id: int,
+    group_b_id: int,
     gene_names: list[str],
 ) -> dict:
-    """Wilcoxon rank-sum DE between two groups.
+    """Wilcoxon rank-sum DE between two groups (identified by integer ID).
 
     Returns dict with gene-level stats: lfc, pval, padj, gene_name.
     """
-    mask_a = labels == group_a
-    mask_b = labels == group_b
+    mask_a = labels == group_a_id
+    mask_b = labels == group_b_id
     X_a = expr[mask_a]
     X_b = expr[mask_b]
 
@@ -192,13 +194,12 @@ def run_enrichment_analysis():
     real, real_labels, gen, gen_labels, gene_names = _load_expression_data()
 
     results = {}
-    for group_a, group_b in CONTRASTS:
-        contrast_name = f"{group_a} vs {group_b}"
+    for id_a, id_b, contrast_name in CONTRASTS_BY_ID:
         print(f"\nContrast: {contrast_name}")
 
         # DE on real
-        de_real = _wilcoxon_de(real, real_labels, group_a, group_b, gene_names)
-        de_gen = _wilcoxon_de(gen, gen_labels, group_a, group_b, gene_names)
+        de_real = _wilcoxon_de(real, real_labels, id_a, id_b, gene_names)
+        de_gen = _wilcoxon_de(gen, gen_labels, id_a, id_b, gene_names)
 
         if not de_real["genes"] or not de_gen["genes"]:
             print(f"  Skipped (insufficient cells: real n_a={de_real['n_a']}, gen n_a={de_gen['n_a']})")

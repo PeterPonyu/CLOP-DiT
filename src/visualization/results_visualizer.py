@@ -788,6 +788,27 @@ class ResultsVisualizer:
             saved.append(self.output / "fig24_variance_deepdive.pdf")
             plt.close(fig_var)
 
+        # ── Part VI: Downstream application experiments (Figs 25–28) ──
+        fig_cd = self.plot_cross_dataset_validation()
+        if fig_cd:
+            saved.append(self.output / "fig25_cross_dataset.pdf")
+            plt.close(fig_cd)
+
+        fig_de = self.plot_expanded_de()
+        if fig_de:
+            saved.append(self.output / "fig26_expanded_de.pdf")
+            plt.close(fig_de)
+
+        fig_ood2 = self.plot_ood_robustness()
+        if fig_ood2:
+            saved.append(self.output / "fig27_ood_robustness.pdf")
+            plt.close(fig_ood2)
+
+        fig_mkr = self.plot_marker_completeness()
+        if fig_mkr:
+            saved.append(self.output / "fig28_marker_completeness.pdf")
+            plt.close(fig_mkr)
+
         # ── Combine into multi-page PDF ──
         if saved:
             from .report import combine_panels_pdf
@@ -847,6 +868,54 @@ class ResultsVisualizer:
             save_panel_fn=lambda fig, name, *a, **kw: self._save_panel(fig, name),
         )
 
+    # ──────────────────────────────────────────────────────────────
+    # Figs 25–28 — Downstream application experiments
+    # ──────────────────────────────────────────────────────────────
+
+    def plot_cross_dataset_validation(self, save: bool = True) -> Optional[plt.Figure]:
+        """Fig 25: Cross-dataset biological validation."""
+        from .fig25_cross_dataset import plot_cross_dataset_validation as _plot
+        return _plot(
+            data_path=str(RESULTS_DIR / "downstream" / "cross_dataset_validation.json"),
+            output_dir=self.output,
+            dpi=self.dpi,
+            save=save,
+            save_panel_fn=lambda fig, name, *a, **kw: self._save_panel(fig, name),
+        )
+
+    def plot_expanded_de(self, save: bool = True) -> Optional[plt.Figure]:
+        """Fig 26: Expanded DE concordance."""
+        from .fig26_expanded_de import plot_expanded_de as _plot
+        return _plot(
+            de_path=str(RESULTS_DIR / "downstream" / "expanded_de_concordance.json"),
+            output_dir=self.output,
+            dpi=self.dpi,
+            save=save,
+            save_panel_fn=lambda fig, name, *a, **kw: self._save_panel(fig, name),
+        )
+
+    def plot_ood_robustness(self, save: bool = True) -> Optional[plt.Figure]:
+        """Fig 27: OOD robustness evaluation."""
+        from .fig27_ood_robustness import plot_ood_robustness as _plot
+        return _plot(
+            data_path=str(RESULTS_DIR / "downstream" / "ood_robustness_combined.json"),
+            marker_path=str(RESULTS_DIR / "ood_evaluation" / "ood_marker_analysis.json"),
+            output_dir=self.output,
+            dpi=self.dpi,
+            save=save,
+            save_panel_fn=lambda fig, name, *a, **kw: self._save_panel(fig, name),
+        )
+
+    def plot_marker_completeness(self, save: bool = True) -> Optional[plt.Figure]:
+        """Fig 28: Marker gene program completeness."""
+        from .fig28_marker_completeness import plot_marker_completeness as _plot
+        return _plot(
+            data_path=str(RESULTS_DIR / "downstream" / "marker_completeness.json"),
+            output_dir=self.output,
+            dpi=self.dpi,
+            save=save,
+            save_panel_fn=lambda fig, name, *a, **kw: self._save_panel(fig, name),
+        )
 
 
 # ──────────────────────────────────────────────────────────────

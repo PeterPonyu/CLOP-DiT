@@ -3,5 +3,5 @@
   ["Tissue-resident macrophages", "Circulating monocytes"],
   ["Generic epithelial cells", "Fibroblasts and mesenchymal stromal cells"],
   ["B lymphocytes", "Plasma cells"],
-  ["Activated T cells", "Resting T cells"]
+  ["CD4+FOXP3+ regulatory T cells (Tregs)", "CD4+ helper T lymphocytes"]
 ]

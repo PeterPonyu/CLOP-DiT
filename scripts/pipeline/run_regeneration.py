@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-run_regeneration.py — Regenerate all 24 article figures from cached JSON results,
+run_regeneration.py — Regenerate all 30 article figures from cached JSON results,
 run VCD on every output, refresh symlinks, and optionally rebuild the LaTeX PDF.
 
 Usage:
@@ -513,7 +513,7 @@ def run_latex_build():
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description="Regenerate all 24 article figures + VCD + optional PDF rebuild")
+    parser = argparse.ArgumentParser(description="Regenerate all 30 article figures + VCD + optional PDF rebuild")
     parser.add_argument("--no-vcd",    action="store_true", help="Skip live VCD during generation and final VCD reporting")
     parser.add_argument("--skip-arch", action="store_true", help="Skip architecture figure (Fig 1)")
     parser.add_argument("--no-delivery", action="store_true", help="Skip article_delivery (symlinks)")
@@ -524,7 +524,7 @@ def main():
     vcd_enabled = (not args.no_vcd) and _env_flag("CLOPDIT_ENABLE_VCD", True)
     os.environ["CLOPDIT_ENABLE_VCD"] = "1" if vcd_enabled else "0"
     log.info("=" * 70)
-    log.info("CLOP-DiT Figure Regeneration Pipeline (24 figures) — %s", time.strftime("%Y-%m-%d"))
+    log.info("CLOP-DiT Figure Regeneration Pipeline (30 figures) — %s", time.strftime("%Y-%m-%d"))
     log.info("=" * 70)
     log.info("Live VCD during generation: %s", "enabled" if vcd_enabled else "disabled")
     FIG_DIR.mkdir(parents=True, exist_ok=True)
@@ -567,6 +567,20 @@ def main():
     gg = run_gene_gene_correlation_figure()
     if gg:
         saved.append(gg)
+
+    # 8. Figs 25–30: Extended downstream validation figures
+    _ext_figs = [
+        ("src/visualization/fig25_cross_dataset.py",          "fig25_cross_dataset.pdf"),
+        ("src/visualization/fig26_expanded_de.py",            "fig26_expanded_de.pdf"),
+        ("src/visualization/fig27_ood_robustness.py",         "fig27_ood_robustness.pdf"),
+        ("src/visualization/fig28_marker_completeness.py",    "fig28_marker_completeness.pdf"),
+        ("src/visualization/fig29_embedding_augmentation.py", "fig29_embedding_augmentation.pdf"),
+        ("src/visualization/fig30_validation_summary.py",     "fig30_validation_summary.pdf"),
+    ]
+    for _script_rel, _expected_pdf in _ext_figs:
+        _fig = _run_external_script(_script_rel, _expected_pdf, _expected_pdf)
+        if _fig:
+            saved.append(_fig)
 
     # Collect all canonical figure PDFs: fig_architecture.pdf, fig_evaluation_pipeline.pdf
     # (start with "fig_"), plus fig03_…, fig07_…, fig20_… (start with "figNN_").

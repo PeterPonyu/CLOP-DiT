@@ -95,19 +95,25 @@ def plot_variance_deepdive(
         r = 0.0
 
     # Figure: 3 panels
-    fig = plt.figure(figsize=(16.0, 5.0))
-    layout = bind_figure_region(fig, (0.07, 0.14, 0.97, 0.88))
-    cols = layout.split_cols([1, 1, 1.2], wspace=0.38)
+    fig = plt.figure(figsize=(17.0, 6.0))
+    layout = bind_figure_region(fig, (0.11, 0.18, 0.95, 0.82))
+    cols = layout.split_cols([1, 1, 1.2], wspace=0.55)
 
     # ── Panel (a): Scatter ──
     ax_a = cols[0].add_axes(fig)
-    ax_a.scatter(real_var[valid], gen_var[valid], s=4, alpha=0.4,
+    # Scale to avoid tiny-decimal tick labels (values are ~1e-4)
+    scale = 1e4
+    rv_scaled = real_var[valid] * scale
+    gv_scaled = gen_var[valid] * scale
+    ax_a.scatter(rv_scaled, gv_scaled, s=4, alpha=0.4,
                  color=COLORS["real"], edgecolors="none")
     # Identity line
-    lim = max(real_var[valid].max(), gen_var[valid].max()) * 1.05
+    lim = max(rv_scaled.max(), gv_scaled.max()) * 1.08
     ax_a.plot([0, lim], [0, lim], "--", color=COLORS["neutral"], linewidth=1, alpha=0.7)
-    ax_a.set_xlabel("Real per-gene variance", fontsize=FONT_LABEL)
-    ax_a.set_ylabel("Generated per-gene variance", fontsize=FONT_LABEL)
+    ax_a.set_xlim(-lim * 0.02, lim)
+    ax_a.set_ylim(-lim * 0.02, lim)
+    ax_a.set_xlabel("Real variance (x1e-4)", fontsize=FONT_LABEL)
+    ax_a.set_ylabel("Gen. variance (x1e-4)", fontsize=FONT_LABEL)
     ax_a.set_title("Variance Scatter", fontsize=FONT_TITLE)
     ax_a.text(0.05, 0.92, f"r = {r:.3f}\nn = {valid.sum()} genes",
               transform=ax_a.transAxes, fontsize=FONT_LEGEND_DENSE,
@@ -124,9 +130,12 @@ def plot_variance_deepdive(
     ax_b.axvline(0, color=COLORS["neutral"], linewidth=1, linestyle="--", alpha=0.7)
     median_lr = np.median(log_ratio)
     ax_b.axvline(median_lr, color=COLORS["bad"], linewidth=1.2, linestyle="-")
-    ax_b.set_xlabel("log₂(σ²_gen / σ²_real)", fontsize=FONT_LABEL)
+    ax_b.set_xlabel("log2(var_gen / var_real)", fontsize=FONT_LABEL)
     ax_b.set_ylabel("Number of genes", fontsize=FONT_LABEL)
     ax_b.set_title("Variance Ratio Distribution", fontsize=FONT_TITLE)
+    ax_b.locator_params(axis='x', nbins=5)
+    import matplotlib.ticker as mticker_b
+    ax_b.xaxis.set_major_formatter(mticker_b.FormatStrFormatter("%.0f"))
     ax_b.text(0.05, 0.92, f"Median: {median_lr:.2f}",
               transform=ax_b.transAxes, fontsize=FONT_LEGEND_DENSE,
               va="top", color=COLORS["bad"])

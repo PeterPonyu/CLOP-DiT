@@ -41,7 +41,10 @@ _METRIC_COLS = [
 # Category display order and colours
 _CATEGORY_COLORS = {
     "architecture": "#1565C0",
+    "conditioning": "#0097A7",
     "loss": "#C62828",
+    "optimization": "#6A1B9A",
+    "reference": "#455A64",
     "regularization": "#2E7D32",
     "temperature": "#6A1B9A",
     "training": "#E65100",
@@ -121,9 +124,9 @@ def plot_ablation_heatmap(
             norm_data[:, j] = 1.0 - norm_data[:, j]
 
     # Create figure
-    fig_height = max(5.0, 0.35 * n_variants + 1.5)
-    fig = plt.figure(figsize=(8.0, fig_height))
-    layout = bind_figure_region(fig, (0.22, 0.10, 0.92, 0.90))
+    fig_height = max(6.0, 0.40 * n_variants + 2.0)
+    fig = plt.figure(figsize=(9.0, fig_height))
+    layout = bind_figure_region(fig, (0.22, 0.14, 0.90, 0.90))
     region = layout
     ax = region.add_axes(fig)
 
@@ -163,8 +166,8 @@ def plot_ablation_heatmap(
                    markersize=7, label=cat.capitalize())
         for cat, c in seen.items()
     ]
-    ax.legend(handles=legend_handles, loc="lower left", bbox_to_anchor=(0, 0.01),
-              ncol=min(len(seen), 3), fontsize=FONT_LEGEND_DENSE, frameon=False)
+    ax.legend(handles=legend_handles, loc="upper center", bbox_to_anchor=(0.5, -0.08),
+              ncol=min(len(seen), 5), fontsize=FONT_LEGEND_DENSE, frameon=False)
 
     cbar = fig.colorbar(im, ax=ax, shrink=0.6, pad=0.02)
     cbar.set_label("Normalized score (higher = better)", fontsize=FONT_LABEL - 1)

@@ -76,21 +76,21 @@ def plot_ood_showcase(
         return None
 
     # Figure with two panels
-    fig = plt.figure(figsize=(16.0, 6.0))
-    layout = bind_figure_region(fig, (0.04, 0.08, 0.97, 0.88))
+    fig = plt.figure(figsize=(16.0, 6.5))
+    layout = bind_figure_region(fig, (0.04, 0.08, 0.97, 0.80))
     left, right = layout.split_cols([1, 1], wspace=0.45)
 
     # ── Panel (a): Novel cell types ──
     ax_a = left.add_axes(fig)
     ax_a.set_xlim(0, 10)
-    ax_a.set_ylim(-0.5, max(len(novel_types), 1) - 0.5)
+    ax_a.set_ylim(-1.2, max(len(novel_types), 1) - 0.5)
     ax_a.invert_yaxis()
     ax_a.axis("off")
 
     # Header
-    ax_a.text(0.0, -0.8, "Cell Type", fontsize=FONT_LABEL, fontweight="bold",
+    ax_a.text(0.0, -1.0, "Cell Type", fontsize=FONT_LABEL, fontweight="bold",
               va="center")
-    ax_a.text(4.5, -0.8, "Prompt Excerpt", fontsize=FONT_LABEL, fontweight="bold",
+    ax_a.text(4.5, -1.0, "Prompt Excerpt", fontsize=FONT_LABEL, fontweight="bold",
               va="center")
 
     for i, (type_name, info) in enumerate(novel_types.items()):
@@ -108,22 +108,22 @@ def plot_ood_showcase(
             ax_a.axhline(y=i + 0.5, color=COLORS["border_light"], linewidth=0.5,
                          xmin=0, xmax=1)
 
-    add_panel_label(ax_a, "a", x=-0.06, y=1.06)
+    add_panel_label(ax_a, "a", x=-0.06, y=1.12)
     ax_a.set_title("Novel Cell Types (Unseen during Training)", fontsize=FONT_TITLE,
-                   pad=10)
+                   pad=20)
 
     # ── Panel (b): Free-form prompts ──
     ax_b = right.add_axes(fig)
     ax_b.set_xlim(0, 10)
     n_ff = max(len(free_form), 1)
-    ax_b.set_ylim(-0.5, n_ff - 0.5)
+    ax_b.set_ylim(-1.2, n_ff - 0.5)
     ax_b.invert_yaxis()
     ax_b.axis("off")
 
     # Header
-    ax_b.text(0.0, -0.8, "Prompt ID", fontsize=FONT_LABEL, fontweight="bold",
+    ax_b.text(0.0, -1.0, "Prompt ID", fontsize=FONT_LABEL, fontweight="bold",
               va="center")
-    ax_b.text(3.5, -0.8, "Free-form Description", fontsize=FONT_LABEL, fontweight="bold",
+    ax_b.text(3.5, -1.0, "Free-form Description", fontsize=FONT_LABEL, fontweight="bold",
               va="center")
 
     for i, (prompt_id, info) in enumerate(free_form.items()):
@@ -139,10 +139,10 @@ def plot_ood_showcase(
             ax_b.axhline(y=i + 0.5, color=COLORS["border_light"], linewidth=0.5,
                          xmin=0, xmax=1)
 
-    add_panel_label(ax_b, "b", x=-0.06, y=1.06)
-    ax_b.set_title("Free-form Prompt Generalization", fontsize=FONT_TITLE, pad=10)
+    add_panel_label(ax_b, "b", x=-0.06, y=1.12)
+    ax_b.set_title("Free-form Prompt Generalization", fontsize=FONT_TITLE, pad=20)
 
-    set_figure_suptitle(fig, "Out-of-Distribution Generation Showcase", y=0.97)
+    set_figure_suptitle(fig, "Out-of-Distribution Generation Showcase", y=0.93)
 
     if save:
         out = output_dir / "fig23_ood_showcase.png"
