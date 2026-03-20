@@ -79,7 +79,7 @@ def plot_cross_dataset_validation(
 
     # Layout: 3 panels
     fig = plt.figure(figsize=(14.5, 5.0))
-    layout = bind_figure_region(fig, (0.07, 0.14, 0.97, 0.90))
+    layout = bind_figure_region(fig, (0.07, 0.18, 0.97, 0.90))
     p_a, p_b, p_c = layout.split_cols([1.1, 1.1, 0.8], gap=0.06)
 
     x = np.arange(len(tissues))
@@ -102,14 +102,12 @@ def plot_cross_dataset_validation(
     ax_a.legend(fontsize=FONT_LEGEND, loc="upper right", frameon=False)
     style_axes(ax_a)
 
-    # ── Panel (b): PCA overlap + fraction similar genes ──
+    # ── Panel (b): PCA overlap (single bar series) ──
     ax_b = p_b.add_axes(fig)
     add_panel_label(ax_b, "b", x=-0.12, y=1.06)
 
-    bars3 = ax_b.bar(x - bar_w / 2, subspace_vals, bar_w, label="PCA Overlap",
+    bars3 = ax_b.bar(x, subspace_vals, bar_w, label="PCA Overlap",
                      color=COLORS["good"], alpha=0.85, edgecolor="white", linewidth=0.5)
-    bars4 = ax_b.bar(x + bar_w / 2, frac_sim_vals, bar_w, label="Frac. Similar",
-                     color=COLORS["accent"], alpha=0.85, edgecolor="white", linewidth=0.5)
 
     ax_b.set_xticks(x)
     ax_b.set_xticklabels(tissue_labels, fontsize=FONT_TICK, rotation=25, ha="right")
@@ -117,6 +115,9 @@ def plot_cross_dataset_validation(
     ax_b.set_title("Distribution Similarity", fontsize=FONT_TITLE)
     ax_b.set_ylim(0, 1.15)
     ax_b.legend(fontsize=FONT_LEGEND, loc="upper right", frameon=False)
+    ax_b.text(0.5, -0.22, "KS test: 0 genes similar across all tissues",
+              transform=ax_b.transAxes, ha="center", fontsize=FONT_ANNOTATION,
+              style="italic", color=COLORS["neutral"])
     style_axes(ax_b)
 
     # ── Panel (c): Variance ratio + n_shared_genes ──
@@ -140,6 +141,9 @@ def plot_cross_dataset_validation(
     ax_c.axvspan(math.log10(0.5), math.log10(2.0), color=COLORS["good"], alpha=0.08)
     ax_c.invert_yaxis()
     style_axes(ax_c)
+    ax_c.text(0.5, -0.22, "Ratio \u226a 1: scGPT decoder compresses variance",
+              transform=ax_c.transAxes, ha="center", fontsize=FONT_ANNOTATION,
+              style="italic", color=COLORS["neutral"])
 
     # Note: per-bar value annotations omitted to avoid overlap with y-tick labels.
     # The log-scale x-axis and bar lengths directly encode the variance ratio magnitudes.

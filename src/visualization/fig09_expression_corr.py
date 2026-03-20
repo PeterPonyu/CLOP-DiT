@@ -22,11 +22,7 @@ import numpy as np
 
 from .direct_layout import bind_figure_region
 from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
-from .style import COLORS, FONT_DENSE_YTICK, abbreviate_cell_type, add_panel_label, quality_color, save_with_vcd
-from src.utils.paths import load_thresholds
-
-_viz_thresh = load_thresholds().get("visualization", {})
-_EXPR_CORR_BANDS = tuple(_viz_thresh.get("expression_corr_bands", [0.9999, 0.999]))
+from .style import COLORS, FONT_DENSE_YTICK, abbreviate_cell_type, add_panel_label, save_with_vcd
 
 logger = logging.getLogger(__name__)
 
@@ -190,7 +186,7 @@ def plot_expression_correlation(
         connector.set_clip_on(False)
         ax1.add_artist(connector)
 
-    # -- H2: Per-type Pearson r lollipop chart --
+    # -- H2: Per-type deviation lollipop chart (1 - r, log scale) --
     ax2 = top_right.inset(left=0.17, right=0.05).add_axes(fig)
     per_type = metrics.get("per_type_expression_fidelity", {})
     if per_type:
@@ -206,40 +202,27 @@ def plot_expression_correlation(
             type_rs = [type_rs[i] for i in show_idx]
         short_names = [abbreviate_cell_type(n, 24) for n in type_names_sorted]
 
-        mean_r = metrics.get("per_type_summary", {}).get("mean_pearson_r", 0)
-        min_r = min(type_rs)
-        y_pos = np.arange(len(type_rs))
+        # Plot deviation (1 - r) instead of raw Pearson r
+        type_devs = [max(1 - r, 1e-12) for r in type_rs]
+        y_pos = np.arange(len(type_devs))
 
-        # Threshold shading
-        ax2.axvspan(0.9999, 1.00005, alpha=0.08, color=COLORS["good"])
-        ax2.axvspan(0.999, 0.9999, alpha=0.08, color=COLORS["warn"])
-        ax2.axvspan(min_r - 0.001, 0.999, alpha=0.08, color=COLORS["bad"])
-
-        # Pearson r quality bands (from configs/thresholds.yaml → visualization.expression_corr_bands)
-        colors_h2 = [quality_color(r, _EXPR_CORR_BANDS) for r in type_rs]
-        ax2.hlines(y_pos, min_r - 0.0005, type_rs, color="#DDD", linewidth=0.8, zorder=1)
-        ax2.scatter(type_rs, y_pos, c=colors_h2, s=30, zorder=3, edgecolors="white",
+        dev_color = COLORS["real"]
+        ax2.hlines(y_pos, min(type_devs) * 0.5, type_devs, color="#DDD", linewidth=0.8, zorder=1)
+        ax2.scatter(type_devs, y_pos, c=dev_color, s=30, zorder=3, edgecolors="white",
                     linewidths=0.5)
         ax2.set_yticks(y_pos)
         ax2.set_yticklabels(short_names, fontsize=FONT_DENSE_YTICK, ha="right")
-        ax2.axvline(x=mean_r, color=COLORS["bad"], linestyle="--", alpha=0.6, linewidth=1.5,
-                    label="mean (see caption)")
-        ax2.set_xlim(min_r - 0.0005, 1.00005)
-        ax2.set_xlabel("Pearson r", fontsize=11)
-        ax2.legend(
-            fontsize=10,
-            loc="lower right",
-            frameon=False,
-        )
+        ax2.set_xscale('log')
+        ax2.set_xlabel("Deviation (1 \u2212 r)", fontsize=11)
+
+        # Annotation about expression space
+        ax2.text(0.95, 0.05, "Expression in scGPT binned space",
+                 transform=ax2.transAxes, ha="right", va="bottom",
+                 fontsize=9, style="italic", color=COLORS["neutral"])
     else:
         ax2.text(0.5, 0.5, "No per-type data", ha="center", va="center",
                  transform=ax2.transAxes)
     ax2.set_title("Per-Type Expression Fidelity", fontsize=12)
-    ax2.xaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
-    # Disable scientific/offset notation so Pearson r values near 1.0 display cleanly
-    ax2.xaxis.get_major_formatter().set_useOffset(False)
-    ax2.xaxis.get_major_formatter().set_scientific(False)
-    ax2.ticklabel_format(axis='x', useOffset=False, style='plain')
     add_panel_label(ax2, 'b', x=-0.12, y=1.08)
 
     # -- H3: Marker gene expression with error bars --

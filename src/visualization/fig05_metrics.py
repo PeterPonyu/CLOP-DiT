@@ -624,33 +624,24 @@ def plot_metrics_summary(
             ("Per-Type r (min)", expr_metrics.get("Per-Type r (min)", 0)),
         ]
         y_pos = np.arange(len(expr_items))
-        vals = [v for _, v in expr_items]
-        colors_d4 = [COLORS["good"] if v > 0.999 else COLORS["warn"] if v > 0.99 else COLORS["bad"]
-                     for v in vals]
-        bars = ax4.barh(y_pos, vals, color=colors_d4, height=0.5,
+        # Plot deviation (1 - r) on log scale instead of raw values
+        deviations = [max(1 - v, 1e-12) for _, v in expr_items]
+        single_color = COLORS["real"]
+        bars = ax4.barh(y_pos, deviations, color=single_color, height=0.5,
                         edgecolor="white", linewidth=0.8)
         ax4.set_yticks(y_pos)
         ax4.set_yticklabels([n for n, _ in expr_items], fontsize=10)
-        for i, (bar, v) in enumerate(zip(bars, vals)):
-            ax4.text(bar.get_width() + 0.0002, bar.get_y() + bar.get_height() / 2,
-                     f"{v:.3f}", va="center", fontsize=10)
+        for i, (bar, dev) in enumerate(zip(bars, deviations)):
+            ax4.text(bar.get_width() * 1.3, bar.get_y() + bar.get_height() / 2,
+                     f"{dev:.2e}", va="center", fontsize=10)
         ax4.invert_yaxis()
-        min_val = min(vals) - 0.001
-        ax4.set_xlim(min_val - 0.001, 1.015)
-
-        # Add reference line at r = 0.9999 for context
-        ax4.axvline(x=0.9999, color=COLORS["warn"], linewidth=1.0,
-                    linestyle="--", alpha=0.6, zorder=1)
-        ax4.annotate("ref r=0.9999", xy=(0.9999, 0.98),
-                 xycoords=("data", "axes fraction"),
-                 xytext=(8, -2), textcoords="offset points",
-                 fontsize=FONT_SMALL, color=COLORS["annotation_dark"], alpha=0.85,
-                 ha="left", va="top")
-
-        from matplotlib.ticker import MaxNLocator as _MNL4
-        ax4.xaxis.set_major_locator(_MNL4(nbins=5, prune="both"))
+        ax4.set_xscale('log')
+        ax4.set_xlabel("Deviation (1 \u2212 r)", fontsize=FONT_LABEL)
         ax4.set_title("Expression Fidelity", fontsize=12)
         ax4.grid(axis='both', alpha=0.15, linestyle='--')
+        ax4.text(0.98, 0.02, "Lower = better (log scale)",
+                 transform=ax4.transAxes, ha="right", va="bottom",
+                 fontsize=FONT_SMALL, color=COLORS["neutral"], style="italic")
 
     else:
         ax4.text(0.5, 0.5, "No expression data", ha="center", va="center",

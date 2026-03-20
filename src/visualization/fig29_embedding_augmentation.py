@@ -156,6 +156,16 @@ def plot_embedding_augmentation(
         ax_b.text(i, d + offset, f"{d:+.4f}",
                   ha="center", va=va, fontsize=FONT_ANNOTATION)
 
+    # Annotate if 5x and 10x deltas are identical (saturated)
+    if len(delta_f1) >= 3 and abs(delta_f1[1] - delta_f1[2]) < 1e-6:
+        mid_x = (x[1] + x[2]) / 2
+        mid_val = delta_f1[1]
+        y_ann = mid_val + _d_range * 0.25 if mid_val >= 0 else mid_val - _d_range * 0.25
+        ax_b.annotate("identical\n(saturated)",
+                       xy=(mid_x, y_ann),
+                       fontsize=FONT_ANNOTATION - 1, ha="center",
+                       style="italic", color=COLORS["neutral"])
+
     # ── Panel (c): Accuracy delta ──
     ax_c = p_c.add_axes(fig)
     add_panel_label(ax_c, "c", x=-0.18, y=1.06)
@@ -180,6 +190,16 @@ def plot_embedding_augmentation(
         offset = _da_range * 0.04 if d >= 0 else -_da_range * 0.04
         ax_c.text(i, d + offset, f"{d:+.4f}",
                   ha="center", va=va, fontsize=FONT_ANNOTATION)
+
+    # Annotate if 5x and 10x accuracy deltas are identical (saturated)
+    if len(delta_acc) >= 3 and abs(delta_acc[1] - delta_acc[2]) < 1e-6:
+        mid_x = (x[1] + x[2]) / 2
+        mid_val = delta_acc[1]
+        y_ann = mid_val + _da_range * 0.25 if mid_val >= 0 else mid_val - _da_range * 0.25
+        ax_c.annotate("identical\n(saturated)",
+                       xy=(mid_x, y_ann),
+                       fontsize=FONT_ANNOTATION - 1, ha="center",
+                       style="italic", color=COLORS["neutral"])
 
     # Save
     if save:

@@ -48,14 +48,50 @@ from src.utils.paths import RESULTS_DIR, FIG_DIR
 logger = logging.getLogger(__name__)
 
 # ─────────────────────────────────────────────────────────────
-# Hard-coded core CLOP-DiT metrics (from main results, Figs 5–7)
+# Core CLOP-DiT metrics — loaded dynamically with hardcoded fallback
 # ─────────────────────────────────────────────────────────────
-_CORE_METRICS = {
-    "knn_accuracy":     0.369,   # Fig 5 — KNN top-1 type-match
-    "text_steering":    0.810,   # Fig 5 — centroid-cosine steering
-    "diversity_ratio":  0.513,   # Fig 12 — high-fidelity mode
-    "discriminator_auc": 0.656,  # Fig 17 — real vs. generated AUC
-}
+_CORE_METRICS = None  # lazily initialised by _get_core_metrics()
+
+
+def _load_core_metrics() -> dict:
+    """Load core metrics from result files, with hardcoded fallback."""
+    defaults = {
+        "knn_accuracy": 0.369,
+        "text_steering": 0.810,
+        "diversity_ratio": 0.513,
+        "discriminator_auc": 0.656,
+    }
+    try:
+        # Try loading from bootstrap_cis.json (most reliable source)
+        ci_path = Path("results/bootstrap_cis.json")
+        if ci_path.exists():
+            with open(ci_path) as f:
+                ci_data = json.load(f)
+            metrics = ci_data.get("metrics", {})
+            if "knn_top1" in metrics:
+                defaults["knn_accuracy"] = round(metrics["knn_top1"]["point_estimate"], 3)
+            if "steering_accuracy" in metrics:
+                defaults["text_steering"] = round(metrics["steering_accuracy"]["point_estimate"], 3)
+            if "diversity_ratio" in metrics:
+                defaults["diversity_ratio"] = round(metrics["diversity_ratio"]["point_estimate"], 3)
+        # Try loading discriminator AUC from downstream results
+        cls_path = Path("results/downstream/classifier_alignment.json")
+        if cls_path.exists():
+            with open(cls_path) as f:
+                cls_data = json.load(f)
+            if "discriminator_auc" in cls_data:
+                defaults["discriminator_auc"] = round(cls_data["discriminator_auc"], 3)
+    except Exception:
+        pass  # Silently fall back to hardcoded defaults
+    return defaults
+
+
+def _get_core_metrics() -> dict:
+    """Return core metrics, loading them on first access."""
+    global _CORE_METRICS
+    if _CORE_METRICS is None:
+        _CORE_METRICS = _load_core_metrics()
+    return _CORE_METRICS
 
 # Radar axis definitions: (display_label, key, max_expected, description)
 _RADAR_AXES = [
@@ -72,9 +108,10 @@ def _load_radar_scores(results_dir: Path) -> dict[str, float]:
     """Aggregate key metrics from all downstream JSON files."""
     scores: dict[str, float] = {}
 
-    # 1. Core metrics (hard-coded from main results)
-    scores["knn"]      = _CORE_METRICS["knn_accuracy"]
-    scores["steering"] = _CORE_METRICS["text_steering"]
+    # 1. Core metrics (loaded dynamically, with hardcoded fallback)
+    core = _get_core_metrics()
+    scores["knn"]      = core["knn_accuracy"]
+    scores["steering"] = core["text_steering"]
 
     # 2. DE concordance — mean sign agreement across expanded contrasts
     de_path = results_dir / "downstream" / "expanded_de_concordance.json"
@@ -285,8 +322,9 @@ def plot_validation_summary(
     ax_card.axis("off")
 
     # Scorecard rows
+    core = _get_core_metrics()
     experiments = [
-        ("Core Metrics",     "KNN 36.9% | Steering 81.0% | AUC 0.656"),
+        ("Core Metrics",     f"KNN {core['knn_accuracy']*100:.1f}% | Steering {core['text_steering']*100:.1f}% | AUC {core['discriminator_auc']:.3f}"),
         ("Cross-Dataset",    f"Mean Pearson r = {scores.get('xds_pearson', float('nan')):.3f}"),
         ("Expanded DE",      f"Sign agree. = {scores.get('de_sign', float('nan')):.3f} (5 contrasts)"),
         ("OOD Robustness",   f"Marker hit rate = {scores.get('ood_hit', float('nan')):.3f}"),

@@ -145,6 +145,14 @@ def plot_expanded_de(
         ax.set_ylabel("Gen. logFC", fontsize=FONT_TICK_DENSE)
         style_axes(ax)
 
+        # DE logFC scale limitation annotation (first scatter only)
+        if i == 0 and len(real_logfc) > 0 and len(gen_logfc) > 0:
+            max_lfc = max(abs(real_logfc).max(), abs(gen_logfc).max())
+            ax.text(0.97, 0.03, f"max |logFC| \u2248 {max_lfc:.1e}\n(scGPT output space)",
+                    transform=ax.transAxes, ha="right", va="bottom",
+                    fontsize=FONT_ANNOTATION - 1, style="italic", color=COLORS["neutral"],
+                    bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8, edgecolor="none"))
+
     # ── Panel (b): Concordance heatmap ──
     ax_b = p_b.add_axes(fig)
     add_panel_label(ax_b, "b", x=-0.12, y=1.06)

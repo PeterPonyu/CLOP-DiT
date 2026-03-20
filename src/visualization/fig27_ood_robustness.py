@@ -95,6 +95,9 @@ def plot_ood_robustness(
         for name, info in cat_data.items():
             if not isinstance(info, dict):
                 continue
+            # Skip entries with no actual evaluation data
+            if "marker_hit_rate" not in info and "markers_in_vocabulary" not in info:
+                continue
             all_prompts.append(name)
             all_hit_rates.append(float(info.get("marker_hit_rate", 0) or 0))
             all_coherence.append(float(info.get("intra_sample_cosine_sim", 0) or 0))
@@ -105,6 +108,9 @@ def plot_ood_robustness(
     if n_prompts == 0:
         logger.warning("No OOD prompts found in data")
         return None
+
+    # Count how many free-form were skipped
+    n_ff_skipped = len(marker_data.get("free_form", {})) - sum(1 for c in all_categories if c == "free_form")
 
     # Layout
     fig = plt.figure(figsize=(15.0, 6.5))
@@ -143,6 +149,11 @@ def plot_ood_robustness(
     ax_a.legend(handles=legend_patches, fontsize=FONT_LEGEND - 1,
                 loc="upper right", frameon=False)
     style_axes(ax_a)
+
+    if n_ff_skipped > 0:
+        ax_a.text(0.98, 0.95, f"Free-form prompts (n={n_ff_skipped}): no marker ground truth",
+                  transform=ax_a.transAxes, ha="right", va="top",
+                  fontsize=FONT_ANNOTATION - 1, style="italic", color=COLORS["neutral"])
 
     # Annotate bars with markers in vocab
     for i, (bar, n_v) in enumerate(zip(bars, all_n_vocab)):

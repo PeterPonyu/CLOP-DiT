@@ -173,12 +173,28 @@ def plot_marker_completeness(
     ax_c.invert_yaxis()
     style_axes(ax_c)
 
+    # Auto-scale x-axis to data range (values are ~1e-4 to 7e-4, invisible at normal scale)
+    if mean_lfcs:
+        lfc_min = min(mean_lfcs)
+        lfc_max = max(mean_lfcs)
+        lfc_pad = (lfc_max - lfc_min) * 0.15 if lfc_max != lfc_min else abs(lfc_max) * 0.2
+        ax_c.set_xlim(lfc_min - lfc_pad, lfc_max + lfc_pad)
+
+    # Use scientific notation for tiny log2FC values
+    ax_c.ticklabel_format(axis='x', style='scientific', scilimits=(0, 0))
+
     for i, v in enumerate(mean_lfcs):
         ha = "left" if v >= 0 else "right"
         offset_pts = 4 if v >= 0 else -4
         ax_c.annotate(f"{v:.4f}", xy=(v, i), xytext=(offset_pts, 0),
                       textcoords="offset points", ha=ha, va="center",
                       fontsize=FONT_ANNOTATION - 1, annotation_clip=True)
+
+    ax_c.text(0.98, 0.02,
+              "Effect sizes < 0.001 log2FC\n(scGPT decoder near-uniform)",
+              transform=ax_c.transAxes, ha="right", va="bottom",
+              fontsize=FONT_ANNOTATION - 1, style="italic",
+              color=COLORS["neutral"])
 
     # Save
     if save:

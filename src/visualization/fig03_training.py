@@ -123,18 +123,22 @@ def plot_clop_training(
     ax_a1.yaxis.set_major_locator(MaxNLocator(nbins=4, prune='both'))
     add_panel_label(ax_a1, 'a', x=-0.10, y=1.08)
 
-    # ── A2: Temperature stability (fixed τ = 14.0 in production) ──
+    # ── A2: Inter-type separation (replaces trivially flat temperature panel) ──
     ax_a2 = top_right.add_axes(fig)
-    ax_a2.plot(epochs, h["temperature"], color=COLORS["baseline_gauss"], linewidth=2)
+    if "val_inter_sep" in h:
+        ax_a2.plot(epochs, h["val_inter_sep"], color=COLORS["accent"], linewidth=2, label="Inter-sep")
+        ax_a2.set_ylabel("Cosine Separation", fontsize=FONT_LABEL)
+        ax_a2.set_title("Inter-Type Separation", fontsize=FONT_TITLE)
+        ax_a2.set_ylim(0, 1.05)
+        ax_a2.legend(loc="lower right", fontsize=FONT_LEGEND_DENSE, frameon=False)
+    else:
+        # Fallback: show fixed temperature as config note
+        ax_a2.text(0.5, 0.5, "Fixed \u03c4 = 14.0\n(not learned)", transform=ax_a2.transAxes,
+                   ha="center", va="center", fontsize=FONT_LABEL, color=COLORS["neutral"])
+        ax_a2.set_title("Temperature Config", fontsize=FONT_TITLE)
     ax_a2.set_xlabel("Epoch", fontsize=FONT_LABEL)
-    ax_a2.set_ylabel("Logit Scale (\u03c4)", fontsize=FONT_LABEL)
-    ax_a2.set_title("Fixed \u03c4 = 14.0 (production)", fontsize=FONT_TITLE)
-    ax_a2.axhline(y=14.0, color="gray", linestyle=":", alpha=0.5, label="fixed \u03c4=14.0")
-    ax_a2.set_ylim(13.5, 14.5)
-    ax_a2.legend(loc="lower right", fontsize=FONT_LEGEND_DENSE, frameon=False)
     ax_a2.set_xlim(0, max(epochs) * 1.08)
     ax_a2.locator_params(axis='x', nbins=4)
-    ax_a2.locator_params(axis='y', nbins=4)
     add_panel_label(ax_a2, 'b', x=-0.10, y=1.08)
 
     # ── A3: Prototype accuracy ──
@@ -402,18 +406,22 @@ def plot_training_dynamics_combined(
         _add_training_phase_bands(ax_a1, int(max(epochs)))
         add_panel_label(ax_a1, 'a', x=-0.12, y=1.08)
 
-        # A2: Temperature (fixed τ = 14.0 in production)
+        # A2: Inter-type separation (replaces trivially flat temperature panel)
         ax_a2 = top_cols[1].add_axes(fig)
-        ax_a2.plot(epochs, h["temperature"], color=COLORS["baseline_gauss"], linewidth=2)
+        if "val_inter_sep" in h:
+            ax_a2.plot(epochs, h["val_inter_sep"], color=COLORS["accent"], linewidth=2, label="Inter-sep")
+            ax_a2.set_ylabel("Cosine Separation", fontsize=FONT_LABEL)
+            ax_a2.set_title("Inter-Type Separation", fontsize=FONT_TITLE)
+            ax_a2.set_ylim(0, 1.05)
+            ax_a2.legend(loc="lower right", fontsize=FONT_LEGEND_DENSE, frameon=False)
+        else:
+            # Fallback: show fixed temperature as config note
+            ax_a2.text(0.5, 0.5, "Fixed \u03c4 = 14.0\n(not learned)", transform=ax_a2.transAxes,
+                       ha="center", va="center", fontsize=FONT_LABEL, color=COLORS["neutral"])
+            ax_a2.set_title("Temperature Config", fontsize=FONT_TITLE)
         ax_a2.set_xlabel("Epoch", fontsize=FONT_LABEL)
-        ax_a2.set_ylabel("Logit Scale (\u03c4)", fontsize=FONT_LABEL)
-        ax_a2.set_title("Fixed \u03c4 = 14.0", fontsize=FONT_TITLE)
-        ax_a2.axhline(y=14.0, color="gray", linestyle=":", alpha=0.5, label="fixed \u03c4=14.0")
-        ax_a2.set_ylim(13.5, 14.5)
-        ax_a2.legend(loc="lower right", fontsize=FONT_LEGEND_DENSE, frameon=False)
         ax_a2.set_xlim(0, max(epochs) * 1.08)
         ax_a2.locator_params(axis='x', nbins=4)
-        ax_a2.locator_params(axis='y', nbins=4)
         add_panel_label(ax_a2, 'b', x=-0.12, y=1.08)
 
         # A3: Accuracy
