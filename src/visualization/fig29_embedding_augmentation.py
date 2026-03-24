@@ -166,6 +166,15 @@ def plot_embedding_augmentation(
                        fontsize=FONT_ANNOTATION - 1, ha="center",
                        style="italic", color=COLORS["neutral"])
 
+    # Add interpretation: deltas within CV noise band
+    max_delta = max(abs(d) for d in delta_f1) if delta_f1 else 0
+    if max_delta < 0.01 and max_delta > 0:
+        ax_b.text(0.50, 0.02,
+                  f"Gains < {max_delta:.1e} (within CV noise)",
+                  transform=ax_b.transAxes, ha="center", va="bottom",
+                  fontsize=FONT_ANNOTATION - 1, style="italic",
+                  color=COLORS["neutral"])
+
     # ── Panel (c): Accuracy delta ──
     ax_c = p_c.add_axes(fig)
     add_panel_label(ax_c, "c", x=-0.18, y=1.06)
@@ -200,6 +209,15 @@ def plot_embedding_augmentation(
                        xy=(mid_x, y_ann),
                        fontsize=FONT_ANNOTATION - 1, ha="center",
                        style="italic", color=COLORS["neutral"])
+
+    # Add interpretation: deltas within CV noise band
+    max_da = max(abs(d) for d in delta_acc) if delta_acc else 0
+    if max_da < 0.01 and max_da > 0:
+        ax_c.text(0.50, 0.02,
+                  f"Gains < {max_da:.1e} (within CV noise)",
+                  transform=ax_c.transAxes, ha="center", va="bottom",
+                  fontsize=FONT_ANNOTATION - 1, style="italic",
+                  color=COLORS["neutral"])
 
     # Save
     if save:

@@ -139,7 +139,7 @@ def plot_clop_training(
     ax_a2.set_xlabel("Epoch", fontsize=FONT_LABEL)
     ax_a2.set_xlim(0, max(epochs) * 1.08)
     ax_a2.locator_params(axis='x', nbins=4)
-    add_panel_label(ax_a2, 'b', x=-0.10, y=1.08)
+    add_panel_label(ax_a2, 'b', x=-0.10, y=1.14)
 
     # ── A3: Prototype accuracy ──
     ax_a3 = bottom_left.add_axes(fig)

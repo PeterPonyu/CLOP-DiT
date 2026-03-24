@@ -70,7 +70,7 @@ def plot_marker_completeness(
     # Layout
     fig = plt.figure(figsize=(16.5, 8.0))
     layout = bind_figure_region(fig, (0.07, 0.18, 0.97, 0.92))
-    p_a, p_b, p_c = layout.split_cols([1.0, 1.2, 0.7], gap=0.07)
+    p_a, p_b, p_c = layout.split_cols([1.0, 1.2, 0.7], gap=0.10)
 
     # Discover available K values dynamically from data
     _candidate_ks = [10, 20, 50, 100]
@@ -142,9 +142,9 @@ def plot_marker_completeness(
                 ax_b.text(ci, ri, f"{val:.2f}", ha="center", va="center",
                           fontsize=max(FONT_HEATMAP_CELL - 1, 5), color=color)
 
-    cax = add_axes_next_to(fig, ax_b, side="right", width=0.008,
-                           height=ax_b.get_position().height * 0.6,
-                           pad=0.010, align="center")
+    cax = add_axes_next_to(fig, ax_b, side="right", width=0.006,
+                           height=ax_b.get_position().height * 0.5,
+                           pad=0.008, align="center")
     fig.colorbar(im, cax=cax, label="Recall")
     cax.tick_params(labelsize=7)
 

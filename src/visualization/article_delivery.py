@@ -1,4 +1,4 @@
-"""Article figure delivery — single source of truth for the 20 MDPI article figures.
+"""Article figure delivery — single source of truth for the 30 MDPI article figures.
 
 Verify PDF figure assets exist in a source directory and copy them
 to the article figures directory so LaTeX can include the PDF
@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-# Single source of truth: 20 article figure basenames (no suffix).
+# Single source of truth: 30 article figure basenames (no suffix).
 # Order matches the LaTeX \begin{figure} sequence in articles/clop_dit_biology.tex,
 # which determines the auto-numbered Figure 1–20.
 #

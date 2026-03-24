@@ -84,7 +84,7 @@ def plot_expression_correlation(
 
     fig = plt.figure(figsize=(12.0, 7.5))
     # Note: Figure-level title removed per revision requirements; stats moved to caption
-    layout = bind_figure_region(fig, (0.07, 0.10, 0.985, 0.95))
+    layout = bind_figure_region(fig, (0.07, 0.10, 0.96, 0.95))
     top_row, bottom_row = layout.split_rows(2, hspace=0.46)
     top_left, top_right = top_row.split_cols([0.86, 1.14], gap=0.050)
     bottom_left, bottom_right = bottom_row.split_cols([1.04, 0.92], gap=0.050)

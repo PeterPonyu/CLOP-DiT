@@ -221,8 +221,8 @@ def plot_validation_summary(
     # Panel (b): horizontal bars — middle
     ax_bar = fig.add_axes([0.44, 0.12, 0.26, 0.76])
 
-    # Panel (c): scorecard — right
-    ax_card = fig.add_axes([0.74, 0.06, 0.25, 0.88])
+    # Panel (c): scorecard — right, aligned with panel b top/bottom
+    ax_card = fig.add_axes([0.74, 0.12, 0.25, 0.76])
 
     # ── Panel (a): Radar chart ──────────────────────────────────
     angles = [2 * math.pi * i / n_axes for i in range(n_axes)]
@@ -274,10 +274,8 @@ def plot_validation_summary(
     ax_radar.legend(fontsize=FONT_LEGEND - 1, loc="lower left",
                     bbox_to_anchor=(-0.08, -0.05), frameon=False)
 
-    # Panel label
-    ax_radar.text(0.0, 1.02, "(a)", transform=ax_radar.transAxes,
-                  fontsize=14, fontweight="bold", color="black",
-                  va="bottom", ha="left", clip_on=False)
+    # Panel label — use add_panel_label for consistency with other figures
+    add_panel_label(ax_radar, "a", x=-0.02, y=1.04)
 
     # ── Panel (b): Horizontal bars (absolute scores) ──
     add_panel_label(ax_bar, "b", x=-0.18, y=1.04)
@@ -329,7 +327,7 @@ def plot_validation_summary(
         ("Expanded DE",      f"Sign agree. = {scores.get('de_sign', float('nan')):.3f} (5 contrasts)"),
         ("OOD Robustness",   f"Marker hit rate = {scores.get('ood_hit', float('nan')):.3f}"),
         ("Marker Programs",  f"Canonical recall@50 = {scores.get('marker_r50', float('nan')):.3f}"),
-        ("Emb. Augmentation","ΔF1 ≈ +0.001 (marginal benefit)"),
+        ("Emb. Augmentation","dF1 ~ +0.001 (marginal benefit)"),
     ]
 
     row_colors = [

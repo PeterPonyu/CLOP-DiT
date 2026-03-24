@@ -1,6 +1,6 @@
 # src/visualization/
 
-Publication-quality figure generation for the CLOP-DiT manuscript. Produces 19 panels (A through S), merged composite figures, and handles delivery to the LaTeX article directory.
+Publication-quality figure generation for the CLOP-DiT manuscript. Produces 30 article figures (Figs 1–30), merged composite figures, and handles delivery to the LaTeX article directory.
 
 ## Panel Modules
 
@@ -43,7 +43,7 @@ Each `panels_*.py` file renders one or more manuscript panels:
 
 ## Article Delivery
 
-`article_delivery.py` verifies that rendered PDFs exist in `results/figures/` and symlinks (or copies) them into `articles/figures/` for LaTeX inclusion. The 17 article figure basenames are defined as the canonical manifest inside this module.
+`article_delivery.py` verifies that rendered PDFs exist in `results/figures/` and symlinks (or copies) them into `articles/figures/` for LaTeX inclusion. The 30 article figure basenames are defined as the canonical manifest inside this module.
 
 ## Utilities
 

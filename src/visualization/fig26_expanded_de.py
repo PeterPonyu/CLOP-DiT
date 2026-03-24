@@ -108,7 +108,7 @@ def plot_expanded_de(
 
         ax = scatter_regions[i].add_axes(fig)
         if i == 0:
-            add_panel_label(ax, "a", x=-0.20, y=1.08)
+            add_panel_label(ax, "a", x=-0.20, y=1.06)
 
         ax.scatter(real_logfc, gen_logfc, s=4, alpha=0.3, c=COLORS["real"],
                    edgecolors="none", rasterized=True)

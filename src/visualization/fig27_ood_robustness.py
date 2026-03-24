@@ -155,12 +155,13 @@ def plot_ood_robustness(
                   transform=ax_a.transAxes, ha="right", va="top",
                   fontsize=FONT_ANNOTATION - 1, style="italic", color=COLORS["neutral"])
 
-    # Annotate bars with markers in vocab
-    for i, (bar, n_v) in enumerate(zip(bars, all_n_vocab)):
+    # Annotate bars with hit count / markers in vocab
+    for i, (bar, n_v, hr) in enumerate(zip(bars, all_n_vocab, all_hit_rates)):
         h = bar.get_height()
+        n_hit = round(hr * n_v) if n_v > 0 else 0
         ax_a.text(bar.get_x() + bar.get_width() / 2, h + 0.02,
-                  f"{n_v}m", ha="center", va="bottom",
-                  fontsize=FONT_ANNOTATION - 2, color=COLORS["neutral"])
+                  f"{n_hit}/{n_v}", ha="center", va="bottom",
+                  fontsize=FONT_ANNOTATION - 1, color=COLORS["annotation_dark"])
 
     # ── Panel (b): Embedding coherence ──
     ax_b = p_b.add_axes(fig)
@@ -174,7 +175,13 @@ def plot_ood_robustness(
     ax_b.set_yticklabels(short_names, fontsize=FONT_TICK_DENSE - 1)
     ax_b.set_xlabel("Cosine Similarity", fontsize=FONT_LABEL)
     ax_b.set_title("Embedding Coherence", fontsize=FONT_TITLE)
-    ax_b.set_xlim(0, 1.05)
+    # Zoom x-axis to meaningful range so dots aren't compressed into a sliver
+    if all_coherence:
+        coh_min = min(all_coherence)
+        coh_pad = max(0.05, (1.0 - coh_min) * 0.15)
+        ax_b.set_xlim(max(0, coh_min - coh_pad), 1.02)
+    else:
+        ax_b.set_xlim(0, 1.05)
     ax_b.invert_yaxis()
     style_axes(ax_b)
 
@@ -210,8 +217,13 @@ def plot_ood_robustness(
     style_axes(ax_c)
 
     for i, (v, n, nh) in enumerate(zip(cat_means, cat_ns, cat_with_hits)):
-        ax_c.text(v + 0.02, i, f"{v:.2f} ({nh}/{n})",
-                  ha="left", va="center", fontsize=FONT_ANNOTATION)
+        if n == 0:
+            ax_c.text(0.02, i, "N/A (no marker ground truth)",
+                      ha="left", va="center", fontsize=FONT_ANNOTATION,
+                      style="italic", color=COLORS["neutral"])
+        else:
+            ax_c.text(v + 0.02, i, f"{v:.2f} ({nh}/{n})",
+                      ha="left", va="center", fontsize=FONT_ANNOTATION)
 
     # Save
     if save:

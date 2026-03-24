@@ -95,8 +95,8 @@ def plot_variance_deepdive(
         r = 0.0
 
     # Figure: 3 panels
-    fig = plt.figure(figsize=(17.0, 6.0))
-    layout = bind_figure_region(fig, (0.11, 0.18, 0.95, 0.82))
+    fig = plt.figure(figsize=(17.0, 6.5))
+    layout = bind_figure_region(fig, (0.09, 0.12, 0.95, 0.90))
     cols = layout.split_cols([1, 1, 1.2], wspace=0.55)
 
     # ── Panel (a): Scatter ──
@@ -125,7 +125,7 @@ def plot_variance_deepdive(
               va="top", color=COLORS["annotation_dark"])
     ax_a.locator_params(axis='x', nbins=4)
     ax_a.locator_params(axis='y', nbins=4)
-    add_panel_label(ax_a, "a", x=-0.14, y=1.08)
+    add_panel_label(ax_a, "a", x=-0.14, y=1.06)
 
     # ── Panel (b): Histogram of variance ratios ──
     ax_b = cols[1].add_axes(fig)
@@ -141,6 +141,7 @@ def plot_variance_deepdive(
     ax_b.locator_params(axis='x', nbins=5)
     import matplotlib.ticker as mticker_b
     ax_b.xaxis.set_major_formatter(mticker_b.FormatStrFormatter("%.0f"))
+    ax_b.yaxis.set_major_locator(mticker_b.MaxNLocator(nbins=3, prune='upper'))
     ax_b.text(0.05, 0.92, f"Median: {median_lr:.2f}",
               transform=ax_b.transAxes, fontsize=FONT_LEGEND_DENSE,
               va="top", color=COLORS["bad"])
@@ -179,7 +180,7 @@ def plot_variance_deepdive(
     ax_c.set_title(f"Top-{top_n} Under-dispersed Genes", fontsize=FONT_TITLE)
     ax_c.legend(fontsize=FONT_LEGEND_DENSE, loc="lower right")
     ax_c.locator_params(axis='x', nbins=4)
-    add_panel_label(ax_c, "c", x=-0.20, y=1.08)
+    add_panel_label(ax_c, "c", x=-0.20, y=1.06)
 
     set_figure_suptitle(fig, "Per-Gene Variance Analysis: Real vs Generated", y=0.98)
 

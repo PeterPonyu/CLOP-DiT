@@ -141,7 +141,7 @@ def plot_cross_dataset_validation(
     ax_c.axvspan(math.log10(0.5), math.log10(2.0), color=COLORS["good"], alpha=0.08)
     ax_c.invert_yaxis()
     style_axes(ax_c)
-    ax_c.text(0.5, -0.22, "Ratio \u226a 1: scGPT decoder compresses variance",
+    ax_c.text(0.5, -0.22, "Ratio << 1: scGPT decoder compresses variance",
               transform=ax_c.transAxes, ha="center", fontsize=FONT_ANNOTATION,
               style="italic", color=COLORS["neutral"])
 

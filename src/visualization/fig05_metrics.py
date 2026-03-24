@@ -377,7 +377,7 @@ def plot_metrics_summary(
         return None
 
     fig = plt.figure(figsize=(15.2, 8.4))
-    layout = bind_figure_region(fig, (0.07, 0.08, 0.98, 0.95))
+    layout = bind_figure_region(fig, (0.07, 0.08, 0.94, 0.95))
     top_row, bottom_row = layout.split_rows(2, hspace=0.34)
     top_left, top_right = top_row.split_cols([1.12, 1.0], wspace=0.50)
     bottom_left, bottom_right = bottom_row.split_cols([1.12, 1.0], wspace=0.44)
@@ -633,7 +633,7 @@ def plot_metrics_summary(
         ax4.set_yticklabels([n for n, _ in expr_items], fontsize=10)
         for i, (bar, dev) in enumerate(zip(bars, deviations)):
             ax4.text(bar.get_width() * 1.3, bar.get_y() + bar.get_height() / 2,
-                     f"{dev:.2e}", va="center", fontsize=10)
+                     f"{dev:.1e}", va="center", fontsize=9)
         ax4.invert_yaxis()
         ax4.set_xscale('log')
         ax4.set_xlabel("Deviation (1 \u2212 r)", fontsize=FONT_LABEL)
