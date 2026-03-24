@@ -22,6 +22,7 @@ class GroupAwareBatchSampler(Sampler[List[int]]):
         text_embeddings: Optional[np.ndarray] = None,
         drop_last: bool = True,
         seed: int = 42,
+        class_weight_power: float = 0.0,
     ):
         if batch_size <= 0:
             raise ValueError("batch_size must be > 0")
@@ -45,6 +46,18 @@ class GroupAwareBatchSampler(Sampler[List[int]]):
         for gid in self.unique_groups:
             idx = np.where(self.group_ids == gid)[0]
             self.group_to_local_indices[int(gid)] = idx
+
+        # Inverse-frequency weighting for rare-type upsampling.
+        # class_weight_power=0 → uniform, =0.5 → sqrt-balanced, =1.0 → fully balanced
+        self.class_weight_power = float(class_weight_power)
+        if self.class_weight_power > 0:
+            counts = np.array([len(self.group_to_local_indices[int(g)])
+                               for g in self.unique_groups], dtype=np.float64)
+            inv_freq = 1.0 / np.maximum(counts, 1.0)
+            weights = inv_freq ** self.class_weight_power
+            self.group_sample_probs = weights / weights.sum()
+        else:
+            self.group_sample_probs = None
 
         self.group_neighbors: Dict[int, np.ndarray] = {}
         if text_embeddings is not None:
@@ -82,7 +95,10 @@ class GroupAwareBatchSampler(Sampler[List[int]]):
         selected: List[int] = []
         selected_set = set()
 
-        seed_gid = int(self.rng.choice(self.unique_groups))
+        if self.group_sample_probs is not None:
+            seed_gid = int(self.rng.choice(self.unique_groups, p=self.group_sample_probs))
+        else:
+            seed_gid = int(self.rng.choice(self.unique_groups))
         selected.append(seed_gid)
         selected_set.add(seed_gid)
 
@@ -108,7 +124,13 @@ class GroupAwareBatchSampler(Sampler[List[int]]):
             remaining = [int(g) for g in self.unique_groups if int(g) not in selected_set]
             if not remaining:
                 break
-            g = int(self.rng.choice(remaining))
+            if self.group_sample_probs is not None:
+                rem_idx = [i for i, g in enumerate(self.unique_groups) if int(g) not in selected_set]
+                rem_probs = self.group_sample_probs[rem_idx]
+                rem_probs = rem_probs / rem_probs.sum()
+                g = int(self.unique_groups[self.rng.choice(rem_idx, p=rem_probs)])
+            else:
+                g = int(self.rng.choice(remaining))
             selected.append(g)
             selected_set.add(g)
 

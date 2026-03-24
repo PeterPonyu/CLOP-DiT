@@ -13,6 +13,7 @@ cache_dir: "data/cached_latents_v5.2"
 use_preprocessed: true
 use_deduplicated: true
 
+seed: 42
 variant_prob: 0.0
 val_split: 0.1
 n_folds: 1

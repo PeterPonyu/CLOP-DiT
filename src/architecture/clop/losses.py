@@ -276,6 +276,8 @@ class PrototypeSigLIPLoss(nn.Module):
         cohesion_weight: float = 0.1,
         max_temperature: float = 100.0,
         temp_reg_weight: float = 0.0,
+        separation_margin: float = 0.0,
+        separation_threshold: float = 0.3,
     ):
         super().__init__()
         self.log_temperature = nn.Parameter(torch.tensor(np.log(init_temperature)))
@@ -283,6 +285,10 @@ class PrototypeSigLIPLoss(nn.Module):
         self.cohesion_weight = cohesion_weight
         self.max_temperature = max_temperature
         self.temp_reg_weight = temp_reg_weight  # L2 penalty on log_temperature
+        # Separation margin: penalizes prototype pairs with cosine > threshold.
+        # Pushes confusable cell-type prototypes apart (e.g., beta vs alpha pancreatic).
+        self.separation_margin = separation_margin
+        self.separation_threshold = separation_threshold
 
     @property
     def temperature(self) -> torch.Tensor:
@@ -382,6 +388,20 @@ class PrototypeSigLIPLoss(nn.Module):
 
         total_loss = alignment_loss + self.cohesion_weight * cohesion_loss
 
+        # ── Step 5: Separation margin for confusable prototypes ──
+        separation_loss = torch.tensor(0.0, device=device)
+        if self.separation_margin > 0 and n_groups > 1:
+            # Cosine similarity between all prototype pairs
+            proto_sim = prototypes @ prototypes.T  # (n_groups, n_groups)
+            # Mask diagonal
+            diag_mask = torch.eye(n_groups, device=device, dtype=torch.bool)
+            proto_sim = proto_sim.masked_fill(diag_mask, -1.0)
+            # Penalize pairs above threshold: hinge loss
+            violations = torch.clamp(proto_sim - self.separation_threshold, min=0.0)
+            if violations.sum() > 0:
+                separation_loss = violations.sum() / max(1, (violations > 0).sum())
+            total_loss = total_loss + self.separation_margin * separation_loss
+
         # Temperature regularization: prevent saturation
         # 1. L2 penalty on log_temperature (prevents unbounded growth)
         # 2. Soft penalty if temperature approaches max (encourages staying below max)
@@ -443,6 +463,7 @@ class PrototypeSigLIPLoss(nn.Module):
             "bias": self.bias.item(),
             "n_groups": n_groups,
             "cohesion_loss": cohesion_loss.item(),
+            "separation_loss": separation_loss.item(),
         }
 
         return total_loss, metrics

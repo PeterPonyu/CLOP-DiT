@@ -107,6 +107,8 @@ class CLOPAligner(nn.Module):
         auto_duplicate_mask: bool = False,
         cohesion_weight: float = 0.1,
         temp_reg_weight: float = 0.0,
+        separation_margin: float = 0.0,
+        separation_threshold: float = 0.3,
     ):
         super().__init__()
 
@@ -153,6 +155,8 @@ class CLOPAligner(nn.Module):
                 cohesion_weight=cohesion_weight,
                 max_temperature=max_temperature if max_temperature > 1.0 else 100.0,
                 temp_reg_weight=temp_reg_weight,
+                separation_margin=separation_margin,
+                separation_threshold=separation_threshold,
             )
         elif loss_type == "siglip":
             self.criterion = SigLIPLoss(

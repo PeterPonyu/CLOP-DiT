@@ -636,6 +636,7 @@ class CLOPTrainer:
             variant_map_path=config.get("variant_map_path"),
             use_deduplicated=config.get("use_deduplicated", False),
             split_strategy=config.get("split_strategy", "stratified"),
+            class_weight_power=config.get("class_weight_power", 0.0),
         )
 
         # Auto-detect dimensions from cached data if not specified
@@ -671,6 +672,8 @@ class CLOPTrainer:
             auto_duplicate_mask=config.get("auto_duplicate_mask", False),
             cohesion_weight=config.get("cohesion_weight", 0.1),
             temp_reg_weight=config.get("temp_reg_weight", 0.0),
+            separation_margin=config.get("separation_margin", 0.0),
+            separation_threshold=config.get("separation_threshold", 0.3),
         )
 
         # Freeze temperature if configured as non-learnable (prevents temp runaway)

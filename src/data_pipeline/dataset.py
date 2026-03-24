@@ -573,6 +573,7 @@ def create_dataloaders(
     variant_map_path: Optional[str] = None,
     use_deduplicated: bool = False,
     split_strategy: str = "stratified",
+    class_weight_power: float = 0.0,
 ) -> Tuple[DataLoader, DataLoader]:
     """Create train/val DataLoaders for CLOP or DiT training.
 
@@ -767,6 +768,7 @@ def create_dataloaders(
                 hard_negative_k=hard_negative_k,
                 text_embeddings=text_embeddings,
                 drop_last=True,
+                class_weight_power=class_weight_power,
             )
 
             logger.info(

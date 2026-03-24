@@ -6,6 +6,7 @@ cache_dir: "data/cached_latents_v5.2"
 projected_text_path: "data/cached_latents_v5.2/projected_text.npy"
 use_deduplicated: true          # Use dedup cell embeddings (167K, matches projected_text)
 use_preprocessed: true          # Use whitened embeddings (ZCA-preprocessed)
+seed: 42
 split_strategy: "stratified"     # Cell-type-stratified split (all 69 types in val)
 val_split: 0.1
 n_folds: 1
