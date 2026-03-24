@@ -169,7 +169,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
 
     # ── Panel (a): Distribution with null baseline ──
     ax = top_left.add_axes(fig)
-    add_panel_label(ax, 'a', x=-0.12, y=1.08)
+    add_panel_label(ax, 'a', x=-0.12, y=1.06)
 
     # Compute null baseline: permuted gene labels within each type
     rng = np.random.default_rng(42)
@@ -261,7 +261,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     R_gen = _corr_matrix(gen_sub[g_mask][:, :50])
 
     ax2 = top_right.add_axes(fig)
-    add_panel_label(ax2, 'b', x=-0.12, y=1.08)
+    add_panel_label(ax2, 'b', x=-0.12, y=1.06)
     diff = R_gen - R_real
     im = ax2.imshow(
         diff,
@@ -308,7 +308,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     R_gen_w = _corr_matrix(gen_sub[g_mask][:, :50])
 
     ax3 = bottom_left.add_axes(fig)
-    add_panel_label(ax3, 'c', x=-0.12, y=1.08)
+    add_panel_label(ax3, 'c', x=-0.12, y=1.06)
     diff_w = R_gen_w - R_real_w
     im2 = ax3.imshow(
         diff_w,
@@ -346,7 +346,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     # ── Panel (d): Replace non-informative cell-count panel ──
     # Use Mantel r vs per-type mean expression variance (biological heterogeneity)
     ax4 = bottom_right.add_axes(fig)
-    add_panel_label(ax4, 'd', x=-0.12, y=1.08)
+    add_panel_label(ax4, 'd', x=-0.12, y=1.06)
 
     # Compute mean expression variance per type as a proxy for heterogeneity
     type_het = []

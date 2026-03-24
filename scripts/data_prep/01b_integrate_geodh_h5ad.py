@@ -235,8 +235,8 @@ def preprocess_adata(
 
 def main():
     parser = argparse.ArgumentParser(description="Integrate GEO-DataHub h5ad into CLOP-DiT")
-    parser.add_argument("--source_dir", type=str, default="/home/zeyufu/Desktop/GEO-DataHub/h5ad_output")
-    parser.add_argument("--meta_root", type=str, default="/home/zeyufu/Desktop/GEO-DataHub/downloads")
+    parser.add_argument("--source_dir", type=str, default="/home/zeyufu/Desktop/.archive/GEO-DataHub/h5ad_output")
+    parser.add_argument("--meta_root", type=str, default="/home/zeyufu/Desktop/.archive/GEO-DataHub/downloads")
     parser.add_argument("--output_dir", type=str, default="data/processed_h5ad")
     parser.add_argument("--main_metadata", type=str, default="data/processed_h5ad/metadata_structured.json")
     parser.add_argument("--selection", type=str, default="canonical", choices=["canonical", "all"])

@@ -63,8 +63,8 @@ python scripts/inference/05_inference.py \
 python scripts/training/04a_train_clop.py --config configs/clop.yaml
 python scripts/training/04b_train_dit.py --config configs/dit.yaml
 
-# Regenerate all 19 panels and article figures
-bash scripts/pipeline/regenerate_report.sh
+# Regenerate all 30 article figures
+python scripts/pipeline/run_regeneration.py
 
 # Or run the full orchestrated pipeline
 python scripts/pipeline/run_pipeline.py --stage all
@@ -82,7 +82,7 @@ CLOP-DiT/
 │   ├── training/               #   CLOPTrainer, DiTTrainer, schedulers
 │   ├── evaluation/             #   Metrics, benchmarking, biological validation
 │   ├── experiments/            #   OOD evaluation, rare cell augmentation
-│   ├── visualization/          #   Publication figure generation (panels A-S)
+│   ├── visualization/          #   Publication figure generation (Figs 1-30)
 │   └── utils/                  #   Path resolution, logging, helpers
 ├── scripts/                    # Pipeline entry points
 │   ├── data_prep/              #   Steps 00-03: data preparation & caching
@@ -119,10 +119,10 @@ CLOP-DiT/
 
 ## Reproducibility
 
-Model checkpoints and pre-processed embeddings are available upon request from the corresponding author. Once placed in `models/` and `data/`, all 19 figure panels can be regenerated with:
+Model checkpoints and pre-processed embeddings are available upon request from the corresponding author. Once placed in `models/` and `data/`, all 30 article figures can be regenerated with:
 
 ```bash
-bash scripts/pipeline/regenerate_report.sh
+python scripts/pipeline/run_regeneration.py
 ```
 
 See [REPRODUCIBILITY.md](REPRODUCIBILITY.md) for environment setup, data layout, and expected numeric results.

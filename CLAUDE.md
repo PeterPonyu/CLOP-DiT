@@ -90,7 +90,7 @@ articles/clop_dit_biology.tex (\includegraphics)
 ```
 
 **Key files:**
-- **`src/visualization/article_delivery.py`** — Canonical 20-figure manifest (single source of truth)
+- **`src/visualization/article_delivery.py`** — Canonical 30-figure manifest (single source of truth)
   - Maps source filenames → article figure numbers
   - Verifies PDFs exist and creates symlinks to `articles/figures/`
 - **`src/visualization/style.py`** — Global style management
@@ -156,7 +156,7 @@ LaTeX build: articles/clop_dit_biology.tex → PDF
 
 ### Full regeneration process
 
-1. **Regenerate all 20 figures with VCD checks:**
+1. **Regenerate all 30 figures with VCD checks:**
    ```bash
    python scripts/pipeline/run_regeneration.py  # Auto-runs VCD on every figure
    ```
@@ -235,7 +235,7 @@ See `PIPELINE.md` for detailed stage descriptions.
 
 | File/Dir | Role |
 |----------|------|
-| `src/visualization/article_delivery.py` | **Canonical 20-figure manifest** — single source of truth for figure numbering and symlinks |
+| `src/visualization/article_delivery.py` | **Canonical 30-figure manifest** — single source of truth for figure numbering and symlinks |
 | `src/visualization/style.py` | Global style settings, VCD, and figure-saving helpers |
 | `src/visualization/results_visualizer.py` | Orchestrator that generates Figs 3–18 |
 | `src/visualization/fig0X_*.py` | Individual figure modules (Figs 3–18) |
