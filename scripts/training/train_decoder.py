@@ -50,6 +50,7 @@ def load_config(config_path: str = None) -> dict:
         "marker_weight": 10.0,
         "marker_genes_config": "configs/marker_genes.yaml",
         "val_split": 0.1,
+        "max_train_samples": 10000,
         "save_dir": "models/checkpoints",
         "device": "cuda",
     }
@@ -151,6 +152,23 @@ def main():
     decoder._load_encoder()
     scgpt_model = decoder._encoder.model
 
+    # ── Populate reference gene set from an h5ad file ──
+    # The decoder needs gene_ids from encode() to know which genes to decode.
+    # Load one h5ad file to cross-reference gene names against scGPT vocab.
+    h5ad_dir = Path(config.get("h5ad_dir", "data/processed_h5ad"))
+    h5ad_files = sorted(h5ad_dir.glob("*_processed.h5ad"))
+    if not h5ad_files:
+        logger.error(f"No h5ad files found in {h5ad_dir} for gene reference")
+        return
+    import anndata as ad
+    ref_adata = ad.read_h5ad(h5ad_files[0])
+    logger.info(f"Loading gene reference from {h5ad_files[0].name} ({ref_adata.n_vars} genes)")
+    # Run encode on a tiny subset just to populate _ref_gene_ids
+    tiny_adata = ref_adata[:2].copy()
+    decoder._encoder.encode(tiny_adata)
+    del ref_adata, tiny_adata
+    logger.info(f"Reference gene set: {len(decoder._encoder._ref_gene_ids)} genes")
+
     # ── Load cached cell embeddings ──
     cache_dir = Path(config["cache_dir"])
     cell_embs_path = cache_dir / "cell_embeddings_dedup_preprocessed.npy"
@@ -163,6 +181,14 @@ def main():
     logger.info(f"Loading cell embeddings from {cell_embs_path}")
     cell_embeddings = np.load(cell_embs_path)
     logger.info(f"Cell embeddings shape: {cell_embeddings.shape}")
+
+    # ── Subsample for speed ──
+    max_samples = config.get("max_train_samples", 0)
+    if max_samples and max_samples < cell_embeddings.shape[0]:
+        rng = np.random.default_rng(42)
+        keep_idx = rng.choice(cell_embeddings.shape[0], max_samples, replace=False)
+        cell_embeddings = cell_embeddings[keep_idx]
+        logger.info(f"Subsampled to {max_samples} cells for LoRA training")
 
     # ── Build expression targets (frozen decode of real embeddings) ──
     expression_targets, gene_names = build_expression_targets(
@@ -191,6 +217,8 @@ def main():
         alpha=config["lora_alpha"],
         num_last_layers=config["num_last_layers"],
     )
+    # Move LoRA params to device (they're created on CPU by default)
+    scgpt_model = scgpt_model.to(device)
 
     # Count trainable parameters
     trainable = sum(p.numel() for p in scgpt_model.parameters() if p.requires_grad)
@@ -255,6 +283,7 @@ def main():
         scgpt_model.train()
         train_loss_sum = 0
         n_batches = 0
+        n_total_batches = len(train_loader)
 
         for batch_emb, batch_expr in train_loader:
             batch_emb = batch_emb.to(device)
@@ -288,6 +317,12 @@ def main():
 
             train_loss_sum += weighted_loss.item()
             n_batches += 1
+
+            if n_batches % 50 == 0:
+                logger.info(
+                    f"  [Epoch {epoch+1}][Step {n_batches}/{n_total_batches}] "
+                    f"loss={weighted_loss.item():.6f}"
+                )
 
         avg_train = train_loss_sum / max(n_batches, 1)
 
