@@ -423,6 +423,20 @@ class DiTDataset(Dataset):
         self._cell_tensor = torch.from_numpy(self.cell_emb).float()
         self._cond_tensor = torch.from_numpy(self.text_cond).float()
 
+        # ── Load group IDs for per-class variance loss ──
+        self.group_ids = None
+        for gid_name in ["text_group_ids_dedup.npy", "text_group_ids.npy"]:
+            gid_path = cache_dir / gid_name
+            if gid_path.exists():
+                gid_arr = np.load(gid_path)
+                if len(gid_arr) == len(self.cell_emb):
+                    self.group_ids = gid_arr
+                    self._gid_tensor = torch.from_numpy(gid_arr).long()
+                    logger.info(f"DiTDataset: loaded {gid_name} ({len(np.unique(gid_arr))} groups)")
+                    break
+        if self.group_ids is None:
+            logger.info("DiTDataset: no group_ids found (per-class variance loss unavailable)")
+
     def _sample_timestep(self) -> torch.Tensor:
         """Sample a timestep t ∈ (0, 1).
 
@@ -462,13 +476,19 @@ class DiTDataset(Dataset):
         # Target velocity: v = z_1 - z_0
         v_target = z_1 - z_0
 
-        return {
+        result = {
             "z_t": z_t,           # Noisy interpolated embedding
             "t": t,               # Timestep
             "v_target": v_target,  # Target velocity
             "cond": cond,          # Text condition
             "z_1": z_1,           # Real embedding (for evaluation)
         }
+
+        # Include group_id for per-class variance loss (if available)
+        if self.group_ids is not None:
+            result["group_id"] = self._gid_tensor[idx]
+
+        return result
 
     @property
     def latent_dim(self) -> int:
@@ -748,7 +768,7 @@ def create_dataloaders(
         train_dataset = Subset(dataset, train_indices)
         val_dataset = Subset(dataset, val_indices)
 
-    if stage == "clop" and group_aware_sampling:
+    if stage in ("clop", "dit") and group_aware_sampling:
         if hasattr(train_dataset, "dataset") and hasattr(train_dataset, "indices"):
             base_dataset = train_dataset.dataset
             local_to_global = np.asarray(train_dataset.indices)
@@ -756,8 +776,15 @@ def create_dataloaders(
             base_dataset = train_dataset
             local_to_global = np.arange(len(train_dataset))
 
+        # Get group IDs from the appropriate attribute (CLOP vs DiT)
+        _group_ids_raw = None
         if hasattr(base_dataset, "text_group_ids") and base_dataset.text_group_ids is not None:
-            local_group_ids = np.asarray(base_dataset.text_group_ids)[local_to_global]
+            _group_ids_raw = np.asarray(base_dataset.text_group_ids)
+        elif hasattr(base_dataset, "group_ids") and base_dataset.group_ids is not None:
+            _group_ids_raw = np.asarray(base_dataset.group_ids)
+
+        if _group_ids_raw is not None:
+            local_group_ids = _group_ids_raw[local_to_global]
             text_embeddings = getattr(base_dataset, "text_emb_unique", None)
 
             batch_sampler = GroupAwareBatchSampler(

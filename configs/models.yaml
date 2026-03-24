@@ -1,4 +1,4 @@
-# CLOP-DiT v0.4 — Model Configuration
+# CLOP-DiT — Model Configuration
 # Comprehensive encoder/decoder catalog for benchmark & ablation experiments
 #
 # ═══════════════════════════════════════════════════════════════════════
@@ -178,5 +178,20 @@ presets:
 #  ★ = active_preset default
 #  All text encoders auto-download from HuggingFace on first use.
 
+# ── Primary: whole-human scGPT + BiomedBERT-large ──
+  # Best combo: generative-trained decoder (33M cells) + large text encoder
+  human_large:
+    cell_encoder:
+      name: scgpt_human
+      model_dir: models/scgpt_human
+      embed_dim: 512
+    text_encoder:
+      name: biomedbert_large
+      model_id: microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract
+      embed_dim: 1024
+    decoder:
+      name: scgpt_human
+      model_dir: models/scgpt_human
+
 # ── Active configuration ───────────────────────────────────────────────
-active_preset: cancer
+active_preset: human_large

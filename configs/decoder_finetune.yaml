@@ -1,8 +1,8 @@
-# Decoder Fine-Tuning Configuration — v0.4
+# Decoder Fine-Tuning Configuration
 # LoRA adapters for scGPT decoder last layers
 
 # scGPT model
-scgpt_model_dir: "models/scgpt_pancancer"
+scgpt_model_dir: "models/scgpt_human"
 cache_dir: "data/cached_latents_v5.2"
 
 # LoRA hyperparameters

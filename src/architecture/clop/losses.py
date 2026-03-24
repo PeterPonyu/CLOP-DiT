@@ -391,15 +391,22 @@ class PrototypeSigLIPLoss(nn.Module):
         # ── Step 5: Separation margin for confusable prototypes ──
         separation_loss = torch.tensor(0.0, device=device)
         if self.separation_margin > 0 and n_groups > 1:
-            # Cosine similarity between all prototype pairs
+            # Cell-side: push apart confusable cell prototypes
             proto_sim = prototypes @ prototypes.T  # (n_groups, n_groups)
-            # Mask diagonal
             diag_mask = torch.eye(n_groups, device=device, dtype=torch.bool)
             proto_sim = proto_sim.masked_fill(diag_mask, -1.0)
-            # Penalize pairs above threshold: hinge loss
             violations = torch.clamp(proto_sim - self.separation_threshold, min=0.0)
             if violations.sum() > 0:
                 separation_loss = violations.sum() / max(1, (violations > 0).sum())
+
+            # Text-side: push apart confusable text projections
+            text_sim = text_reps @ text_reps.T  # (n_groups, n_groups)
+            text_sim = text_sim.masked_fill(diag_mask, -1.0)
+            text_violations = torch.clamp(text_sim - self.separation_threshold, min=0.0)
+            if text_violations.sum() > 0:
+                text_sep = text_violations.sum() / max(1, (text_violations > 0).sum())
+                separation_loss = separation_loss + text_sep
+
             total_loss = total_loss + self.separation_margin * separation_loss
 
         # Temperature regularization: prevent saturation

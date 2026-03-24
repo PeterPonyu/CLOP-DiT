@@ -1,62 +1,65 @@
-# DiT Configuration — v6.0 (matched to CLOP v6)
-# 1D Diffusion Transformer with Flow Matching
+# DiT Configuration — 1D Diffusion Transformer with Flow Matching
 
 # Data
 cache_dir: "data/cached_latents_v5.2"
 projected_text_path: "data/cached_latents_v5.2/projected_text.npy"
-use_deduplicated: true          # Use dedup cell embeddings (167K, matches projected_text)
-use_preprocessed: true          # Use whitened embeddings (ZCA-preprocessed)
+use_deduplicated: true
+use_preprocessed: true
 seed: 42
-split_strategy: "stratified"     # Cell-type-stratified split (all 69 types in val)
+split_strategy: "stratified"
 val_split: 0.1
 n_folds: 1
 fold_idx: 0
 num_workers: 4
 
 # Model Architecture
-latent_dim: 512        # Cell embedding dimension (scGPT)
-hidden_dim: 512        # Transformer hidden dimension (was 384, increased for capacity)
-cond_dim: 512          # CLOP proj_dim=512 (must match projected_text dim)
-num_blocks: 8          # Number of DiT transformer blocks
-num_heads: 8           # Attention heads (hidden_dim / num_heads = 64 = standard head_dim)
-mlp_ratio: 4.0         # FFN expansion ratio
-num_tokens: 16         # Pseudo-tokens (latent_dim / num_tokens = 32-dim tokens)
-cond_drop_prob: 0.15   # Classifier-free guidance dropout
-attn_drop: 0.0         # Attention dropout
-proj_drop: 0.1         # Projection dropout
+latent_dim: 512
+hidden_dim: 512
+cond_dim: 512
+num_blocks: 8
+num_heads: 8
+mlp_ratio: 4.0
+num_tokens: 16
+cond_drop_prob: 0.15
+attn_drop: 0.0
+proj_drop: 0.1
 
 # Training
-batch_size: 1024       # Larger batches = fewer steps = faster epochs
-lr: 2.0e-4             # Scale LR with batch size (linear scaling rule)
+batch_size: 1024
+lr: 2.0e-4
 weight_decay: 0.01
-num_epochs: 200        # 200 is sufficient (convergence plateaus around 150)
+num_epochs: 300
 warmup_epochs: 5
 grad_clip: 1.0
 use_amp: true
-ema_decay: 0.9999      # EMA for model weights
-log_interval: 100      # Reduce logging overhead
-eval_interval: 50      # Heavy generation eval only every 50 epochs
+ema_decay: 0.9999
+log_interval: 100
+eval_interval: 25
 
-# Time sampling (v2: logit-normal for better training)
-time_sampling: "logit_normal"   # 'uniform' or 'logit_normal'
+# Time sampling
+time_sampling: "logit_normal"
 time_sampling_mean: 0.0
 time_sampling_std: 1.0
 
-# Inference defaults
-inference_steps: 20    # v2: increased from 4 for higher quality
-cfg_scale: 3.0         # Guidance scale
+# Inference
+inference_steps: 30
+cfg_scale: 2.0
 
-# Variance-matching regularization (Eq. 7)
-# Penalizes disagreement between real and predicted per-dim variance
-variance_loss_weight: 0.1  # λ_var; 0 = disabled, 0.1 recommended
+# Variance-matching regularization (per-class, not batch-level)
+variance_loss_weight: 0.1
 
-# Adaptive ODE solver (alternative to fixed-step Euler)
-adaptive_solver: false          # If true, use dopri5 (RK45) at inference
+# Group-aware batch sampling (ensures per-class variance loss has enough samples)
+group_aware_sampling: true
+groups_per_batch: 64
+class_weight_power: 0.5
+
+# Adaptive ODE solver
+adaptive_solver: false
 adaptive_solver_atol: 1.0e-5
 adaptive_solver_rtol: 1.0e-5
 
-# scGPT (for decoding)
-scgpt_model_dir: "models/scgpt_pancancer"  # v0.3: pan-cancer pretrained
+# scGPT
+scgpt_model_dir: "models/scgpt_human"
 
 # System
 device: "cuda"

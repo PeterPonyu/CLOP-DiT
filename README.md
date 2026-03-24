@@ -27,7 +27,7 @@ User Text --> BiomedBERT-large (1024-d) --> ZCA Whitening --> CLOP Projector -->
                                                                         scGPT Decoder --> Gene Expression (G genes)
 ```
 
-## Key Results (v9.3)
+## Key Results
 
 | Method | KNN-1 | Steering | DivR | LinAcc | KNN/Rand |
 |--------|-------|----------|------|--------|----------|
@@ -93,8 +93,8 @@ CLOP-DiT/
 │   ├── baselines/              #   Baseline method training
 │   └── vcd/                    #   Visual Conflict Detector
 ├── configs/                    # YAML/JSON configuration
-│   ├── clop.yaml               #   CLOP v9.3 training config
-│   ├── dit.yaml                #   DiT v2.0 training config
+│   ├── clop.yaml               #   CLOP training config
+│   ├── dit.yaml                #   DiT training config
 │   ├── pipeline.yaml           #   Centralized path configuration
 │   └── baselines/              #   Baseline method configs
 ├── articles/                   # LaTeX manuscript

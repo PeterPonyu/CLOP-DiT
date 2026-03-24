@@ -204,17 +204,33 @@ class DiTTrainer:
         loss = F.mse_loss(v_pred, v_target)
 
         # Variance-matching regularization (Eq. 7 in manuscript)
-        # Encourages generated embeddings to preserve per-dimension variance
+        # Per-class variance matching: preserves within-type diversity
         if self.variance_loss_weight > 0 and "z_1" in batch:
             z_1 = batch["z_1"].to(self.device)
             # Reconstruct z_1 estimate from flow: z_1_hat = z_t + (1 - t) * v_pred
             t_expand = t.unsqueeze(-1)  # (B, 1)
             z_1_hat = z_t + (1 - t_expand) * v_pred
-            # Per-dimension variance matching
-            var_real = z_1.var(dim=0)      # (latent_dim,)
-            var_pred = z_1_hat.var(dim=0)  # (latent_dim,)
-            var_loss = F.mse_loss(var_pred, var_real)
-            loss = loss + self.variance_loss_weight * var_loss
+
+            if "group_id" in batch:
+                # Per-class variance: match intra-type variance, not batch-level
+                group_ids = batch["group_id"].to(self.device)
+                var_losses = []
+                for gid in torch.unique(group_ids):
+                    mask = (group_ids == gid)
+                    if mask.sum() < 4:  # need minimum samples for stable variance
+                        continue
+                    var_real_g = z_1[mask].var(dim=0)
+                    var_pred_g = z_1_hat[mask].var(dim=0)
+                    var_losses.append(F.mse_loss(var_pred_g, var_real_g))
+                if var_losses:
+                    var_loss = torch.stack(var_losses).mean()
+                    loss = loss + self.variance_loss_weight * var_loss
+            else:
+                # Fallback: batch-level variance (less effective but still useful)
+                var_real = z_1.var(dim=0)      # (latent_dim,)
+                var_pred = z_1_hat.var(dim=0)  # (latent_dim,)
+                var_loss = F.mse_loss(var_pred, var_real)
+                loss = loss + self.variance_loss_weight * var_loss
 
         return loss
 
