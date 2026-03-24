@@ -614,7 +614,7 @@ def main():
                         default="data/processed_h5ad/GSE123902_LungAdreHmCancer_processed.h5ad")
     parser.add_argument("--clop_checkpoint", type=str, default="models/checkpoints/clop_best.pth")
     parser.add_argument("--dit_checkpoint", type=str, default="models/checkpoints/dit_best.pth")
-    parser.add_argument("--scgpt_model_dir", type=str, default="models/scgpt_pancancer")
+    parser.add_argument("--scgpt_model_dir", type=str, default="models/scgpt_human")
     parser.add_argument("--num_cells", type=int, default=200)
     parser.add_argument("--device", type=str, default="cuda")
     args = parser.parse_args()

@@ -42,7 +42,6 @@ def plot_diagnostics(
     if type_names is None:
         import json as _json
         _cap_candidates = [
-            Path("data/cached_latents_v5.2/text_captions_deduplicated.json"),
             Path("data/cached_latents/text_captions_deduplicated.json"),
         ]
         for _cp in _cap_candidates:

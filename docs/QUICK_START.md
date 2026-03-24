@@ -52,8 +52,8 @@ bash scripts/pipeline/verify_article_figures.sh            # verify + recreate s
 ### Step 1: Retrain CLOP
 ```bash
 python -m src.training.train_clop \
-    --config configs/clop_v9.3.yaml \
-    --cache_dir data/cached_latents_v5.2
+    --config configs/clop.yaml \
+    --cache_dir data/cached_latents
 ```
 
 **Expected**: val_proto_acc 15-25% (vs 10.45% baseline)
@@ -68,8 +68,8 @@ text_proj = model.text_encoder(text_embeddings)
 cell_proj = model.cell_encoder(cell_embeddings)
 
 # Save for DiT
-np.save("data/cached_latents_v5.2/text_proj_clop.npy", text_proj)
-np.save("data/cached_latents_v5.2/cell_proj_clop.npy", cell_proj)
+np.save("data/cached_latents/text_proj_clop.npy", text_proj)
+np.save("data/cached_latents/cell_proj_clop.npy", cell_proj)
 ```
 
 ### Step 3: Train DiT
@@ -77,7 +77,7 @@ np.save("data/cached_latents_v5.2/cell_proj_clop.npy", cell_proj)
 python -m src.training.train_dit \
     --config configs/dit.yaml \
     --version_id v2.0_polished_clop \
-    --clop_proj_dir data/cached_latents_v5.2
+    --clop_proj_dir data/cached_latents
 ```
 
 **Features Used**:
@@ -110,7 +110,7 @@ print_metrics_summary(metrics)
 
 ### Data
 ```
-data/cached_latents_v5.2/
+data/cached_latents/
 ├── text_strings.json                    # ✅ POLISHED (updated)
 ├── text_embeddings.npy                  # ⏳ TO UPDATE (re-embed)
 ├── cell_embeddings.npy                  # ✅ (unchanged)
@@ -139,7 +139,7 @@ docs/
 ### Re-embedding fails
 ```bash
 # Check text file exists and is polished
-python -c "import json; t=json.load(open('data/cached_latents_v5.2/text_strings.json')); print(f'Texts: {len(t)}, Avg len: {sum(len(x) for x in t.values())/len(t):.0f}')"
+python -c "import json; t=json.load(open('data/cached_latents/text_strings.json')); print(f'Texts: {len(t)}, Avg len: {sum(len(x) for x in t.values())/len(t):.0f}')"
 # Expected: Texts: 1088, Avg len: ~301
 ```
 

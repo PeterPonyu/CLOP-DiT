@@ -5,7 +5,7 @@ Tests that CLOPDataset can load text embeddings from custom paths
 specified in config, rather than only using default path inference.
 
 This is critical for v8.2+ where we want to load v2 re-embedded captions
-from data/cached_latents_v5.2/embeddings/text_embeddings_v2.npy.
+from data/cached_latents/embeddings/text_embeddings_v2.npy.
 """
 
 import pytest
@@ -130,11 +130,11 @@ class TestDatasetPathWiringIntegration:
         """Create a minimal v8.2 config with custom paths."""
         config = {
             "data": {
-                "cache_dir": "data/cached_latents_v5.2",
-                "text_embeddings_path": "data/cached_latents_v5.2/embeddings/text_embeddings_v2.npy",
-                "text_strings_path": "data/cached_latents_v5.2/raw/text_strings_v2.json",
-                "variant_path": "data/cached_latents_v5.2/variants/text_variants.json",
-                "variant_map_path": "data/cached_latents_v5.2/variants/text_variant_map.json",
+                "cache_dir": "data/cached_latents",
+                "text_embeddings_path": "data/cached_latents/embeddings/text_embeddings_v2.npy",
+                "text_strings_path": "data/cached_latents/raw/text_strings_v2.json",
+                "variant_path": "data/cached_latents/variants/text_variants.json",
+                "variant_map_path": "data/cached_latents/variants/text_variant_map.json",
             },
             "training": {
                 "variant_prob": 0.35,
@@ -185,8 +185,8 @@ class TestExpectedBehaviorDocumentation:
         Expected signature after implementation:
         
         CLOPDataset(
-            cache_dir="data/cached_latents_v5.2",
-            text_embeddings_path="data/cached_latents_v5.2/embeddings/text_embeddings_v2.npy",
+            cache_dir="data/cached_latents",
+            text_embeddings_path="data/cached_latents/embeddings/text_embeddings_v2.npy",
             ...
         )
         
@@ -206,9 +206,9 @@ class TestExpectedBehaviorDocumentation:
         Expected signature after implementation:
         
         CLOPDataset(
-            cache_dir="data/cached_latents_v5.2",
-            variant_path="data/cached_latents_v5.2/variants/text_variant_embeddings.npy",
-            variant_map_path="data/cached_latents_v5.2/variants/text_variant_map.json",
+            cache_dir="data/cached_latents",
+            variant_path="data/cached_latents/variants/text_variant_embeddings.npy",
+            variant_map_path="data/cached_latents/variants/text_variant_map.json",
             variant_prob=0.35,
             ...
         )
@@ -230,9 +230,9 @@ class TestExpectedBehaviorDocumentation:
         
         1. train_clop.py reads config YAML:
            data:
-             cache_dir: "data/cached_latents_v5.2"
-             text_embeddings_path: "data/cached_latents_v5.2/embeddings/text_embeddings_v2.npy"
-             variant_path: "data/cached_latents_v5.2/variants/text_variants.json"
+             cache_dir: "data/cached_latents"
+             text_embeddings_path: "data/cached_latents/embeddings/text_embeddings_v2.npy"
+             variant_path: "data/cached_latents/variants/text_variants.json"
         
         2. train_clop.py creates dataset with custom paths:
            dataset = CLOPDataset(
@@ -247,7 +247,7 @@ class TestExpectedBehaviorDocumentation:
            - variants from custom variant paths
         
         4. Training log shows:
-           "Loading custom text embeddings from: data/cached_latents_v5.2/embeddings/text_embeddings_v2.npy"
+           "Loading custom text embeddings from: data/cached_latents/embeddings/text_embeddings_v2.npy"
         """
         assert True  # Design documentation, always passes
 

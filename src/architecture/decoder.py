@@ -55,7 +55,7 @@ class ScGPTDecoder(nn.Module):
 
     def __init__(
         self,
-        model_dir: Union[str, Path] = "models/scgpt_pancancer",
+        model_dir: Union[str, Path] = "models/scgpt_human",
         device: torch.device = torch.device("cuda"),
         max_seq_len: int = 1200,
         batch_size: int = 64,
@@ -84,6 +84,57 @@ class ScGPTDecoder(nn.Module):
         # Trigger the actual model load
         self._encoder._load()
         logger.info("scGPT encoder ready")
+
+    def load_lora_weights(self, checkpoint_path: Union[str, Path]) -> None:
+        """Apply LoRA adapters and load trained weights from checkpoint.
+
+        LoRA hyperparameters are read from the checkpoint's saved config.
+
+        Parameters
+        ----------
+        checkpoint_path : path to scgpt_lora_best.pth
+
+        Raises
+        ------
+        FileNotFoundError
+            If checkpoint_path does not exist.
+        ValueError
+            If checkpoint has no lora_state_dict.
+        """
+        self._load_encoder()
+        checkpoint_path = Path(checkpoint_path)
+        if not checkpoint_path.exists():
+            raise FileNotFoundError(f"LoRA checkpoint not found: {checkpoint_path}")
+
+        ckpt = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
+        lora_sd = ckpt.get("lora_state_dict", {})
+        if not lora_sd:
+            raise ValueError(f"No lora_state_dict in checkpoint: {checkpoint_path}")
+
+        cfg = ckpt.get("config", {})
+        target_modules = cfg.get("target_modules", ["out_proj", "linear1", "linear2"])
+        rank = cfg.get("lora_rank", 8)
+        alpha = cfg.get("lora_alpha", 16.0)
+        num_last_layers = cfg.get("num_last_layers", 2)
+        val_loss = ckpt.get("val_loss", "N/A")
+        del ckpt
+
+        model = self._encoder.model
+        model = apply_lora_to_model(
+            model, target_modules=target_modules,
+            rank=rank, alpha=alpha, num_last_layers=num_last_layers,
+        )
+        # Load the trained LoRA parameters
+        missing, unexpected = model.load_state_dict(lora_sd, strict=False)
+        if unexpected:
+            logger.warning(f"Unexpected keys in LoRA checkpoint: {unexpected}")
+        loaded = len(lora_sd) - len(unexpected)
+        logger.info(f"Loaded LoRA weights: {loaded} tensors from {checkpoint_path.name} "
+                     f"(val_loss={val_loss})")
+        # Move only new LoRA params to device (base model already on device)
+        for name, param in model.named_parameters():
+            if "lora_" in name and param.device.type == "cpu":
+                param.data = param.data.to(self.device)
 
     @torch.no_grad()
     def encode(self, adata, gene_col: str = "feature_name") -> np.ndarray:

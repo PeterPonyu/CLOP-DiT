@@ -42,7 +42,7 @@ FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 # Contrasts used in DE concordance (same as Fig 18).
 # Labels in the expression arrays are *integer IDs* that map to full captions
-# in ``data/cached_latents_v5.2/text_captions_deduplicated.json``.
+# in ``data/cached_latents/text_captions_deduplicated.json``.
 CONTRASTS_BY_ID = [
     (0, 6, "CD8+ T cells vs CD4+ T cells"),
     (5, 7, "Macrophages vs Monocytes"),

@@ -824,7 +824,7 @@ def main() -> None:
     parser.add_argument(
         "--scgpt_model_dir",
         type=str,
-        default="models/scgpt_pancancer",
+        default="models/scgpt_human",
     )
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--seed", type=int, default=42)

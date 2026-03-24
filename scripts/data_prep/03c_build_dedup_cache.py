@@ -21,7 +21,7 @@ Then run 03b_preprocess_embeddings (which will also produce *_dedup_preprocessed
 
 Usage:
   python scripts/03c_build_dedup_cache.py
-  python scripts/03c_build_dedup_cache.py --cache-dir data/cached_latents_v5.2
+  python scripts/03c_build_dedup_cache.py --cache-dir data/cached_latents
 """
 
 import argparse

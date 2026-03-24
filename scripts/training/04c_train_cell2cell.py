@@ -7,11 +7,11 @@ This model learns cross-condition cell transport in scGPT latent space,
 analogous to Stable Diffusion img2img but for single-cell biology.
 
 Usage:
-    python scripts/04c_train_cell2cell.py --cache_dir data/cached_latents_v5.2 --epochs 200
+    python scripts/04c_train_cell2cell.py --cache_dir data/cached_latents --epochs 200
     python scripts/04c_train_cell2cell.py --identity_weight 0.15 --lr 5e-5
 
 Prerequisites:
-    - Run 03_cache_builder.py first (creates data/cached_latents_v5.2/)
+    - Run 03_cache_builder.py first (creates data/cached_latents/)
     - Run 04a_train_clop.py first (creates projected_text.npy)
     - Optionally pre-train DiT with 04b_train_dit.py (for weight init)
 """
@@ -34,7 +34,7 @@ from src.utils.logging_config import setup_logging
 def main():
     parser = argparse.ArgumentParser(description="Train Cell2Cell Flow Matching")
     parser.add_argument("--config", type=str, default=None, help="YAML config file")
-    parser.add_argument("--cache_dir", type=str, default="data/cached_latents_v5.2")
+    parser.add_argument("--cache_dir", type=str, default="data/cached_latents")
     parser.add_argument("--save_dir", type=str, default="models/checkpoints")
     parser.add_argument("--projected_text", type=str, default=None,
                         help="Path to CLOP-projected text embeddings")

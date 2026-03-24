@@ -5,7 +5,7 @@ Step 4a: Train CLOP alignment between text and cell embeddings.
 
 Usage:
     python scripts/04a_train_clop.py --config configs/clop.yaml
-    python scripts/04a_train_clop.py --cache_dir data/cached_latents_v5.2 --epochs 100
+    python scripts/04a_train_clop.py --cache_dir data/cached_latents --epochs 100
 """
 
 import argparse
@@ -48,7 +48,7 @@ def main():
             config = yaml.safe_load(f)
     else:
         config = {
-            "cache_dir": args.cache_dir or "data/cached_latents_v5.2",
+            "cache_dir": args.cache_dir or "data/cached_latents",
             "save_dir": args.save_dir or "models/checkpoints",
             "num_epochs": args.epochs or 200,
             "batch_size": args.batch_size or 256,
@@ -87,7 +87,7 @@ def main():
     history = trainer.train()
 
     # Project and save text embeddings for DiT training
-    cache_dir = config.get("cache_dir", "data/cached_latents_v5.2")
+    cache_dir = config.get("cache_dir", "data/cached_latents")
     trainer.project_and_save(
         output_path=str(Path(cache_dir) / "projected_text.npy")
     )

@@ -27,7 +27,7 @@ import torch
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from src.architecture.decoder import ScGPTDecoder
-from src.utils.paths import CACHE_DIR, RESULTS_DIR, SCGPT_DIR, PROCESSED_H5AD_DIR
+from src.utils.paths import CACHE_DIR, RESULTS_DIR, SCGPT_DIR, PROCESSED_H5AD_DIR, CHECKPOINT_DIR
 from src.data_pipeline.embedding_preprocessor import EmbeddingPreprocessor
 from src.utils.helpers import seed_everything, get_device
 
@@ -280,6 +280,8 @@ def main():
                         help="Number of generated cells to decode")
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--lora-checkpoint", default=None,
+                        help="LoRA checkpoint path (auto-detected if not set)")
     args = parser.parse_args()
 
     seed_everything(args.seed)
@@ -307,6 +309,16 @@ def main():
         device=device,
         batch_size=args.batch_size,
     )
+
+    # ── Load LoRA weights if available ──
+    lora_path = args.lora_checkpoint
+    if lora_path is None:
+        candidate = CHECKPOINT_DIR / "scgpt_lora_best.pth"
+        if candidate.exists():
+            lora_path = str(candidate)
+    if lora_path:
+        logger.info(f"Loading LoRA weights from {lora_path}")
+        scgpt.load_lora_weights(lora_path)
 
     # ── Set up gene vocabulary from reference h5ad ──
     if args.h5ad_ref:

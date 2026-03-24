@@ -106,8 +106,8 @@ def main() -> None:
     np.random.seed(seed)
     torch.manual_seed(seed)
 
-    emb_path = Path(args.embeddings or cfg.get("embeddings", "data/cached_latents_v5.2/cell_embeddings_dedup_preprocessed.npy"))
-    lbl_path = Path(args.labels or cfg.get("labels", "data/cached_latents_v5.2/text_group_ids_dedup.npy"))
+    emb_path = Path(args.embeddings or cfg.get("embeddings", "data/cached_latents/cell_embeddings_dedup_preprocessed.npy"))
+    lbl_path = Path(args.labels or cfg.get("labels", "data/cached_latents/text_group_ids_dedup.npy"))
     epochs = args.epochs or cfg.get("epochs", 60)
     batch_size = args.batch_size or cfg.get("batch_size", 1024)
     hidden_dim = args.hidden_dim or cfg.get("hidden_dim", 512)

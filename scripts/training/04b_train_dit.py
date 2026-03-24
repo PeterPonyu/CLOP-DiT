@@ -5,7 +5,7 @@ Step 4b: Train the DiT generative model with Flow Matching.
 
 Usage:
     python scripts/04b_train_dit.py --config configs/dit.yaml
-    python scripts/04b_train_dit.py --cache_dir data/cached_latents_v5.2 --epochs 200
+    python scripts/04b_train_dit.py --cache_dir data/cached_latents --epochs 200
 """
 
 import argparse
@@ -56,7 +56,7 @@ def main():
             config = yaml.safe_load(f)
     else:
         config = {
-            "cache_dir": args.cache_dir or "data/cached_latents_v5.2",
+            "cache_dir": args.cache_dir or "data/cached_latents",
             "save_dir": args.save_dir or "models/checkpoints",
             "num_epochs": args.epochs or 200,
             "batch_size": args.batch_size or 512,
@@ -82,7 +82,7 @@ def main():
             config[key] = arg_val
 
     # Auto-detect projected text
-    cache_dir = config.get("cache_dir", "data/cached_latents_v5.2")
+    cache_dir = config.get("cache_dir", "data/cached_latents")
     if args.projected_text is not None:
         config["projected_text_path"] = args.projected_text
     elif "projected_text_path" not in config or not Path(config["projected_text_path"]).exists():

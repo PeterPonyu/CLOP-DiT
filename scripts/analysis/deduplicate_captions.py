@@ -20,8 +20,8 @@ from pathlib import Path
 # ============================================================================
 
 CAPTION_ANALYSIS_FILE = "/home/zeyufu/Desktop/CLOP-DiT/caption_analysis.json"
-TEXT_STRINGS_FILE = "/home/zeyufu/Desktop/CLOP-DiT/data/cached_latents_v5.2/text_strings_polished_pre_v3.json"
-OUTPUT_DIR = Path("/home/zeyufu/Desktop/CLOP-DiT/data/cached_latents_v5.2")
+TEXT_STRINGS_FILE = "/home/zeyufu/Desktop/CLOP-DiT/data/cached_latents/text_strings_polished_pre_v3.json"
+OUTPUT_DIR = Path("/home/zeyufu/Desktop/CLOP-DiT/data/cached_latents")
 
 # ============================================================================
 # LOAD DATA

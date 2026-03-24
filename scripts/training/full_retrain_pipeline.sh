@@ -25,7 +25,7 @@ set -e  # Exit on error
 set -u  # Exit on undefined variable
 
 # Configuration
-CACHE_DIR="data/cached_latents_v5.2"
+CACHE_DIR="data/cached_latents"
 CLOP_CONFIG="configs/clop_v72.yaml"
 DIT_CONFIG="configs/dit.yaml"
 DEVICE="cuda"
@@ -90,7 +90,7 @@ log_info "Verifying text quality..."
 python3 << 'EOF'
 import json
 import sys
-with open("data/cached_latents_v5.2/text_strings.json") as f:
+with open("data/cached_latents/text_strings.json") as f:
     texts = json.load(f)
 
 # Check average length
@@ -142,14 +142,14 @@ log_success "Re-embedding complete"
 log_info "Verifying new embeddings..."
 python3 << 'EOF'
 import numpy as np
-text_emb = np.load("data/cached_latents_v5.2/text_embeddings.npy")
+text_emb = np.load("data/cached_latents/text_embeddings.npy")
 print(f"Text embeddings shape: {text_emb.shape}")
 print(f"Mean norm: {np.linalg.norm(text_emb, axis=1).mean():.4f}")
 
 # Check if whitening was updated
 try:
-    text_mean = np.load("data/cached_latents_v5.2/text_mean.npy")
-    text_W_zca = np.load("data/cached_latents_v5.2/text_W_zca.npy")
+    text_mean = np.load("data/cached_latents/text_mean.npy")
+    text_W_zca = np.load("data/cached_latents/text_W_zca.npy")
     print(f"ZCA transform shape: {text_W_zca.shape}")
     print("✓ Whitening transforms updated")
 except:
@@ -166,7 +166,7 @@ log_info "Expected: val_proto_acc 15-25% (vs 10.45% baseline)"
 log_info "Config: $CLOP_CONFIG"
 
 # Update config for new run
-CLOP_VERSION="v8.0_polished_texts"
+CLOP_VERSION="polished_texts"
 log_info "Version: $CLOP_VERSION"
 
 python3 -m src.training.train_clop \
@@ -263,7 +263,7 @@ print_header "STEP 4: TRAIN DiT"
 log_info "Training DiT with CLOP-aligned embeddings..."
 log_info "Using classifier-free guidance (10% dropout)"
 
-DIT_VERSION="v2.0_polished_clop"
+DIT_VERSION="polished_clop"
 log_info "Version: $DIT_VERSION"
 
 python3 -m src.training.train_dit \

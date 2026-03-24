@@ -80,7 +80,7 @@ class Cell2CellInference:
         self,
         cell2cell_checkpoint: str,
         clop_checkpoint: str,
-        scgpt_model_dir: str = "models/scgpt_pancancer",
+        scgpt_model_dir: str = "models/scgpt_human",
         text_encoder_name: str = "microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract",
         device: str = "cuda",
     ):
@@ -387,7 +387,7 @@ def main():
     parser.add_argument("--clop_checkpoint", type=str,
                         default="models/checkpoints/clop_best.pth")
     parser.add_argument("--scgpt_model_dir", type=str,
-                        default="models/scgpt_pancancer")
+                        default="models/scgpt_human")
     parser.add_argument("--text_encoder", type=str,
                         default="microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract")
     parser.add_argument("--output", type=str, default="edited_cells.h5ad")

@@ -60,7 +60,7 @@ class LatentCacheBuilder:
 
     def __init__(
         self,
-        cache_dir: Union[str, Path] = "data/cached_latents_v5.2",
+        cache_dir: Union[str, Path] = "data/cached_latents",
         cell_encoder: str = "scgpt",
         text_encoder: str = "microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract",
         cell_dim: int = 512,

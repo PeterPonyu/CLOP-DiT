@@ -1134,7 +1134,7 @@ def main():
     parser.add_argument("--dit_checkpoint", default="models/checkpoints/dit_best.pth")
     parser.add_argument("--clop_checkpoint", default="models/checkpoints/clop_best.pth")
     parser.add_argument("--cell2cell_checkpoint", default="models/checkpoints/cell2cell_best.pth")
-    parser.add_argument("--scgpt_model_dir", default="models/scgpt_pancancer")
+    parser.add_argument("--scgpt_model_dir", default="models/scgpt_human")
     parser.add_argument("--text_encoder", default="microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract")
     parser.add_argument("--celltypist_model", default=CELLTYPIST_MODEL)
     parser.add_argument("--device", default="cuda")

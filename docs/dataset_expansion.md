@@ -57,7 +57,7 @@ python scripts/data_prep/03_cache_latents.py \
     --h5ad_dir data/processed_h5ad/ \
     --metadata data/cache/subcluster_metadata.json \
     --scgpt_dir models/scgpt_human \
-    --output data/cached_latents_v5.2/
+    --output data/cached_latents/
 ```
 
 **Incremental mode**: If you already have a cache and are adding new datasets,
@@ -68,7 +68,7 @@ python scripts/data_prep/03_cache_latents.py \
     --h5ad_dir data/processed_h5ad/ \
     --metadata data/cache/subcluster_metadata.json \
     --scgpt_dir models/scgpt_human \
-    --output data/cached_latents_v5.2/ \
+    --output data/cached_latents/ \
     --incremental
 ```
 
@@ -112,7 +112,7 @@ python scripts/pipeline/run_pipeline.py --stage all
 data/
   processed_h5ad/
     GSE999999_processed.h5ad    ← Your new file
-  cached_latents_v5.2/
+  cached_latents/
     cell_embeddings.npy         ← Updated with new cells
     text_embeddings_unique.npy  ← Updated with new texts
     processed_datasets.json     ← Tracks processed datasets

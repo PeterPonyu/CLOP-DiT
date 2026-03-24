@@ -450,7 +450,7 @@ def run_embedding_augmentation() -> dict:
     from sklearn.model_selection import StratifiedKFold
 
     # Load real and generated embeddings
-    cache_dir = Path("data/cached_latents_v5.2")
+    cache_dir = Path("data/cached_latents")
     real_embs = np.load(cache_dir / "cell_embeddings_dedup_preprocessed.npy")
     gen_embs = np.load(RESULTS_DIR / "generated_embeddings.npy")
     gen_labels = np.load(RESULTS_DIR / "generated_labels.npy")

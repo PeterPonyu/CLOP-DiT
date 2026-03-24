@@ -391,7 +391,7 @@ def _build_rankings(all_methods: Dict[str, Dict]) -> Tuple[Dict, Dict, Dict]:
 
 
 def run_benchmark(
-    cache_dir: str = "data/cached_latents_v5.2",
+    cache_dir: str = "data/cached_latents",
     results_dir: str = "results",
     output_path: str = "results/benchmark_report.json",
     n_sub: int = 5000,

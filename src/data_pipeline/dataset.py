@@ -56,7 +56,7 @@ class CLOPDataset(Dataset):
 
     def __init__(
         self,
-        cache_dir: Union[str, Path] = "data/cached_latents_v5.2",
+        cache_dir: Union[str, Path] = "data/cached_latents",
         noise_std: float = 0.0,
         sample_level: bool = False,
         use_preprocessed: bool = False,
@@ -340,7 +340,7 @@ class DiTDataset(Dataset):
 
     def __init__(
         self,
-        cache_dir: Union[str, Path] = "data/cached_latents_v5.2",
+        cache_dir: Union[str, Path] = "data/cached_latents",
         projected_text_path: Optional[Union[str, Path]] = None,
         time_sampling: str = "logit_normal",
         time_sampling_mean: float = 0.0,

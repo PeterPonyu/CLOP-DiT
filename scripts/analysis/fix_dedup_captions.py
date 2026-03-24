@@ -16,7 +16,7 @@ import numpy as np
 from pathlib import Path
 from collections import defaultdict
 
-CACHE_DIR = Path("data/cached_latents_v5.2")
+CACHE_DIR = Path("data/cached_latents")
 
 
 def main():

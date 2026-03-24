@@ -150,7 +150,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     from scipy import stats as scipy_stats
 
     # Load captions for cell-type names
-    captions_path = ROOT / "data" / "cached_latents_v5.2" / "text_captions_deduplicated.json"
+    captions_path = ROOT / "data" / "cached_latents" / "text_captions_deduplicated.json"
     _type_names = {}
     if captions_path.exists():
         with open(captions_path) as f:

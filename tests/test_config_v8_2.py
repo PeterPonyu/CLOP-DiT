@@ -65,11 +65,11 @@ class TestV82ConfigValidation:
         """Create a minimal valid v8.2 config for testing."""
         return {
             "data": {
-                "cache_dir": "data/cached_latents_v5.2",
-                "text_embeddings_path": "data/cached_latents_v5.2/embeddings/text_embeddings_v2.npy",
-                "text_strings_path": "data/cached_latents_v5.2/raw/text_strings_v2.json",
-                "variant_path": "data/cached_latents_v5.2/variants/text_variants.json",
-                "variant_map_path": "data/cached_latents_v5.2/variants/text_variant_map.json",
+                "cache_dir": "data/cached_latents",
+                "text_embeddings_path": "data/cached_latents/embeddings/text_embeddings_v2.npy",
+                "text_strings_path": "data/cached_latents/raw/text_strings_v2.json",
+                "variant_path": "data/cached_latents/variants/text_variants.json",
+                "variant_map_path": "data/cached_latents/variants/text_variant_map.json",
             },
             "training": {
                 "batch_size": 1024,
@@ -179,9 +179,9 @@ class TestV82ConfigFileCreation:
             "version": "8.2",
             "description": "v8.1 with corrected dataset loader path wiring",
             "data": {
-                "cache_dir": "data/cached_latents_v5.2",
-                "text_embeddings_path": "data/cached_latents_v5.2/embeddings/text_embeddings_v2.npy",
-                "variant_path": "data/cached_latents_v5.2/variants/text_variants.json",
+                "cache_dir": "data/cached_latents",
+                "text_embeddings_path": "data/cached_latents/embeddings/text_embeddings_v2.npy",
+                "variant_path": "data/cached_latents/variants/text_variants.json",
             },
             "training": {
                 "variant_prob": 0.35,
@@ -243,7 +243,7 @@ class TestV82SuccessCriteria:
         """Success criterion: Training log must show v2 embeddings being loaded.
         
         Expected log line in v8.2:
-        "Loading custom text embeddings from: data/cached_latents_v5.2/embeddings/text_embeddings_v2.npy"
+        "Loading custom text embeddings from: data/cached_latents/embeddings/text_embeddings_v2.npy"
         
         Should NOT see:
         "Loading PREPROCESSED (whitened) unique text embeddings"

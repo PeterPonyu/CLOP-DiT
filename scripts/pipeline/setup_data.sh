@@ -20,10 +20,10 @@ echo "=== CLOP-DiT Data Setup ==="
 echo ""
 echo "--- Creating directory structure ---"
 for d in \
-    data/cached_latents_v5.2 \
+    data/cached_latents \
     data/processed_h5ad \
     models/checkpoints \
-    models/scgpt_pancancer \
+    models/scgpt_human \
     results \
     results/figures \
     results/downstream \
@@ -39,7 +39,7 @@ done
 # ─────────────────────────────────────────────────────────────
 echo ""
 echo "--- Checking scGPT model weights ---"
-SCGPT_DIR="models/scgpt_pancancer"
+SCGPT_DIR="models/scgpt_human"
 SCGPT_CKPT="$SCGPT_DIR/best_model.pt"
 
 if [ -f "$SCGPT_CKPT" ]; then
@@ -56,7 +56,7 @@ fi
 # ─────────────────────────────────────────────────────────────
 echo ""
 echo "--- Checking cached latents ---"
-CACHE_DIR="data/cached_latents_v5.2"
+CACHE_DIR="data/cached_latents"
 REQUIRED_LATENTS=(
     "cell_embeddings_dedup_preprocessed.npy"
     "text_group_ids_dedup.npy"

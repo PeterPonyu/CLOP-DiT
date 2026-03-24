@@ -1,15 +1,15 @@
-# clop_v9.3.yaml — Stratified validation split + fixed temperature
+# clop_latest.yaml — Stratified validation split + fixed temperature
 #
-# Key change from v9.2:
-#   v9.2: Dataset-level split → only 27/69 cell types in validation
+# Key change from previous:
+#   previous: Dataset-level split → only 27/69 cell types in validation
 #         (42 types NEVER evaluated, a critical blind spot)
-#   v9.3: Cell-type-stratified split → ALL 69 types in both train & val
+#   latest: Cell-type-stratified split → ALL 69 types in both train & val
 #         Each type contributes ~10% of its cells to validation,
 #         guaranteeing comprehensive evaluation coverage.
 #
-# Same hyperparameters as v9.2 (fixed temperature, moderate regularization).
+# Same hyperparameters as previous (fixed temperature, moderate regularization).
 
-cache_dir: "data/cached_latents_v5.2"
+cache_dir: "data/cached_latents"
 use_preprocessed: true
 use_deduplicated: true
 

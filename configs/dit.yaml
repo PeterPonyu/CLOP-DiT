@@ -1,8 +1,8 @@
 # DiT Configuration — 1D Diffusion Transformer with Flow Matching
 
 # Data
-cache_dir: "data/cached_latents_v5.2"
-projected_text_path: "data/cached_latents_v5.2/projected_text.npy"
+cache_dir: "data/cached_latents"
+projected_text_path: "data/cached_latents/projected_text.npy"
 use_deduplicated: true
 use_preprocessed: true
 seed: 42

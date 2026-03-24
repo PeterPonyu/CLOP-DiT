@@ -616,7 +616,7 @@ class CLOPTrainer:
 
         # Build dataloaders
         train_loader, val_loader = create_dataloaders(
-            cache_dir=config.get("cache_dir", "data/cached_latents_v5.2"),
+            cache_dir=config.get("cache_dir", "data/cached_latents"),
             batch_size=config.get("batch_size", 256),
             val_split=config.get("val_split", 0.1),
             n_folds=config.get("n_folds", 1),
@@ -688,7 +688,7 @@ class CLOPTrainer:
         # Run embedding preprocessing if needed and preprocessed files don't exist
         if config.get("use_preprocessed", False):
             from ..data_pipeline.embedding_preprocessor import preprocess_cached_embeddings
-            cache_dir = Path(config.get("cache_dir", "data/cached_latents_v5.2"))
+            cache_dir = Path(config.get("cache_dir", "data/cached_latents"))
             text_pp = cache_dir / "text_embeddings_preprocessed.npy"
             cell_pp = cache_dir / "cell_embeddings_preprocessed.npy"
             if not text_pp.exists() or not cell_pp.exists():
@@ -737,7 +737,7 @@ class CLOPTrainer:
 
     def project_and_save(
         self,
-        output_path: str = "data/cached_latents_v5.2/projected_text.npy",
+        output_path: str = "data/cached_latents/projected_text.npy",
         use_best: bool = True,
     ):
         """Project all text embeddings through the trained projector.

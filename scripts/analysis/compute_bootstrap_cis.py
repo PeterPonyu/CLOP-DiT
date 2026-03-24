@@ -34,8 +34,8 @@ def main():
 
     # ── Load data ──
     print("[1] Loading data...")
-    cell_emb = np.load(PROJECT / "data/cached_latents_v5.2/cell_embeddings_dedup_preprocessed.npy")
-    group_ids = np.load(PROJECT / "data/cached_latents_v5.2/text_group_ids_dedup.npy")
+    cell_emb = np.load(PROJECT / "data/cached_latents/cell_embeddings_dedup_preprocessed.npy")
+    group_ids = np.load(PROJECT / "data/cached_latents/text_group_ids_dedup.npy")
     gen_emb = np.load(PROJECT / "results/generated_embeddings.npy")
     gen_labels = np.load(PROJECT / "results/generated_labels.npy")
 

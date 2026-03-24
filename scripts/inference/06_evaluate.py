@@ -27,7 +27,7 @@ Visualizations generated:
 
 Usage:
     python scripts/06_evaluate.py \
-        --cache_dir data/cached_latents_v5.2 \
+        --cache_dir data/cached_latents \
         --clop_checkpoint models/checkpoints/clop_best.pth \
         --dit_checkpoint models/checkpoints/dit_best.pth \
         --output_dir figures \
@@ -184,7 +184,7 @@ def generate_visualizations(clop_results, gen_results, history_dir, output_dir,
 
 def main():
     parser = argparse.ArgumentParser(description="CLOP-DiT v0.3 Evaluation")
-    parser.add_argument("--cache_dir", type=str, default="data/cached_latents_v5.2")
+    parser.add_argument("--cache_dir", type=str, default="data/cached_latents")
     parser.add_argument("--clop_checkpoint", type=str, default="models/checkpoints/clop_best.pth")
     parser.add_argument("--dit_checkpoint", type=str, default="models/checkpoints/dit_best.pth")
     parser.add_argument("--output_dir", type=str, default="figures")
@@ -198,7 +198,7 @@ def main():
     # v0.3 additions
     parser.add_argument("--decode_expression", action="store_true",
                         help="Evaluate gene expression decoding via scGPT generate()")
-    parser.add_argument("--scgpt_model_dir", type=str, default="models/scgpt_pancancer",
+    parser.add_argument("--scgpt_model_dir", type=str, default="models/scgpt_human",
                         help="scGPT model directory for decoding")
     parser.add_argument("--reference_h5ad", type=str, default=None,
                         help="Reference h5ad for scGPT gene vocabulary")

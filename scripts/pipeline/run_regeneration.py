@@ -42,8 +42,8 @@ logging.basicConfig(
 )
 log = logging.getLogger("regenerate")
 
-CLOP_HIST = REPO / "models" / "checkpoints" / "CLOP" / "versions" / "v9.3" / "clop_history.json"
-DIT_HIST  = REPO / "models" / "checkpoints" / "DiT" / "versions" / "v2.0" / "dit_history.json"
+CLOP_HIST = REPO / "models" / "checkpoints" / "CLOP" / "versions" / "latest" / "clop_history.json"
+DIT_HIST  = REPO / "models" / "checkpoints" / "DiT" / "versions" / "latest" / "dit_history.json"
 
 
 def _env_flag(name: str, default: bool = True) -> bool:
@@ -64,7 +64,7 @@ def run_results_visualizer():
     viz = ResultsVisualizer(
         clop_history_path=clop_hist_path,
         dit_history_path=dit_hist_path,
-        cache_dir=str(REPO / "data" / "cached_latents_v5.2"),
+        cache_dir=str(REPO / "data" / "cached_latents"),
         output_dir=str(FIG_DIR),
         dpi=300,
     )

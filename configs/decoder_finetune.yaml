@@ -3,7 +3,7 @@
 
 # scGPT model
 scgpt_model_dir: "models/scgpt_human"
-cache_dir: "data/cached_latents_v5.2"
+cache_dir: "data/cached_latents"
 
 # LoRA hyperparameters
 lora_rank: 8           # Low-rank dimension (8-16 typical)

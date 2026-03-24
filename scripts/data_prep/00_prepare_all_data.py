@@ -517,7 +517,7 @@ def main():
     if skipped:
         print(f"  Skipped datasets: {skipped}")
     print(f"{'='*70}")
-    print(f"\nNext: Run 03_cache_latents.py --cell_encoder scgpt --scgpt_dir models/scgpt_pancancer")
+    print(f"\nNext: Run 03_cache_latents.py --cell_encoder scgpt --scgpt_dir models/scgpt_human")
 
 
 if __name__ == "__main__":

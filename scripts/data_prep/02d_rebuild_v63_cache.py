@@ -442,7 +442,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Rebuild cache for v6.3 (template anchor + enriched augmentation)"
     )
-    parser.add_argument("--cache_dir", default="data/cached_latents_v5.2")
+    parser.add_argument("--cache_dir", default="data/cached_latents")
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--skip_variants", action="store_true",
                         help="Skip variant re-encoding (faster)")

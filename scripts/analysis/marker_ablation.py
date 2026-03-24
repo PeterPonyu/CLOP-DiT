@@ -55,7 +55,7 @@ def main() -> None:
     pipeline = CLOPDiTInference(
         dit_checkpoint="models/checkpoints/DiT/best/dit_best.pth",
         clop_checkpoint="models/checkpoints/CLOP/best/clop_best.pth",
-        scgpt_model_dir="models/scgpt_pancancer",
+        scgpt_model_dir="models/scgpt_human",
         device="cuda",
     )
 

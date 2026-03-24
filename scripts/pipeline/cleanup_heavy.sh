@@ -34,7 +34,7 @@ echo "  ♻ Kept: *_best.pth, *_final.pth, *_history.json"
 echo ""
 echo "--- Phase 3: Archive directories ---"
 for d in results/archive configs/archive docs/archive docs/intermediate_analysis \
-         scripts/archive models/checkpoints/archive data/cached_latents_v5.2/archive; do
+         scripts/archive models/checkpoints/archive data/cached_latents/archive; do
     if [ -d "$d" ]; then
         SIZE=$(du -sh "$d" 2>/dev/null | cut -f1)
         rm -rf "$d"

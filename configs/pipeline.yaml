@@ -2,7 +2,7 @@
 # Scripts and run_pipeline.py should use these; override via env (CLOPDIT_*).
 # All paths are relative to project root unless absolute.
 
-cache_dir: "data/cached_latents_v5.2"
+cache_dir: "data/cached_latents"
 checkpoint_dir: "models/checkpoints"
 results_dir: "results"
 fig_dir: "results/figures"
@@ -10,7 +10,7 @@ article_figures_dir: "articles/figures"
 
 # Optional: data prep and models (used by 03, 03b, decode_expression, etc.)
 processed_h5ad_dir: "data/processed_h5ad"
-scgpt_dir: "models/scgpt_pancancer"
+scgpt_dir: "models/scgpt_human"
 
 # Article build
 article_dir: "articles"

@@ -17,7 +17,7 @@ import re
 import copy
 from pathlib import Path
 
-DATA_DIR = Path("data/cached_latents_v5.2")
+DATA_DIR = Path("data/cached_latents")
 POLISHED = DATA_DIR / "text_strings_polished.json"
 ORIGINALS = DATA_DIR / "text_strings_original_templates.json"
 OUTPUT = DATA_DIR / "text_strings_polished.json"

@@ -260,7 +260,7 @@ class OODEvaluator:
         cls,
         dit_checkpoint: str = "models/checkpoints/dit_best.pth",
         clop_checkpoint: str = "models/checkpoints/clop_best.pth",
-        scgpt_model_dir: str = "models/scgpt_pancancer",
+        scgpt_model_dir: str = "models/scgpt_human",
         device: str = "cuda",
     ) -> "OODEvaluator":
         """Convenience constructor that loads the inference pipeline.
@@ -653,7 +653,7 @@ def main() -> None:
     parser.add_argument(
         "--scgpt_model_dir",
         type=str,
-        default="models/scgpt_pancancer",
+        default="models/scgpt_human",
     )
     parser.add_argument("--device", type=str, default="cuda")
     args = parser.parse_args()

@@ -1,5 +1,5 @@
-embeddings: data/cached_latents_v5.2/cell_embeddings_dedup_preprocessed.npy
-labels: data/cached_latents_v5.2/text_group_ids_dedup.npy
+embeddings: data/cached_latents/cell_embeddings_dedup_preprocessed.npy
+labels: data/cached_latents/text_group_ids_dedup.npy
 output_dir: results/baselines/embedding_vae
 epochs: 60
 batch_size: 1024

@@ -175,7 +175,7 @@ CONTEXT: dict[str, tuple[str, str]] = {
         "Integrated h5ad inputs",
         "Upstream of latent caching; verify provenance in data prep scripts.",
     ),
-    "data/cached_latents_v5.2": (
+    "data/cached_latents": (
         "Cached embeddings / latents",
         "Primary training cache path in default pipeline config; may include `archive/` subtrees.",
     ),
@@ -257,11 +257,11 @@ CONTEXT: dict[str, tuple[str, str]] = {
     ),
     "models/scgpt_pancancer": (
         "scGPT pancancer decoder weights",
-        "Default decoder path in pipeline config; required for decode and training cache.",
+        "Cancer-focused checkpoint; kept for ablation presets.",
     ),
     "models/scgpt_human": (
-        "Alternative scGPT bundle",
-        "Human-focused checkpoint if used by alternate configs.",
+        "scGPT whole-human decoder weights",
+        "Default decoder path in pipeline config; required for decode and training cache.",
     ),
     "models/baselines": (
         "Baseline model weights",
@@ -317,7 +317,7 @@ MANUAL_REVIEWS: dict[str, dict[str, Any]] = {
         ),
         evidence=[
             "`README.md`, `PIPELINE.md`, `REPRODUCIBILITY.md`, and the generated audit scaffold.",
-            "`results/clop_data_audit.json`, `models/checkpoints/CLOP/versions/v9.3/clop_history.json`, and `models/checkpoints/DiT/versions/v2.0/dit_history.json`.",
+            "`results/clop_data_audit.json`, `models/checkpoints/CLOP/versions/latest/clop_history.json`, and `models/checkpoints/DiT/versions/latest/dit_history.json`.",
             "`results/benchmark_report.json`, `results/comprehensive_summary.json`, `results/vcd_report_summary.md`, and `articles/clop_dit_biology.tex`.",
         ],
         strengths=[
@@ -403,7 +403,7 @@ MANUAL_REVIEWS: dict[str, dict[str, Any]] = {
             "The main CLOP and DiT YAMLs do not declare `seed`, even though the training scripts default to `42` at the CLI layer.",
             "Path authority is split between `pipeline.yaml` and per-stage YAMLs, which can drift silently.",
             "`models.yaml` names Hugging Face models but does not pin revisions or commit hashes.",
-            "`dit.yaml` still describes itself as matched to CLOP v6, while `clop.yaml` is labeled v9.3.",
+            "`dit.yaml` and `clop.yaml` config descriptions should be kept in sync.",
         ],
         next_checks=[
             "Add explicit `seed` keys to every trainable config.",
@@ -504,8 +504,8 @@ MANUAL_REVIEWS: dict[str, dict[str, Any]] = {
         ),
         evidence=[
             "`models/checkpoints/CURRENT_VERSION.txt`.",
-            "`models/checkpoints/CLOP/best/clop_best.pth`, `models/checkpoints/CLOP/versions/v9.3/{clop_best.pth,clop_final.pth,clop_history.json}`.",
-            "`models/checkpoints/DiT/best/dit_best.pth`, `models/checkpoints/DiT/versions/v2.0/{dit_best.pth,dit_final.pth,dit_history.json}`.",
+            "`models/checkpoints/CLOP/best/clop_best.pth`, `models/checkpoints/CLOP/versions/latest/{clop_best.pth,clop_final.pth,clop_history.json}`.",
+            "`models/checkpoints/DiT/best/dit_best.pth`, `models/checkpoints/DiT/versions/latest/{dit_best.pth,dit_final.pth,dit_history.json}`.",
         ],
         strengths=[
             "A lightweight version pointer exists in `CURRENT_VERSION.txt`.",
@@ -514,7 +514,7 @@ MANUAL_REVIEWS: dict[str, dict[str, Any]] = {
         gaps=[
             "`generation_metadata.json` points to `models/checkpoints/dit_best.pth`, while the concrete stored checkpoint is nested under `models/checkpoints/DiT/...`, which is a path-drift risk.",
             "Checkpoint folders still need explicit hashes, config snapshots, and seed metadata if they are to function as release-grade evidence bundles.",
-            "`CURRENT_VERSION.txt` names CLOP v9.3, while DiT is versioned separately under `v2.0`; that split is reasonable but should be made explicit in human-facing docs.",
+            "`CURRENT_VERSION.txt` names CLOP, while DiT is versioned separately under `v2.0`; that split is reasonable but should be made explicit in human-facing docs.",
         ],
         next_checks=[
             "Record which exact checkpoint pairs correspond to the reported paper version.",
@@ -780,7 +780,7 @@ MANUAL_REVIEWS: dict[str, dict[str, Any]] = {
             "claims about dataset sufficiency cannot be validated here without the actual artifacts."
         ),
         evidence=[
-            "`dataset.py`, `cache_builder.py`, and the repo docs describing `data/cached_latents_v5.2`.",
+            "`dataset.py`, `cache_builder.py`, and the repo docs describing `data/cached_latents`.",
             "`scripts/analysis/audit_data.py` as the intended cache sanity check.",
         ],
         strengths=[
@@ -954,13 +954,13 @@ MANUAL_REVIEWS: dict[str, dict[str, Any]] = {
         ),
         evidence=[
             "`results/clop_data_audit.json`.",
-            "`data/processed_h5ad/` and `data/cached_latents_v5.2/` inventories.",
+            "`data/processed_h5ad/` and `data/cached_latents/` inventories.",
             "`REPRODUCIBILITY.md` and the default cache path in the configs.",
         ],
         strengths=[
             "`clop_data_audit.json` reports `167245` cells, `69` cell types, and `79` datasets, with all `69` types present in both train and validation under the stratified split.",
             "Embedding norms are effectively unit-normalized and the mean pairwise cosine values do not suggest collapse.",
-            "`data/processed_h5ad/` contains `80` processed `.h5ad` files and `data/cached_latents_v5.2/` contains the expected cached arrays and metadata sidecars.",
+            "`data/processed_h5ad/` contains `80` processed `.h5ad` files and `data/cached_latents/` contains the expected cached arrays and metadata sidecars.",
         ],
         gaps=[
             "The data audit status is `WARN`, not `PASS`.",

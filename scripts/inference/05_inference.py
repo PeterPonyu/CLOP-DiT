@@ -65,7 +65,7 @@ class CLOPDiTInference:
         dit_checkpoint: str,
         clop_checkpoint: str,
         decoder_checkpoint: str = None,
-        scgpt_model_dir: str = "models/scgpt_pancancer",
+        scgpt_model_dir: str = "models/scgpt_human",
         text_encoder_name: str = "microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract",
         device: str = "cuda",
     ):
@@ -377,7 +377,7 @@ def main():
     parser.add_argument("--dit_checkpoint", type=str, default="models/checkpoints/dit_best.pth")
     parser.add_argument("--clop_checkpoint", type=str, default="models/checkpoints/clop_best.pth")
     parser.add_argument("--decoder_checkpoint", type=str, default=None)
-    parser.add_argument("--scgpt_model_dir", type=str, default="models/scgpt_pancancer",
+    parser.add_argument("--scgpt_model_dir", type=str, default="models/scgpt_human",
                         help="scGPT model dir for generate() decoding")
     parser.add_argument("--text_encoder", type=str,
                         default="microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract")

@@ -56,7 +56,7 @@ def _get_path(env_key: str, config_key: str, default: Path) -> Path:
 CACHE_DIR = _get_path(
     "CLOPDIT_CACHE_DIR",
     "cache_dir",
-    PROJECT_ROOT / "data" / "cached_latents_v5.2",
+    PROJECT_ROOT / "data" / "cached_latents",
 )
 RESULTS_DIR = _get_path(
     "CLOPDIT_RESULTS_DIR",
@@ -85,8 +85,8 @@ PROCESSED_H5AD_DIR = _resolve_path(
     _pipeline.get("processed_h5ad_dir", "data/processed_h5ad")
 ) if _pipeline else (PROJECT_ROOT / "data" / "processed_h5ad")
 SCGPT_DIR = _resolve_path(
-    _pipeline.get("scgpt_dir", "models/scgpt_pancancer")
-) if _pipeline else (PROJECT_ROOT / "models" / "scgpt_pancancer")
+    _pipeline.get("scgpt_dir", "models/scgpt_human")
+) if _pipeline else (PROJECT_ROOT / "models" / "scgpt_human")
 ARTICLE_DIR = _resolve_path(
     _pipeline.get("article_dir", "articles")
 ) if _pipeline else (PROJECT_ROOT / "articles")

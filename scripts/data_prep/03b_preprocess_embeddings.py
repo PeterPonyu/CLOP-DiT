@@ -17,7 +17,7 @@ After preprocessing:
 
 Usage:
     python scripts/03b_preprocess_embeddings.py
-    python scripts/03b_preprocess_embeddings.py --cache_dir data/cached_latents_v5.2
+    python scripts/03b_preprocess_embeddings.py --cache_dir data/cached_latents
     python scripts/03b_preprocess_embeddings.py --text_method whiten --cell_method center_norm
 """
 
@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 def main():
     parser = argparse.ArgumentParser(description="Preprocess cached embeddings (whitening)")
-    parser.add_argument("--cache_dir", type=str, default="data/cached_latents_v5.2",
+    parser.add_argument("--cache_dir", type=str, default="data/cached_latents",
                         help="Directory with cached embeddings")
     parser.add_argument("--text_method", type=str, default="whiten",
                         choices=["whiten", "whiten_pca", "center_norm", "none"],

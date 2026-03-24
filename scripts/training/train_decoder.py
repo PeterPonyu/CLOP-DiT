@@ -36,7 +36,7 @@ def load_config(config_path: str = None) -> dict:
     """Load config from YAML or use defaults."""
     defaults = {
         "scgpt_model_dir": "models/scgpt_human",
-        "cache_dir": "data/cached_latents_v5.2",
+        "cache_dir": "data/cached_latents",
         "h5ad_dir": "data/processed_h5ad",
         "lora_rank": 8,
         "lora_alpha": 16.0,

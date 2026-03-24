@@ -235,7 +235,7 @@ def plot_baseline_comparison(
     return fig
 
 
-def _compute_baselines(cache_dir: str = "data/cached_latents_v5.2") -> Dict[str, Dict]:
+def _compute_baselines(cache_dir: str = "data/cached_latents") -> Dict[str, Dict]:
     """Compute Gaussian and Shuffled baselines on-the-fly."""
     from src.evaluation.metrics import GenerationMetrics
 

@@ -492,7 +492,7 @@ class DiTTrainer:
         )
 
         train_loader, val_loader = create_dataloaders(
-            cache_dir=config.get("cache_dir", "data/cached_latents_v5.2"),
+            cache_dir=config.get("cache_dir", "data/cached_latents"),
             batch_size=config.get("batch_size", 512),
             val_split=config.get("val_split", 0.1),
             n_folds=config.get("n_folds", 1),

@@ -5,7 +5,7 @@ Validates preprocessing, split coverage, and embedding quality
 to catch silent data issues before training.
 
 Usage:
-    python scripts/audit_data.py [--cache-dir data/cached_latents_v5.2]
+    python scripts/audit_data.py [--cache-dir data/cached_latents]
 """
 import argparse
 import json
@@ -220,7 +220,7 @@ def main():
     parser = argparse.ArgumentParser(description="CLOP-DiT data audit")
     parser.add_argument(
         "--cache-dir",
-        default="data/cached_latents_v5.2",
+        default="data/cached_latents",
         help="Path to cached latents directory",
     )
     args = parser.parse_args()

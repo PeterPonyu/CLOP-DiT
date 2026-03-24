@@ -2,7 +2,7 @@
 #
 # Prototype SigLIP loss + group-aware sampling + separation margin
 
-cache_dir: "data/cached_latents_v5.2"
+cache_dir: "data/cached_latents"
 use_preprocessed: true
 use_deduplicated: true
 

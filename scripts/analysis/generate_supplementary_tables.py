@@ -26,8 +26,8 @@ import numpy as np
 # ──────────────────────────────────────────────────────────────────────
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 METADATA_STRUCTURED = PROJECT_ROOT / "data/processed_h5ad/metadata_structured.json"
-METADATA_CACHE = PROJECT_ROOT / "data/cached_latents_v5.2/metadata.json"
-SAMPLE_IDS_PATH = PROJECT_ROOT / "data/cached_latents_v5.2/sample_ids.npy"
+METADATA_CACHE = PROJECT_ROOT / "data/cached_latents/metadata.json"
+SAMPLE_IDS_PATH = PROJECT_ROOT / "data/cached_latents/sample_ids.npy"
 EVAL_RESULTS = PROJECT_ROOT / "results/archive/v5_final/final_evaluation.json"
 OUTPUT_TEX = PROJECT_ROOT / "articles/supplementary_tables.tex"
 OUTPUT_JSON = PROJECT_ROOT / "results/supplementary_data.json"

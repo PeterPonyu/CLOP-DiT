@@ -17,7 +17,7 @@ Outputs:
 
 Usage:
     python scripts/data_prep/generate_caption_variants.py
-    python scripts/data_prep/generate_caption_variants.py --n_variants 5 --cache_dir data/cached_latents_v5.2
+    python scripts/data_prep/generate_caption_variants.py --n_variants 5 --cache_dir data/cached_latents
 """
 
 import argparse
@@ -191,7 +191,7 @@ def embed_texts(texts: List[str], model_name: str, batch_size: int = 32) -> np.n
 
 def main():
     parser = argparse.ArgumentParser(description="Generate caption variants for CLOP augmentation")
-    parser.add_argument("--cache_dir", type=str, default="data/cached_latents_v5.2")
+    parser.add_argument("--cache_dir", type=str, default="data/cached_latents")
     parser.add_argument("--n_variants", type=int, default=5, help="Variants per caption")
     parser.add_argument("--text_encoder", type=str,
                         default="microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract")

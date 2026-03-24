@@ -72,7 +72,7 @@ def sliced_wasserstein_distance(x: np.ndarray, y: np.ndarray, n_proj: int = 100,
 
 def main():
     project_root = Path(__file__).resolve().parents[2]
-    cache_dir = project_root / "data" / "cached_latents_v5.2"
+    cache_dir = project_root / "data" / "cached_latents"
     results_dir = project_root / "results"
     output_dir = results_dir / "variance_matching_pilot"
     output_dir.mkdir(parents=True, exist_ok=True)
