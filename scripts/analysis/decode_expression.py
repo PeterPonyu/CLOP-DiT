@@ -301,6 +301,7 @@ def main():
     logger.info("Computing inverse-transform scale factor...")
     raw_emb = np.load(cache / "cell_embeddings_dedup.npy")
     pre_norm_scale = compute_pre_norm_scale(preprocessor, raw_emb, n_samples=5000)
+    del raw_emb
 
     # ── Load scGPT decoder ──
     logger.info("Loading scGPT decoder...")
