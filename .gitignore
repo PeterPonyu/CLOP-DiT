@@ -36,7 +36,6 @@ models/scgpt_human/
 models/scgpt_pancancer/
 models/checkpoints/
 !models/checkpoints/.gitkeep
-!models/checkpoints/CURRENT_VERSION.txt
 models/baselines/
 
 # === Generated outputs ===
@@ -49,6 +48,10 @@ generated_*.h5ad
 # === Archives (historical, not for public repo) ===
 configs/archive/
 scripts/archive/
+
+# === Claude Code agent artifacts ===
+.claude/
+CLAUDE.md
 
 # === Agent / IDE / working artifacts ===
 prompts.md
@@ -113,3 +116,17 @@ FOLDER_REVIEW.md
 
 # === Fetched reference articles ===
 references/
+
+# === Fonts (copyrighted, not distributable) ===
+fonts/
+*.ttf
+
+# === Internal docs (not for public repo) ===
+docs/
+
+# === Internal maintenance / audit scripts ===
+scripts/pipeline/generate_folder_audit_reports.py
+scripts/analysis/audit_data.py
+
+# === VCD tooling (internal development tool) ===
+scripts/vcd/

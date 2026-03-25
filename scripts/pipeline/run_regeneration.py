@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-run_regeneration.py — Regenerate all 30 article figures from cached JSON results,
+run_regeneration.py — Regenerate all 31 article figures from cached JSON results,
 run VCD on every output, refresh symlinks, and optionally rebuild the LaTeX PDF.
 
 Usage:
@@ -97,16 +97,25 @@ def run_architecture_figure():
 
 
 def _run_external_script(script_relpath: str, label: str, expected_pdf: str):
-    """Run an external figure script and return the output PDF path (or None)."""
+    """Run an external figure script and return the output PDF path (or None).
+
+    Scripts under src/ are run as modules (-m) to support relative imports.
+    Scripts under scripts/ are run as plain scripts.
+    """
     import subprocess, sys
     script = REPO / script_relpath
     if not script.exists():
         log.warning("%s script not found: %s", label, script)
         return None
     log.info("── Generating %s ──", label)
+    if script_relpath.startswith("src/"):
+        # Convert path to module: src/visualization/fig25_cross_dataset.py → src.visualization.fig25_cross_dataset
+        module_name = script_relpath.replace("/", ".").removesuffix(".py")
+        cmd = [sys.executable, "-m", module_name]
+    else:
+        cmd = [sys.executable, str(script)]
     result = subprocess.run(
-        [sys.executable, str(script)],
-        capture_output=True, text=True, cwd=str(REPO)
+        cmd, capture_output=True, text=True, cwd=str(REPO)
     )
     if result.returncode != 0:
         log.error("%s failed:\n%s", label, result.stderr[-2000:])
@@ -513,7 +522,7 @@ def run_latex_build():
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description="Regenerate all 30 article figures + VCD + optional PDF rebuild")
+    parser = argparse.ArgumentParser(description="Regenerate all 31 article figures + VCD + optional PDF rebuild")
     parser.add_argument("--no-vcd",    action="store_true", help="Skip live VCD during generation and final VCD reporting")
     parser.add_argument("--skip-arch", action="store_true", help="Skip architecture figure (Fig 1)")
     parser.add_argument("--no-delivery", action="store_true", help="Skip article_delivery (symlinks)")
@@ -524,7 +533,7 @@ def main():
     vcd_enabled = (not args.no_vcd) and _env_flag("CLOPDIT_ENABLE_VCD", True)
     os.environ["CLOPDIT_ENABLE_VCD"] = "1" if vcd_enabled else "0"
     log.info("=" * 70)
-    log.info("CLOP-DiT Figure Regeneration Pipeline (30 figures) — %s", time.strftime("%Y-%m-%d"))
+    log.info("CLOP-DiT Figure Regeneration Pipeline (31 figures) — %s", time.strftime("%Y-%m-%d"))
     log.info("=" * 70)
     log.info("Live VCD during generation: %s", "enabled" if vcd_enabled else "disabled")
     FIG_DIR.mkdir(parents=True, exist_ok=True)
@@ -576,6 +585,7 @@ def main():
         ("src/visualization/fig28_marker_completeness.py",    "fig28_marker_completeness.pdf"),
         ("src/visualization/fig29_embedding_augmentation.py", "fig29_embedding_augmentation.pdf"),
         ("src/visualization/fig30_validation_summary.py",     "fig30_validation_summary.pdf"),
+        ("src/visualization/fig31_decoder_ablation.py",       "fig31_decoder_ablation.pdf"),
     ]
     for _script_rel, _expected_pdf in _ext_figs:
         _fig = _run_external_script(_script_rel, _expected_pdf, _expected_pdf)
