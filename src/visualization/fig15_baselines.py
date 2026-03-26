@@ -34,6 +34,7 @@ def plot_baseline_comparison(
     output_dir: Optional[Path] = None,
     dpi: int = 300,
     save: bool = True,
+    label_offset: int = 0,
 ) -> Optional[plt.Figure]:
     """Fig 15: CLOP-DiT vs baselines (publication quality, 3-panel).
 
@@ -111,7 +112,7 @@ def plot_baseline_comparison(
 
     # ── O1: Grouped bar chart ──
     ax = ax_rect_1.add_axes(fig)
-    add_panel_label(ax, 'a', x=-0.12, y=1.02)
+    add_panel_label(ax, chr(ord('a') + label_offset), x=-0.12, y=1.02)
     x = np.arange(len(metric_labels))
     w = 0.8 / n_methods
     for i, mname in enumerate(method_names):
@@ -127,7 +128,7 @@ def plot_baseline_comparison(
 
     # ── O2: Ranked dot plot (normalised scores) ──
     ax2 = ax_rect_2.inset(left=0.020, right=0.010).add_axes(fig)
-    add_panel_label(ax2, 'b', x=-0.12, y=1.02)
+    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.12, y=1.02)
 
     # Normalise each metric to [0,1] with direction awareness
     all_vals = {k: [methods[m][k] for m in method_names] for k in metric_keys}
@@ -172,7 +173,7 @@ def plot_baseline_comparison(
 
     # ── O3: Absolute delta bar chart (CLOP-DiT minus baseline) ──
     ax3 = ax_rect_3.inset(left=0.10, right=0.02).add_axes(fig)
-    add_panel_label(ax3, 'c', x=-0.18, y=1.02)
+    add_panel_label(ax3, chr(ord('a') + label_offset + 2), x=-0.12, y=1.02)
 
     clop_vals = methods["CLOP-DiT"]
     bl_names = [bl for bl in baselines]
@@ -230,7 +231,7 @@ def plot_baseline_comparison(
     ax3.xaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
 
     if save:
-        path = save_panel(fig, output_dir / "fig15_baseline_comparison.png", dpi)
+        path = save_panel(fig, output_dir / "fig07b_baseline_comparison.png", dpi)
         logger.info(f"Saved Fig 15 \u2192 {path}")
     return fig
 

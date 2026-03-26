@@ -106,8 +106,8 @@ def plot_per_type_generation(
     fd_valid = np.isfinite(fd_array)
     fd_mean = float(np.nanmean(fd_array)) if fd_valid.any() else float("nan")
 
-    fig = plt.figure(figsize=(14.0, 6.9))
-    layout = bind_figure_region(fig, (0.16, 0.10, 0.965, 0.90))
+    fig = plt.figure(figsize=(14.0, 5.2))
+    layout = bind_figure_region(fig, (0.16, 0.12, 0.965, 0.92))
     g1_slot, g2_slot, g3_slot = layout.split_cols([1.00, 1.18, 0.76], gap=[0.024, 0.038])
     g1_rect = g1_slot.inset(right=0.004)
     g2_rect = g2_slot.inset(left=0.148, right=0.018)
@@ -175,7 +175,7 @@ def plot_per_type_generation(
 
     # G3: Cosine vs abundance with FD bubble size and diversity color
     ax = g3_rect.add_axes(fig)
-    add_panel_label(ax, chr(ord('a') + label_offset + 2), x=-0.30, y=1.06)
+    add_panel_label(ax, chr(ord('a') + label_offset + 2), x=-0.14, y=1.06)
     fd_for_size = np.where(fd_valid, fd_array, np.nanmedian(fd_array[fd_valid]) if fd_valid.any() else 1.0)
     fd_min = float(np.nanmin(fd_for_size)) if np.isfinite(fd_for_size).any() else 0.0
     fd_ptp = float(np.nanmax(fd_for_size) - fd_min) if np.isfinite(fd_for_size).any() else 1.0
@@ -265,7 +265,7 @@ def plot_per_type_generation(
     style_axes(ax, kind="scatter")
 
     if save:
-        path = Path(output_dir) / "fig06_per_type_fidelity.png"
+        path = Path(output_dir) / "fig03b_per_type_fidelity.png"
         if save_panel_fn is not None:
             save_panel_fn(fig, path, dpi)
         else:

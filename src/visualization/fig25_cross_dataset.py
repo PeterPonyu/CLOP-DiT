@@ -161,5 +161,7 @@ def plot_cross_dataset_validation(
 
 
 if __name__ == "__main__":
+    import matplotlib
+    matplotlib.use("Agg")
     logging.basicConfig(level=logging.INFO)
     plot_cross_dataset_validation()

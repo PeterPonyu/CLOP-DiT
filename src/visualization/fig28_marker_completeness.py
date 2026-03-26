@@ -209,5 +209,7 @@ def plot_marker_completeness(
 
 
 if __name__ == "__main__":
+    import matplotlib
+    matplotlib.use("Agg")
     logging.basicConfig(level=logging.INFO)
     plot_marker_completeness()

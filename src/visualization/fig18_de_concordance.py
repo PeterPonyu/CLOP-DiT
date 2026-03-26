@@ -40,6 +40,7 @@ def plot_de_concordance_panel(
     output_dir: Path,
     dpi: int = 300,
     save: bool = True,
+    label_offset: int = 0,
 ) -> Optional[plt.Figure]:
     """Fig 18: Differential expression concordance between real and generated.
 
@@ -67,7 +68,7 @@ def plot_de_concordance_panel(
 
     # ── Panel (a): effect-size weighted logFC scatter ──
     ax = ax_rect_a.add_axes(fig)
-    add_panel_label(ax, 'a', x=-0.16, y=1.04)
+    add_panel_label(ax, chr(ord('a') + label_offset), x=-0.14, y=1.03)
 
     first_key = contrasts[0]
     first = de_data[first_key]
@@ -208,7 +209,7 @@ def plot_de_concordance_panel(
 
     # ── Panel (b): concordance heatmap ──
     ax2 = ax_rect_b.add_axes(fig)
-    add_panel_label(ax2, 'b', x=-0.12, y=1.03)
+    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.14, y=1.03)
 
     metric_names = ["Pears. r", "Spear. \u03c1", "Jacc.@50", "Sign agr."]
     metric_tick_labels = ["Pears.\nr", "Spear.\n\u03c1", "Jacc.\n50", "Sign\nagr."]
@@ -254,7 +255,7 @@ def plot_de_concordance_panel(
 
     # ── Panel (c): grouped bar chart ──
     ax3 = ax_rect_c.add_axes(fig)
-    add_panel_label(ax3, 'c', x=-0.22, y=1.04)
+    add_panel_label(ax3, chr(ord('a') + label_offset + 2), x=-0.14, y=1.03)
 
     x        = np.arange(n_contrasts)
     n_metrics = len(metric_names)
@@ -279,6 +280,6 @@ def plot_de_concordance_panel(
     ax3.tick_params(labelsize=FONT_TICK)
 
     if save:
-        path = save_panel(fig, output_dir / "fig18_de_concordance.png", dpi)
+        path = save_panel(fig, output_dir / "fig08b_de_concordance.png", dpi)
         logger.info("Saved Fig 18 \u2192 %s", path)
     return fig

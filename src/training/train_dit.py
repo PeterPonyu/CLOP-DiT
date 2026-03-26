@@ -100,6 +100,8 @@ class DiTTrainer:
         self.inference_steps = kwargs.get("inference_steps", 20)
         self.cfg_scale = kwargs.get("cfg_scale", 3.0)
         self.variance_loss_weight = kwargs.get("variance_loss_weight", 0.0)
+        self.covariance_loss_weight = kwargs.get("covariance_loss_weight", 0.0)
+        self.cov_num_slices = kwargs.get("cov_num_slices", 32)
         self.save_dir.mkdir(parents=True, exist_ok=True)
 
         # Optimizer
@@ -185,7 +187,7 @@ class DiTTrainer:
             e_param.data.mul_(self.ema_decay).add_(s_param.data, alpha=1 - self.ema_decay)
 
     def compute_loss(self, batch: Dict) -> torch.Tensor:
-        """Compute flow matching MSE loss with optional variance-matching regularization.
+        """Compute flow matching MSE loss with variance and covariance regularization.
 
         Parameters
         ----------
@@ -203,36 +205,90 @@ class DiTTrainer:
         v_pred = self.model(z_t, t, cond)
         loss = F.mse_loss(v_pred, v_target)
 
-        # Variance-matching regularization (Eq. 7 in manuscript)
-        # Per-class variance matching: preserves within-type diversity
-        if self.variance_loss_weight > 0 and "z_1" in batch:
+        # Reconstruct z_1 estimate for variance/covariance losses
+        needs_z1_hat = (self.variance_loss_weight > 0 or self.covariance_loss_weight > 0)
+        if needs_z1_hat and "z_1" in batch:
             z_1 = batch["z_1"].to(self.device)
-            # Reconstruct z_1 estimate from flow: z_1_hat = z_t + (1 - t) * v_pred
             t_expand = t.unsqueeze(-1)  # (B, 1)
             z_1_hat = z_t + (1 - t_expand) * v_pred
 
             if "group_id" in batch:
-                # Per-class variance: match intra-type variance, not batch-level
                 group_ids = batch["group_id"].to(self.device)
                 var_losses = []
+                cov_losses = []
                 for gid in torch.unique(group_ids):
                     mask = (group_ids == gid)
-                    if mask.sum() < 4:  # need minimum samples for stable variance
+                    n_samples = mask.sum()
+                    if n_samples < 4:
                         continue
-                    var_real_g = z_1[mask].var(dim=0)
-                    var_pred_g = z_1_hat[mask].var(dim=0)
-                    var_losses.append(F.mse_loss(var_pred_g, var_real_g))
-                if var_losses:
-                    var_loss = torch.stack(var_losses).mean()
-                    loss = loss + self.variance_loss_weight * var_loss
+
+                    real_g = z_1[mask]
+                    pred_g = z_1_hat[mask]
+
+                    # Per-class variance matching (Eq. 7)
+                    if self.variance_loss_weight > 0:
+                        var_real_g = real_g.var(dim=0)
+                        var_pred_g = pred_g.var(dim=0)
+                        var_losses.append(F.mse_loss(var_pred_g, var_real_g))
+
+                    # Sliced covariance matching (Eq. 8): project onto random
+                    # directions and match projected variances. This implicitly
+                    # preserves cross-dimension correlation structure without
+                    # computing full D x D covariance matrices.
+                    if self.covariance_loss_weight > 0 and n_samples >= 8:
+                        cov_losses.append(
+                            self._sliced_covariance_loss(real_g, pred_g)
+                        )
+
+                if var_losses and self.variance_loss_weight > 0:
+                    loss = loss + self.variance_loss_weight * torch.stack(var_losses).mean()
+                if cov_losses and self.covariance_loss_weight > 0:
+                    loss = loss + self.covariance_loss_weight * torch.stack(cov_losses).mean()
             else:
-                # Fallback: batch-level variance (less effective but still useful)
-                var_real = z_1.var(dim=0)      # (latent_dim,)
-                var_pred = z_1_hat.var(dim=0)  # (latent_dim,)
-                var_loss = F.mse_loss(var_pred, var_real)
-                loss = loss + self.variance_loss_weight * var_loss
+                # Fallback: batch-level
+                if self.variance_loss_weight > 0:
+                    var_real = z_1.var(dim=0)
+                    var_pred = z_1_hat.var(dim=0)
+                    loss = loss + self.variance_loss_weight * F.mse_loss(var_pred, var_real)
+                if self.covariance_loss_weight > 0:
+                    loss = loss + self.covariance_loss_weight * self._sliced_covariance_loss(z_1, z_1_hat)
 
         return loss
+
+    def _sliced_covariance_loss(
+        self, real: torch.Tensor, pred: torch.Tensor
+    ) -> torch.Tensor:
+        """Sliced covariance loss: match variance along random projections.
+
+        Projects both real and predicted samples onto K random unit directions
+        and matches the variance of each 1-D projection. This captures
+        cross-dimension correlation structure without computing full covariance.
+
+        Parameters
+        ----------
+        real : (N, D) real clean samples for a group
+        pred : (N, D) predicted clean samples for a group
+
+        Returns
+        -------
+        loss : scalar tensor
+        """
+        D = real.shape[1]
+        K = self.cov_num_slices
+
+        # Fixed random projections per step (regenerated each call for diversity)
+        theta = torch.randn(K, D, device=real.device, dtype=real.dtype)
+        theta = F.normalize(theta, dim=1)  # (K, D) unit vectors
+
+        # Project: (N, D) @ (D, K) -> (N, K)
+        proj_real = real @ theta.T
+        proj_pred = pred @ theta.T
+
+        # Match variance along each projection direction
+        var_real = proj_real.var(dim=0)   # (K,)
+        var_pred = proj_pred.var(dim=0)   # (K,)
+
+        return F.mse_loss(var_pred, var_real)
 
     def train_epoch(self, epoch: int) -> Dict:
         """Train for one epoch.
@@ -526,6 +582,8 @@ class DiTTrainer:
             inference_steps=config.get("inference_steps", 20),
             cfg_scale=config.get("cfg_scale", 3.0),
             variance_loss_weight=config.get("variance_loss_weight", 0.0),
+            covariance_loss_weight=config.get("covariance_loss_weight", 0.0),
+            cov_num_slices=config.get("cov_num_slices", 32),
         )
 
         # Resume from checkpoint if specified

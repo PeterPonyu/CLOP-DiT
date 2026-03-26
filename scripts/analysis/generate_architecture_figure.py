@@ -7,7 +7,7 @@ Generates a three-stage pipeline diagram showing:
   Stage 2 (DiT):   Noise -> DiT1D with AdaLN-Zero conditioning -> ODE solver -> latent
   Stage 3 (Decode): Generated latent -> scGPT decoder -> gene expression profile
 
-Output: results/figures/fig_architecture.png and .pdf at 300 DPI.
+Output: results/figures/fig01a_architecture.png and .pdf at 300 DPI.
 
 Usage:
     python scripts/generate_architecture_figure.py
@@ -167,7 +167,7 @@ def create_architecture_figure(output_dir=None):
     fig = plt.figure(figsize=(10.0, 3.6))
     ax = bind_figure_region(fig, (0.01, 0.02, 0.99, 0.97)).add_axes(fig)
     ax.set_xlim(-0.20, 7.65)
-    ax.set_ylim(-0.18, 3.18)
+    ax.set_ylim(-0.18, 3.30)
     ax.axis("off")
     ax.set_xticks([])
     ax.set_yticks([])
@@ -202,7 +202,7 @@ def create_architecture_figure(output_dir=None):
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=2)
     ax.text(4.80, 2.82, "ODE latent sampling",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=2)
-    ax.text(6.90, 2.70, "decode to genes",
+    ax.text(6.90, 2.80, "decode to genes",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=2)
 
     # Stage 1: CLOP
@@ -518,7 +518,7 @@ def create_architecture_figure(output_dir=None):
                 fontsize=FONT_ARCH_SUBLABEL, va="center", color=ec, zorder=5)
         lx += 1.15
 
-    output_path = output_dir / "fig_architecture.png"
+    output_path = output_dir / "fig01a_architecture.png"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     save_panel(fig, output_path, dpi=300, close=False)
     plt.close(fig)

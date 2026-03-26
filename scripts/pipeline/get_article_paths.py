@@ -23,11 +23,11 @@ def main() -> None:
                 with open(CONFIG_PATH) as f:
                     cfg = yaml.safe_load(f) or {}
                 article_dir = article_dir or cfg.get("article_dir", "articles")
-                article_tex = article_tex or cfg.get("article_tex", "clop_dit_biology.tex")
+                article_tex = article_tex or cfg.get("article_tex", "clop_dit_genes.tex")
             except Exception:
                 pass
         article_dir = article_dir or "articles"
-        article_tex = article_tex or "clop_dit_biology.tex"
+        article_tex = article_tex or "clop_dit_genes.tex"
     article_dir = Path(article_dir)
     if not article_dir.is_absolute():
         article_dir = PROJECT_ROOT / article_dir

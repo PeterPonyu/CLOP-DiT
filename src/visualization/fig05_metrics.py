@@ -650,7 +650,7 @@ def plot_metrics_summary(
     add_panel_label(ax4, 'd', x=-0.10, y=1.05)
 
     if save:
-        path = Path(output_dir) / "fig05_metrics_summary.png"
+        path = Path(output_dir) / "fig03a_metrics_summary.png"
         if save_panel_fn is not None:
             save_panel_fn(fig, path, dpi)
         else:

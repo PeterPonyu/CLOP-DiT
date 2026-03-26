@@ -390,5 +390,7 @@ def plot_validation_summary(
 
 
 if __name__ == "__main__":
+    import matplotlib
+    matplotlib.use("Agg")
     logging.basicConfig(level=logging.INFO)
     plot_validation_summary()

@@ -52,6 +52,7 @@ def plot_panel_m(
     full_dim_data: Optional[np.ndarray] = None,
     full_dim_labels: Optional[np.ndarray] = None,
     full_dim_source: Optional[np.ndarray] = None,
+    label_offset: int = 0,
 ) -> Path:
     """Panel M / Figure 11: Conditioning mode comparison (plot only). coords are (n, 2) PCA/UMAP."""
     output_dir = Path(output_dir)
@@ -62,11 +63,17 @@ def plot_panel_m(
     _fw = 15.0  # Fixed width for reproducible layout
     has_row3 = full_dim_data is not None and len(full_dim_data) > 0
     if has_row3:
-        fig = plt.figure(figsize=(_fw, 10.8))
-        row_regions = bind_figure_region(fig, (0.05, 0.05, 0.97, 0.95)).split_rows([1.48, 1.02, 0.98], hspace=0.28)
+        fig = plt.figure(figsize=(_fw, 9.0))
+        row_regions = bind_figure_region(fig, (0.05, 0.12, 0.97, 0.95)).split_rows(
+            [1.34, 1.02, 0.70],
+            gap=[0.108, 0.074],
+        )
     else:
-        fig = plt.figure(figsize=(_fw, 6.8))
-        row_regions = bind_figure_region(fig, (0.05, 0.05, 0.97, 0.95)).split_rows([1.46, 0.98], hspace=0.24)
+        fig = plt.figure(figsize=(_fw, 6.7))
+        row_regions = bind_figure_region(fig, (0.05, 0.12, 0.97, 0.95)).split_rows(
+            [1.30, 0.96],
+            gap=0.104,
+        )
     top_widths = [1.0] * n_modes
     if n_modes > 1:
         top_widths[-1] = 1.04
@@ -74,13 +81,13 @@ def plot_panel_m(
 
     # Panel labels: placed with enough clearance for single-line titles
     _panel_label_y = 1.09
-    add_panel_label(axes[0], 'a', x=-0.14, y=_panel_label_y)
+    add_panel_label(axes[0], chr(ord('a') + label_offset), x=-0.14, y=_panel_label_y)
 
     type_to_color = {tid: TYPE_PALETTE[i % len(TYPE_PALETTE)] for i, tid in enumerate(selected_types)}
     type_to_name = {
         tid: abbreviate_cell_type(
             type_names.get(int(tid), f"Type_{tid}") if type_names else f"Type_{tid}",
-            max_len=18,
+            max_len=15,
         )
         for tid in selected_types
     }
@@ -127,11 +134,11 @@ def plot_panel_m(
     # ── Row 2: Quantitative summaries ──
     bottom_regions = row_regions[1].split_cols([1.08, 1.02, 0.92], wspace=0.28)
     ax_b1 = bottom_regions[0].add_axes(fig)
-    add_panel_label(ax_b1, 'b', x=-0.18, y=_panel_label_y)
+    add_panel_label(ax_b1, chr(ord('a') + label_offset + 1), x=-0.18, y=_panel_label_y)
     ax_b2 = bottom_regions[1].add_axes(fig)
-    add_panel_label(ax_b2, 'c', x=-0.18, y=1.03)
+    add_panel_label(ax_b2, chr(ord('a') + label_offset + 2), x=-0.18, y=_panel_label_y)
     ax_b3 = bottom_regions[2].add_axes(fig)
-    add_panel_label(ax_b3, 'd', x=-0.14, y=1.05)
+    add_panel_label(ax_b3, chr(ord('a') + label_offset + 3), x=-0.18, y=_panel_label_y)
     _adjust_axes_rect(ax_b1, width_scale=0.90)
     _adjust_axes_rect(ax_b3, dx=ax_b3.get_position().width * 0.08, width_scale=0.92)
 
@@ -179,10 +186,10 @@ def plot_panel_m(
         ax_b1.set_xticklabels([_short_mode(m) for m in shift_labels],
                                rotation=0, ha="center", fontsize=FONT_TICK)
         ax_b1.set_ylabel("Mean centroid shift (PC units)", fontsize=FONT_LABEL)
-        ax_b1.set_title("Centroid Shift", fontsize=FONT_TITLE, x=0.58)
+        ax_b1.set_title("Centroid Shift", fontsize=FONT_TITLE, x=0.58, pad=2)
     else:
         ax_b1.text(0.5, 0.5, "No centroid shift data", ha="center", va="center", transform=ax_b1.transAxes)
-        ax_b1.set_title("Centroid Shift", fontsize=FONT_TITLE, x=0.58)
+        ax_b1.set_title("Centroid Shift", fontsize=FONT_TITLE, x=0.58, pad=2)
 
     div_labels = ["Real"] + list(mode_diversity.keys())
     div_values = [real_diversity] + [mode_diversity[m] for m in mode_diversity.keys()]
@@ -194,7 +201,7 @@ def plot_panel_m(
     ax_b2.set_xticklabels([_short_mode(m) for m in div_labels],
                            rotation=0, ha="center", fontsize=FONT_TICK)
     ax_b2.set_ylabel("Within-type diversity", fontsize=FONT_LABEL)
-    ax_b2.set_title("Diversity by Mode", fontsize=FONT_TITLE, y=0.90, pad=0)
+    ax_b2.set_title("Diversity by Mode", fontsize=FONT_TITLE, pad=2)
 
     if per_type_shift_distributions:
         ax_b3.boxplot(
@@ -209,11 +216,11 @@ def plot_panel_m(
         )
         ax_b3.tick_params(axis="x", labelrotation=0, labelsize=FONT_TICK)
         ax_b3.set_ylabel("Per-type centroid shift", fontsize=FONT_LABEL)
-        ax_b3.set_title("Shift Distribution", fontsize=FONT_TITLE, y=0.92, pad=0)
+        ax_b3.set_title("Shift Distribution", fontsize=FONT_TITLE, pad=2)
         ax_b3.yaxis.set_major_locator(MaxNLocator(nbins=4, prune='upper'))
     else:
         ax_b3.text(0.5, 0.5, "No shift distribution data", ha="center", va="center", transform=ax_b3.transAxes)
-        ax_b3.set_title("Shift Distribution", fontsize=FONT_TITLE)
+        ax_b3.set_title("Shift Distribution", fontsize=FONT_TITLE, pad=2)
 
     # ── Row 3: KNN accuracy, diversity heatmap, pairwise cosine violin ──
     if has_row3:
@@ -222,11 +229,11 @@ def plot_panel_m(
 
         row3_regions = row_regions[2].split_cols([0.98, 1.00, 0.94], wspace=0.34)
         ax_c1 = row3_regions[0].add_axes(fig)
-        add_panel_label(ax_c1, 'e', x=-0.20, y=_panel_label_y)
+        add_panel_label(ax_c1, chr(ord('a') + label_offset + 4), x=-0.18, y=_panel_label_y)
         ax_c2 = row3_regions[1].add_axes(fig)
-        add_panel_label(ax_c2, 'f', x=-0.12, y=_panel_label_y)
+        add_panel_label(ax_c2, chr(ord('a') + label_offset + 5), x=-0.18, y=_panel_label_y)
         ax_c3 = row3_regions[2].add_axes(fig)
-        add_panel_label(ax_c3, 'g', x=-0.20, y=_panel_label_y)
+        add_panel_label(ax_c3, chr(ord('a') + label_offset + 6), x=-0.04, y=_panel_label_y)
         _adjust_axes_rect(ax_c1, width_scale=0.90)
         _adjust_axes_rect(ax_c3, dx=ax_c3.get_position().width * 0.08, width_scale=0.92)
 
@@ -362,24 +369,25 @@ def plot_panel_m(
         ax_c3.set_ylabel("Pairwise Cosine Similarity", fontsize=FONT_LABEL)
         ax_c3.set_title("Cluster Tightness", fontsize=FONT_TITLE)
 
-    # ── Legend: cell-type keys — place as a figure-level legend below row 1 ──
+    # ── Legend: cell-type keys — place just below the top-row scatter plots ──
     handles, labels = axes[0].get_legend_handles_labels()
     # Remove any subplot-level legend that may have been auto-added
     for _ax in axes:
         leg = _ax.get_legend()
         if leg is not None:
             leg.remove()
-    legend_bottom = ax_b1.get_position().y1 + 0.026
-    legend_ax = add_shared_legend_axes(fig, (0.15, legend_bottom, 0.70, 0.028))
+    # Position legend just below the bottom edge of the first row of scatter plots
+    row1_bottom = axes[0].get_position().y0
+    legend_ax = add_shared_legend_axes(fig, (0.11, row1_bottom - 0.046, 0.78, 0.036))
     legend_ax.legend(
         handles, labels, loc="center",
-        ncol=min(len(handles), 8), fontsize=FONT_TICK_DENSE,
-        markerscale=2.4, frameon=False,
-        columnspacing=0.4, handletextpad=0.28,
+        ncol=min(len(handles), 5), fontsize=FONT_TICK_DENSE - 1,
+        markerscale=2.1, frameon=False,
+        columnspacing=0.8, handletextpad=0.36,
     )
 
-    path = output_dir / "fig11_conditioning_umap.png"
+    path = output_dir / "fig05b_conditioning_landscape.png"
     save_with_vcd(fig, path, dpi)
-    logger.info(f"Saved Fig 11 \u2192 %s", path)
+    logger.info(f"Saved conditioning landscape \u2192 %s", path)
     plt.close(fig)
     return path

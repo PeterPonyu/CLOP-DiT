@@ -82,10 +82,10 @@ def plot_expression_correlation(
     pearson_r = metrics["gene_correlation"]["pearson_r"]
     spearman_rho = metrics["gene_correlation"]["spearman_rho"]
 
-    fig = plt.figure(figsize=(12.0, 7.5))
+    fig = plt.figure(figsize=(12.0, 6.8))
     # Note: Figure-level title removed per revision requirements; stats moved to caption
-    layout = bind_figure_region(fig, (0.07, 0.10, 0.96, 0.95))
-    top_row, bottom_row = layout.split_rows(2, hspace=0.46)
+    layout = bind_figure_region(fig, (0.07, 0.12, 0.93, 0.94))
+    top_row, bottom_row = layout.split_rows(2, hspace=0.50)
     top_left, top_right = top_row.split_cols([0.86, 1.14], gap=0.050)
     bottom_left, bottom_right = bottom_row.split_cols([1.04, 0.92], gap=0.050)
 
@@ -136,7 +136,7 @@ def plot_expression_correlation(
     cbar.ax.tick_params(labelsize=7, length=2, pad=1)
     cbar.ax.yaxis.get_offset_text().set_fontsize(7)
     cbar.ax.yaxis.get_offset_text().set_visible(True)
-    add_panel_label(ax1, 'a', x=-0.12, y=1.08)
+    add_panel_label(ax1, 'e', x=-0.12, y=1.08)
 
     # Annotate outlier genes with staggered offsets
     outlier_idx = np.argsort(abs_res)[-5:]
@@ -223,7 +223,7 @@ def plot_expression_correlation(
         ax2.text(0.5, 0.5, "No per-type data", ha="center", va="center",
                  transform=ax2.transAxes)
     ax2.set_title("Per-Type Expression Fidelity", fontsize=12)
-    add_panel_label(ax2, 'b', x=-0.12, y=1.08)
+    add_panel_label(ax2, 'f', x=-0.12, y=1.08)
 
     # -- H3: Marker gene expression with error bars --
     ax3 = bottom_left.add_axes(fig)
@@ -285,7 +285,7 @@ def plot_expression_correlation(
     # Note: do NOT set xaxis MaxNLocator here -- it would override the explicit
     # gene-name tick labels set above (set_xticks / set_xticklabels).
     ax3.yaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
-    add_panel_label(ax3, 'c', x=-0.12, y=1.08)
+    add_panel_label(ax3, 'g', x=-0.12, y=1.08)
 
     # -- H4: Residual distribution --
     ax4 = bottom_right.inset(left=0.07, right=0.02).add_axes(fig)
@@ -301,7 +301,7 @@ def plot_expression_correlation(
     ax4.legend(fontsize=10, frameon=False)
     ax4.xaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
     ax4.yaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
-    add_panel_label(ax4, 'd', x=-0.12, y=1.08)
+    add_panel_label(ax4, 'h', x=-0.12, y=1.08)
 
     pct_within_01 = (np.abs(residuals) < 0.1).mean() * 100
     pct_within_001 = (np.abs(residuals) < 0.01).mean() * 100
@@ -315,7 +315,7 @@ def plot_expression_correlation(
 
     if save:
         if save_panel_fn:
-            save_panel_fn(fig, "fig09_expression_correlation", Path(output_dir), dpi)
+            save_panel_fn(fig, "fig04b_expression_correlation", Path(output_dir), dpi)
         else:
-            save_with_vcd(fig, Path(output_dir) / "fig09_expression_correlation.png", dpi)
+            save_with_vcd(fig, Path(output_dir) / "fig04b_expression_correlation.png", dpi)
     return fig

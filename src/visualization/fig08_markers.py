@@ -142,9 +142,9 @@ def plot_marker_gene_comparison(
     n_markers = len(all_marker_genes)
     n_sel_types = len(selected_type_ids)
 
-    fig = plt.figure(figsize=(10.8, 7.0))
-    layout = bind_figure_region(fig, (0.11, 0.10, 0.98, 0.97))
-    top_row, bottom_row = layout.split_rows(2, hspace=0.54)
+    fig = plt.figure(figsize=(12.0, 6.4))
+    layout = bind_figure_region(fig, (0.11, 0.12, 0.98, 0.96))
+    top_row, bottom_row = layout.split_rows(2, hspace=0.64)
     top_left, top_right = top_row.split_cols([1.0, 1.28], wspace=0.52)
     bottom_left, bottom_right = bottom_row.split_cols([1.0, 1.28], wspace=0.52)
 
@@ -249,7 +249,7 @@ def plot_marker_gene_comparison(
             color=COLORS["generated"],
         )
         add_colorbar_safe(im, ax=ax2, label="Expr.", shrink=0.6, pad=0.05)
-        add_panel_label(ax2, "b", x=-0.24, y=1.01)
+        add_panel_label(ax2, "b", x=-0.14, y=1.03)
         ax1.legend(
             handles_top,
             labels_top,
@@ -338,7 +338,7 @@ def plot_marker_gene_comparison(
 
     if save:
         if save_panel_fn:
-            save_panel_fn(fig, "fig08_marker_genes", Path(output_dir), dpi)
+            save_panel_fn(fig, "fig04a_marker_genes", Path(output_dir), dpi)
         else:
-            save_with_vcd(fig, Path(output_dir) / "fig08_marker_genes.png", dpi)
+            save_with_vcd(fig, Path(output_dir) / "fig04a_marker_genes.png", dpi)
     return fig

@@ -238,5 +238,7 @@ def plot_ood_robustness(
 
 
 if __name__ == "__main__":
+    import matplotlib
+    matplotlib.use("Agg")
     logging.basicConfig(level=logging.INFO)
     plot_ood_robustness()

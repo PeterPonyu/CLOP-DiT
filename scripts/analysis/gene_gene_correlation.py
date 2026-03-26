@@ -137,12 +137,12 @@ def analyse():
 
     # --- Produce figure ---
     _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
-                 gene_subset, types)
+                 gene_subset, types, label_offset=4)
     return summary
 
 
 def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
-                 gene_subset, types):
+                 gene_subset, types, label_offset: int = 0):
     from src.visualization.style import (
         abbreviate_cell_type, FONT_TITLE, FONT_LABEL, FONT_TICK,
         FONT_ANNOTATION, FONT_SMALL, FONT_HEATMAP_CELL, style_axes,
@@ -161,15 +161,15 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
 
     mantel_vals = [v["mantel_r"] for v in per_type_results.values()]
 
-    fig = plt.figure(figsize=(13.8, 9.8))
-    layout = bind_figure_region(fig, (0.08, 0.08, 0.93, 0.94))
-    top_row, bottom_row = layout.split_rows([0.92, 1.08], hspace=0.30)
+    fig = plt.figure(figsize=(14.0, 8.0))
+    layout = bind_figure_region(fig, (0.08, 0.10, 0.93, 0.94))
+    top_row, bottom_row = layout.split_rows([0.92, 1.08], hspace=0.28)
     top_left, top_right = top_row.split_cols(2, wspace=0.34)
     bottom_left, bottom_right = bottom_row.split_cols([0.92, 1.08], wspace=0.34)
 
     # ── Panel (a): Distribution with null baseline ──
     ax = top_left.add_axes(fig)
-    add_panel_label(ax, 'a', x=-0.12, y=1.06)
+    add_panel_label(ax, chr(ord('a') + label_offset), x=-0.12, y=1.06)
 
     # Compute null baseline: permuted gene labels within each type
     rng = np.random.default_rng(42)
@@ -216,8 +216,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     null_mean = np.mean(null_mantels) if null_mantels else 0
     ax.text(0.03, 0.97,
             f"Mean 95% CI: [{ci_lo:.3f}, {ci_hi:.3f}]\n"
-            f"Null mean: {null_mean:.3f}\n"
-            f"All {len(mantel_vals)} types > null mean"
+            f"Null mean: {null_mean:.3f}"
             if all(m > null_mean for m in mantel_vals)
             else f"Mean 95% CI: [{ci_lo:.3f}, {ci_hi:.3f}]\n"
                  f"Null mean: {null_mean:.3f}",
@@ -261,7 +260,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     R_gen = _corr_matrix(gen_sub[g_mask][:, :50])
 
     ax2 = top_right.add_axes(fig)
-    add_panel_label(ax2, 'b', x=-0.12, y=1.06)
+    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.12, y=1.06)
     diff = R_gen - R_real
     im = ax2.imshow(
         diff,
@@ -308,7 +307,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     R_gen_w = _corr_matrix(gen_sub[g_mask][:, :50])
 
     ax3 = bottom_left.add_axes(fig)
-    add_panel_label(ax3, 'c', x=-0.12, y=1.06)
+    add_panel_label(ax3, chr(ord('a') + label_offset + 2), x=-0.12, y=1.06)
     diff_w = R_gen_w - R_real_w
     im2 = ax3.imshow(
         diff_w,
@@ -346,7 +345,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     # ── Panel (d): Replace non-informative cell-count panel ──
     # Use Mantel r vs per-type mean expression variance (biological heterogeneity)
     ax4 = bottom_right.add_axes(fig)
-    add_panel_label(ax4, 'd', x=-0.12, y=1.06)
+    add_panel_label(ax4, chr(ord('a') + label_offset + 3), x=-0.12, y=1.06)
 
     # Compute mean expression variance per type as a proxy for heterogeneity
     type_het = []
@@ -377,9 +376,8 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
         ax4.plot(x_fit, slope * x_fit + intercept, color=COLORS["generated"],
                  linewidth=1.5, alpha=0.7, label="OLS fit")
 
-        stat_text = (f"Spearman \u03c1 = {spearman_r:.3f} (p = {spearman_p:.2e})\n"
-                     f"Pearson r = {pearson_r:.3f} (p = {pearson_p:.2e})\n"
-                     f"n = {len(type_het)} cell types")
+        stat_text = (f"Spearman \u03c1 = {spearman_r:.3f}\n"
+                 f"Pearson r = {pearson_r:.3f}")
 
         # Label top 3 outliers by residual
         residuals = np.abs(type_mantel - (slope * type_het + intercept))
@@ -405,7 +403,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
                ylabel="Upper-Tri Pearson r",
                title="Preservation vs. Expression Heterogeneity")
 
-    out_path = FIG_DIR / "fig20_gene_gene_correlation.png"
+    out_path = FIG_DIR / "fig09b_gene_gene_correlation.png"
     save_with_vcd(fig, out_path, dpi=300, layout_rect=(0.02, 0.04, 0.98, 0.97))
     plt.close(fig)
     print(f"Saved figure to {out_path}")

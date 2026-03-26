@@ -48,6 +48,10 @@ cfg_scale: 2.0
 # Variance-matching regularization (per-class, not batch-level)
 variance_loss_weight: 0.1
 
+# Sliced covariance-matching regularization (captures cross-dimension correlations)
+covariance_loss_weight: 0.05
+cov_num_slices: 32
+
 # Group-aware batch sampling (ensures per-class variance loss has enough samples)
 group_aware_sampling: true
 groups_per_batch: 64

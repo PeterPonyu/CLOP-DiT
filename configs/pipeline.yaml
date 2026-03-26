@@ -14,4 +14,4 @@ scgpt_dir: "models/scgpt_human"
 
 # Article build
 article_dir: "articles"
-article_tex: "clop_dit_biology.tex"
+article_tex: "clop_dit_genes.tex"

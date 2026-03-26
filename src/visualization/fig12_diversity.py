@@ -32,8 +32,17 @@ def plot_diagnostics(
     output_dir: str = "results/figures",
     dpi: int = 300,
     type_names: Optional[Dict[int, str]] = None,
+    include_noise_panel: bool = True,
+    noise_data: Optional[Dict] = None,
 ) -> List[Path]:
-    """Generate Fig 12 (diversity diagnostics) and Fig 14 (expression diversity) from test results."""
+    """Generate diversity diagnostics figure and expression diversity figure from test results.
+
+    When *include_noise_panel* is True (default), the noise-tradeoff panel from
+    fig13 is appended as a 5th panel (e) in the diagnostics figure, producing a
+    combined ``fig06_diversity_diagnostics.pdf`` suitable for the merged article
+    layout.  The expression diversity figure (fig14) is always generated
+    separately with panels starting at label 'a'.
+    """
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     saved: List[Path] = []
@@ -61,10 +70,15 @@ def plot_diagnostics(
 
     apply_style()
 
-    # ── Figure 12: Diversity Diagnostics (4 subplots) ──
-    fig = plt.figure(figsize=(12.8, 8.7))
-    layout = bind_figure_region(fig, (0.12, 0.14, 0.988, 0.92))
-    top_row, bottom_row = layout.split_rows(2, hspace=0.46)
+    # ── Figure 12: Diversity Diagnostics (4 subplots + optional noise panel) ──
+    if include_noise_panel:
+        fig = plt.figure(figsize=(14.0, 9.8))
+        outer_layout = bind_figure_region(fig, (0.12, 0.08, 0.988, 0.93))
+        diag_region, noise_region = outer_layout.split_rows([1.0, 0.48], hspace=0.28)
+    else:
+        fig = plt.figure(figsize=(14.0, 6.8))
+        diag_region = bind_figure_region(fig, (0.12, 0.12, 0.988, 0.93))
+    top_row, bottom_row = diag_region.split_rows(2, hspace=0.42)
     top_left, top_right = top_row.split_cols([1.00, 1.00], gap=0.048)
     bottom_left, bottom_right = bottom_row.split_cols([0.92, 1.02], gap=0.074)
     top_left = top_left.inset(right=0.006)
@@ -75,10 +89,10 @@ def plot_diagnostics(
         [top_left.add_axes(fig), top_right.add_axes(fig)],
         [bottom_left.add_axes(fig), bottom_right.add_axes(fig)],
     ], dtype=object)
-    add_panel_label(axes[0, 0], 'a', x=-0.16, y=1.08)
+    add_panel_label(axes[0, 0], 'a', x=-0.14, y=1.08)
     add_panel_label(axes[0, 1], 'b', x=-0.14, y=1.08)
-    add_panel_label(axes[1, 0], 'c', x=-0.16, y=1.08)
-    add_panel_label(axes[1, 1], 'd', x=-0.22, y=1.08)
+    add_panel_label(axes[1, 0], 'c', x=-0.14, y=1.08)
+    add_panel_label(axes[1, 1], 'd', x=-0.14, y=1.08)
 
     ax = axes[0, 0]
     t1 = all_results.get("test1_intratype_diversity", {}).get("per_type", {})
@@ -188,17 +202,38 @@ def plot_diagnostics(
     # Shared legend removed: the remaining labels are self-explanatory and the
     # legend occupied more visual space than the signal it provided.
 
-    path = out / "fig12_diversity_diagnostics.png"
+    # ── Optional noise tradeoff panel (e) ──
+    if include_noise_panel and noise_data:
+        from .fig13_noise_tradeoff import plot_panel_l
+        noise_plot_region, noise_legend_region = noise_region.split_cols([1.0, 0.34], wspace=0.08)
+        legend_ax = noise_legend_region.inset(left=0.05, right=0.05, top=0.10, bottom=0.10).add_axes(fig)
+        legend_ax.axis("off")
+        noise_ax = noise_plot_region.inset(left=0.04, right=0.04, top=0.04, bottom=0.05).add_axes(fig)
+        plot_panel_l(
+            noise_scales=noise_data["noise_scales"],
+            fds=noise_data["fds"],
+            centroids=noise_data["centroids"],
+            div_ratios=noise_data["div_ratios"],
+            output_dir=str(out),
+            dpi=dpi,
+            cfg_scale=noise_data.get("cfg_scale", 1.5),
+            ax_target=noise_ax,
+            panel_label='e',
+            legend_ax=legend_ax,
+            embedded_label_pos=(-0.12, 1.06),
+        )
+
+    path = out / "fig06_diversity_diagnostics.png"
     save_with_vcd(fig, path, dpi)
     logger.info(f"Saved Fig 12 \u2192 {path}")
     saved.append(path)
     plt.close(fig)
 
-    # ── Figure 14: Expression Diversity ──
+    # ── Figure 14: Expression Diversity (now standalone Fig 9 with labels a-b) ──
     t6 = all_results.get("test6_expression_diversity", {})
-    fig_k = plot_expression_diversity_panel(t6, output_dir=str(out), dpi=dpi)
+    fig_k = plot_expression_diversity_panel(t6, output_dir=str(out), dpi=dpi, label_offset=0)
     if fig_k:
-        saved.append(out / "fig14_expression_diversity.png")
+        saved.append(out / "fig07a_expression_diversity.png")
         plt.close(fig_k)
 
     return saved

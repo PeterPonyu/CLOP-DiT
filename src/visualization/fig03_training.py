@@ -139,7 +139,7 @@ def plot_clop_training(
     ax_a2.set_xlabel("Epoch", fontsize=FONT_LABEL)
     ax_a2.set_xlim(0, max(epochs) * 1.08)
     ax_a2.locator_params(axis='x', nbins=4)
-    add_panel_label(ax_a2, 'b', x=-0.10, y=1.14)
+    add_panel_label(ax_a2, 'b', x=-0.10, y=1.08)
 
     # ── A3: Prototype accuracy ──
     ax_a3 = bottom_left.add_axes(fig)
@@ -377,9 +377,9 @@ def plot_training_dynamics_combined(
         return None
 
     apply_style()
-    fig = plt.figure(figsize=(14.4, 8.6))
+    fig = plt.figure(figsize=(14.8, 9.4))
     layout = bind_figure_region(fig, (0.06, 0.10, 0.955, 0.87))
-    top_row, bottom_row = layout.split_rows([1, 1], hspace=0.55)
+    top_row, bottom_row = layout.split_rows([1, 1], hspace=0.48)
     top_cols = top_row.split_cols([1.0, 1.0, 1.0, 1.2], wspace=0.42)
     bottom_cols = bottom_row.split_cols([1.0, 1.0, 1.0, 1.2], wspace=0.42)
     # Note: Figure-level title removed per revision requirements; panel labels added below
@@ -519,7 +519,7 @@ def plot_training_dynamics_combined(
         set_scientific_tickformat(ax_c3, axis="y", scilimits=(-4, -4))
         ax_c3.set_xlim(0, max(epochs) * 1.05)
         ax_c3.xaxis.set_major_locator(MaxNLocator(nbins=4, integer=True, prune="both"))
-        add_panel_label(ax_c3, 'g', x=-0.16, y=1.08)
+        add_panel_label(ax_c3, 'g', x=-0.12, y=1.08)
 
         # C4: Normalized convergence comparison (CLOP + DiT)
         ax_c4 = bottom_cols[3].add_axes(fig)
@@ -560,7 +560,7 @@ def plot_training_dynamics_combined(
 
     if save:
         if save_panel_fn:
-            save_panel_fn(fig, "fig03_training_dynamics", output_dir, dpi)
+            save_panel_fn(fig, "fig02a_training_dynamics", output_dir, dpi)
         else:
-            save_with_vcd(fig, Path(output_dir) / "fig03_training_dynamics.png", dpi)
+            save_with_vcd(fig, Path(output_dir) / "fig02a_training_dynamics.png", dpi)
     return fig

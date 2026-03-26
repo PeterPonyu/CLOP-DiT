@@ -87,6 +87,7 @@ def plot_embedding_space_merged(
     dpi: int = 300,
     save: bool = True,
     save_panel_fn: Optional[Callable] = None,
+    label_offset: int = 0,
 ) -> Optional[plt.Figure]:
     """Merged embedding-space figure (former Panels B + E).
 
@@ -141,9 +142,9 @@ def plot_embedding_space_merged(
 
     apply_style()
     n_rows = (1 if has_b else 0) + (1 if has_e else 0)
-    fig = plt.figure(figsize=(14.8, 5.2 * n_rows))
-    layout = bind_figure_region(fig, (0.05, 0.07, 0.97, 0.96))
-    row_regions = layout.split_rows(n_rows, hspace=0.30)
+    fig = plt.figure(figsize=(14.8, 4.0 * n_rows))
+    layout = bind_figure_region(fig, (0.05, 0.08, 0.97, 0.96))
+    row_regions = layout.split_rows(n_rows, hspace=0.22)
     # suptitle removed per revision; title information moved to LaTeX caption
     row = 0
 
@@ -184,7 +185,7 @@ def plot_embedding_space_merged(
 
         ax_b0 = b_slots[0].inset(right=0.010).add_axes(fig)
         ax = ax_b0
-        add_panel_label(ax, 'a', x=-0.12, y=1.04)
+        add_panel_label(ax, chr(ord('a') + label_offset), x=-0.12, y=1.04)
         for i, (x, y) in enumerate(proto_coords):
             color = TYPE_PALETTE[i % len(TYPE_PALETTE)]
             ax.scatter(x, y, c=[color], s=120, marker="D", edgecolors="black",
@@ -197,7 +198,7 @@ def plot_embedding_space_merged(
 
         ax_b1 = b_slots[1].inset(left=0.034, right=0.018).add_axes(fig)
         ax = ax_b1
-        add_panel_label(ax, 'b', x=-0.18, y=1.04)
+        add_panel_label(ax, chr(ord('a') + label_offset + 1), x=-0.18, y=1.04)
         for t in unique_types:
             mask = gids_sub == t
             color = TYPE_PALETTE[int(t) % len(TYPE_PALETTE)]
@@ -215,7 +216,7 @@ def plot_embedding_space_merged(
 
         ax_b2 = b_slots[2].inset(left=0.130, right=0.050).add_axes(fig)
         ax = ax_b2
-        add_panel_label(ax, 'c', x=-0.18, y=1.06)
+        add_panel_label(ax, chr(ord('a') + label_offset + 2), x=-0.18, y=1.06)
         so = np.argsort(type_counts)[::-1]
         bar_c = [TYPE_PALETTE[t % len(TYPE_PALETTE)] for t in unique_types[so]]
         y_pos = np.arange(n_types)
@@ -266,7 +267,7 @@ def plot_embedding_space_merged(
 
             ax_e0 = e_slots[0].inset(right=0.012).add_axes(fig)
             ax = ax_e0
-            add_panel_label(ax, 'd', x=-0.12, y=1.08)
+            add_panel_label(ax, chr(ord('a') + label_offset + 3), x=-0.12, y=1.08)
             for t in np.unique(r_gids):
                 m = r_gids == t
                 ax.scatter(rc[m, 0], rc[m, 1],
@@ -280,7 +281,7 @@ def plot_embedding_space_merged(
 
             ax_e1 = e_slots[1].inset(left=0.008, right=0.012).add_axes(fig)
             ax = ax_e1
-            add_panel_label(ax, 'e', x=-0.12, y=1.08)
+            add_panel_label(ax, chr(ord('a') + label_offset + 4), x=-0.12, y=1.08)
             if g_gids is not None:
                 for t in np.unique(g_gids):
                     m = g_gids == t
@@ -298,7 +299,7 @@ def plot_embedding_space_merged(
 
             ax_e2 = e_slots[2].inset(left=0.006, right=0.028).add_axes(fig)
             ax = ax_e2
-            add_panel_label(ax, 'f', x=-0.12, y=1.08)
+            add_panel_label(ax, chr(ord('a') + label_offset + 5), x=-0.12, y=1.08)
             all_types = np.unique(np.concatenate([r_gids, g_gids])) if g_gids is not None else np.unique(r_gids)
             for t in all_types:
                 color = TYPE_PALETTE[int(t) % len(TYPE_PALETTE)]
@@ -329,7 +330,7 @@ def plot_embedding_space_merged(
             _set_umap_limits_from_points(ax, np.vstack([rc, gc]), pad_frac=0.04)
             _set_interior_umap_ticks(ax, n_ticks=1)
     if save:
-        path = Path(output_dir) / "fig04_embedding_space.png"
+        path = Path(output_dir) / "fig02b_embedding_space.png"
         if save_panel_fn is not None:
             save_panel_fn(fig, path, dpi)
         else:

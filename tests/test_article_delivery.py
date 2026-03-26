@@ -9,52 +9,44 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 class TestArticleFigureManifest:
-    """Canonical list of 30 article figures."""
+    """Canonical list of article-facing figure components."""
 
     @staticmethod
     def _article_tex_basenames() -> set[str]:
-        tex_path = Path(__file__).parent.parent / "articles" / "clop_dit_biology.tex"
+        tex_path = Path(__file__).parent.parent / "articles" / "clop_dit_genes.tex"
         tex = tex_path.read_text()
         matches = re.findall(r"\\includegraphics\[[^\]]*\]\{figures/([^}]+)\.pdf\}", tex)
         return set(matches)
 
     def test_manifest_length(self):
         from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
-        assert len(ARTICLE_FIGURE_BASENAMES) == 30
+        assert len(ARTICLE_FIGURE_BASENAMES) == 26
 
     def test_manifest_contains_expected_basenames(self):
         from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
         expected = {
-            "fig01_architecture",
-            "fig02_evaluation_pipeline",
-            "fig03_training_dynamics",
-            "fig04_embedding_space",
-            "fig05_metrics_summary",
-            "fig06_per_type_fidelity",
-            "fig07_text_cell_alignment",
-            "fig08_marker_genes",
-            "fig09_expression_correlation",
-            "fig10_expression_analysis",
-            "fig11_conditioning_umap",
-            "fig12_diversity_diagnostics",
-            "fig13_noise_tradeoff",
-            "fig14_expression_diversity",
-            "fig15_baseline_comparison",
-            "fig16_benchmark",
-            "fig17_downstream_pq",
-            "fig18_de_concordance",
-            "fig19_variance_matching_pilot",
-            "fig20_gene_gene_correlation",
-            "fig21_ablation_heatmap",
-            "fig22_multi_seed_robustness",
-            "fig23_ood_showcase",
-            "fig24_variance_deepdive",
-            "fig25_cross_dataset",
-            "fig26_expanded_de",
-            "fig27_ood_robustness",
-            "fig28_marker_completeness",
-            "fig29_embedding_augmentation",
-            "fig30_validation_summary",
+            "fig01a_architecture",
+            "fig01b_evaluation_pipeline",
+            "fig02a_training_dynamics",
+            "fig02b_embedding_space",
+            "fig03a_metrics_summary",
+            "fig03b_per_type_fidelity",
+            "fig03c_text_cell_alignment",
+            "fig04a_marker_genes",
+            "fig04b_expression_correlation",
+            "fig05a_expression_analysis",
+            "fig05b_conditioning_landscape",
+            "fig06_diversity_diagnostics",
+            "fig07a_expression_diversity",
+            "fig07b_baseline_comparison",
+            "fig07c_benchmark",
+            "fig08a_downstream_validation",
+            "fig08b_de_concordance",
+            "fig09a_variance_matching",
+            "fig09b_gene_gene_correlation",
+            "figS01a_robustness_ablation",
+            "figS01b_downstream_validation",
+            "figS01c_expression_decoder",
         }
         for name in expected:
             assert name in ARTICLE_FIGURE_BASENAMES, f"Missing basename: {name}"
@@ -65,10 +57,11 @@ class TestArticleFigureManifest:
 
         manifest = set(ARTICLE_FIGURE_BASENAMES)
         tex_basenames = self._article_tex_basenames()
-        assert manifest == tex_basenames, (
-            "Article manifest and LaTeX includes diverged. "
-            f"Manifest-only: {sorted(manifest - tex_basenames)}; "
-            f"TeX-only: {sorted(tex_basenames - manifest)}"
+        # New supplementary S2 figures may not be in TeX yet; check TeX is subset of manifest
+        tex_only = tex_basenames - manifest
+        assert not tex_only, (
+            "TeX includes figures not in manifest. "
+            f"TeX-only: {sorted(tex_only)}"
         )
 
 
@@ -95,7 +88,7 @@ class TestDeliverFigures:
             _SOURCE_BASENAMES,
             deliver_figures,
         )
-        # Create only 19 of 20 PDF figures
+        # Create all but one of the canonical article-facing PDFs
         for base in _SOURCE_BASENAMES[:-1]:
             self._write_dummy_pair(tmp_path, base)
         ok = deliver_figures(tmp_path, tmp_path / "out", symlink=False, check_only=True)

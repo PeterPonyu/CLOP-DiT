@@ -55,11 +55,11 @@ def plot_expression_diversity_panel(
     apply_style()
 
     o = t6_data["overall"]
-    fig = plt.figure(figsize=(7.6, 3.6))
-    left_rect, right_rect = bind_figure_region(fig, (0.08, 0.12, 0.98, 0.90)).split_cols(2, wspace=0.38)
+    fig = plt.figure(figsize=(15.2, 3.6))
+    left_rect, right_rect = bind_figure_region(fig, (0.06, 0.14, 0.96, 0.90)).split_cols(2, wspace=0.38)
     axes = [left_rect.add_axes(fig), right_rect.add_axes(fig)]
-    add_panel_label(axes[0], chr(ord('a') + label_offset), x=-0.04, y=1.05)
-    add_panel_label(axes[1], chr(ord('a') + label_offset + 1), x=-0.04, y=1.05)
+    add_panel_label(axes[0], chr(ord('a') + label_offset), x=-0.08, y=1.05)
+    add_panel_label(axes[1], chr(ord('a') + label_offset + 1), x=-0.08, y=1.05)
 
     ax = axes[0]
     labels = ["Cell Std\n(across genes)", "Gene Std\n(across cells)"]
@@ -89,10 +89,10 @@ def plot_expression_diversity_panel(
     if annotation_tops:
         ax.set_ylim(0, max(max(real_vals + gen_vals) * 1.08, max(annotation_tops) * 1.10))
     ax.set_xticks(x)
-    ax.set_xticklabels(labels)
-    ax.set_ylabel("Standard Deviation")
-    ax.set_title("Expression Variability Summary", x=0.58)
-    ax.legend(frameon=False)
+    ax.set_xticklabels(labels, fontsize=10)
+    ax.set_ylabel("Standard Deviation", fontsize=11)
+    ax.set_title("Expression Variability Summary", fontsize=12, x=0.58)
+    ax.legend(frameon=False, fontsize=9)
 
     ax = axes[1]
     pt_ratio = t6_data.get("per_type_gene_std_ratio", {})
@@ -103,16 +103,16 @@ def plot_expression_diversity_panel(
         ax.bar(lbls, vals, color=colors, alpha=0.8, edgecolor="white")
         ax.axhline(y=1.0, color="black", ls="--", lw=1, alpha=0.5,
                    label="ratio=1 (equal diversity)")
-        ax.set_ylabel("Gene Std Ratio (gen / real)")
-        ax.set_title("Per-Type Gene Std Ratio")
-        ax.legend(fontsize=8, frameon=False)
+        ax.set_ylabel("Gene Std Ratio (gen / real)", fontsize=11)
+        ax.set_title("Per-Type Gene Std Ratio", fontsize=12)
+        ax.legend(fontsize=9, frameon=False)
     else:
         ax.text(0.5, 0.5, "No per-type data", ha="center", va="center",
                 transform=ax.transAxes, fontsize=10, color=COLORS["neutral"])
-        ax.set_title("Per-Type Gene Std Ratio")
+        ax.set_title("Per-Type Gene Std Ratio", fontsize=12)
 
     if save:
-        path = out / "fig14_expression_diversity.png"
+        path = out / "fig07a_expression_diversity.png"
         save_with_vcd(fig, path, dpi)
         logger.info(f"Saved Fig 14 \u2192 {path}")
 

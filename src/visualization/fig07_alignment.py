@@ -167,9 +167,9 @@ def plot_text_cell_heatmap(
     x_labels_sorted = [x_labels[i] for i in sort_order]
     y_labels_sorted = [y_labels[i] for i in sort_order]
 
-    fig = plt.figure(figsize=(15.2, 9.1))
+    fig = plt.figure(figsize=(15.2, 6.8))
     # Title moved to LaTeX caption
-    layout = bind_figure_region(fig, (0.12, 0.14, 0.985, 0.90))
+    layout = bind_figure_region(fig, (0.12, 0.14, 0.985, 0.92))
     ax1_slot, ax2_slot, ax3_slot = layout.split_cols([1.42, 1.02, 0.60], gap=[0.060, 0.028])
     ax1_rect = ax1_slot.inset(right=0.004)
     ax2_rect = ax2_slot.inset(left=0.110, right=0.010)
@@ -247,7 +247,7 @@ def plot_text_cell_heatmap(
 
     # ── F2: Per-type alignment bars with threshold bands ──
     ax2 = ax2_rect.add_axes(fig)
-    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.24, y=1.06)
+    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.14, y=1.06)
     sorted_idx_asc = np.argsort(diag)
     d_asc = diag[sorted_idx_asc]
     labels_asc = [y_labels[i] for i in sorted_idx_asc]
@@ -401,7 +401,7 @@ def plot_text_cell_heatmap(
     style_axes(ax3, kind="default")
 
     if save:
-        path = Path(output_dir) / "fig07_text_cell_alignment.png"
+        path = Path(output_dir) / "fig03c_text_cell_alignment.png"
         if save_panel_fn is not None:
             save_panel_fn(fig, path, dpi)
         else:

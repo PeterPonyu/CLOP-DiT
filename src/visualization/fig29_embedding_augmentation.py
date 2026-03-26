@@ -232,5 +232,7 @@ def plot_embedding_augmentation(
 
 
 if __name__ == "__main__":
+    import matplotlib
+    matplotlib.use("Agg")
     logging.basicConfig(level=logging.INFO)
     plot_embedding_augmentation()

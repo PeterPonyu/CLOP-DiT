@@ -154,6 +154,7 @@ FONT_ARCH_SUBLABEL = 10
 FONT_SUPTITLE = 15
 FONT_TITLE = 14
 FONT_LABEL = 12
+PANEL_LABEL_FONT_SIZE = 14
 FONT_TICK = 11
 FONT_TICK_DENSE = 10
 FONT_ANNOTATION = 10
@@ -269,8 +270,8 @@ def add_panel_label(
     x: float = -0.10,
     y: float = 1.05,
     *,
-    fontsize: int = 14,
-    fontweight: str = "bold",
+    fontsize: int = PANEL_LABEL_FONT_SIZE,
+    fontweight: str = "semibold",
     color: str = "black",
     stroke_linewidth: float = 3.0,
     stroke_foreground: str = "white",

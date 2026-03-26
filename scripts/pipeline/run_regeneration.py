@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-run_regeneration.py — Regenerate all 31 article figures from cached JSON results,
-run VCD on every output, refresh symlinks, and optionally rebuild the LaTeX PDF.
+run_regeneration.py — Regenerate article-facing figure components from cached JSON results,
+run VCD on every output, refresh delivered assets, and optionally rebuild the LaTeX PDF.
 
 Usage:
     python scripts/pipeline/run_regeneration.py [--no-vcd] [--skip-arch] [--build-pdf]
@@ -83,7 +83,7 @@ def run_architecture_figure():
     if not arch_script.exists():
         log.warning("Architecture script not found: %s", arch_script)
         return None
-    log.info("── Generating fig_architecture.pdf ──")
+    log.info("── Generating fig01a_architecture.pdf ──")
     result = subprocess.run(
         [sys.executable, str(arch_script)],
         capture_output=True, text=True, cwd=str(REPO)
@@ -91,7 +91,7 @@ def run_architecture_figure():
     if result.returncode != 0:
         log.error("Architecture figure failed:\n%s", result.stderr[-2000:])
         return None
-    arch_pdf = FIG_DIR / "fig_architecture.pdf"
+    arch_pdf = FIG_DIR / "fig01a_architecture.pdf"
     log.info("Architecture figure: %s (%s)", arch_pdf, "exists" if arch_pdf.exists() else "MISSING")
     return arch_pdf if arch_pdf.exists() else None
 
@@ -129,8 +129,8 @@ def run_evaluation_pipeline_figure():
     """Generate Fig 2: evaluation pipeline schematic."""
     return _run_external_script(
         "scripts/analysis/evaluation_pipeline_figure.py",
-        "fig_evaluation_pipeline.pdf",
-        "fig_evaluation_pipeline.pdf",
+        "fig01b_evaluation_pipeline.pdf",
+        "fig01b_evaluation_pipeline.pdf",
     )
 
 
@@ -138,8 +138,8 @@ def run_variance_matching_figure():
     """Generate Fig 19: variance matching pilot."""
     return _run_external_script(
         "scripts/analysis/variance_matching_pilot.py",
-        "fig19_variance_matching_pilot.pdf",
-        "fig19_variance_matching_pilot.pdf",
+        "fig09a_variance_matching.pdf",
+        "fig09a_variance_matching.pdf",
     )
 
 
@@ -147,8 +147,8 @@ def run_gene_gene_correlation_figure():
     """Generate Fig 20: gene-gene correlation."""
     return _run_external_script(
         "scripts/analysis/gene_gene_correlation.py",
-        "fig20_gene_gene_correlation.pdf",
-        "fig20_gene_gene_correlation.pdf",
+        "fig09b_gene_gene_correlation.pdf",
+        "fig09b_gene_gene_correlation.pdf",
     )
 
 
@@ -221,6 +221,7 @@ def run_conditioning_figures():
                 full_dim_data=full_dim_data,
                 full_dim_labels=full_dim_labels,
                 full_dim_source=full_dim_source,
+                label_offset=4,
             )
             plt.close("all")
             saved.append(p)
@@ -234,7 +235,10 @@ def run_conditioning_figures():
 
 
 def run_diversity_figures():
-    """Regenerate Figs 12 + 14 from cached diversity_diagnostics.json (no model inference)."""
+    """Regenerate Figs 12 + 14 from cached diversity_diagnostics.json (no model inference).
+
+    Fig 12 now includes the noise-tradeoff panel (e) from panel_l_data.json when available.
+    """
     div_json = REPO / "results" / "diversity_diagnostics.json"
     if not div_json.exists():
         log.warning("Figs 12+14 skipped (no cached data: %s)", div_json)
@@ -244,8 +248,31 @@ def run_diversity_figures():
     try:
         with open(div_json) as f:
             all_results = json.load(f)
+
+        # Load noise tradeoff data for embedded panel (e) in Fig 12
+        noise_data = None
+        l_data_path = REPO / "results" / "conditioning_cache" / "panel_l_data.json"
+        if l_data_path.exists():
+            with open(l_data_path) as f:
+                l_data = json.load(f)
+            noise_data = {
+                "noise_scales": l_data["noise_scales"],
+                "fds": l_data["fds"],
+                "centroids": l_data["centroids"],
+                "div_ratios": l_data["div_ratios"],
+                "cfg_scale": l_data.get("cfg_scale", 1.5),
+            }
+            log.info("Loaded noise tradeoff data for Fig 12 panel (e)")
+        else:
+            log.warning("Noise tradeoff data not found (%s); Fig 12 panel (e) will be omitted", l_data_path)
+
         from visualization.fig12_diversity import plot_diagnostics
-        saved = plot_diagnostics(all_results, output_dir=str(FIG_DIR))
+        saved = plot_diagnostics(
+            all_results,
+            output_dir=str(FIG_DIR),
+            include_noise_panel=noise_data is not None,
+            noise_data=noise_data,
+        )
         plt.close("all")
         log.info("Figs 12+14: %d panels saved", len(saved))
         return saved
@@ -522,7 +549,7 @@ def run_latex_build():
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description="Regenerate all 31 article figures + VCD + optional PDF rebuild")
+    parser = argparse.ArgumentParser(description="Regenerate article-facing figure assets + VCD + optional PDF rebuild")
     parser.add_argument("--no-vcd",    action="store_true", help="Skip live VCD during generation and final VCD reporting")
     parser.add_argument("--skip-arch", action="store_true", help="Skip architecture figure (Fig 1)")
     parser.add_argument("--no-delivery", action="store_true", help="Skip article_delivery (symlinks)")
@@ -532,8 +559,11 @@ def main():
     t0 = time.time()
     vcd_enabled = (not args.no_vcd) and _env_flag("CLOPDIT_ENABLE_VCD", True)
     os.environ["CLOPDIT_ENABLE_VCD"] = "1" if vcd_enabled else "0"
+    # Force headless rendering in all subprocesses to prevent figures from
+    # popping up in an interactive viewer.
+    os.environ["MPLBACKEND"] = "Agg"
     log.info("=" * 70)
-    log.info("CLOP-DiT Figure Regeneration Pipeline (31 figures) — %s", time.strftime("%Y-%m-%d"))
+    log.info("CLOP-DiT Figure Regeneration Pipeline (article-facing assets) — %s", time.strftime("%Y-%m-%d"))
     log.info("=" * 70)
     log.info("Live VCD during generation: %s", "enabled" if vcd_enabled else "disabled")
     FIG_DIR.mkdir(parents=True, exist_ok=True)
@@ -577,7 +607,18 @@ def main():
     if gg:
         saved.append(gg)
 
-    # 8. Figs 25–30: Extended downstream validation figures
+    # 8. Supplementary components used inside the merged Figure S1 appendix float
+    _supp_figs = [
+        ("src/visualization/figS1_robustness_ablation.py",   "figS01a_robustness_ablation.pdf"),
+        ("src/visualization/figS2_downstream_validation.py", "figS01b_downstream_validation.pdf"),
+        ("src/visualization/figS3_expression_decoder.py",    "figS01c_expression_decoder.pdf"),
+    ]
+    for _script_rel, _expected_pdf in _supp_figs:
+        _fig = _run_external_script(_script_rel, _expected_pdf, _expected_pdf)
+        if _fig:
+            saved.append(_fig)
+
+    # 9. Figs 25–31: extended analysis figures (not article-facing, kept for diagnostics until delivery cleanup)
     _ext_figs = [
         ("src/visualization/fig25_cross_dataset.py",          "fig25_cross_dataset.pdf"),
         ("src/visualization/fig26_expanded_de.py",            "fig26_expanded_de.pdf"),
@@ -592,22 +633,20 @@ def main():
         if _fig:
             saved.append(_fig)
 
-    # Collect all canonical figure PDFs: fig_architecture.pdf, fig_evaluation_pipeline.pdf
-    # (start with "fig_"), plus fig03_…, fig07_…, fig20_… (start with "figNN_").
-    # Note: "fig_*.pdf" alone misses the numbered figures; use "fig*.pdf" to catch both.
+    # Collect every generated figure PDF before article-delivery cleanup so VCD can audit the full run.
     all_pdfs = sorted(FIG_DIR.glob("fig*.pdf"))
     log.info("Total PDFs in results/figures: %d", len(all_pdfs))
     for p in all_pdfs:
         log.info("  ✓ %s", p.name)
 
-    # 8. VCD pass
+    # 10. VCD pass
     if vcd_enabled:
         vcd = run_vcd_on_figures(all_pdfs)
         save_vcd_report(vcd)
     else:
         log.info("VCD skipped (--no-vcd or CLOPDIT_ENABLE_VCD=0)")
 
-    # 9. Article delivery (symlinks)
+    # 11. Article delivery (copy/symlink + stale-asset cleanup)
     if not args.no_delivery:
         ret = run_article_delivery()
         if ret == 0:
@@ -615,7 +654,7 @@ def main():
         else:
             log.warning("Article delivery: FAILED (exit %d)", ret)
 
-    # 10. Rebuild LaTeX article PDF (requires --build-pdf)
+    # 12. Rebuild LaTeX article PDF (requires --build-pdf)
     if args.build_pdf:
         ret = run_latex_build()
         if ret != 0:

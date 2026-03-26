@@ -79,9 +79,9 @@ def plot_expression_analysis(
 
     overall = metrics.get("overall", {})
 
-    fig = plt.figure(figsize=(10.4, 7.0))
-    layout = bind_figure_region(fig, (0.08, 0.08, 0.985, 0.93))
-    top_row, bottom_row = layout.split_rows(2, hspace=0.52)
+    fig = plt.figure(figsize=(12.0, 5.8))
+    layout = bind_figure_region(fig, (0.08, 0.10, 0.985, 0.94))
+    top_row, bottom_row = layout.split_rows([0.90, 1.00], hspace=0.42)
     top_left, top_right = top_row.split_cols([1.00, 1.02], gap=0.050)
     bottom_left, bottom_right = bottom_row.split_cols([1.02, 0.98], gap=0.060)
     # Note: Figure-level title removed per revision requirements; stats moved to caption
@@ -199,12 +199,12 @@ def plot_expression_analysis(
     ax2.plot(real_means[sort_idx], color=COLORS["real"], lw=1.2, label="Real mean", zorder=3)
     ax2.plot(gen_means[sort_idx], color=COLORS["generated"], lw=1.2, ls="--",
              label="Gen mean", zorder=3)
-    ax2.set_xlabel("Gene index (sorted by real mean)", fontsize=11)
+    ax2.set_xlabel("Gene index (sorted by real mean)", fontsize=11, labelpad=1)
     ax2.set_ylabel("Expression", fontsize=11)
     ax2.set_title("Expression Range", fontsize=12)
     ax2.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, 0.98), ncol=2, frameon=False)
     ax2.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="upper"))
-    add_panel_label(ax2, 'b', x=-0.18, y=1.08)
+    add_panel_label(ax2, 'b', x=-0.16, y=1.08)
 
     # -- I3: Per-cell std as overlaid smooth histograms --
     ax3 = bottom_left.add_axes(fig)
@@ -266,8 +266,8 @@ def plot_expression_analysis(
     ax4.set_yticks(range(n_show))
     ax4.set_yticklabels(names_show, fontsize=10, ha="right")
     ax4.set_xlabel("Std Ratio (Gen / Real, clipped at 5\u00d7)", fontsize=11)
-    ax4.set_title("Most Divergent Genes\n(over- & under-dispersed)", fontsize=11, pad=10)
-    add_panel_label(ax4, 'd', x=-0.30, y=1.08)
+    ax4.set_title("Most Divergent Genes\n(over- & under-dispersed)", fontsize=11, pad=4)
+    add_panel_label(ax4, 'd', x=-0.12, y=1.08)
     placed_annotations: list = []
     for i, r in enumerate(ratios_show):
         # Skip annotations within 0.05 of an already-placed one to avoid overlap
@@ -282,13 +282,13 @@ def plot_expression_analysis(
     if legend_handles_c:
         legend_ax = add_shared_legend_axes(
             fig,
-            (ax3.get_position().x0, ax3.get_position().y1 + 0.055, ax3.get_position().width * 0.98, 0.045),
+            (ax3.get_position().x0, ax3.get_position().y1 + 0.050, ax3.get_position().width * 0.98, 0.034),
         )
-        legend_ax.legend(legend_handles_c, legend_labels_c, fontsize=10, loc="center", ncol=2, frameon=False)
+        legend_ax.legend(legend_handles_c, legend_labels_c, fontsize=9, loc="center", ncol=2, frameon=False)
 
     if save:
         if save_panel_fn:
-            save_panel_fn(fig, "fig10_expression_analysis", Path(output_dir), dpi)
+            save_panel_fn(fig, "fig05a_expression_analysis", Path(output_dir), dpi)
         else:
-            save_with_vcd(fig, Path(output_dir) / "fig10_expression_analysis.png", dpi)
+            save_with_vcd(fig, Path(output_dir) / "fig05a_expression_analysis.png", dpi)
     return fig

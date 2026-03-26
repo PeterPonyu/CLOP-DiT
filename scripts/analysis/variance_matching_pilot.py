@@ -173,13 +173,13 @@ def main():
     )
     from scipy import stats as scipy_stats
 
-    fig = plt.figure(figsize=(14.0, 10.0))
-    layout = bind_figure_region(fig, (0.11, 0.06, 0.99, 0.96))
+    fig = plt.figure(figsize=(14.0, 8.0))
+    layout = bind_figure_region(fig, (0.11, 0.08, 0.99, 0.96))
     # Uses the repository's direct rectangle layout engine, not GridSpec or
     # matplotlib's automatic/constrained layout.
     # - split_rows(..., hspace=...) controls the vertical gap between rows.
     # - split_cols(..., wspace=...) controls the horizontal gap between columns.
-    top_row, bottom_row = layout.split_rows([1.20, 0.92], hspace=0.22)
+    top_row, bottom_row = layout.split_rows([1.20, 0.92], hspace=0.24)
     top_left, top_right = top_row.split_cols([1.2, 1.0], wspace=0.20)
     bottom_left, bottom_right = bottom_row.split_cols([1.16, 1.04], wspace=0.26)
 
@@ -255,8 +255,7 @@ def main():
 
     ax2.text(0.97, 0.97,
              f"Median = {vr_median:.3f}\n"
-             f"IQR = [{vr_q25:.3f}, {vr_q75:.3f}]\n"
-             f"{pct_in_band:.0f}% within \u00b10.1",
+             f"IQR = [{vr_q25:.3f}, {vr_q75:.3f}]",
              transform=ax2.transAxes, ha="right", va="top",
              fontsize=FONT_ANNOTATION, color=COLORS["neutral"])
 
@@ -290,9 +289,7 @@ def main():
     ax3.text(0.97, 0.03,
              f"Mean = {vc_mean:.3f}\n"
              f"Median = {vc_median:.3f}\n"
-             f"{pct_positive:.0f}% positive\n"
-             f"Note: global variance ratio \u2248 1\n"
-             f"but per-dim structure is weak",
+             f"{pct_positive:.0f}% positive",
              transform=ax3.transAxes, ha="right", va="bottom",
              fontsize=FONT_SMALL, color=COLORS["neutral"])
 
@@ -307,7 +304,7 @@ def main():
 
     # ── Panel (d): SWD vs. Training Cell Count ──
     ax4 = bottom_right.inset(left=0.05, right=0.02).add_axes(fig)
-    add_panel_label(ax4, 'd', x=-0.06, y=1.04)
+    add_panel_label(ax4, 'd', x=-0.10, y=1.05)
 
     n_reals = np.array([r["n_real"] for r in results])
     swd_arr = np.array(swd_values)
@@ -345,9 +342,8 @@ def main():
         ax4.fill_between(10 ** x_fit, y_fit - y_ci, y_fit + y_ci,
                          alpha=0.08, color=COLORS["generated"])
 
-        stat_text = (f"Pearson r = {r_val:.3f} (p = {p_val:.1e})\n"
-                     f"Spearman \u03c1 = {spearman_r:.3f} (p = {spearman_p:.1e})\n"
-                     f"n = {n_pts} cell types")
+        stat_text = (f"Pearson r = {r_val:.3f}\n"
+                 f"Spearman \u03c1 = {spearman_r:.3f}")
     else:
         stat_text = "Insufficient data for correlation"
 
@@ -376,7 +372,7 @@ def main():
     ax4.xaxis.labelpad = 1
     ax4.set_title("SWD vs. Training Cell Count", fontsize=FONT_TITLE - 2, pad=0, y=0.985)
 
-    fig_path = output_dir / "variance_matching_pilot.png"
+    fig_path = output_dir / "fig09a_variance_matching.png"
     save_with_vcd(fig, fig_path, dpi=300, layout_rect=(0.08, 0.03, 0.99, 0.96))
     print(f"\n[var_pilot] Figure saved to {fig_path}")
 
@@ -385,16 +381,16 @@ def main():
     fig_dir.mkdir(parents=True, exist_ok=True)
     import shutil
     for suffix in (".pdf",):
-        src = output_dir / f"variance_matching_pilot{suffix}"
-        dst = fig_dir / f"fig19_variance_matching_pilot{suffix}"
+        src = output_dir / f"fig09a_variance_matching{suffix}"
+        dst = fig_dir / f"fig09a_variance_matching{suffix}"
         if src.exists():
             shutil.copy(src, dst)
-    src_live = output_dir / "_live_vcd" / "variance_matching_pilot.json"
+    src_live = output_dir / "_live_vcd" / "fig09a_variance_matching.json"
     if src_live.exists():
         dst_live_dir = fig_dir / "_live_vcd"
         dst_live_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copy(src_live, dst_live_dir / "fig19_variance_matching_pilot.json")
-    print(f"[var_pilot] Copied to {fig_dir / 'fig19_variance_matching_pilot.pdf'}")
+        shutil.copy(src_live, dst_live_dir / "fig09a_variance_matching.json")
+    print(f"[var_pilot] Copied to {fig_dir / 'fig09a_variance_matching.pdf'}")
     plt.close()
 
 

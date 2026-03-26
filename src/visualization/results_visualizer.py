@@ -214,7 +214,7 @@ class ResultsVisualizer:
             output_dir=str(self.output),
             dpi=self.dpi,
             save=save,
-            save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "fig05_metrics_summary"),
+            save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "fig03a_metrics_summary"),
         )
 
     # ──────────────────────────────────────────────────────────
@@ -262,7 +262,8 @@ class ResultsVisualizer:
             output_dir=str(self.output),
             dpi=self.dpi,
             save=save,
-            save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "fig07_text_cell_alignment"),
+            save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "fig03c_text_cell_alignment"),
+            label_offset=7,
         )
 
     # ──────────────────────────────────────────────────────────
@@ -287,7 +288,8 @@ class ResultsVisualizer:
             output_dir=str(self.output),
             dpi=self.dpi,
             save=save,
-            save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "fig06_per_type_fidelity"),
+            save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "fig03b_per_type_fidelity"),
+            label_offset=4,
         )
 
     # ──────────────────────────────────────────────────────────
@@ -429,6 +431,7 @@ class ResultsVisualizer:
             output_dir=self.output,
             dpi=self.dpi,
             save=save,
+            label_offset=2,
         )
 
     # ──────────────────────────────────────────────────────────
@@ -492,7 +495,7 @@ class ResultsVisualizer:
                     save=True,
                 )
                 if fig_pq:
-                    saved.append(self.output / "fig17_downstream_pq.pdf")
+                    saved.append(self.output / "fig08a_downstream_validation.pdf")
                     plt.close(fig_pq)
             except Exception as exc:
                 logger.warning(f"Merged P+Q figure failed: {exc}")
@@ -508,9 +511,9 @@ class ResultsVisualizer:
                     arr_path = ds_dir / fname
                     if arr_path.exists():
                         de_data[cname][key] = np.load(arr_path, allow_pickle=True).tolist()
-            fig_r = plot_de_concordance_panel(de_data, self.output, self.dpi)
+            fig_r = plot_de_concordance_panel(de_data, self.output, self.dpi, label_offset=6)
             if fig_r:
-                saved.append(self.output / "fig18_de_concordance.pdf")
+                saved.append(self.output / "fig08b_de_concordance.pdf")
                 plt.close(fig_r)
 
         if not saved:
@@ -583,7 +586,7 @@ class ResultsVisualizer:
             return arr[y0:y1, x0:x1]
 
         l_image = Image.open(l_path)
-        images = [(l_path.stem, l_image), ("fig14_expression_diversity", k_image)]
+        images = [(l_path.stem, l_image), ("fig07a_expression_diversity", k_image)]
 
         fig = plt.figure(figsize=(13.6, 8.6), dpi=self.dpi)
         layout = bind_figure_region(fig, (0.02, 0.04, 0.98, 0.96))
@@ -649,7 +652,7 @@ class ResultsVisualizer:
 
         # ── Part I: Training ──
         # NOTE: Standalone A/C panels are NOT saved — only the merged A+C is
-        # needed for the article (fig03_training_dynamics).
+        # needed for the article (fig02a_training_dynamics).
 
         # ── Merged: A+C Training Dynamics ──
         try:
@@ -663,7 +666,7 @@ class ResultsVisualizer:
                 save_panel_fn=lambda fig, name, *a, **kw: self._save_panel(fig, name),
             )
             if fig_ac:
-                saved.append(self.output / "fig03_training_dynamics.pdf")
+                saved.append(self.output / "fig02a_training_dynamics.pdf")
                 plt.close(fig_ac)
         except Exception as exc:
             logger.warning(f"Merged A+C figure failed: {exc}")
@@ -671,20 +674,20 @@ class ResultsVisualizer:
         # ── Part II: Generation quality ──
         fig_d = self.plot_metrics_summary()
         if fig_d:
-            saved.append(self.output / "fig05_metrics_summary.pdf")
+            saved.append(self.output / "fig03a_metrics_summary.pdf")
             plt.close(fig_d)
 
         # NOTE: Standalone B/E panels are NOT saved — only the merged B+E is
-        # needed for the article (fig04_embedding_space).
+        # needed for the article (fig02b_embedding_space).
 
         fig_f = self.plot_text_cell_heatmap()
         if fig_f:
-            saved.append(self.output / "fig07_text_cell_alignment.pdf")
+            saved.append(self.output / "fig03c_text_cell_alignment.pdf")
             plt.close(fig_f)
 
         fig_g = self.plot_per_type_generation()
         if fig_g:
-            saved.append(self.output / "fig06_per_type_fidelity.pdf")
+            saved.append(self.output / "fig03b_per_type_fidelity.pdf")
             plt.close(fig_g)
 
         # ── Merged: B+E Embedding Space ──
@@ -698,10 +701,11 @@ class ResultsVisualizer:
                     output_dir=str(self.output),
                     dpi=self.dpi,
                     save=True,
-                    save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "fig04_embedding_space"),
+                    save_panel_fn=lambda fig, path, dpi: self._save_panel(fig, "fig02b_embedding_space"),
+                    label_offset=8,
                 )
                 if fig_be:
-                    saved.append(self.output / "fig04_embedding_space.pdf")
+                    saved.append(self.output / "fig02b_embedding_space.pdf")
                     plt.close(fig_be)
             except Exception as exc:
                 logger.warning(f"Merged B+E figure failed: {exc}")
@@ -712,23 +716,23 @@ class ResultsVisualizer:
         # ── Part III: Expression & biological validation ──
         fig_h = self.plot_expression_correlation()
         if fig_h:
-            saved.append(self.output / "fig09_expression_correlation.pdf")
+            saved.append(self.output / "fig04b_expression_correlation.pdf")
             plt.close(fig_h)
 
         fig_i = self.plot_expression_analysis()
         if fig_i:
-            saved.append(self.output / "fig10_expression_analysis.pdf")
+            saved.append(self.output / "fig05a_expression_analysis.pdf")
             plt.close(fig_i)
 
         fig_n = self.plot_marker_gene_comparison()
         if fig_n:
-            saved.append(self.output / "fig08_marker_genes.pdf")
+            saved.append(self.output / "fig04a_marker_genes.pdf")
             plt.close(fig_n)
 
         # ── Part IV: Baselines & downstream ──
         fig_o = self.plot_baseline_comparison()
         if fig_o:
-            saved.append(self.output / "fig15_baseline_comparison.pdf")
+            saved.append(self.output / "fig07b_baseline_comparison.pdf")
             plt.close(fig_o)
 
         # Panels P/Q/R: Downstream biology (from pre-computed JSONs)
@@ -742,19 +746,19 @@ class ResultsVisualizer:
                 report_path=str(RESULTS_DIR / "benchmark_report.json"),
                 output_dir=self.output,
                 dpi=self.dpi,
+                label_offset=5,
             )
             if fig_s:
-                saved.append(self.output / "fig16_benchmark.pdf")
+                saved.append(self.output / "fig07c_benchmark.pdf")
                 plt.close(fig_s)
         except Exception as exc:
             logger.warning(f"Panel S (Benchmark) failed: {exc}")
 
-        # Panels J–M: Pre-generated external panels (fig12, fig14, fig13, fig11)
+        # Panels J–M: Pre-generated external panels (fig12, fig14, fig11)
         for panel_name in [
-            "fig12_diversity_diagnostics",
-            "fig14_expression_diversity",
-            "fig13_noise_tradeoff",
-            "fig11_conditioning_umap",
+            "fig06_diversity_diagnostics",
+            "fig07a_expression_diversity",
+            "fig05b_conditioning_landscape",
         ]:
             panel_pdf = self.output / f"{panel_name}.pdf"
             panel_png = self.output / f"{panel_name}.png"
@@ -808,6 +812,27 @@ class ResultsVisualizer:
         if fig_mkr:
             saved.append(self.output / "fig28_marker_completeness.pdf")
             plt.close(fig_mkr)
+
+        # ── Part VII: Manuscript rescue validation figures (Figs 32–35) ──
+        fig_pb = self.plot_pseudobulk_validation()
+        if fig_pb:
+            saved.append(self.output / "figS02a_pseudobulk_validation.pdf")
+            plt.close(fig_pb) if hasattr(fig_pb, 'number') else None
+
+        fig_fa = self.plot_failure_analysis()
+        if fig_fa:
+            saved.append(self.output / "figS02b_failure_analysis.pdf")
+            plt.close(fig_fa) if hasattr(fig_fa, 'number') else None
+
+        fig_fld = self.plot_field_ablation()
+        if fig_fld:
+            saved.append(self.output / "figS02c_field_ablation.pdf")
+            plt.close(fig_fld) if hasattr(fig_fld, 'number') else None
+
+        fig_disc = self.plot_discriminator_analysis()
+        if fig_disc:
+            saved.append(self.output / "figS02d_discriminator_analysis.pdf")
+            plt.close(fig_disc) if hasattr(fig_disc, 'number') else None
 
         # ── Combine into multi-page PDF ──
         if saved:
@@ -916,6 +941,46 @@ class ResultsVisualizer:
             save=save,
             save_panel_fn=lambda fig, name, *a, **kw: self._save_panel(fig, name),
         )
+
+    # ──────────────────────────────────────────────────────────────
+    # NEW: Figs 32–34 — Manuscript Rescue Validation Figures
+    # ──────────────────────────────────────────────────────────────
+
+    def plot_pseudobulk_validation(self, save: bool = True) -> Optional[plt.Figure]:
+        """Fig 32: Pseudobulk validation (expression-level evidence)."""
+        try:
+            from .fig19_pseudobulk import plot_pseudobulk_validation as _plot
+            return _plot(output_dir=self.output, dpi=self.dpi)
+        except Exception as exc:
+            logger.warning(f"Pseudobulk validation figure failed: {exc}")
+            return None
+
+    def plot_failure_analysis(self, save: bool = True) -> Optional[plt.Figure]:
+        """Fig 33: Per-cell-type failure analysis."""
+        try:
+            from .fig20_failure_analysis import plot_failure_analysis as _plot
+            return _plot(output_dir=self.output, dpi=self.dpi)
+        except Exception as exc:
+            logger.warning(f"Failure analysis figure failed: {exc}")
+            return None
+
+    def plot_field_ablation(self, save: bool = True) -> Optional[plt.Figure]:
+        """Fig 34: Prompt field disentanglement."""
+        try:
+            from .fig21_field_ablation import plot_field_ablation as _plot
+            return _plot(output_dir=self.output, dpi=self.dpi)
+        except Exception as exc:
+            logger.warning(f"Field ablation figure failed: {exc}")
+            return None
+
+    def plot_discriminator_analysis(self, save: bool = True) -> Optional[plt.Figure]:
+        """Fig 35: Discriminator feature importance."""
+        try:
+            from .fig22_discriminator import plot_discriminator_analysis as _plot
+            return _plot(output_dir=self.output, dpi=self.dpi)
+        except Exception as exc:
+            logger.warning(f"Discriminator analysis figure failed: {exc}")
+            return None
 
 
 # ──────────────────────────────────────────────────────────────

@@ -225,5 +225,7 @@ def plot_expanded_de(
 
 
 if __name__ == "__main__":
+    import matplotlib
+    matplotlib.use("Agg")
     logging.basicConfig(level=logging.INFO)
     plot_expanded_de()

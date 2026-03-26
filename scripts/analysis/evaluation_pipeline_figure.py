@@ -27,7 +27,7 @@ FIG_DIR = ROOT / "results" / "figures"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def _rounded_box(ax, xy, w, h, text, fc="#E8F4FD", ec="#2C3E50", fontsize=11,
+def _rounded_box(ax, xy, w, h, text, fc="#E8F4FD", ec="#2C3E50", fontsize=12,
                  lw=1.2, text_color="#2C3E50", bold=False):
     """Draw a rounded rectangle with centered text."""
     box = mpatches.FancyBboxPatch(
@@ -41,24 +41,32 @@ def _rounded_box(ax, xy, w, h, text, fc="#E8F4FD", ec="#2C3E50", fontsize=11,
     return box
 
 
-def _arrow(ax, start, end, color="#555", lw=1.2, style="->"):
+def _arrow(ax, start, end, color="#555", lw=1.8, style="-|>"):
     ax.annotate("", xy=end, xytext=start,
-                arrowprops=dict(arrowstyle=style, color=color, lw=lw),
+                arrowprops=dict(arrowstyle=style + ",head_length=0.6,head_width=0.3",
+                                color=color, lw=lw),
                 zorder=1)
 
 
 def make_figure():
     apply_style()
-    fig = plt.figure(figsize=(10.6, 7.0))
-    ax = bind_figure_region(fig, (0.04, 0.04, 0.96, 0.97)).add_axes(fig)
+    fig = plt.figure(figsize=(14.4, 7.6))
+    ax = bind_figure_region(fig, (0.03, 0.04, 0.97, 0.97)).add_axes(fig)
     ax.set_xlim(-0.12, 10.36)
     ax.set_ylim(-0.22, 7.18)
     ax.axis("off")
     ax.set_xticks([])
     ax.set_yticks([])
 
+    # Panel label (d) — this figure is merged with the architecture figure (a–c) in the article.
+    # fig01b (14.4" wide) is scaled to 0.95\textwidth while fig01a (10.0") is scaled to
+    # \textwidth, so (d) needs a larger fontsize (~21pt) to match (a)–(c) at 14pt after
+    # LaTeX scaling.
+    ax.text(-0.05, 6.96, "(d)", fontsize=21, fontweight="bold", color="black",
+            ha="left", va="center", zorder=10)
+
     # Title
-    ax.text(5.0, 6.96, "Evaluation Pipeline Schematic", fontsize=15,
+    ax.text(5.0, 6.96, "Evaluation Pipeline Schematic", fontsize=16,
             ha="center", va="center", weight="bold", color="#2C3E50")
 
     # ── Row 1: Data Sources ──
@@ -100,10 +108,12 @@ def make_figure():
 
     _arrow(ax, (9.3, y2 + 0.7), (8.25, y2 + 0.7))
 
-    # Arrows from real train to PCA/KNN
-    _arrow(ax, (1.6, y2), (1.6, y2 - 0.4))
-    _arrow(ax, (4.7, y2), (4.7, y2 - 0.4))
-    _arrow(ax, (8.25, y2), (8.25, y2 - 0.4))
+    # Arrows from Row 2 to Row 3
+    _arrow(ax, (1.6, y2), (1.6, y2 - 0.4))          # Real train → KNN
+    _arrow(ax, (4.7, y2), (4.7, y2 - 0.4))          # Real test → PCA transform
+    _arrow(ax, (8.25, y2), (8.25, y2 - 0.4))        # Generated → Per-type stats
+    _arrow(ax, (7.5, y2), (5.8, y2 - 0.4),          # Generated → PCA transform
+           color="#888")
 
     # ── Row 3: PCA + KNN ──
     y3 = 3.2
@@ -124,9 +134,11 @@ def make_figure():
 
     # ── Row 4: Metrics ──
     y4 = 1.7
-    _arrow(ax, (1.6, y3), (1.6, y4 + 0.7))
-    _arrow(ax, (5.2, y3), (5.2, y4 + 0.7))
-    _arrow(ax, (8.7, y3), (8.7, y4 + 0.7))
+    _arrow(ax, (1.6, y3), (1.0, y4 + 0.7))          # KNN → KNN Accuracy
+    _arrow(ax, (2.4, y3), (3.2, y4 + 0.7))          # KNN → Steering Accuracy
+    _arrow(ax, (5.2, y3), (5.3, y4 + 0.7))          # PCA → Diversity Ratio
+    _arrow(ax, (8.7, y3), (7.5, y4 + 0.7))          # Stats → FD/Coverage
+    _arrow(ax, (9.5, y3), (9.55, y4 + 0.7))         # Stats → Linear Accuracy
 
     _rounded_box(ax, (0.0, y4), 2.0, 0.7,
                  "KNN Accuracy\n(top-1, top-5)",
@@ -150,25 +162,31 @@ def make_figure():
 
     # ── Row 5: Composites ──
     y5 = 0.4
-    _arrow(ax, (5.0, y4), (5.0, y5 + 0.7))
+    # Left 3 metrics feed Common-Metrics Composite
+    _arrow(ax, (1.0, y4), (2.2, y5 + 0.7), color="#C0392B", lw=0.9)
+    _arrow(ax, (3.2, y4), (3.2, y5 + 0.7), color="#C0392B", lw=0.9)
+    _arrow(ax, (5.3, y4), (4.4, y5 + 0.7), color="#C0392B", lw=0.9)
+    # Right 2 metrics feed Full Composite
+    _arrow(ax, (7.5, y4), (6.5, y5 + 0.7), color="#C0392B", lw=0.9)
+    _arrow(ax, (9.55, y4), (7.8, y5 + 0.7), color="#C0392B", lw=0.9)
 
     _rounded_box(ax, (1.5, y5), 3.2, 0.7,
                  "Common-Metrics Composite (9)\nPRIMARY BENCHMARK",
                  fc="#F7B7AE", ec="#C0392B", text_color="#111111", bold=True)
 
     _rounded_box(ax, (5.5, y5), 3.2, 0.7,
-                 "Full Composite (17)\n+ 8 downstream biology metrics\n(structurally biased)",
+                 "Full Composite (17)\n+ 8 downstream biology metrics",
                  fc="#F5B7B1", ec="#C0392B")
 
     _arrow(ax, (4.7, y5 + 0.35), (5.5, y5 + 0.35))
 
     # ── Row 6: Bootstrap ──
     ax.text(9.5, y5 + 0.35, "Bootstrap\n95% CI\n(B=1000)",
-            ha="center", va="center", fontsize=11, style="italic",
+            ha="center", va="center", fontsize=12, style="italic",
             color="#7F8C8D",
             bbox=dict(boxstyle="round,pad=0.3", fc="#F9F9F9", ec="#BDC3C7", lw=0.8))
 
-    _arrow(ax, (8.7, y5 + 0.35), (9.0, y5 + 0.35), style="->", color="#BDC3C7")
+    _arrow(ax, (8.7, y5 + 0.35), (9.0, y5 + 0.35), color="#BDC3C7")
 
     # Legend
     legend_items = [
@@ -184,9 +202,9 @@ def make_figure():
                                      boxstyle="round,pad=0.03",
                                      facecolor=color, edgecolor="#666", lw=0.5)
         ax.add_patch(p)
-        ax.text(x + 0.38, -0.055, label, fontsize=10.5, va="center", color="#333")
+        ax.text(x + 0.38, -0.055, label, fontsize=11.5, va="center", color="#333")
 
-    out_png = FIG_DIR / "fig_evaluation_pipeline.png"
+    out_png = FIG_DIR / "fig01b_evaluation_pipeline.png"
     from src.visualization.style import save_with_vcd
     save_with_vcd(fig, out_png, dpi=300)
     plt.close(fig)
