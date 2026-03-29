@@ -607,11 +607,10 @@ def main():
     if gg:
         saved.append(gg)
 
-    # 8. Supplementary components used inside the merged Figure S1 appendix float
+    # 8. Python-composed supplementary appendix figures (replace LaTeX stitching)
     _supp_figs = [
-        ("src/visualization/figS1_robustness_ablation.py",   "figS01a_robustness_ablation.pdf"),
-        ("src/visualization/figS2_downstream_validation.py", "figS01b_downstream_validation.pdf"),
-        ("src/visualization/figS3_expression_decoder.py",    "figS01c_expression_decoder.pdf"),
+        ("src/visualization/figS01_supplementary_validation.py", "figS01_supplementary_validation.pdf"),
+        ("src/visualization/figS02_expression_diagnostics.py",    "figS02_expression_diagnostics.pdf"),
     ]
     for _script_rel, _expected_pdf in _supp_figs:
         _fig = _run_external_script(_script_rel, _expected_pdf, _expected_pdf)

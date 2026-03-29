@@ -20,7 +20,7 @@ import numpy as np
 from .direct_layout import bind_figure_region
 from .style import (
     COLORS, add_panel_label, apply_style, save_with_vcd, style_axes,
-    FONT_LABEL, FONT_TITLE, FONT_ANNOTATION,
+    FONT_LABEL, FONT_TICK, FONT_TITLE, FONT_ANNOTATION,
 )
 from src.utils.paths import RESULTS_DIR, FIG_DIR
 
@@ -64,13 +64,13 @@ def plot_field_ablation(output_dir=None, dpi=300):
     knn_vals = [results[v]["knn_accuracy"] for v in present_variants]
     retention = [results[v].get("knn_retention_pct", 100.0) for v in present_variants]
 
-    fig = plt.figure(figsize=(8.0, 3.2))
-    layout = bind_figure_region(fig, (0.14, 0.16, 0.95, 0.88))
-    left, right = layout.split_cols([1.0, 1.0], wspace=0.26)
+    fig = plt.figure(figsize=(5.0, 3.0))
+    layout = bind_figure_region(fig, (0.18, 0.18, 0.94, 0.88))
+    left, right = layout.split_cols([1.0, 1.0], wspace=0.28)
 
     # Panel (f): KNN accuracy bars
     ax = left.inset(right=0.02).add_axes(fig)
-    add_panel_label(ax, 'f', x=-0.12, y=1.14)
+    add_panel_label(ax, 'f', x=-0.12, y=1.10)
 
     y_pos = np.arange(len(labels))
     colors = []
@@ -85,7 +85,7 @@ def plot_field_ablation(output_dir=None, dpi=300):
     bars = ax.barh(y_pos, knn_vals, color=colors, height=0.6,
                    edgecolor="white", linewidth=0.3)
     ax.set_yticks(y_pos)
-    ax.set_yticklabels(labels, fontsize=10)
+    ax.set_yticklabels(labels, fontsize=11)
     ax.invert_yaxis()
 
     # Value annotations
@@ -94,11 +94,11 @@ def plot_field_ablation(output_dir=None, dpi=300):
                 fontsize=FONT_ANNOTATION, color=COLORS["neutral"])
 
     style_axes(ax, "bar", xlabel="KNN Accuracy",
-               title="Steering Quality by Prompt Variant")
+               title="Steering by Variant")
 
     # Panel (g): Retention percentage
     ax2 = right.inset(left=0.05, right=0.02).add_axes(fig)
-    add_panel_label(ax2, 'g', x=-0.12, y=1.14)
+    add_panel_label(ax2, 'g', x=-0.12, y=1.10)
 
     # Skip "full" for retention chart (it's always 100%)
     ret_variants = [v for v in present_variants if v != "full"]
@@ -112,7 +112,7 @@ def plot_field_ablation(output_dir=None, dpi=300):
     bars2 = ax2.barh(ret_y, ret_vals, color=ret_colors, height=0.6,
                      edgecolor="white", linewidth=0.3)
     ax2.set_yticks(ret_y)
-    ax2.set_yticklabels(ret_labels, fontsize=10)
+    ax2.set_yticklabels(ret_labels, fontsize=11)
     ax2.invert_yaxis()
     ax2.axvline(100, color="#999", linestyle=":", linewidth=1.0, alpha=0.5)
 
@@ -120,11 +120,11 @@ def plot_field_ablation(output_dir=None, dpi=300):
         ax2.text(val + 1.0, i, f"{val:.1f}%", va="center",
                  fontsize=FONT_ANNOTATION, color=COLORS["neutral"])
 
-    style_axes(ax2, "bar", xlabel="Retention vs Full Prompt (%)",
-               title="Per-Field Contribution to Steering")
+    style_axes(ax2, "bar", xlabel="Retention (%)",
+               title="Field Contribution")
 
     fig_path = output_dir / "figS02c_field_ablation"
-    save_with_vcd(fig, fig_path, dpi=dpi, layout_rect=(0.10, 0.06, 0.98, 0.94))
+    save_with_vcd(fig, fig_path, dpi=dpi, layout_rect=(0.12, 0.08, 0.97, 0.93))
     plt.close()
     logger.info(f"Saved: {fig_path}")
     return fig_path

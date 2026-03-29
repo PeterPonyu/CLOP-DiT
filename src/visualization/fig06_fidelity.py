@@ -231,13 +231,21 @@ def plot_per_type_generation(
         ax.plot(x_line, slope * x_line + intercept, color=COLORS["trend_dark"], linestyle="--", linewidth=1.3, label="Trend")
 
     candidate_idx = np.argsort(cos_array)[:10]
-    label_offsets = [(-34, -12), (10, -10), (-30, 10), (12, 10), (16, -18), (-22, 18)]
+    label_offsets = [(-34, -12), (28, -10), (-30, 14), (28, 12), (16, -20), (-26, 20)]
     annotated = 0
+    placed_data_coords: list[tuple[float, float]] = []
     for rank, i in enumerate(candidate_idx):
-        if annotated >= 5:
+        if annotated >= 4:
             break
         if cos_array[i] < 0.94:
             if x_vals[i] > np.quantile(x_vals, 0.88) and annotated >= 3:
+                continue
+            # Skip if too close to an already-placed annotation (avoid overlap)
+            too_close = any(
+                abs(x_vals[i] - px) < 0.25 and abs(cos_array[i] - py) < 0.04
+                for px, py in placed_data_coords
+            )
+            if too_close:
                 continue
             x_offset, y_offset = label_offsets[rank % len(label_offsets)]
             if x_vals[i] > np.median(x_vals):
@@ -254,6 +262,7 @@ def plot_per_type_generation(
                 bbox=dict(boxstyle="round,pad=0.16", facecolor="white",
                           edgecolor="none", alpha=0.75),
             )
+            placed_data_coords.append((x_vals[i], cos_array[i]))
             annotated += 1
     ax.set_xlabel("log10(Number of Real Cells)")
     ax.set_ylabel("Centroid Cosine Similarity")

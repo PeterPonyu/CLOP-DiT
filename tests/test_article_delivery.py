@@ -20,7 +20,7 @@ class TestArticleFigureManifest:
 
     def test_manifest_length(self):
         from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
-        assert len(ARTICLE_FIGURE_BASENAMES) == 26
+        assert len(ARTICLE_FIGURE_BASENAMES) == 21
 
     def test_manifest_contains_expected_basenames(self):
         from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
@@ -44,9 +44,8 @@ class TestArticleFigureManifest:
             "fig08b_de_concordance",
             "fig09a_variance_matching",
             "fig09b_gene_gene_correlation",
-            "figS01a_robustness_ablation",
-            "figS01b_downstream_validation",
-            "figS01c_expression_decoder",
+            "figS01_supplementary_validation",
+            "figS02_expression_diagnostics",
         }
         for name in expected:
             assert name in ARTICLE_FIGURE_BASENAMES, f"Missing basename: {name}"
@@ -57,11 +56,11 @@ class TestArticleFigureManifest:
 
         manifest = set(ARTICLE_FIGURE_BASENAMES)
         tex_basenames = self._article_tex_basenames()
-        # New supplementary S2 figures may not be in TeX yet; check TeX is subset of manifest
+        manifest_only = manifest - tex_basenames
         tex_only = tex_basenames - manifest
-        assert not tex_only, (
-            "TeX includes figures not in manifest. "
-            f"TeX-only: {sorted(tex_only)}"
+        assert not manifest_only and not tex_only, (
+            "Manifest and TeX includegraphics basenames diverged. "
+            f"Manifest-only: {sorted(manifest_only)}; TeX-only: {sorted(tex_only)}"
         )
 
 

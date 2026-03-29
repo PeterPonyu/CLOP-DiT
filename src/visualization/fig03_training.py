@@ -44,13 +44,14 @@ def _add_training_phase_bands(ax: plt.Axes, max_epoch: int) -> None:
     ax.axvspan(p1_end, p2_end, color=COLORS["neutral"], alpha=0.05, lw=0)
     ax.axvspan(p2_end, max_epoch, color=COLORS["baseline_gauss"], alpha=0.07, lw=0)
     ax.text(
-        0.92, 0.80,
+        0.97, 0.78,
         "Phase I: rapid\nPhase II: refine\nPhase III: converge",
         transform=ax.transAxes,
         va="top",
         ha="right",
-        fontsize=9,
-        path_effects=[pe.withStroke(linewidth=2.5, foreground="white", alpha=0.95)],
+        fontsize=8,
+        color=COLORS.get("neutral", "#555555"),
+        bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.85, edgecolor="none"),
     )
 
 

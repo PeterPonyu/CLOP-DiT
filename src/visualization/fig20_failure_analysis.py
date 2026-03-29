@@ -53,13 +53,13 @@ def plot_failure_analysis(output_dir=None, dpi=300):
     per_type = analysis["per_type_metrics"]
     patterns = analysis["summary"]["patterns"]
 
-    fig = plt.figure(figsize=(8.0, 3.5))
-    layout = bind_figure_region(fig, (0.08, 0.16, 0.98, 0.88))
-    left, mid, right = layout.split_cols([1.0, 1.0, 1.0], wspace=0.26)
+    fig = plt.figure(figsize=(5.0, 3.2))
+    layout = bind_figure_region(fig, (0.12, 0.18, 0.96, 0.88))
+    left, mid, right = layout.split_cols([1.0, 1.0, 1.0], wspace=0.44)
 
     # Panel (c): Stacked bar by biological family
     ax = left.inset(right=0.02).add_axes(fig)
-    add_panel_label(ax, 'c', x=-0.12, y=1.14)
+    add_panel_label(ax, 'c', x=-0.12, y=1.08)
 
     by_family = patterns.get("by_family", {})
     families = sorted(by_family.keys(), key=lambda f: by_family[f]["mean_score"], reverse=True)
@@ -76,17 +76,17 @@ def plot_failure_analysis(output_dir=None, dpi=300):
     ax.barh(y_pos, fail_counts, left=cumulative, color=TIER_COLORS["fail"],
             height=0.6, label="Fail")
 
-    short_families = [f.replace("Immune: ", "").replace("Stem/", "S/")[:18] for f in families]
+    short_families = [f.replace("Immune: ", "").replace("Stem/", "S/")[:10] for f in families]
     ax.set_yticks(y_pos)
-    ax.set_yticklabels(short_families, fontsize=9)
+    ax.set_yticklabels(short_families, fontsize=10)
     ax.invert_yaxis()
     ax.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="lower right")
     style_axes(ax, "bar", xlabel="Number of cell types",
-               title="Quality Tiers by Biological Family")
+               title="Quality by Family")
 
     # Panel (d): Quality score vs log(sample size)
     ax2 = mid.inset(left=0.05, right=0.02).add_axes(fig)
-    add_panel_label(ax2, 'd', x=-0.12, y=1.14)
+    add_panel_label(ax2, 'd', x=-0.12, y=1.08)
 
     names = list(per_type.keys())
     n_reals = np.array([per_type[n]["n_real"] for n in names])
@@ -97,6 +97,7 @@ def plot_failure_analysis(output_dir=None, dpi=300):
     ax2.scatter(n_reals, scores, c=point_colors, s=30, alpha=0.7,
                 edgecolors="white", linewidth=0.3, zorder=3)
     ax2.set_xscale("log")
+    ax2.xaxis.set_major_locator(plt.MaxNLocator(nbins=3))
 
     # Regression line
     from scipy import stats as scipy_stats
@@ -117,7 +118,7 @@ def plot_failure_analysis(output_dir=None, dpi=300):
 
     # Panel (e): Quality score vs max overlap (confusability)
     ax3 = right.inset(left=0.05, right=0.02).add_axes(fig)
-    add_panel_label(ax3, 'e', x=-0.12, y=1.14)
+    add_panel_label(ax3, 'e', x=-0.12, y=1.08)
 
     overlaps = np.array([per_type[n]["max_overlap_with_other_type"] for n in names])
     ax3.scatter(overlaps, scores, c=point_colors, s=30, alpha=0.7,
@@ -133,11 +134,11 @@ def plot_failure_analysis(output_dir=None, dpi=300):
 
     ax3.set_ylim(4.5, 8.3)
     ax3.set_yticks([5, 6, 7, 8])
-    style_axes(ax3, "scatter", xlabel="Max cosine overlap with other type",
+    style_axes(ax3, "scatter", xlabel="Max cosine overlap",
                ylabel="Quality score (0-8)", title="Quality vs Confusability")
 
     fig_path = output_dir / "figS02b_failure_analysis"
-    save_with_vcd(fig, fig_path, dpi=dpi, layout_rect=(0.06, 0.06, 0.98, 0.94))
+    save_with_vcd(fig, fig_path, dpi=dpi, layout_rect=(0.08, 0.08, 0.97, 0.93))
     plt.close()
     logger.info(f"Saved: {fig_path}")
     return fig_path

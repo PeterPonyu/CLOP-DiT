@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# regenerate_report.sh — One-command regeneration of all 20 article figures.
+# regenerate_report.sh — One-command regeneration of all article-facing figures.
 #
 # Prerequisites: trained CLOP (clop_best.pth) + DiT (dit_best.pth) + scGPT decoder.
 # All intermediate outputs (embeddings, metrics, figures) are regenerated.
-# After step 7 (visualization), step 8 verifies all 20 article figures and
-# creates symlinks in articles/figures/ so the LaTeX article builds correctly.
+# After the figure-generation steps, article_delivery verifies all 21
+# article-facing figure assets and creates symlinks in articles/figures/ so
+# the LaTeX article builds correctly.
 #
 # Paths come from configs/pipeline.yaml and src.utils.paths; override via env:
 #   CLOPDIT_CACHE_DIR, CLOPDIT_RESULTS_DIR, CLOPDIT_FIG_DIR,
@@ -94,6 +95,12 @@ echo "▶ Step 8/10: Generating external figures (Figs 19, 20)..."
 python scripts/analysis/variance_matching_pilot.py
 python scripts/analysis/gene_gene_correlation.py
 
+# ── Step 8b: Python-composed supplementary appendix figures ──
+echo ""
+echo "▶ Step 8b/10: Generating Python-composed supplementary figures..."
+python -m src.visualization.figS01_supplementary_validation
+python -m src.visualization.figS02_expression_diagnostics
+
 # ── Step 9: Verify article figures + create symlinks ──
 echo ""
 echo "▶ Step 9/10: Verifying article figures + creating symlinks..."
@@ -110,7 +117,7 @@ echo "════════════════════════�
 echo "  Report regeneration complete"
 echo "═══════════════════════════════════════════════════════════════"
 echo ""
-echo "Outputs (22 article-facing components + supporting diagnostics):"
+echo "Outputs (21 article-facing components + supporting diagnostics):"
 echo "  Fig 1:   results/figures/fig01a_architecture.{png,pdf} + fig01b_evaluation_pipeline.{png,pdf}"
 echo "  Fig 2:   results/figures/fig02a_training_dynamics.{png,pdf} + fig02b_embedding_space.{png,pdf}"
 echo "  Fig 3:   results/figures/fig03a_metrics_summary.{png,pdf} + fig03b_per_type_fidelity.{png,pdf} + fig03c_text_cell_alignment.{png,pdf}"
@@ -120,10 +127,11 @@ echo "  Fig 6:   results/figures/fig06_diversity_diagnostics.{png,pdf}"
 echo "  Fig 7:   results/figures/fig07a_expression_diversity.{png,pdf} + fig07b_baseline_comparison.{png,pdf} + fig07c_benchmark.{png,pdf}"
 echo "  Fig 8:   results/figures/fig08a_downstream_validation.{png,pdf} + fig08b_de_concordance.{png,pdf}"
 echo "  Fig 9:   results/figures/fig09a_variance_matching.{png,pdf} + fig09b_gene_gene_correlation.{png,pdf}"
-echo "  Fig S1:  results/figures/figS01a_robustness_ablation.{png,pdf} + figS01b_downstream_validation.{png,pdf} + figS01c_expression_decoder.{png,pdf}"
+echo "  Fig S1:  results/figures/figS01_supplementary_validation.{png,pdf}"
+echo "  Fig S2:  results/figures/figS02_expression_diagnostics.{png,pdf}"
 echo "  Support: results/figures/fig13_noise_tradeoff.{png,pdf}, fig21_*.{png,pdf} … fig31_*.{png,pdf}"
 echo ""
 echo "  Combined:    results/figures/clop_dit_full_report.pdf"
-echo "  Delivery:    articles/figures/ (22 PDFs → results/figures/)"
+echo "  Delivery:    articles/figures/ (21 PDFs → results/figures/)"
 echo ""
 ls -lh results/figures/clop_dit_full_report.pdf 2>/dev/null || true

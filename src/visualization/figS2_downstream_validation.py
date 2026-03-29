@@ -69,7 +69,7 @@ def _panel_a(ax: plt.Axes, results_dir: Path) -> None:
     """Grouped bars: Pearson r + Spearman rho per tissue."""
     data_path = results_dir / "downstream" / "cross_dataset_validation.json"
     if not data_path.exists():
-        _placeholder(ax, "Cross-Dataset Correlation")
+        _placeholder(ax, "Cross-Dataset Corr.")
         return
 
     with open(data_path) as f:
@@ -78,7 +78,7 @@ def _panel_a(ax: plt.Axes, results_dir: Path) -> None:
     tissues = [t for t, info in all_data.items()
                if isinstance(info, dict) and info.get("status") == "ok"]
     if not tissues:
-        _placeholder(ax, "Cross-Dataset Correlation")
+        _placeholder(ax, "Cross-Dataset Corr.")
         return
 
     tissue_labels = [t.capitalize() for t in tissues]
@@ -94,9 +94,9 @@ def _panel_a(ax: plt.Axes, results_dir: Path) -> None:
            color=COLORS["generated"], alpha=0.85, edgecolor="white", linewidth=0.5)
 
     ax.set_xticks(x)
-    ax.set_xticklabels(tissue_labels, fontsize=FONT_TICK_DENSE, rotation=35, ha="right")
+    ax.set_xticklabels(tissue_labels, fontsize=FONT_TICK_DENSE, rotation=40, ha="right")
     ax.set_ylabel("Correlation", fontsize=FONT_LABEL)
-    ax.set_title("Cross-Dataset Correlation", fontsize=FONT_TITLE, fontweight="normal")
+    ax.set_title("Cross-Dataset Corr.", fontsize=FONT_TITLE, fontweight="normal")
     ax.set_ylim(0, max(max(pearson_vals, default=0), max(spearman_vals, default=0)) * 1.2)
     ax.legend(fontsize=FONT_LEGEND_DENSE, loc="upper left", frameon=False)
     style_axes(ax)
@@ -106,7 +106,7 @@ def _panel_a(ax: plt.Axes, results_dir: Path) -> None:
 # Panel b: DE concordance heatmap
 # ─────────────────────────────────────────────────────────────
 
-def _abbrev_contrast(name: str, max_len: int = 14) -> str:
+def _abbrev_contrast(name: str, max_len: int = 10) -> str:
     parts = name.split("_vs_")
     if len(parts) == 2:
         a = abbreviate_cell_type(parts[0].replace("_", " "), max_len=max_len)
@@ -131,8 +131,8 @@ def _panel_b(fig: plt.Figure, ax: plt.Axes, results_dir: Path) -> None:
         return
 
     metrics = ["logfc_pearson_r", "logfc_spearman_rho", "top_k_jaccard", "top_k_sign_agreement"]
-    metric_labels = ["Pearson r", "Spearman \u03c1", "Jaccard@100", "Sign Agr."]
-    contrast_labels = [_abbrev_contrast(c, max_len=12) for c in contrasts]
+    metric_labels = ["Pearson r", "Spearman \u03c1", "Jacc@100", "Sign Agr."]
+    contrast_labels = [_abbrev_contrast(c, max_len=10) for c in contrasts]
 
     n_contrasts = len(contrasts)
     heatmap_data = np.full((n_contrasts, len(metrics)), np.nan)
@@ -142,19 +142,15 @@ def _panel_b(fig: plt.Figure, ax: plt.Axes, results_dir: Path) -> None:
 
     im = ax.imshow(heatmap_data, cmap="RdYlGn", aspect="auto", vmin=0, vmax=1)
     ax.set_xticks(range(len(metrics)))
-    ax.set_xticklabels(metric_labels, fontsize=FONT_TICK_DENSE, rotation=35, ha="right")
+    ax.set_xticklabels(metric_labels, fontsize=FONT_TICK_DENSE, rotation=40, ha="right")
     ax.set_yticks(range(n_contrasts))
-    ax.set_yticklabels(contrast_labels, fontsize=FONT_HEATMAP_CELL)
+    ax.set_yticklabels(contrast_labels, fontsize=max(FONT_HEATMAP_CELL, 10))
     ax.set_title("DE Concordance", fontsize=FONT_TITLE, fontweight="normal")
 
-    for ri in range(heatmap_data.shape[0]):
-        for ci in range(heatmap_data.shape[1]):
-            val = heatmap_data[ri, ci]
-            if np.isfinite(val):
-                color = "white" if val > 0.6 else "black"
-                ax.text(ci, ri, f"{val:.2f}", ha="center", va="center",
-                        fontsize=max(FONT_HEATMAP_CELL, 7), color=color,
-                        clip_on=True)
+    # Cell annotations removed: at 0.48\textwidth render scale the small
+    # numbers (0.17, 0.14 …) become illegible and create VCD text-overlap
+    # warnings against the y-tick labels.  The colour gradient conveys the
+    # same information without the visual clutter.
 
 
 # ─────────────────────────────────────────────────────────────
@@ -226,8 +222,8 @@ def _panel_c(ax: plt.Axes, results_dir: Path) -> None:
 
     legend_patches = [Patch(facecolor=cat_colors[c], label=cat_labels[c], alpha=0.85)
                       for c in categories if any(cc == c for cc in prompt_cats)]
-    ax.legend(handles=legend_patches, fontsize=FONT_LEGEND_DENSE, loc="lower right",
-              frameon=False)
+    ax.legend(handles=legend_patches, fontsize=FONT_LEGEND_DENSE, loc="upper right",
+              frameon=False, borderaxespad=0.3)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -256,9 +252,9 @@ def _panel_d(ax: plt.Axes, results_dir: Path) -> None:
     if not ks:
         ks = candidate_ks
 
-    # Limit to 6 cell types for readability
-    show_types = cell_types[:6]
-    ct_short = [abbreviate_cell_type(ct, max_len=18) for ct in show_types]
+    # Limit to 4 cell types for readability at article scale
+    show_types = cell_types[:4]
+    ct_short = [abbreviate_cell_type(ct, max_len=10) for ct in show_types]
 
     n_ct = max(len(show_types), 1)
     cmap = matplotlib.colormaps.get_cmap("tab10").resampled(n_ct)
@@ -276,7 +272,7 @@ def _panel_d(ax: plt.Axes, results_dir: Path) -> None:
     ax.set_xticks(ks)
     ax.set_ylim(-0.05, 1.05)
     ax.set_xlim(5, 110)
-    ax.legend(fontsize=FONT_LEGEND_DENSE, loc="upper left",
+    ax.legend(fontsize=FONT_LEGEND_DENSE, loc="lower right",
               frameon=False, ncol=2, columnspacing=0.6, handlelength=1.0)
     style_axes(ax)
 
@@ -437,7 +433,7 @@ def _panel_e(fig: plt.Figure, rect: list[float], results_dir: Path) -> plt.Axes:
     ax.set_ylim(0, 1.15)
     ax.set_yticks([0.2, 0.4, 0.6, 0.8, 1.0])
     ax.set_yticklabels(["0.2", "0.4", "0.6", "0.8", "1.0"],
-                        fontsize=FONT_SMALL - 1, color="grey")
+                        fontsize=max(FONT_SMALL, 10), color="grey")
     ax.set_xticks([])
     ax.spines["polar"].set_visible(False)
     ax.grid(False)
@@ -468,21 +464,21 @@ def plot_downstream_validation(
     results_dir = Path(RESULTS_DIR)
     output_dir = Path(output_dir)
 
-    fig = plt.figure(figsize=(8.0, 6.5))
+    fig = plt.figure(figsize=(6.5, 6.5))
 
     # ── Define grid positions manually (left, bottom, width, height) ──
-    # figsize=(8.0, 6.5) — matches figS01c width so LaTeX 0.48\textwidth gives
-    # the same scale factor (~0.41) → fonts render at identical sizes.
+    # figsize=(6.5, 6.5) — targets ~0.49x at 0.48\textwidth (~3.2").
+    # Tighter layout keeps text readable at article scale.
     # Row 0 (top): 3 panels in a row with generous column gaps
     # Row 1 (bottom): recall@K + radar
-    row0_bot, row0_top = 0.56, 0.90
-    row1_bot, row1_top = 0.06, 0.42
+    row0_bot, row0_top = 0.55, 0.88
+    row1_bot, row1_top = 0.08, 0.42
     row0_h = row0_top - row0_bot
     row1_h = row1_top - row1_bot
 
-    # Column layout — 3 equal columns with ~5% gap between
-    col_lefts = [0.10, 0.40, 0.71]
-    col_widths = [0.25, 0.26, 0.25]
+    # Column layout — wider gaps to accommodate yticklabel words
+    col_lefts = [0.10, 0.42, 0.73]
+    col_widths = [0.27, 0.27, 0.24]
 
     _S2_LABEL_SIZE = 14  # standard size — matches figS01a at same effective scale
     _LBL_Y = 1.14
@@ -508,8 +504,8 @@ def plot_downstream_validation(
     _panel_d(ax_d, results_dir)
 
     # Panel e: radar (row 1, col 1-2 merged area)
-    radar_left = col_lefts[1] + 0.04
-    radar_width = 0.50
+    radar_left = col_lefts[1] + 0.06
+    radar_width = 0.44
     radar_bot = row1_bot + 0.01
     radar_h = row1_h - 0.02
     ax_e = _panel_e(fig, [radar_left, radar_bot, radar_width, radar_h], results_dir)

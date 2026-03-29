@@ -50,13 +50,13 @@ def plot_pseudobulk_validation(output_dir=None, dpi=300):
 
     # Sort types by correlation
     sorted_types = sorted(per_type.items(), key=lambda x: x[1]["pearson_r"], reverse=True)
-    names = [abbreviate_cell_type(n, max_len=16) for n, _ in sorted_types]
+    names = [abbreviate_cell_type(n, max_len=10) for n, _ in sorted_types]
     pearson_vals = [v["pearson_r"] for _, v in sorted_types]
     cosine_vals = [v["cosine_sim"] for _, v in sorted_types]
 
-    fig = plt.figure(figsize=(8.0, 3.5))
-    layout = bind_figure_region(fig, (0.10, 0.14, 0.98, 0.92))
-    left, right = layout.split_cols([1.2, 1.0], wspace=0.36)
+    fig = plt.figure(figsize=(5.0, 3.2))
+    layout = bind_figure_region(fig, (0.16, 0.20, 0.96, 0.90))
+    left, right = layout.split_cols([1.2, 1.0], wspace=0.42)
 
     # Panel (a): Per-type Pearson r bar chart
     ax = left.inset(right=0.02).add_axes(fig)
@@ -73,7 +73,7 @@ def plot_pseudobulk_validation(output_dir=None, dpi=300):
     ax.barh(range(n_types), pearson_vals, color=colors, height=0.7,
             edgecolor="white", linewidth=0.3)
     ax.set_yticks(range(n_types))
-    ax.set_yticklabels(thin_labels, fontsize=7)
+    ax.set_yticklabels(thin_labels, fontsize=10)
     ax.invert_yaxis()
     ax.axvline(median_r, color="#555", linestyle="--", linewidth=1.2,
                label=f"Median = {median_r:.3f}")
@@ -81,7 +81,7 @@ def plot_pseudobulk_validation(output_dir=None, dpi=300):
                alpha=0.5, label="r = 0.8")
     ax.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="lower right")
     style_axes(ax, "bar", xlabel="Pseudobulk Pearson r",
-               title="Per-Type Pseudobulk Correlation")
+               title="Per-Type Pseudobulk Corr.")
 
     # Panel (b): Summary statistics box
     ax2 = right.inset(left=0.05, right=0.02).add_axes(fig)
@@ -98,27 +98,30 @@ def plot_pseudobulk_validation(output_dir=None, dpi=300):
     # Disable scientific notation on x-axis (values close to 1.0)
     ax2.xaxis.get_major_formatter().set_useOffset(False)
     ax2.ticklabel_format(axis='x', useOffset=False, style='plain')
+    # Limit x-axis ticks to avoid crowding in narrow numeric range
+    import matplotlib.ticker as ticker
+    ax2.xaxis.set_major_locator(ticker.MaxNLocator(nbins=3))
     # Rotate x-tick labels to avoid overlap (values are very close together near 1.0)
-    ax2.tick_params(axis='x', rotation=40)
+    ax2.tick_params(axis='x', rotation=35)
     for label in ax2.get_xticklabels():
         label.set_ha('right')
-        label.set_fontsize(7)
+        label.set_fontsize(10)
 
-    # Summary text — positioned to avoid overlap with legend
+    # Summary text — placed in lower-left to avoid overlapping tall histogram bars
     s = summary
     text = (f"n = {s['n_types_evaluated']} types\n"
             f"r > 0.9: {s['pct_pearson_gt_0.9']:.0f}%\n"
             f"r > 0.8: {s['pct_pearson_gt_0.8']:.0f}%")
-    ax2.text(0.97, 0.60, text, transform=ax2.transAxes,
-             ha="right", va="top", fontsize=FONT_SMALL,
+    ax2.text(0.03, 0.35, text, transform=ax2.transAxes,
+             ha="left", va="top", fontsize=FONT_SMALL,
              color=COLORS["neutral"])
 
-    ax2.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="upper left")
+    ax2.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="upper right")
     style_axes(ax2, "default", xlabel="Pearson r", ylabel="Count",
-               title="Distribution of Pseudobulk Correlations")
+               title="Pseudobulk Correlation Dist.")
 
     fig_path = output_dir / "figS02a_pseudobulk_validation"
-    save_with_vcd(fig, fig_path, dpi=dpi, layout_rect=(0.08, 0.06, 0.98, 0.94))
+    save_with_vcd(fig, fig_path, dpi=dpi, layout_rect=(0.10, 0.08, 0.97, 0.93))
     plt.close()
     logger.info(f"Saved: {fig_path}")
     return fig_path

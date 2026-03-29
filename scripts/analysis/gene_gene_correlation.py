@@ -221,10 +221,12 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
             else f"Mean 95% CI: [{ci_lo:.3f}, {ci_hi:.3f}]\n"
                  f"Null mean: {null_mean:.3f}",
             transform=ax.transAxes, ha="left", va="top",
-              fontsize=FONT_SMALL, color=COLORS["neutral"])
+              fontsize=FONT_SMALL, color=COLORS["neutral"],
+            bbox=dict(boxstyle="round,pad=0.25", facecolor="white", alpha=0.85, edgecolor="none"))
 
-    ax.legend(fontsize=FONT_ANNOTATION - 1, frameon=False,
-              loc="upper right")
+    ax.legend(fontsize=FONT_ANNOTATION - 1, frameon=True,
+              framealpha=0.85, edgecolor="none",
+              loc="upper right", bbox_to_anchor=(0.99, 0.98))
     style_axes(ax, "default",
                xlabel="Upper-triangle Pearson r (real vs. gen corr. matrix)",
                ylabel="Density",

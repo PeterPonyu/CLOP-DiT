@@ -19,16 +19,17 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-# Single source of truth: 22 article-facing component basenames (no suffix).
+# Single source of truth: 21 article-facing component basenames (no suffix).
 # Order matches the LaTeX \begin{figure} sequence in articles/clop_dit_genes.tex,
-# which determines the displayed Figure 1–9 plus Figure S1.
+# which determines the displayed Figure 1–9 plus Figures S1–S2.
 #
 # The manuscript now uses article-index-aware component names:
 #   Fig 1  -> fig01a_*, fig01b_*
 #   Fig 2  -> fig02a_*, fig02b_*
 #   ...
 #   Fig 9  -> fig09a_*, fig09b_*
-#   Fig S1 -> figS01a_*, figS01b_*, figS01c_*
+#   Fig S1 -> figS01_*
+#   Fig S2 -> figS02_*
 #
 # Both the generated source assets in results/figures/ and the delivered
 # article-facing assets use the same basenames so there is no second naming
@@ -63,15 +64,10 @@ _SOURCE_BASENAMES: List[str] = [
     # Main body display Figure 9
     "fig09a_variance_matching",
     "fig09b_gene_gene_correlation",
-    # Supplementary display Figure S1 (single composed float, three graphic assets)
-    "figS01a_robustness_ablation",
-    "figS01b_downstream_validation",
-    "figS01c_expression_decoder",
-    # Supplementary display Figure S2 (manuscript rescue — expression-level validation)
-    "figS02a_pseudobulk_validation",
-    "figS02b_failure_analysis",
-    "figS02c_field_ablation",
-    "figS02d_discriminator_analysis",
+    # Supplementary display Figure S1 (single Python-composed appendix figure)
+    "figS01_supplementary_validation",
+    # Supplementary display Figure S2 (single Python-composed appendix figure)
+    "figS02_expression_diagnostics",
 ]
 
 ARTICLE_FIGURE_BASENAMES: List[str] = list(_SOURCE_BASENAMES)
@@ -101,13 +97,8 @@ ARTICLE_FIGURE_PRODUCERS: List[Tuple[str, str]] = [
     ("fig08b_de_concordance", "src/visualization/fig18_de_concordance.py"),
     ("fig09a_variance_matching", "scripts/analysis/variance_matching_pilot.py"),
     ("fig09b_gene_gene_correlation", "scripts/analysis/gene_gene_correlation.py"),
-    ("figS01a_robustness_ablation", "src/visualization/figS1_robustness_ablation.py"),
-    ("figS01b_downstream_validation", "src/visualization/figS2_downstream_validation.py"),
-    ("figS01c_expression_decoder", "src/visualization/figS3_expression_decoder.py"),
-    ("figS02a_pseudobulk_validation", "src/visualization/fig19_pseudobulk.py"),
-    ("figS02b_failure_analysis", "src/visualization/fig20_failure_analysis.py"),
-    ("figS02c_field_ablation", "src/visualization/fig21_field_ablation.py"),
-    ("figS02d_discriminator_analysis", "src/visualization/fig22_discriminator.py"),
+    ("figS01_supplementary_validation", "src/visualization/figS01_supplementary_validation.py"),
+    ("figS02_expression_diagnostics", "src/visualization/figS02_expression_diagnostics.py"),
 ]
 
 _N_FIGURES = len(ARTICLE_FIGURE_BASENAMES)

@@ -62,12 +62,12 @@ _CATEGORY_COLORS = {
 # Panel (b) constants — multi-seed robustness
 # ---------------------------------------------------------------------------
 _SEED_METRICS = [
-    ("knn_top1", "kNN Top-1"),
-    ("knn_top5", "kNN Top-5"),
-    ("steering_accuracy", "Steering Acc"),
-    ("diversity_ratio", "Diversity Ratio"),
-    ("linear_accuracy", "Linear Acc"),
-    ("centroid_cosine", "Centroid Cos"),
+    ("knn_top1", "kNN-1"),
+    ("knn_top5", "kNN-5"),
+    ("steering_accuracy", "Steer."),
+    ("diversity_ratio", "DivR"),
+    ("linear_accuracy", "LinAcc"),
+    ("centroid_cosine", "Cen.Cos"),
     ("frechet_distance", "FD \u2193"),
 ]
 
@@ -169,17 +169,6 @@ def _draw_ablation_heatmap(fig: plt.Figure, region, ablation_path: Path) -> None
     ax.set_yticks(range(n_variants))
     ax.set_yticklabels(names, fontsize=FONT_TICK)
 
-    # Cell annotations
-    for i in range(n_variants):
-        for j in range(n_metrics):
-            val = data[i, j]
-            if np.isnan(val):
-                continue
-            color = "white" if norm_data[i, j] < 0.3 or norm_data[i, j] > 0.7 else "black"
-            fmt = ".3f" if val < 10 else ".1f"
-            ax.text(j, i, f"{val:{fmt}}", ha="center", va="center",
-                    fontsize=FONT_ANNOTATION, color=color)
-
     # Category colour markers on left
     for i, cat in enumerate(categories):
         color = _CATEGORY_COLORS.get(cat, COLORS["neutral"])
@@ -196,12 +185,12 @@ def _draw_ablation_heatmap(fig: plt.Figure, region, ablation_path: Path) -> None
                    markersize=6, label=cat.capitalize())
         for cat, c in seen.items()
     ]
-    ax.legend(handles=legend_handles, loc="lower right",
+    ax.legend(handles=legend_handles, loc="upper left",
               ncol=1, fontsize=FONT_LEGEND_DENSE, frameon=True,
-              facecolor="white", edgecolor="none", framealpha=0.85)
+              facecolor="white", edgecolor="none", framealpha=0.9)
 
     # Colorbar
-    cbar = fig.colorbar(im, ax=ax, shrink=0.6, pad=0.02)
+    cbar = fig.colorbar(im, ax=ax, shrink=0.6, pad=0.04)
     cbar.set_label("Normalized (higher = better)", fontsize=FONT_ANNOTATION)
 
     ax.set_title("CLOP Ablation Comparison", fontsize=FONT_TITLE, fontweight="normal", pad=8)
@@ -258,7 +247,7 @@ def _draw_multi_seed(fig: plt.Figure, region, report_path: Path) -> None:
     ax.set_xticklabels([label for _, label in _SEED_METRICS], rotation=0, ha="center",
                        fontsize=FONT_TICK)
     ax.set_ylabel("Score", fontsize=FONT_LABEL)
-    ax.set_ylim(0, 1.15)  # cap y-axis so outliers don't dominate
+    ax.set_ylim(0, 1.05)  # cap y-axis so outliers don't dominate
     ax.legend(fontsize=FONT_LEGEND_DENSE, loc="upper right", frameon=False)
     style_axes(ax)
 
@@ -267,8 +256,8 @@ def _draw_multi_seed(fig: plt.Figure, region, report_path: Path) -> None:
         for bar in bar_group:
             if bar is None or not hasattr(bar, 'get_height'):
                 continue
-            if bar.get_height() > 1.15:
-                ax.text(bar.get_x() + bar.get_width() / 2, 1.12,
+            if bar.get_height() > 1.05:
+                ax.text(bar.get_x() + bar.get_width() / 2, 1.02,
                         f"{bar.get_height():.1f}",
                         ha="center", va="top", fontsize=FONT_ANNOTATION,
                         color="white", fontweight="bold")
@@ -280,7 +269,7 @@ def _draw_multi_seed(fig: plt.Figure, region, report_path: Path) -> None:
             transform=ax.transAxes, ha="right", va="bottom",
             fontsize=FONT_LEGEND_DENSE, color=COLORS["neutral"])
 
-    ax.set_title("Multi-Seed Generation Robustness", fontsize=FONT_TITLE, fontweight="normal", pad=8)
+    ax.set_title("Multi-Seed Robustness", fontsize=FONT_TITLE, fontweight="normal", pad=8)
     add_panel_label(ax, "b", x=-0.10, y=1.04)
 
 
@@ -310,58 +299,74 @@ def _draw_ood_showcase(fig: plt.Figure, region, ood_path: Path) -> None:
         add_panel_label(ax, "c", x=-0.10, y=1.04)
         return
 
-    # Split region into left (novel types) and right (free-form)
-    left, right = region.split_cols([1, 1], wspace=0.08)
+    # Split region into left (novel types) and right (free-form). The right
+    # side needs extra width because free-form prompt IDs are longer and were
+    # colliding with the description column at article scale.
+    left, right = region.split_cols([0.98, 1.22], wspace=0.10)
 
     # ── Left: Novel cell types ──
     ax_l = left.add_axes(fig)
-    ax_l.set_xlim(0, 10)
+    ax_l.set_xlim(0, 11.5)
     ax_l.set_ylim(-1.2, max(len(novel_types), 1) - 0.5)
     ax_l.invert_yaxis()
     ax_l.axis("off")
 
     # Header
-    ax_l.text(0.0, -1.0, "Cell Type", fontsize=FONT_LABEL, fontweight="medium", va="center")
-    ax_l.text(4.5, -1.0, "Prompt Excerpt", fontsize=FONT_LABEL, fontweight="medium", va="center")
+    ax_l.text(0.0, -1.0, "Cell Type", fontsize=FONT_LABEL + 1, fontweight="medium", va="center")
+    ax_l.text(5.1, -1.0, "Prompt Excerpt", fontsize=FONT_LABEL + 1, fontweight="medium", va="center")
 
     for i, (type_name, info) in enumerate(novel_types.items()):
         prompt = info.get("prompt", "")
-        excerpt = prompt[:50] + "\u2026" if len(prompt) > 50 else prompt
-        ax_l.text(0.0, i, type_name, fontsize=FONT_TICK, va="center",
+        excerpt = prompt[:58] + "\u2026" if len(prompt) > 58 else prompt
+        ax_l.text(0.0, i, type_name, fontsize=FONT_LABEL, va="center",
                   color=COLORS["real"], fontweight="medium")
-        ax_l.text(4.5, i, excerpt, fontsize=FONT_ANNOTATION, va="center",
+        ax_l.text(5.1, i, excerpt, fontsize=max(FONT_TICK - 1, 8), va="center",
                   color=COLORS["annotation_dark"], style="italic")
         if i < len(novel_types) - 1:
             ax_l.axhline(y=i + 0.5, color=COLORS["border_light"], linewidth=0.5,
                          xmin=0, xmax=1)
 
-    ax_l.set_title("Novel Cell Types", fontsize=FONT_TITLE - 1, fontweight="normal", pad=10)
+    ax_l.set_title("Novel Cell Types", fontsize=FONT_TITLE, fontweight="normal", pad=10)
 
     # ── Right: Free-form prompts ──
     ax_r = right.add_axes(fig)
-    ax_r.set_xlim(0, 10)
+    ax_r.set_xlim(0, 12.8)
     n_ff = max(len(free_form), 1)
     ax_r.set_ylim(-1.2, n_ff - 0.5)
     ax_r.invert_yaxis()
     ax_r.axis("off")
 
-    ax_r.text(0.0, -1.0, "Prompt ID", fontsize=FONT_LABEL, fontweight="medium", va="center")
-    ax_r.text(3.5, -1.0, "Free-form Description", fontsize=FONT_LABEL, fontweight="medium",
+    ax_r.text(0.0, -1.0, "Prompt ID", fontsize=FONT_LABEL + 1, fontweight="medium", va="center")
+    ax_r.text(4.6, -1.0, "Free-form Description", fontsize=FONT_LABEL + 1, fontweight="medium",
               va="center")
+
+    style_aliases = {
+        "informal cd8": "CD8",
+        "informal macrophage": "Macrophage",
+        "informal stem": "Stem/prog.",
+        "informal neuron": "Neuron",
+        "expert sergio": "Expert note",
+        "question style": "Q&A",
+        "shorthand nk": "NK",
+        "clinical note style": "Clinical note",
+    }
 
     for i, (prompt_id, info) in enumerate(free_form.items()):
         ff_prompt = info.get("free_form_prompt", "")
-        excerpt = ff_prompt[:45] + "\u2026" if len(ff_prompt) > 45 else ff_prompt
+        excerpt = ff_prompt[:58] + "\u2026" if len(ff_prompt) > 58 else ff_prompt
         display_id = prompt_id.replace("_", " ")
-        ax_r.text(0.0, i, display_id, fontsize=FONT_TICK, va="center",
+        display_id = style_aliases.get(display_id, display_id.title())
+        if len(display_id) > 16:
+            display_id = display_id[:14] + "\u2026"
+        ax_r.text(0.0, i, display_id, fontsize=max(FONT_TICK - 1, 8), va="center",
                   color=COLORS["generated"], fontweight="medium")
-        ax_r.text(3.5, i, excerpt, fontsize=FONT_ANNOTATION, va="center",
+        ax_r.text(4.6, i, excerpt, fontsize=max(FONT_TICK - 1, 8), va="center",
                   color=COLORS["annotation_dark"], style="italic")
         if i < len(free_form) - 1:
             ax_r.axhline(y=i + 0.5, color=COLORS["border_light"], linewidth=0.5,
                          xmin=0, xmax=1)
 
-    ax_r.set_title("Free-form Prompts", fontsize=FONT_TITLE - 1, fontweight="normal", pad=10)
+    ax_r.set_title("Free-form Prompts", fontsize=FONT_TITLE, fontweight="normal", pad=10)
 
     # Overall panel label on left sub-panel
     add_panel_label(ax_l, "c", x=-0.10, y=1.04)
@@ -402,13 +407,13 @@ def plot_robustness_ablation(
     seed_path = Path("results/multi_seed/multi_seed_report.json")
     ood_path = Path("results/ood_evaluation/ood_results.json")
 
-    # Create figure — height sized for three rows with adequate inter-row gaps
-    fig = plt.figure(figsize=(16, 12.5))
+    # Create figure — height sized for three rows with tighter inter-row gaps
+    fig = plt.figure(figsize=(10.0, 7.5))
 
     # Divide figure into three rows: heatmap (tall), bars (medium), table (medium)
-    # Increased inter-row gaps to prevent x-axis labels overlapping titles below
-    layout = bind_figure_region(fig, (0.12, 0.04, 0.96, 0.96))
-    row_a, row_b, row_c = layout.split_rows([1.28, 0.94, 0.84], gap=0.10)
+    # Gap increased to prevent cross-row text overlaps at article scale
+    layout = bind_figure_region(fig, (0.14, 0.06, 0.96, 0.95))
+    row_a, row_b, row_c = layout.split_rows([1.28, 0.94, 0.84], gap=0.12)
 
     # Draw each panel
     _draw_ablation_heatmap(fig, row_a, ablation_path)

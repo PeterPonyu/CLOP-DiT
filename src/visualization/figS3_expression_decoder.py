@@ -27,12 +27,9 @@ import numpy as np
 from .direct_layout import bind_figure_region
 from .style import (
     COLORS,
-    FONT_ANNOTATION,
     FONT_LABEL,
     FONT_LEGEND,
-    FONT_LEGEND_DENSE,
     FONT_TICK,
-    FONT_TICK_DENSE,
     FONT_TITLE,
     add_panel_label,
     apply_style,
@@ -101,15 +98,15 @@ def _panel_a(ax: plt.Axes, real_var: np.ndarray, gen_var: np.ndarray) -> None:
     ax.set_yscale("log")
     ax.set_xlim(lo, hi)
     ax.set_ylim(lo, hi)
-    ax.set_xlabel("Real per-gene variance", fontsize=FONT_LABEL)
-    ax.set_ylabel("Generated per-gene variance", fontsize=FONT_LABEL)
+    ax.set_xlabel("Real variance", fontsize=FONT_LABEL)
+    ax.set_ylabel("Gen. variance", fontsize=FONT_LABEL)
     ax.set_title("Variance Scatter", fontsize=FONT_TITLE, fontweight="normal")
-    ax.tick_params(labelsize=FONT_TICK_DENSE)
+    ax.tick_params(labelsize=FONT_TICK)
 
     ax.text(
         0.05, 0.93,
         f"r = {r:.3f}\nn = {valid.sum()} genes",
-        transform=ax.transAxes, fontsize=FONT_LEGEND_DENSE,
+        transform=ax.transAxes, fontsize=FONT_LEGEND,
         va="top", color=COLORS.get("annotation_dark", "#333"),
     )
 
@@ -134,15 +131,15 @@ def _panel_b(ax: plt.Axes, real_var: np.ndarray, gen_var: np.ndarray) -> None:
     ax.text(
         0.97, 0.93,
         f">2-fold deficit: {frac_deficit:.1%}\nof {valid.sum()} genes",
-        transform=ax.transAxes, fontsize=FONT_LEGEND_DENSE,
+        transform=ax.transAxes, fontsize=FONT_LEGEND,
         va="top", ha="right", color=COLORS.get("annotation_dark", "#333"),
     )
 
     ax.set_xlabel(r"$\log_2$(var$_{\rm gen}$ / var$_{\rm real}$)", fontsize=FONT_LABEL)
     ax.set_ylabel("Gene count", fontsize=FONT_LABEL)
     ax.set_title("Variance Ratio Distribution", fontsize=FONT_TITLE, fontweight="normal")
-    ax.tick_params(labelsize=FONT_TICK_DENSE)
-    ax.legend(fontsize=FONT_LEGEND_DENSE, frameon=False, loc="upper left")
+    ax.tick_params(labelsize=FONT_TICK)
+    ax.legend(fontsize=FONT_LEGEND, frameon=False, loc="upper left")
 
     style_axes(ax)
 
@@ -171,21 +168,10 @@ def _panel_c(ax: plt.Axes, data: dict) -> None:
     # Horizontal dashed line at 0
     ax.axhline(0, color=COLORS.get("neutral", "#999"), ls="--", lw=1.0)
 
-    # Annotate values inside bars (to prevent cross-panel spillover)
-    for b, val in zip(bars, delta_f1):
-        ax.text(
-            b.get_x() + b.get_width() / 2,
-            b.get_height() * 0.5,
-            f"{val:+.4f}",
-            ha="center", va="center", fontsize=FONT_ANNOTATION,
-            color="black",
-            clip_on=True,
-        )
-
     ax.set_xticks(x)
     ax.set_xticklabels(ratios, fontsize=FONT_TICK)
     ax.set_xlabel("Augmentation ratio", fontsize=FONT_LABEL)
-    ax.set_ylabel(r"$\Delta$ F1 (augmented $-$ baseline)", fontsize=FONT_LABEL)
+    ax.set_ylabel(r"$\Delta$ F1", fontsize=FONT_LABEL)
     ax.set_title("Embedding Augmentation", fontsize=FONT_TITLE, fontweight="normal")
 
     style_axes(ax)
@@ -210,7 +196,7 @@ def _panel_d(ax: plt.Axes, metrics: dict, approaches: list[str]) -> None:
     ax.bar(x + w / 2, gen_vals, w, color=colors, edgecolor="none")
 
     ax.set_xticks(x)
-    ax.set_xticklabels(labels, fontsize=FONT_TICK)
+    ax.set_xticklabels(labels, fontsize=FONT_TICK, rotation=25, ha="right")
     ax.set_ylabel("Per-gene std", fontsize=FONT_LABEL)
     ax.set_title("Decoder Comparison", fontsize=FONT_TITLE, fontweight="normal")
 
@@ -221,8 +207,8 @@ def _panel_d(ax: plt.Axes, metrics: dict, approaches: list[str]) -> None:
             Patch(facecolor=APPROACH_COLORS.get(a, "#999"),
                   label=f"Gen: {APPROACH_LABELS.get(a, a)}")
         )
-    ax.legend(handles=legend_handles, fontsize=FONT_LEGEND_DENSE, frameon=False,
-              loc="upper right")
+    ax.legend(handles=legend_handles, fontsize=FONT_LEGEND, frameon=False,
+              loc="upper left", ncol=2)
 
     style_axes(ax)
 
@@ -294,13 +280,13 @@ def plot_expression_decoder(
     # scale (~0.40x) matches figS01a at 0.96\textwidth with figsize=16.
     _S3_LABEL_SIZE = 14  # standard size — matches figS01a at same effective scale
 
-    fig = plt.figure(figsize=(8, 6.5))
-    # Wider left margin and adequate gaps for log-scale ticks
-    layout = bind_figure_region(fig, (0.14, 0.10, 0.96, 0.93))
-    row_top, row_bot = layout.split_rows([1, 1], gap=0.24)
+    fig = plt.figure(figsize=(6.0, 5.5))
+    # Wider left margin for log-scale y-axis labels
+    layout = bind_figure_region(fig, (0.15, 0.12, 0.96, 0.94))
+    row_top, row_bot = layout.split_rows([1, 1], gap=0.34)
 
-    col_a, col_b = row_top.split_cols([1, 1], wspace=0.30)
-    col_c, col_d = row_bot.split_cols([1, 1], wspace=0.30)
+    col_a, col_b = row_top.split_cols([1, 1], wspace=0.44)
+    col_c, col_d = row_bot.split_cols([1, 1], wspace=0.44)
 
     _LBL_Y = 1.05
 
