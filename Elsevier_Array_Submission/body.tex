@@ -1,63 +1,4 @@
-%% Submissions for peer-review must enable line-numbering
-%% using the lineno option in the \documentclass command.
-%%
-%% Camera-ready submissions do not need line numbers, and
-%% should have this option removed.
-
-\documentclass[fleqn,10pt,lineno]{wlpeerj}
-
-% Additional packages needed for this manuscript
-\usepackage{longtable}
-\usepackage{tabularx}
-\usepackage{placeins}       % \FloatBarrier
-\usepackage{float}          % [H] float placement
-\usepackage{multirow}
-\usepackage{array}
-\usepackage{url}
-\usepackage{hyperref}
-
-% Define the C column type (centered, equal-width) used in MDPI tables
-\newcolumntype{C}{>{\centering\arraybackslash}X}
-
-% Reduce float spacing for tighter layout
-\setlength{\textfloatsep}{8pt plus 2pt minus 2pt}
-\setlength{\floatsep}{8pt plus 2pt minus 2pt}
-\setlength{\intextsep}{8pt plus 2pt minus 2pt}
-
-% Allow more aggressive float placement
-\renewcommand{\topfraction}{0.95}
-\renewcommand{\bottomfraction}{0.85}
-\renewcommand{\textfraction}{0.05}
-\renewcommand{\floatpagefraction}{0.8}
-
-\title{CLOP-DiT: Text-Conditioned Single-Cell Latent Generation via Contrastive Language-Omics Pretraining and Diffusion Transformers}
-
-\author[1]{Zeyu Fu\textsuperscript{*$\dagger$}}
-\author[2]{JianXu Zheng\textsuperscript{$\dagger$}}
-\author[3]{Jiawei Fu\textsuperscript{$\dagger$}}
-\affil[1]{State Key Laboratory of Trauma and Chemical Poisoning, Institute of Combined Injury, Chongqing Engineering Research Center for Nanomedicine, College of Preventive Medicine, Army Medical University, Chongqing 400038, China}
-\affil[2]{Chongqing Key Laboratory of Intelligent Diagnosis, Treatment and Rehabilitation of Central Nervous System Injuries, Southwest Hospital, Third Military Medical University (Army Medical University), Chongqing 400038, China}
-\affil[3]{Department of Orthopedics, Xinqiao Hospital, Army Medical University, Chongqing 400037, China}
-\corrauthor[1]{Zeyu Fu}{fuzeyu09@gmail.com}
-
-% Equal contribution footnote
-\newcommand{\equalcontrib}{\textsuperscript{$\dagger$}These authors contributed equally to this work.}
-
-\begin{abstract}
-Conditional generation in high-dimensional biological embedding spaces poses distinct computational challenges: tight inter-class cosine similarity ($>$0.99), many-to-one decoder mappings, and the need to balance sample fidelity against within-class diversity. We present CLOP-DiT, a modular three-stage framework that addresses these challenges through (1)~a prototype-aware contrastive aligner (CLOP) that projects frozen BiomedBERT text embeddings and scGPT cell embeddings into a shared 512-dimensional space with $130\times$ improved inter-class separation, (2)~a 1D Diffusion Transformer (DiT) that performs conditional flow matching in that latent space with group-aware variance and sliced covariance regularization, and (3)~a frozen scGPT decoder for downstream expression-level inspection. Conditioning follows a fixed five-field structured template (cell type, tissue, organism, marker genes, disease context) rather than free-form language. On 69 deduplicated cell types from 80 datasets (220,304 cells), classifier-free guidance provides a controllable fidelity--diversity trade-off: a high-fidelity regime (CFG\,=\,2.0) achieves 36.9\% KNN accuracy ($25\times$ chance) and 81.0\% steering, whereas a high-diversity regime (CFG\,=\,1.0) reaches a diversity ratio of 0.93 while retaining 80.7\% steering. Conditioning-field ablation and swap-label permutation tests confirm causal prompt dependence, with marker genes providing the strongest steering signal. Multi-seed validation shows inter-run standard deviations below 1 percentage point for steering and below 2 percentage points for diversity ratio. We also characterize current limitations: cross-dataset variance correlation near zero, discriminator AUC of 0.656, and negative rare-cell augmentation results. The modular architecture enables independent improvement of each stage, making CLOP-DiT a reusable framework for structured-text-conditioned generation in continuous latent spaces.
-\end{abstract}
-
-\begin{document}
-
-\flushbottom
-\maketitle
-\thispagestyle{empty}
-
-\noindent\equalcontrib\\
-Contributing authors: \href{mailto:zhengjianxu@tmmu.edu.cn}{zhengjianxu@tmmu.edu.cn}; \href{mailto:fjw813130855@163.com}{fjw813130855@163.com}
-\vspace{1em}
-
-\section*{Introduction}
+\section{Introduction}
 
 Conditional generation in continuous latent spaces has been widely studied for images and audio, yet applying these techniques to high-dimensional biological embeddings introduces distinct computational challenges. Foundation models such as scGPT~\citep{ref-scgpt} produce cell embeddings in which different cell types are separated by less than 1\% in mean pairwise cosine similarity, the decoder mapping from latent to expression space is many-to-one, and preserving within-class heterogeneity requires balancing fidelity against diversity under structured conditioning. Single-cell RNA sequencing (scRNA-seq) provides the data substrate for this problem~\citep{ref-scrnaseq-review,ref-10x}, but the generative modeling challenge is fundamentally algorithmic.
 
@@ -90,7 +31,7 @@ The main contributions are fourfold. First, we introduce a prototype-aware contr
 
 Across two primary operating regimes, CLOP-DiT reaches 36.9\% KNN accuracy ($25\times$ chance) and 81.0\% steering in a high-fidelity setting, whereas a high-diversity setting attains a diversity ratio of 0.93 at 80.7\% steering. The modular design means each stage can be improved independently, making the framework a reusable scaffold for structured-text-conditioned generation in tightly-packed embedding spaces.
 
-\section*{Materials and Methods}
+\section{Materials and Methods}
 
 Figure~\ref{fig:architecture} summarizes the full workflow. For clarity, the Materials and Methods are organized in three parts: (1) dataset curation, caption construction, and embedding preprocessing (\ref{sec:dataset}); (2) model architecture and training, covering CLOP alignment (\ref{sec:clop}), DiT generation (\ref{sec:dit}), and scGPT decoding (\ref{sec:decoding}); and (3) evaluation metrics, operating points, and statistical reporting (\ref{sec:evaluation}). This ordering follows the actual data flow from GEO-derived cells and structured captions to latent generation and downstream biological validation.
 
@@ -101,7 +42,7 @@ Figure~\ref{fig:architecture} summarizes the full workflow. For clarity, the Mat
 \caption{\textbf{CLOP-DiT pipeline overview and evaluation framework.} \textbf{(Top)} \textbf{Stage~1 (CLOP)} aligns structured text descriptions and scGPT cell embeddings in a shared 512-dimensional space after BiomedBERT whitening and projection. \textbf{Stage~2 (DiT)} performs conditional flow matching in scGPT latent space and generates a target latent from Gaussian noise using classifier-free guidance at inference. \textbf{Stage~3 (Decoding)} maps the generated latent back to gene expression through the frozen scGPT decoder. \textbf{(Bottom)} Evaluation pipeline schematic: data flow from raw datasets through deduplication, stratified splitting, scGPT encoding, PCA fitting (on real training split only), KNN classifier training, and metric computation. The common-metrics-only composite (9 shared distributional metrics) is the primary benchmark; bootstrap confidence intervals ($B{=}1{,}000$) are computed by resampling the 69 evaluation types.\label{fig:architecture}\label{fig:eval-pipeline}}
 \end{figure}
 
-\subsection*{Datasets and preprocessing}\label{sec:dataset}
+\subsection{Datasets and preprocessing}\label{sec:dataset}
 
 We curated 80 scRNA-seq datasets from the Gene Expression Omnibus (GEO), spanning cancer and developmental biology and totaling 220,304 cells after quality control and highly variable gene selection~\citep{ref-seurat,ref-hvg}. For each dataset, 2,000 highly variable genes were retained. Each cell was then encoded as a 512-dimensional embedding by a pre-trained scGPT model. Cell-type annotations were organized into 1,088 unique text groups, each represented by a structured caption rather than free-form prose. These captions combine cell type, marker genes, tissue of origin, organism, and disease context using the following template:
 \begin{quote}\small\ttfamily
@@ -121,7 +62,7 @@ The 80 datasets include both \textit{Homo sapiens} (59 datasets) and \textit{Mus
 \paragraph{Hardware and compute budget.}
 All training and evaluation were conducted on a single NVIDIA GeForce RTX~5090 Laptop GPU (24\,GB VRAM) using PyTorch~2.1 with CUDA~12.0 and automatic mixed precision (AMP/FP16). The total compute budget remains modest ($<$2 GPU-hours in aggregate, $<$24\,GB VRAM peak), so reproduction should be feasible on any Ampere-or-later GPU with at least 16\,GB VRAM. CLOP alignment training completes in minutes, DiT training in roughly an hour-scale run, and end-to-end figure regeneration from cached embeddings in under 30~minutes. No multi-GPU or distributed training was used. Inference for 69 cell types (approximately 6,900 generated cells) takes about 2~minutes with 10-step Euler integration.
 
-\subsection*{CLOP: Contrastive Language--Omics Pretraining}\label{sec:clop}
+\subsection{CLOP: Contrastive Language--Omics Pretraining}\label{sec:clop}
 
 CLOP aligns structured metadata descriptions and cell profiles in a shared 512-dimensional embedding space, producing the condition representation used by the DiT. A frozen BiomedBERT-large encoder maps captions to 1024-dimensional embeddings, and a frozen scGPT encoder maps cells to 512-dimensional embeddings. The production aligner uses dual three-layer MLP projectors (text: $1024 \to 1024 \to 1024 \to 512$; cell: $512 \to 512 \to 512 \to 512$) with LayerNorm, GELU activation~\citep{ref-gelu}, and dropout~\citep{ref-dropout} (0.2), followed by $L_2$ normalization onto the unit hypersphere. In the final configuration, duplicate captions within a mini-batch are masked so that cells sharing the same caption are not treated as false negatives.
 
@@ -143,7 +84,7 @@ with $\lambda_\text{coh}=0.15$, batch size $B$, and $\mathrm{sg}(\cdot)$ denotin
 
 The key output of CLOP is the projected condition space. Raw scGPT cell-type centroids have a mean pairwise cosine similarity of 0.994 (that is, cell types differ by only 0.6\% on average), whereas CLOP-projected conditions reduce this mean to 0.222, increasing inter-group separation by approximately $130\times$. That improvement is what makes conditional generation in the subsequent DiT stage feasible.
 
-\subsection*{DiT: Conditional Flow Matching with Diffusion Transformer}\label{sec:dit}
+\subsection{DiT: Conditional Flow Matching with Diffusion Transformer}\label{sec:dit}
 
 The Diffusion Transformer (DiT1D) reshapes each 512-dimensional cell embedding into 16 pseudo-tokens of dimension 32. The backbone comprises 8 AdaLN-Zero transformer blocks with 8-head self-attention and an MLP expansion ratio of 4.0, corresponding to feed-forward sublayers of size $512 \to 2048 \to 512$. Timestep information and CLOP condition vectors are each projected to 512 dimensions and combined by element-wise summation, so every block is modulated by a shared conditioning signal rather than by concatenated inputs. The model has 22.10M trainable parameters (Table~\ref{tab:architecture}).
 
@@ -166,11 +107,11 @@ To reduce mean-collapse, the production DiT adds two group-aware regularizers on
 \end{equation}
 with $\lambda_\text{var}=0.10$ and $\lambda_\text{cov}=0.05$. Here, $\mathcal{L}_\text{var}$ matches per-dimension variance within each caption group, and $\mathcal{L}_\text{cov}$ matches the variance of random projected views of real and reconstructed clean latents, providing a sliced approximation to covariance preservation. DiT is optimized with AdamW for a 300-epoch training run using EMA~\citep{ref-ema} (decay = 0.9999), cosine learning-rate decay with 5-epoch warmup, AMP, and gradient clipping at 1.0.
 
-\subsection*{Decoding via scGPT}\label{sec:decoding}
+\subsection{Decoding via scGPT}\label{sec:decoding}
 
 Generated latent vectors $z_1 \in \mathbb{R}^{512}$ are mapped back to gene expression using the frozen scGPT decoder. This stage is useful for downstream biological inspection, but it also imposes an important limitation: the decoder is many-to-one, so distinct latents near the training manifold can decode to similar expression profiles. We therefore treat latent-space metrics---KNN accuracy, steering, diversity ratio, and centroid cosine---as the primary indicators of generative quality, whereas expression-space analyses are interpreted as compatibility checks on the full pipeline rather than as direct measures of latent fidelity. Relaxing this bottleneck will require either decoder fine-tuning or a lightweight trainable adapter.
 
-\subsection*{Evaluation Framework}\label{sec:evaluation}
+\subsection{Evaluation Framework}\label{sec:evaluation}
 
 We evaluate CLOP-DiT along six axes using in-distribution conditions (the actual CLOP-projected text embeddings from training data):
 
@@ -191,7 +132,7 @@ The biological evidence is organized by figure family: Figures~\ref{fig:markers}
 
 Having established the methodology and evaluation framework, we now present the empirical results.
 
-\subsection*{Statistical Analysis}\label{sec:stats}
+\subsection{Statistical Analysis}\label{sec:stats}
 
 \textbf{Primary endpoints.} Two operating points were pre-specified as primary comparisons: CFG\,=\,2.0 with 10-step Euler integration (high-fidelity regime, selected because KNN accuracy plateaus at CFG 2.0--3.0 in Table~\ref{tab:cfg-sweep}; the lower end was chosen to minimize diversity loss) and CFG\,=\,1.0 with 10-step Midpoint integration (high-diversity regime, selected to match DivR\,$\approx$\,1.0). The primary metrics are KNN top-1 classification accuracy (69-class, $k{=}15$, cosine metric on PCA-50 features) and steering accuracy (pairwise directional test, 1000 random pairs).
 
@@ -203,7 +144,7 @@ Having established the methodology and evaluation framework, we now present the 
 
 \textbf{Limitations of the statistical design.} (1)~No formal pre-registration: operating points were selected based on interpretable criteria post-hoc rather than by pre-registered protocol; this study is therefore exploratory rather than confirmatory. (2)~No multiple-comparison correction for the exploratory CFG sweep.
 
-\subsection*{Composite Score Formulation}\label{sec:composite}
+\subsection{Composite Score Formulation}\label{sec:composite}
 
 The composite benchmark score aggregates all active metrics into a single ranking index. For each metric~$m$ with direction $d_m \in \{\text{lower}, \text{higher}\}$, let $v_{m,j}$ denote the raw value for method~$j$. We compute a min--max normalised score:
 \begin{equation}
@@ -221,7 +162,7 @@ where $k$ ranges over all methods that report a non-null value for~$m$; methods 
 \end{equation}
 Because not all methods support downstream biology (Section~\ref{sec:evaluation}, axis~6), they receive $s = 0$ on those metrics, which inflates the score of methods that do. In the current benchmark, 8 of 17 active metrics are reported only by CLOP-DiT; the remaining 9 distributional metrics are shared by all methods. \textbf{To enable fair like-for-like comparison, the common-metrics-only composite ($C_j^{\text{common}}$, restricted to the 9 shared distributional metrics) serves as the primary benchmark figure.} The full composite ($C_j$ over all $M = 17$ metrics) is reported as a supplementary capability ranking but should not be used for method comparison, as the 8 exclusive metrics structurally bias it in favor of CLOP-DiT. Table~\ref{tab:core-results} and the per-metric panels in Figure~\ref{fig:benchmark} report individual metrics for transparent comparison. Bootstrap 95\% confidence intervals (percentile method, $B{=}1{,}000$) for all headline generation metrics are provided in Table~\ref{tab:s5_bootstrap_ci} (Appendix~\ref{app:suppl-tables}).
 
-\section*{Results}\label{sec:results}
+\section{Results}\label{sec:results}
 
 We report in-distribution results along the six evaluation axes defined in the Methods, organized by evidence type:
 training dynamics and embedding space (Figure~\ref{fig:training});
@@ -232,7 +173,7 @@ baseline comparisons and benchmarking (Figure~\ref{fig:baselines});
 and downstream biological validation (Figure~\ref{fig:downstream-pq}).
 This structure allows readers to assess evidence quality at multiple resolutions, from training convergence through partial downstream biological utility.
 
-\subsection*{Training Dynamics and Embedding Space}
+\subsection{Training Dynamics and Embedding Space}
 
 Figure~\ref{fig:training} summarizes convergence across the two training stages. CLOP rapidly reduces alignment loss and steadily improves prototype-level separation, indicating that the whitened encoder embeddings and LayerNorm-based projectors yield a stable condition space rather than a collapsed contrastive solution. DiT training is similarly well behaved: validation velocity cosine rises sharply early and then improves more gradually under EMA averaging, consistent with reliable learning of the conditional velocity field.
 
@@ -245,7 +186,7 @@ The embedding visualizations (panels i--n) show the geometry induced by this pip
 \caption{\textbf{Training dynamics and embedding space analysis.} \emph{Training dynamics} (\textbf{a--d})~CLOP loss, inter-type cosine separation, batch accuracy, and embedding-quality metrics over the reported training run. (\textbf{e--h})~DiT train/validation loss, velocity cosine similarity, learning-rate schedule, and normalized convergence comparison. \emph{Embedding space} (\textbf{i--j})~CLOP-projected text and cell embeddings form aligned clusters in the shared space. (\textbf{k})~Cell-count distribution across types. (\textbf{l--n})~Real and generated scGPT embeddings occupy overlapping but distinguishable regions.\label{fig:training}\label{fig:embedding-space}}
 \end{figure}
 
-\subsection*{Core Evaluation Metrics}
+\subsection{Core Evaluation Metrics}
 
 Table~\ref{tab:core-results} and Figure~\ref{fig:metrics} summarize performance across representative generation settings. In the high-fidelity regime (CFG = 2.0, 10-step Euler), CLOP-DiT achieves a KNN top-1 accuracy of 36.9\% ($25\times$ random chance of 1.45\%; 52 percentage points below the 89\% real-data baseline), KNN top-5 of 55.3\%, steering accuracy of 81.0\%, and linear classifier accuracy of 51.1\%. The unconditional control ($s{=}0$) collapses to chance-level type specificity (KNN = 1.0\%, steering = 47.5\%), confirming that prompt conditioning rather than the sampler or decoder alone drives the observed structure. Fr\'{e}chet distance (FD) is reported for completeness, but because it rewards global moment matching even when conditioning is ignored, we interpret it only as a secondary distributional diagnostic.
 
@@ -279,7 +220,7 @@ Random chance    & 0.010 & ---   & 0.500 & ---   & ---   & ---  \\
 
 \textbf{Bootstrap confidence intervals.} To quantify evaluation sampling uncertainty, we computed bootstrap 95\% CIs by resampling the 69 cell types in the generation cache with replacement ($B{=}1{,}000$, percentile method). All 69 deduplicated types have both real and generated cells, so the bootstrap covers the full evaluation set consistently. At an intermediate reference configuration (CFG = 1.5, Midpoint, 20 steps; selected to balance fidelity and diversity between the two primary operating points): KNN top-1 = 0.509 [0.421, 0.586], KNN top-5 = 0.728 [0.658, 0.794], steering = 1.000 [1.000, 1.000] (\textbf{ceiling effect}: all bootstrap resamples achieve perfect pairwise accuracy at this configuration, indicating that the steering metric saturates at moderate-to-high CFG and becomes non-discriminative; this ceiling limits the interpretability of steering differences across configurations), diversity ratio = 0.969 [0.963, 0.974], linear accuracy = 0.583 [0.518, 0.646], and centroid cosine = 0.898 [0.875, 0.913]. The narrow diversity ratio and centroid cosine CIs reflect uniformly high performance across types; the wider KNN CIs reflect type-dependent classification difficulty. These CIs capture evaluation sampling variability; inter-run variance across three training seeds is reported separately in Table~\ref{tab:multi-seed}.
 
-\subsection*{Multi-Seed Validation}\label{sec:multi-seed-results}
+\subsection{Multi-Seed Validation}\label{sec:multi-seed-results}
 
 To quantify inter-run variance from stochastic initialization, data shuffling, and mini-batch ordering, we trained three independent CLOP + DiT pipelines (seeds 42, 123, 456) with identical hyperparameters and evaluated each under both operating regimes (Table~\ref{tab:multi-seed}).
 
@@ -305,11 +246,11 @@ Centroid Cos.  & $0.892 \pm 0.012$ & [0.878, 0.900] & $0.892 \pm 0.010$ & [0.880
 
 Inter-run standard deviations are small relative to effect sizes: steering accuracy varies by $< 1$ percentage point ($\sigma = 0.009$), diversity ratio by $< 2$ percentage points ($\sigma = 0.015$--$0.016$), and centroid cosine by $\sim 1\%$ ($\sigma = 0.010$--$0.012$). KNN top-1 accuracy exhibits the largest inter-seed variance ($\sigma = 0.082$ in the high-fidelity regime), reflecting the sensitivity of nearest-neighbor classification to the decision boundary in the tightly-packed scGPT embedding space. Critically, the qualitative conclusions---$25\times$ above random chance, $\sim$52-point gap from real data, near-ideal diversity at CFG\,=\,1.0---are stable across all three seeds.
 
-\subsection*{Per-Type Generation Quality and Text--Cell Alignment}
+\subsection{Per-Type Generation Quality and Text--Cell Alignment}
 
 Beyond aggregate metrics, per-type analysis reveals which cell types benefit most from text conditioning and where failures concentrate. Figure~\ref{fig:per-type-gen} presents per-type generation quality and text--cell alignment. The enhanced per-type analysis now makes heterogeneity explicit: centroid cosine is ranked across all 69 deduplicated cell types; the Fr\'echet profile highlights outlier types rather than only reporting the mean, and the abundance--fidelity scatter encodes Fr\'echet distance as bubble size and diversity ratio as color. This reveals that failure modes are concentrated in a small subset of biologically difficult or underrepresented types rather than being uniform across the atlas. The text--cell alignment analysis (panels h--j) confirms that generated cells remain most similar to their intended text condition despite these type-specific differences.
 
-\subsection*{Gene-Level Fidelity}
+\subsection{Gene-Level Fidelity}
 
 A key question for conditional generation is whether cell-type-specific marker gene signatures and gene-level expression statistics are preserved. Figure~\ref{fig:gene-fidelity} addresses this at two levels: marker-gene comparison (top) confirms that CLOP-DiT preserves cell-type-specific expression signatures, while per-gene correlation analysis (bottom) localizes fidelity in gene-wise means and marker-level residuals. Figure~\ref{fig:expr-analysis} provides a broader view of expression distribution properties, including per-gene coefficient of variation and per-cell variability.
 
@@ -327,7 +268,7 @@ A key question for conditional generation is whether cell-type-specific marker g
 \caption{\textbf{Expression distribution analysis and conditioning landscape.} \textbf{(Top)} (\textbf{a})~Per-gene coefficient-of-variation scatter (real vs.\ generated) with abbreviated outlier callouts moved to the panel margin. (\textbf{b})~Expression-range ribbons. (\textbf{c})~Per-cell variability distributions. (\textbf{d})~Top variable genes ranked by standard-deviation ratio. \textbf{(Bottom)} (\textbf{e})~PCA projection of real and generated cells under three conditioning modes (centroid, noisy, variant); the shared cell-type legend is placed beneath the panel set to keep the scatter axes clear. (\textbf{f})~Mean centroid shift per mode. (\textbf{g})~Within-type diversity by mode relative to the real baseline. (\textbf{h})~Per-type centroid shift distributions. (\textbf{i})~KNN-5 identity-preservation accuracy. (\textbf{j})~Per-type diversity heatmap ($1 - \text{mean cosine}$). (\textbf{k})~Pairwise cosine violin plots comparing cluster tightness across modes.\label{fig:expr-analysis}\label{fig:cond-umap}}
 \end{figure}
 
-\subsection*{Conditioning Landscape and Diversity Trade-Offs}
+\subsection{Conditioning Landscape and Diversity Trade-Offs}
 
 \noindent After establishing headline fidelity metrics, we next ask how controllable the generator is and how much diversity is sacrificed as guidance increases.
 
@@ -349,7 +290,7 @@ Figure~\ref{fig:diversity} breaks this trade-off into interpretable diagnostics 
 \caption{\textbf{Expression-level diversity, baseline comparison, and composite benchmark.} \textbf{(Top)} (\textbf{a})~Gene-expression variability summary (real vs.\ generated). (\textbf{b})~Per-type gene standard-deviation ratio. \textbf{(Middle)} (\textbf{c})~Head-to-head grouped-bar analysis across four evaluation metrics. (\textbf{d})~Ranked normalised scores per method. (\textbf{e})~Absolute metric delta of CLOP-DiT relative to each baseline. \textbf{(Bottom)} (\textbf{f})~Normalized metrics heatmap (methods $\times$ metrics). (\textbf{g})~Composite score (solid = common-metrics-only; hatched = full). \textbf{Warning: the full composite is structurally biased}; the common-metrics-only bars are the fair comparison. (\textbf{h})~Grouped comparison of four interpretable metrics. (\textbf{i})~95\% bootstrap confidence intervals.\label{fig:expr-diversity}\label{fig:baselines}\label{fig:benchmark}}
 \end{figure}
 
-\subsection*{Baseline Comparison and Composite Benchmark}
+\subsection{Baseline Comparison and Composite Benchmark}
 
 \noindent We benchmark CLOP-DiT against both simple parametric controls (Gaussian per-type sampling, shuffled-label controls, mean-collapse baselines) and learned generative models (scVI Latent, scGen, EmbeddingVAE).
 
@@ -357,7 +298,7 @@ CLOP-DiT is compared against unconditional generation (CFG = 0), Gaussian sampli
 
 Figure~\ref{fig:benchmark} aggregates these results into a composite score across eight methods. \textbf{On the nine distributional metrics shared by all methods---the primary fair comparison---the Gaussian baseline (0.747) slightly exceeds CLOP-DiT (0.694)}, showing that simple mean-matching approaches remain competitive when evaluation ignores condition-sensitive biology. The scGen baseline (common-metrics composite 0.425) achieves the best \emph{coverage} among the learned baselines (0.384 vs.\ 0.028 for CLOP-DiT), reflecting the flexibility of its label-conditioned VAE latent space. When the eight downstream biology metrics reported only by CLOP-DiT are included, the full composite rises to 0.838 versus 0.395 for Gaussian and 0.225 for scGen; however, this full score is structurally biased in favor of CLOP-DiT and \textbf{should not be used for method ranking}. We therefore treat the common-metrics-only composite as the main benchmark and the full composite as a supplementary capability summary.
 
-\subsection*{Downstream Biological Validation}
+\subsection{Downstream Biological Validation}
 
 Beyond distributional metrics, we evaluate whether generated cells are usable in standard single-cell analysis workflows. These analyses are implemented from matched real/generated AnnData objects with shared preprocessing and use Scanpy~\citep{ref-scanpy} for the single-cell workflow, ensuring that any downstream advantage is not caused by mismatched feature engineering. Two downstream tasks are assessed on real and generated cells jointly:
 
@@ -374,7 +315,7 @@ Beyond distributional metrics, we evaluate whether generated cells are usable in
 
 Together, these results establish that CLOP-DiT generates text-conditioned single-cell profiles with measurable type specificity, though with performance trade-offs between fidelity and diversity that depend on the operating regime.
 
-\subsection*{In-Distribution Expression-Level Validation}\label{sec:cross-dataset}
+\subsection{In-Distribution Expression-Level Validation}\label{sec:cross-dataset}
 
 To assess biological fidelity across tissue contexts, we performed expression-level validation on five datasets (Table~\ref{tab:s4_biovalidation}) spanning lung adenocarcinoma (GSE123902), basal cell carcinoma (GSE123813), liver T-cell hepatocellular carcinoma (GSE98638), gastric cancer (GSE183904), and acute lymphoblastic leukemia in bone marrow (GSE132509). Four of these five datasets (GSE123902, GSE123813, GSE98638, GSE132509) are from the training split; only GSE183904 is among the 8 held-out validation studies (Table~S2). This analysis therefore primarily evaluates in-distribution gene-level reconstruction fidelity rather than out-of-distribution generalization. For each dataset, cells were generated conditioned on the dataset-specific text descriptions and compared with real (scGPT-reconstructed) expression profiles; because both the generated and reference expressions are decoded by the same frozen scGPT decoder, the resulting correlations measure decoder-reconstructed fidelity rather than agreement with raw sequencing counts. Per-gene mean expression, gene-level variance, and Fr\'{e}chet distance in both gene space and embedding space were computed for each dataset independently (Table~\ref{tab:cross-dataset}).
 
@@ -397,7 +338,7 @@ GSE132509 & Blood (ALL)  & Train & 0.9993 & 0.9985 & $-$0.007  & $8.87 \times 10
 
 Across all five datasets, per-gene mean expression Pearson correlation exceeds 0.999 and $R^2$ exceeds 0.998. Because both reference and generated profiles pass through the same frozen scGPT decoder, these correlations reflect decoder-reconstructed fidelity rather than absolute biological accuracy against raw counts. However, per-gene variance correlation ($r_\text{var}$) is near zero across all datasets (range: $-0.019$ to $+0.013$), indicating that the model reproduces mean expression accurately but does not preserve gene-level variability---consistent with the flow-matching mean-regression bias. Embedding-space FD (62.1--155.4) is substantially higher than gene-space FD ($<10^{-4}$), reflecting the many-to-one decoder mapping.
 
-\subsection*{CLOP Ablation Study}\label{sec:ablation}
+\subsection{CLOP Ablation Study}\label{sec:ablation}
 
 To validate the contribution of individual CLOP components, we conducted 15 ablation experiments, removing or modifying one component at a time while holding all other settings constant. Table~\ref{tab:ablation} summarizes the six most informative ablations.
 
@@ -421,11 +362,11 @@ High variant prob   & regularization & 70.14 & $-$6.03 \\
 
 The two most impactful ablations are cohesion regularization removal ($+$10.24~pp) and cell noise augmentation removal ($+$10.07~pp), both of which improve prototype accuracy. This counterintuitive result has the following mechanistic explanation: both cohesion loss and cell noise augmentation act as within-group tightening forces that penalize intra-cluster variance. In a contrastive learning regime where the primary bottleneck is inter-group separation (raw pairwise cosine 0.994), these tightening forces compete with the alignment gradient rather than complementing it. In effect, the network spends representational capacity enforcing tight within-group clusters before inter-group margins have been established, diverting training signal from the discrimination task. Removing these terms allows the optimizer to focus entirely on inter-group separation, which is the binding constraint at this scale. This interpretation is consistent with recent analyses of regularization--discrimination trade-offs in contrastive learning~\citep{ref-siglip}. Architecture ablations (projection dimension 256 vs.\ 512 vs.\ 768) have minimal impact (within $\pm$0.3~pp), indicating that the CLOP aligner is not sensitive to projection dimension in this range. Fixed temperature ($-$4.61~pp) and high variant probability ($-$6.03~pp) degrade performance substantially relative to the ablation baseline (which used a learnable temperature). \textbf{Clarification:} The ablation baseline used a learnable $\tau$, whereas the final production model uses fixed $\tau = 14.0$ in combination with a stratified validation split (Section~\ref{sec:dataset}). The production configuration was selected based on the full-pipeline generation quality assessment, not solely on CLOP prototype accuracy; the ablation table characterizes the CLOP alignment stage in isolation and does not directly predict downstream DiT generation performance.
 
-\subsection*{Rare Cell Augmentation}\label{sec:rare-cell}
+\subsection{Rare Cell Augmentation}\label{sec:rare-cell}
 
 As a proof-of-concept, we evaluated whether generated cells can improve classifier performance on an underrepresented type (``Cycling cells'', $<$5\% prevalence). Augmentation at 1--10$\times$ ratios did not improve Cycling-cell F1 (baseline 0.828 $\to$ 0.741--0.786 after augmentation), though overall macro F1 remained stable (0.947--0.964), indicating that synthetic profiles are realistic enough to avoid catastrophic interference but lack the within-type heterogeneity needed for net positive augmentation.
 
-\subsection*{Conditioning Field Ablation and Swap-Label Permutation Test}\label{sec:cond-ablation}
+\subsection{Conditioning Field Ablation and Swap-Label Permutation Test}\label{sec:cond-ablation}
 
 To assess whether the conditioning signal causally steers generation---rather than the model recapitulating training-set structure regardless of prompt content---we performed two targeted experiments.
 
@@ -452,7 +393,7 @@ The results indicate that semantic content contributes to the conditioning signa
 
 \textbf{Swap-label permutation test.} To test whether generation follows the conditioning signal causally, we generated 15 cell-type pairs where the prompt for type $A$ was used to condition generation but evaluation was performed against both type $A$ (matched) and type $B$ (mismatched) real-cell centroids. In 9 of 15 pairs, the generation conditioned on the matched prompt was closer to the real centroid of type $A$ than the mismatched generation (matched cosine similarity 0.032 vs.\ mismatched 0.016, gap = 0.016). Critically, in all 15 of 15 pairs the mislabeled generation---conditioned on text$_B$ but evaluated against real cluster $A$---followed the conditioning signal (text$_B$) rather than the evaluation label, confirming that the model generates latents based on prompt semantics rather than memorized label identity. The sub-unity matched-wins rate (9/15) reflects the small magnitude of centroid cosine differences in the tightly packed scGPT embedding space rather than a failure of causal conditioning. While this test does not fully exclude encoder-level leakage, it provides causal evidence that the conditioning channel is functional and semantically interpretable.
 
-\section*{Discussion}\label{sec:discussion}
+\section{Discussion}\label{sec:discussion}
 
 CLOP-DiT demonstrates that structured-text conditioning can drive non-trivial conditional generation in tightly-packed biological embedding spaces. The framework's primary contribution is architectural: a modular pipeline where contrastive alignment, conditional flow matching, and frozen decoding are independently trainable and replaceable. We discuss the main computational findings, open problems, and design implications below.
 
@@ -475,7 +416,7 @@ CLOP-DiT demonstrates that structured-text conditioning can drive non-trivial co
 
 \textbf{Modularity as a design principle.} The three-stage architecture enables independent improvement of each component. The aligner, generator, and decoder can be upgraded without retraining the full pipeline---for instance, replacing the scGPT decoder with a fine-tuned adapter, or substituting a stronger text encoder. This composability distinguishes CLOP-DiT from fully joint training approaches~\citep{ref-scdesign3} and positions it as a reusable framework for future work on conditioned generation in continuous latent spaces.
 
-\section*{Conclusions}\label{sec:conclusions}
+\section{Conclusions}\label{sec:conclusions}
 
 We presented CLOP-DiT, a modular three-stage framework for structured-text-conditioned generation in continuous biological latent spaces. The pipeline combines prototype-aware contrastive alignment, 1D flow matching with group-aware regularization, and frozen foundation-model decoding. On 69 cell types from 80 datasets, the model achieves controllable generation with $25\times$-above-chance type specificity, reproducible operating regimes, and causal prompt dependence confirmed by ablation and permutation tests.
 
@@ -483,23 +424,6 @@ We presented CLOP-DiT, a modular three-stage framework for structured-text-condi
 
 \textbf{Open problems.} Second-order structure preservation (variance, covariance) remains the primary unsolved challenge. The modular architecture provides a clear path forward: (i)~trajectory-level diversity objectives for the flow-matching stage; (ii)~decoder fine-tuning via LoRA~\citep{ref-scgpt} or lightweight adapters; (iii)~adaptive ODE solvers for improved distributional fidelity; (iv)~out-of-distribution evaluation on unseen cell types; and (v)~harmonized benchmarking against CellWhisperer~\citep{ref-cellwhisperer} and scDesign3~\citep{ref-scdesign3}. The composable design ensures each improvement can be tested independently without retraining the full pipeline.
 
-\section*{Author Contributions}
-
-Zeyu Fu: conceptualization, methodology, software, validation, formal analysis, investigation, resources, data curation, writing---original draft preparation, writing---review and editing, visualization, supervision, project administration, funding acquisition. JianXu Zheng: writing---review and editing, validation. Jiawei Fu: writing---review and editing, validation.
-
-\section*{Acknowledgments}
-
-The author acknowledges the developers and communities behind scGPT, BiomedBERT, and the Gene Expression Omnibus (GEO) for providing open-access tools and datasets that made this work possible. This work was supported by the National Key Research and Development Program of China (Grant No.~2024YFA1107101), the Ministry of Science and Technology of the People's Republic of China, and the National Key Laboratory of Trauma and Chemical Poisoning (Grant No.~2024K004).
-
-AI-assisted tools (including Claude and GitHub Copilot) were used for code development (pipeline implementation, figure generation scripts, and evaluation infrastructure), manuscript drafting assistance, and language editing. All AI-generated content was reviewed, verified, and revised by the author, who takes full responsibility for the accuracy and integrity of the manuscript. No AI tools were used for data collection, experimental design, or interpretation of results.
-
-\section*{Ethics Statement}
-
-Ethical review and approval were waived for this study, as only publicly available, de-identified data from the Gene Expression Omnibus (GEO) were analyzed; all datasets were deposited by their original investigators under institutional ethical approvals as required by GEO submission policy. No new human subjects research, animal experiments, or clinical interventions were conducted. Informed consent was not applicable.
-
-\section*{Conflicts of Interest}
-
-The author declares no conflicts of interest.
 
 \textbf{Data Availability.} The training and validation data were curated from publicly available GEO datasets; a full list of GEO accession identifiers is provided in Table~\ref{tab:s1_datasets} (Appendix~\ref{app:suppl-tables}), and the held-out validation study identifiers are in Table~\ref{tab:s2_validation}. Source code, trained model checkpoints (CLOP aligner and DiT generator), configuration files, environment specifications (Python~3.10, PyTorch~2.1, CUDA~12.0, scGPT~v0.2.1, Transformers~4.36), multi-seed validation data, independent marker gene validation data (PanglaoDB and CellMarker~2.0 cross-references), external marker ablation analysis, and one-command figure reproduction instructions are publicly available on GitHub~\citep{ref-clop-dit} and will be archived on Zenodo upon acceptance of this manuscript. All figures use colormaps designed for accessibility under common forms of color vision deficiency (deuteranopia, protanopia); critical distinctions additionally use shape or pattern encoding.
 
@@ -529,7 +453,7 @@ ZCA & Zero-phase Component Analysis
 
 \FloatBarrier
 \appendix
-\section*{Appendix A: Supplementary Material}\label{app:suppl-tables}\label{app:hyperparams}
+\section{Appendix A: Supplementary Material}\label{app:suppl-tables}\label{app:hyperparams}
 
 \begin{table}[!htbp]
 \caption{Architecture specifications.\label{tab:architecture}}
@@ -824,7 +748,7 @@ Centroid Cosine Sim.    & 0.898 & 0.875 & 0.913 & 0.009 \\
 \end{tabular}
 \end{table}
 
-\subsection*{Supplementary Figures}\label{app:suppl-figs}
+\subsection{Supplementary Figures}\label{app:suppl-figs}
 
 \begin{figure}[p]
 \centering
@@ -851,6 +775,3 @@ Centroid Cosine Sim.    & 0.898 & 0.875 & 0.913 & 0.009 \\
 
 \FloatBarrier
 
-\bibliography{sample}
-
-\end{document}

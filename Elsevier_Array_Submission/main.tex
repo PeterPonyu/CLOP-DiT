@@ -1,0 +1,89 @@
+\documentclass[preprint,review,12pt]{elsarticle}
+
+%% Additional packages
+\usepackage{lineno}
+\modulolinenumbers[5]
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{placeins}
+\usepackage{float}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{amsmath,amssymb}
+
+% Define the C column type for centered tabularx columns
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+
+% Tighter float placement
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\bottomfraction}{0.85}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\floatpagefraction}{0.8}
+
+\journal{Array}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{CLOP-DiT: Text-Conditioned Single-Cell Latent Generation via Contrastive Language-Omics Pretraining and Diffusion Transformers}
+
+\author[ammu]{Zeyu Fu\corref{cor1}\fnref{fn1}}
+\ead{fuzeyu09@gmail.com}
+\author[swh]{JianXu Zheng\fnref{fn1}}
+\ead{zhengjianxu@tmmu.edu.cn}
+\author[xqh]{Jiawei Fu\fnref{fn1}}
+\ead{fjw813130855@163.com}
+
+\cortext[cor1]{Corresponding author}
+\fntext[fn1]{These authors contributed equally to this work.}
+
+\address[ammu]{State Key Laboratory of Trauma and Chemical Poisoning, Institute of Combined Injury, Chongqing Engineering Research Center for Nanomedicine, College of Preventive Medicine, Army Medical University, Chongqing 400038, China}
+\address[swh]{Chongqing Key Laboratory of Intelligent Diagnosis, Treatment and Rehabilitation of Central Nervous System Injuries, Southwest Hospital, Third Military Medical University (Army Medical University), Chongqing 400038, China}
+\address[xqh]{Department of Orthopedics, Xinqiao Hospital, Army Medical University, Chongqing 400037, China}
+
+\begin{abstract}
+Conditional generation in continuous latent spaces has been widely studied for images and audio, yet applying these techniques to high-dimensional biological embeddings introduces distinct computational challenges: tight inter-class cosine similarity ($>$0.99), many-to-one decoder mappings, and the need to balance sample fidelity against within-class diversity. We present CLOP-DiT, a modular three-stage framework that addresses these challenges through (1)~a prototype-aware contrastive aligner (CLOP) that projects frozen BiomedBERT text embeddings and scGPT cell embeddings into a shared 512-dimensional space with $130\times$ improved inter-class separation, (2)~a 1D Diffusion Transformer (DiT) that performs conditional flow matching in that latent space with group-aware variance and sliced covariance regularization, and (3)~a frozen scGPT decoder for downstream expression-level inspection. Conditioning follows a fixed five-field structured template (cell type, tissue, organism, marker genes, disease context) rather than free-form language. On 69 deduplicated cell types from 80 datasets (220,304 cells), classifier-free guidance provides a controllable fidelity--diversity trade-off: a high-fidelity regime (CFG\,=\,2.0) achieves 36.9\% KNN accuracy ($25\times$ chance) and 81.0\% steering, whereas a high-diversity regime (CFG\,=\,1.0) reaches a diversity ratio of 0.93 while retaining 80.7\% steering. Conditioning-field ablation and swap-label permutation tests confirm causal prompt dependence, with marker genes providing the strongest steering signal. Multi-seed validation shows inter-run standard deviations below 1 percentage point for steering and below 2 percentage points for diversity ratio. We also characterize current limitations: cross-dataset variance correlation near zero, discriminator AUC of 0.656, and negative rare-cell augmentation results. The modular architecture enables independent improvement of each stage, making CLOP-DiT a reusable framework for structured-text-conditioned generation in continuous latent spaces.
+\end{abstract}
+
+\begin{keyword}
+conditional generation \sep diffusion transformer \sep contrastive learning \sep flow matching \sep single-cell RNA-seq \sep structured-text conditioning \sep latent space modeling \sep foundation model
+\end{keyword}
+
+\end{frontmatter}
+
+\linenumbers
+
+%%% BODY — extracted from the PeerJ reframed version %%%
+\input{body}
+
+\section*{CRediT authorship contribution statement}
+
+\textbf{Zeyu Fu}: Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Resources, Data curation, Writing -- original draft, Writing -- review \& editing, Visualization, Supervision, Project administration, Funding acquisition.
+\textbf{JianXu Zheng}: Writing -- review \& editing, Validation.
+\textbf{Jiawei Fu}: Writing -- review \& editing, Validation.
+
+\section*{Declaration of competing interest}
+
+The authors declare no conflicts of interest.
+
+\section*{Acknowledgments}
+
+The authors acknowledge the developers and communities behind scGPT, BiomedBERT, and the Gene Expression Omnibus (GEO) for providing open-access tools and datasets that made this work possible. This work was supported by the National Key Research and Development Program of China (Grant No.~2024YFA1107101), the Ministry of Science and Technology of the People's Republic of China, and the National Key Laboratory of Trauma and Chemical Poisoning (Grant No.~2024K004).
+
+AI-assisted tools (including Claude and GitHub Copilot) were used for code development (pipeline implementation, figure generation scripts, and evaluation infrastructure), manuscript drafting assistance, and language editing. All AI-generated content was reviewed, verified, and revised by the authors, who take full responsibility for the accuracy and integrity of the manuscript. No AI tools were used for data collection, experimental design, or interpretation of results.
+
+\section*{Ethics statement}
+
+Ethical review and approval were waived for this study, as only publicly available, de-identified data from the Gene Expression Omnibus (GEO) were analyzed. No new human subjects research, animal experiments, or clinical interventions were conducted. Informed consent was not applicable.
+
+\section*{Data availability}
+
+The training and validation data were curated from publicly available GEO datasets; a full list of GEO accession identifiers is provided in Table~\ref{tab:s1_datasets} (Appendix~\ref{app:suppl-tables}), and the held-out validation study identifiers are in Table~\ref{tab:s2_validation}. Source code, trained model checkpoints, configuration files, environment specifications, and one-command figure reproduction instructions are publicly available on GitHub \citep{ref-clop-dit} and will be archived on Zenodo upon acceptance. All figures use colormaps designed for accessibility under common forms of color vision deficiency.
+
+\bibliographystyle{elsarticle-harv}
+\bibliography{references}
+
+\end{document}
