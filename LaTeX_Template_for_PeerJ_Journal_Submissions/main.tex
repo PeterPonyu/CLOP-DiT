@@ -30,11 +30,18 @@
 \renewcommand{\textfraction}{0.05}
 \renewcommand{\floatpagefraction}{0.8}
 
-\title{CLOP-DiT: Structured-Metadata-Conditioned Single-Cell Latent Generation via Contrastive Language-Omics Pretraining and Diffusion Transformers}
+\title{CLOP-DiT: Text-Conditioned Single-Cell Latent Generation via Contrastive Language-Omics Pretraining and Diffusion Transformers}
 
-\author[1]{Zeyu Fu}
+\author[1]{Zeyu Fu\textsuperscript{*$\dagger$}}
+\author[2]{JianXu Zheng\textsuperscript{$\dagger$}}
+\author[3]{Jiawei Fu\textsuperscript{$\dagger$}}
 \affil[1]{State Key Laboratory of Trauma and Chemical Poisoning, Institute of Combined Injury, Chongqing Engineering Research Center for Nanomedicine, College of Preventive Medicine, Army Medical University, Chongqing 400038, China}
+\affil[2]{Chongqing Key Laboratory of Intelligent Diagnosis, Treatment and Rehabilitation of Central Nervous System Injuries, Southwest Hospital, Third Military Medical University (Army Medical University), Chongqing 400038, China}
+\affil[3]{Department of Orthopedics, Xinqiao Hospital, Army Medical University, Chongqing 400037, China}
 \corrauthor[1]{Zeyu Fu}{fuzeyu09@gmail.com}
+
+% Equal contribution footnote
+\newcommand{\equalcontrib}{\textsuperscript{$\dagger$}These authors contributed equally to this work.}
 
 \begin{abstract}
 Generating realistic single-cell transcriptomic profiles from structured biological descriptions could enable controlled simulation, data augmentation, and hypothesis-guided exploration of cell states. To our knowledge, however, no prior method jointly learns text--cell alignment and conditional single-cell generation within a single pipeline. We present CLOP-DiT, a modular three-stage framework in which (1)~CLOP aligns BiomedBERT text embeddings and scGPT cell embeddings in a shared 512-dimensional space, (2)~a conditional Diffusion Transformer (DiT) performs flow matching in that latent space under a fixed five-field template (cell type, tissue, organism, marker genes, and disease context), and (3)~a frozen scGPT decoder maps generated latents back to gene expression for downstream inspection. Across 69 deduplicated cell types from 80 GEO datasets (220,304 cells), a high-fidelity operating regime (CFG\,=\,2.0) achieves 36.9\% KNN accuracy ($25\times$ chance) and 81.0\% steering, whereas a high-diversity regime (CFG\,=\,1.0) reaches a diversity ratio of 0.93 while retaining 80.7\% steering. Conditioning-field ablation and swap-label permutation tests show that marker genes provide the strongest steering signal: steering falls from 99.8\% with the full prompt to 62.4\% with metadata alone. We also report the model's current limits transparently. Although in-distribution per-gene variance is well preserved ($r = 0.98$), cross-dataset variance correlation falls near zero, the discriminator AUC of 0.656 indicates residual separability between real and generated cells, and a pilot rare-cell augmentation study was negative. Taken together, these results establish the feasibility of structured-metadata-conditioned single-cell generation while clarifying the remaining challenges in preserving within-type heterogeneity and downstream biological realism.
@@ -45,6 +52,10 @@ Generating realistic single-cell transcriptomic profiles from structured biologi
 \flushbottom
 \maketitle
 \thispagestyle{empty}
+
+\noindent\equalcontrib\\
+Contributing authors: \href{mailto:zhengjianxu@tmmu.edu.cn}{zhengjianxu@tmmu.edu.cn}; \href{mailto:fjw813130855@163.com}{fjw813130855@163.com}
+\vspace{1em}
 
 \section*{Introduction}
 
@@ -476,7 +487,7 @@ We introduced CLOP-DiT, a three-stage framework for generating single-cell laten
 
 \section*{Author Contributions}
 
-Z.F.: conceptualization, methodology, software, validation, formal analysis, investigation, resources, data curation, writing---original draft preparation, writing---review and editing, visualization, supervision, project administration, funding acquisition.
+Zeyu Fu: conceptualization, methodology, software, validation, formal analysis, investigation, resources, data curation, writing---original draft preparation, writing---review and editing, visualization, supervision, project administration, funding acquisition. JianXu Zheng: writing---review and editing, validation. Jiawei Fu: writing---review and editing, validation.
 
 \section*{Acknowledgments}
 
