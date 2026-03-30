@@ -453,7 +453,7 @@ CLOP-DiT demonstrates that structured biological metadata can drive non-trivial 
 \centering
 \includegraphics[width=0.95\textwidth]{figures/fig09a_variance_matching.pdf}\par\vspace{2pt}
 \includegraphics[width=0.95\textwidth]{figures/fig09b_gene_gene_correlation.pdf}
-\caption{\textbf{Latent variance and gene--gene correlation analysis.} \emph{Variance matching} (\textbf{a})~Per-cell-type sliced Wasserstein distance (SWD) between real and generated latent distributions. (\textbf{b})~Per-type latent variance ratios (generated/real), summarized with the median and interquartile range relative to the ideal unity band. (\textbf{c})~Per-dimension variance-correlation ECDF, showing that most dimensions remain positively correlated but only weakly structured. (\textbf{d})~SWD versus training cell count with Pearson and Spearman trend summaries. \emph{Gene--gene correlation} (\textbf{e})~Distribution of per-type Mantel correlations with a permuted-null baseline overlay and bootstrap confidence interval on the mean preserved correlation. (\textbf{f--g})~Correlation-difference heatmaps for best- and worst-preserved cell types. (\textbf{h})~Mantel $r$ versus mean gene expression variance per type, showing only a weak dependence of preservation on intrinsic heterogeneity.\label{fig:var-pilot}\label{fig:gene-gene-corr}\label{fig:variance-deepdive}}
+\caption{\textbf{Latent variance and gene--gene correlation analysis.} \emph{Variance matching} (\textbf{a})~Per-cell-type sliced Wasserstein distance (SWD) between real and generated latent distributions. (\textbf{b})~Per-type latent variance ratios (generated/real), summarized with the median and interquartile range relative to the ideal unity band. (\textbf{c})~Per-dimension variance-correlation ECDF, showing that most dimensions remain positively correlated but only weakly structured. (\textbf{d})~SWD versus training cell count with Pearson and Spearman trend summaries. \emph{Gene--gene correlation} (\textbf{e})~Distribution of per-type Mantel correlations with a permuted-null baseline overlay and bootstrap confidence interval on the mean preserved correlation. (\textbf{f--g})~Correlation-difference heatmaps for best- and worst-preserved cell types. (\textbf{h})~Mantel $r$ versus mean gene expression variance per type, showing only a weak dependence of preservation on intrinsic heterogeneity.\label{fig:var-pilot}\label{fig:gene-gene-corr}}
 \end{figure}
 
 \textbf{Extended validation.} Five additional experiments characterize the model beyond the core latent metrics; full figures are provided in Appendix~\ref{app:suppl-figs}. Cross-dataset validation across five tissues confirms near-perfect mean reconstruction after shared decoder reconstruction but near-zero variance correlation, underscoring that decoder consistency is not the same as transcriptomic fidelity. Expanded differential-expression analyses, OOD prompt tests, marker-completeness scores, and rare-cell augmentation collectively reinforce the same message: the model captures coarse biological identity better than within-type heterogeneity.
@@ -474,13 +474,21 @@ We introduced CLOP-DiT, a three-stage framework for generating single-cell laten
 
 \textbf{Future directions.} The modular architecture nevertheless offers several concrete next steps: (i)~strengthening the existing variance- and covariance-aware training objectives; (ii)~decoder fine-tuning via adapters such as LoRA~\citep{ref-scgpt}; (iii)~adaptive ODE sampling for improved distributional fidelity; (iv)~more rigorous out-of-distribution evaluation on unseen cell types and organisms; and (v)~direct benchmarking against CellWhisperer~\citep{ref-cellwhisperer} and scDesign3~\citep{ref-scdesign3} under harmonized evaluation protocols.
 
+\section*{Author Contributions}
+
+Z.F.: conceptualization, methodology, software, validation, formal analysis, investigation, resources, data curation, writing---original draft preparation, writing---review and editing, visualization, supervision, project administration, funding acquisition.
+
 \section*{Acknowledgments}
 
 The author acknowledges the developers and communities behind scGPT, BiomedBERT, and the Gene Expression Omnibus (GEO) for providing open-access tools and datasets that made this work possible. This work was supported by the National Key Research and Development Program of China (Grant No.~2024YFA1107101), the Ministry of Science and Technology of the People's Republic of China, and the National Key Laboratory of Trauma and Chemical Poisoning (Grant No.~2024K004).
 
 AI-assisted tools (including Claude and GitHub Copilot) were used for code development (pipeline implementation, figure generation scripts, and evaluation infrastructure), manuscript drafting assistance, and language editing. All AI-generated content was reviewed, verified, and revised by the author, who takes full responsibility for the accuracy and integrity of the manuscript. No AI tools were used for data collection, experimental design, or interpretation of results.
 
-Ethical review and approval were waived for this study, as only publicly available, de-identified data from the Gene Expression Omnibus (GEO) were analyzed; all datasets were deposited by their original investigators under institutional ethical approvals as required by GEO submission policy. No new human subjects research, animal experiments, or clinical interventions were conducted.
+\section*{Ethics Statement}
+
+Ethical review and approval were waived for this study, as only publicly available, de-identified data from the Gene Expression Omnibus (GEO) were analyzed; all datasets were deposited by their original investigators under institutional ethical approvals as required by GEO submission policy. No new human subjects research, animal experiments, or clinical interventions were conducted. Informed consent was not applicable.
+
+\section*{Conflicts of Interest}
 
 The author declares no conflicts of interest.
 
@@ -809,18 +817,22 @@ Centroid Cosine Sim.    & 0.898 & 0.875 & 0.913 & 0.009 \\
 
 \subsection*{Supplementary Figures}\label{app:suppl-figs}
 
-\begin{figure}[H]
+\begin{figure}[p]
 \centering
-\includegraphics[width=0.98\textwidth]{figures/figS01_supplementary_validation.pdf}
+\makebox[\textwidth][c]{%
+  \includegraphics[width=1.15\textwidth,keepaspectratio]{figures/figS01_supplementary_validation.pdf}%
+}
 \caption{\textbf{Supplementary validation, ablation, and expression fidelity.}
 \textbf{(a--c)}~Robustness and ablation: (a)~CLOP ablation heatmap showing normalised metrics across 15 configuration variants with component-category markers, (b)~multi-seed generation robustness across the high-fidelity and high-diversity operating regimes ($n = 3$ independent seeds), and (c)~out-of-distribution generation showcase listing six novel cell types (unseen during training) and eight free-form natural-language prompts.
 \textbf{(d--h)}~Downstream validation suite: (d)~cross-dataset mean-expression correlation (Pearson~$r$ and Spearman~$\rho$) across five held-out tissues, (e)~expanded differential-expression concordance heatmap across five cell-type contrasts, (f)~OOD marker-hit rates for novel cell types, (g)~marker recall@$K$ curves for six representative cell types, and (h)~six-axis validation radar summarising type specificity, text steering, DE concordance, marker recall, OOD handling, and cross-dataset correlation.
-\textbf{(i--l)}~Expression fidelity and decoder analysis: (i)~per-gene variance scatter (log-log scale) between real and generated profiles, (j)~variance-ratio distribution highlighting the fraction of genes with $>$2-fold deficit, (k)~embedding-level augmentation $\Delta$F1 at 1$\times$, 5$\times$, and 10$\times$ ratios, and (l)~decoder ablation comparing frozen scGPT, LoRA-adapted scGPT, and a trained MLP decoder.\label{fig:ablation-heatmap}\label{fig:multi-seed}\label{fig:ood-showcase}\label{fig:cross-dataset}\label{fig:expanded-de}\label{fig:ood-robustness}\label{fig:marker-completeness}\label{fig:validation-summary}\label{fig:embedding-augmentation}\label{fig:decoder-ablation}}
+\textbf{(i--l)}~Expression fidelity and decoder analysis: (i)~per-gene variance scatter (log-log scale) between real and generated profiles, (j)~variance-ratio distribution highlighting the fraction of genes with $>$2-fold deficit, (k)~embedding-level augmentation $\Delta$F1 at 1$\times$, 5$\times$, and 10$\times$ ratios, and (l)~decoder ablation comparing frozen scGPT, LoRA-adapted scGPT, and a trained MLP decoder.\label{fig:ablation-heatmap}\label{fig:multi-seed}\label{fig:ood-showcase}\label{fig:cross-dataset}\label{fig:expanded-de}\label{fig:ood-robustness}\label{fig:marker-completeness}\label{fig:validation-summary}\label{fig:variance-deepdive}\label{fig:embedding-augmentation}\label{fig:decoder-ablation}}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[p]
 \centering
-\includegraphics[width=0.98\textwidth]{figures/figS02_expression_diagnostics.pdf}
+\makebox[\textwidth][c]{%
+  \includegraphics[width=1.25\textwidth,keepaspectratio]{figures/figS02_expression_diagnostics.pdf}%
+}
 \caption{\textbf{Expression-level validation and diagnostic analyses.}
 \textbf{(a,\,b)}~Per-cell-type pseudobulk correlation between real and generated mean-expression profiles ($n = 69$ types): (a)~sorted Pearson~$r$ per type and (b)~distribution of correlations with median and mean indicators.
 \textbf{(c--e)}~Failure-mode analysis: (c)~quality-tier distribution (pass/warn/fail) stratified by biological family, (d)~quality score versus training sample size (Pearson~$r = 0.43$), and (e)~quality score versus embedding confusability (Pearson~$r = -0.03$), indicating that generation quality scales with data abundance but is robust to inter-type similarity.
