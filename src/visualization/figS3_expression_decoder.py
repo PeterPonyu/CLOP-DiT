@@ -104,7 +104,7 @@ def _panel_a(ax: plt.Axes, real_var: np.ndarray, gen_var: np.ndarray) -> None:
     ax.tick_params(labelsize=FONT_TICK)
 
     ax.text(
-        0.05, 0.93,
+        0.05, 0.68,
         f"r = {r:.3f}\nn = {valid.sum()} genes",
         transform=ax.transAxes, fontsize=FONT_LEGEND,
         va="top", color=COLORS.get("annotation_dark", "#333"),
@@ -139,7 +139,8 @@ def _panel_b(ax: plt.Axes, real_var: np.ndarray, gen_var: np.ndarray) -> None:
     ax.set_ylabel("Gene count", fontsize=FONT_LABEL)
     ax.set_title("Variance Ratio Distribution", fontsize=FONT_TITLE, fontweight="normal")
     ax.tick_params(labelsize=FONT_TICK)
-    ax.legend(fontsize=FONT_LEGEND, frameon=False, loc="upper left")
+    ax.legend(fontsize=FONT_LEGEND, frameon=False, loc="upper center",
+              bbox_to_anchor=(0.5, -0.15))
 
     style_axes(ax)
 
@@ -208,7 +209,7 @@ def _panel_d(ax: plt.Axes, metrics: dict, approaches: list[str]) -> None:
                   label=f"Gen: {APPROACH_LABELS.get(a, a)}")
         )
     ax.legend(handles=legend_handles, fontsize=FONT_LEGEND, frameon=False,
-              loc="upper left", ncol=2)
+              loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=2)
 
     style_axes(ax)
 

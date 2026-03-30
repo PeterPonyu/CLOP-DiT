@@ -34,9 +34,9 @@ from .direct_layout import bind_figure_region
 logger = logging.getLogger(__name__)
 
 
-_TITLE_SIZE = max(FONT_TITLE - 2, 11)
-_LABEL_SIZE = 14
-_LABEL_Y = 1.05
+_TITLE_SIZE = max(FONT_TITLE - 1, 12)
+_LABEL_SIZE = 15
+_LABEL_Y = 1.08
 _TIER_COLORS = {"pass": "#1B5E20", "warn": "#F9A825", "fail": "#D84315"}
 _VARIANT_DISPLAY = {
     "full": "Full prompt",
@@ -103,7 +103,7 @@ def _panel_a(ax: plt.Axes, summary_path: Path, per_type_path: Path) -> None:
     ax.axvline(median_r, color="#555", linestyle="--", linewidth=1.2, label=f"Median = {median_r:.3f}")
     ax.axvline(0.8, color=COLORS["good"], linestyle=":", linewidth=1.0, alpha=0.5, label="r = 0.8")
     ax.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="lower right")
-    style_axes(ax, "bar", xlabel="Pseudobulk Pearson r", title="Per-Type Pseudobulk Corr.")
+    style_axes(ax, "bar", xlabel="Pearson r", title="Per-Type Pseudobulk Corr.")
 
 
 
@@ -153,7 +153,7 @@ def _panel_b(ax: plt.Axes, summary_path: Path, per_type_path: Path) -> None:
         fontsize=FONT_SMALL,
         color=COLORS["neutral"],
     )
-    ax.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="upper right")
+    ax.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="upper left")
     style_axes(ax, "default", xlabel="Pearson r", ylabel="Count", title="Pseudobulk Correlation Dist.")
 
 
@@ -190,7 +190,8 @@ def _panel_c(ax: plt.Axes, analysis_path: Path, tiers_path: Path) -> None:
     ax.set_yticks(y_pos)
     ax.set_yticklabels(short_families, fontsize=max(FONT_TICK - 1, 9))
     ax.invert_yaxis()
-    ax.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="lower right")
+    ax.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="upper center",
+              bbox_to_anchor=(0.5, -0.10), ncol=3)
     style_axes(ax, "bar", xlabel="Number of cell types", title="Quality by Family")
 
 
@@ -408,7 +409,8 @@ def _panel_j(ax: plt.Axes, results_path: Path) -> None:
     ax.axvline(0.5, color="#999", linestyle=":", linewidth=1.0, alpha=0.5, label="Chance (0.5)")
     auc_mean = float(np.mean(auc_vals))
     ax.axvline(auc_mean, color="#555", linestyle="--", linewidth=1.2, label=f"Mean = {auc_mean:.3f}")
-    ax.legend(fontsize=FONT_SMALL, frameon=False, loc="upper right")
+    ax.legend(fontsize=FONT_SMALL, frameon=False, loc="upper center",
+              bbox_to_anchor=(0.5, -0.10))
     style_axes(ax, "bar", xlabel="Discriminator AUC", title="Per-Type Separability")
 
 
@@ -427,53 +429,63 @@ def plot_expression_diagnostics(output_dir: str | Path = "results/figures", dpi:
     field_ablation = val_dir / "field_ablation_results.json"
     discriminator = val_dir / "discriminator_analysis.json"
 
-    fig = plt.figure(figsize=(11.8, 9.1))
-    layout = bind_figure_region(fig, (0.055, 0.07, 0.988, 0.965))
-    top, bottom = layout.split_rows([1.0, 1.0], gap=0.17)
+    fig = plt.figure(figsize=(13.0, 10.0))
+    layout = bind_figure_region(fig, (0.055, 0.05, 0.988, 0.965))
+    top, bottom = layout.split_rows([1.0, 1.0], gap=0.14)
 
-    col_weights = [1.55, 0.90, 1.05, 1.05, 1.50]
-    top_cols = top.split_cols(col_weights, gap=0.06)
-    bottom_cols = bottom.split_cols(col_weights, gap=0.06)
+    # Top row: wider gap before barh panel c (col 2)
+    top_weights = [1.55, 1.05, 1.10, 1.08, 1.55]
+    top_cols = top.split_cols(top_weights, gap=[0.05, 0.10, 0.06, 0.06])
+    # Bottom row: wider gap before g (col 1) barh; narrower j (col 4)
+    bot_weights = [1.50, 1.15, 1.08, 1.08, 1.35]
+    bottom_cols = bottom.split_cols(bot_weights, gap=[0.10, 0.06, 0.06, 0.10])
+
+    _lbl_x = -0.12  # consistent x-offset for all panel labels
 
     ax_a = top_cols[0].add_axes(fig)
     _panel_a(ax_a, pseudobulk_summary, pseudobulk_per_type)
-    add_panel_label(ax_a, "a", x=-0.11, y=_LABEL_Y, fontsize=_LABEL_SIZE)
+    add_panel_label(ax_a, "a", x=_lbl_x, y=_LABEL_Y, fontsize=_LABEL_SIZE)
 
     ax_b = top_cols[1].add_axes(fig)
     _panel_b(ax_b, pseudobulk_summary, pseudobulk_per_type)
-    add_panel_label(ax_b, "b", x=-0.12, y=_LABEL_Y, fontsize=_LABEL_SIZE)
+    add_panel_label(ax_b, "b", x=_lbl_x, y=_LABEL_Y, fontsize=_LABEL_SIZE)
 
     ax_c = top_cols[2].add_axes(fig)
     _panel_c(ax_c, failure_analysis, failure_tiers)
-    add_panel_label(ax_c, "c", x=-0.11, y=_LABEL_Y, fontsize=_LABEL_SIZE)
+    add_panel_label(ax_c, "c", x=_lbl_x, y=_LABEL_Y, fontsize=_LABEL_SIZE)
 
     ax_d = top_cols[3].add_axes(fig)
     _panel_d(ax_d, failure_analysis, failure_tiers)
-    add_panel_label(ax_d, "d", x=-0.11, y=_LABEL_Y, fontsize=_LABEL_SIZE)
+    add_panel_label(ax_d, "d", x=_lbl_x, y=_LABEL_Y, fontsize=_LABEL_SIZE)
 
     ax_e = top_cols[4].add_axes(fig)
     _panel_e(ax_e, failure_analysis, failure_tiers)
-    add_panel_label(ax_e, "e", x=-0.10, y=_LABEL_Y, fontsize=_LABEL_SIZE)
+    add_panel_label(ax_e, "e", x=_lbl_x, y=_LABEL_Y, fontsize=_LABEL_SIZE)
 
     ax_f = bottom_cols[0].add_axes(fig)
     _panel_f(ax_f, field_ablation)
-    add_panel_label(ax_f, "f", x=-0.11, y=_LABEL_Y, fontsize=_LABEL_SIZE)
+    add_panel_label(ax_f, "f", x=_lbl_x, y=_LABEL_Y, fontsize=_LABEL_SIZE)
 
     ax_g = bottom_cols[1].add_axes(fig)
     _panel_g(ax_g, field_ablation)
-    add_panel_label(ax_g, "g", x=-0.12, y=_LABEL_Y, fontsize=_LABEL_SIZE)
+    add_panel_label(ax_g, "g", x=_lbl_x, y=_LABEL_Y, fontsize=_LABEL_SIZE)
 
     ax_h = bottom_cols[2].add_axes(fig)
     _panel_h(ax_h, discriminator)
-    add_panel_label(ax_h, "h", x=-0.11, y=_LABEL_Y, fontsize=_LABEL_SIZE)
+    add_panel_label(ax_h, "h", x=_lbl_x, y=_LABEL_Y, fontsize=_LABEL_SIZE)
 
     ax_i = bottom_cols[3].add_axes(fig)
     _panel_i(ax_i, discriminator)
-    add_panel_label(ax_i, "i", x=-0.11, y=_LABEL_Y, fontsize=_LABEL_SIZE)
+    add_panel_label(ax_i, "i", x=_lbl_x, y=_LABEL_Y, fontsize=_LABEL_SIZE)
 
     ax_j = bottom_cols[4].add_axes(fig)
     _panel_j(ax_j, discriminator)
-    add_panel_label(ax_j, "j", x=-0.10, y=_LABEL_Y, fontsize=_LABEL_SIZE)
+    add_panel_label(ax_j, "j", x=_lbl_x, y=_LABEL_Y, fontsize=_LABEL_SIZE)
+
+    # Harmonize title size and pad across all panels to avoid label overlap
+    for ax in [ax_a, ax_b, ax_c, ax_d, ax_e, ax_f, ax_g, ax_h, ax_i, ax_j]:
+        if ax.get_title():
+            ax.set_title(ax.get_title(), fontsize=_TITLE_SIZE, fontweight="normal", pad=4)
 
     if save:
         stem = output_dir / "figS02_expression_diagnostics"

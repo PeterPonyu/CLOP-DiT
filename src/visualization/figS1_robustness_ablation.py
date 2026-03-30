@@ -111,7 +111,7 @@ def _draw_ablation_heatmap(fig: plt.Figure, region, ablation_path: Path) -> None
         logger.warning("Ablation summaries not found: %s", ablation_path)
         ax = region.add_axes(fig)
         _draw_placeholder(ax, "Ablation data not available")
-        add_panel_label(ax, "a", x=-0.10, y=1.04)
+        add_panel_label(ax, "a", x=-0.12, y=1.08)
         return
 
     with open(ablation_path) as f:
@@ -121,7 +121,7 @@ def _draw_ablation_heatmap(fig: plt.Figure, region, ablation_path: Path) -> None
         logger.warning("No ablation entries found")
         ax = region.add_axes(fig)
         _draw_placeholder(ax, "No ablation entries")
-        add_panel_label(ax, "a", x=-0.10, y=1.04)
+        add_panel_label(ax, "a", x=-0.12, y=1.08)
         return
 
     # Sort by category then name
@@ -185,8 +185,9 @@ def _draw_ablation_heatmap(fig: plt.Figure, region, ablation_path: Path) -> None
                    markersize=6, label=cat.capitalize())
         for cat, c in seen.items()
     ]
-    ax.legend(handles=legend_handles, loc="upper left",
-              ncol=1, fontsize=FONT_LEGEND_DENSE, frameon=True,
+    ax.legend(handles=legend_handles, loc="center left",
+              bbox_to_anchor=(1.12, 0.5), ncol=1,
+              fontsize=FONT_LEGEND_DENSE, frameon=True,
               facecolor="white", edgecolor="none", framealpha=0.9)
 
     # Colorbar
@@ -194,7 +195,7 @@ def _draw_ablation_heatmap(fig: plt.Figure, region, ablation_path: Path) -> None
     cbar.set_label("Normalized (higher = better)", fontsize=FONT_ANNOTATION)
 
     ax.set_title("CLOP Ablation Comparison", fontsize=FONT_TITLE, fontweight="normal", pad=8)
-    add_panel_label(ax, "a", x=-0.10, y=1.04)
+    add_panel_label(ax, "a", x=-0.12, y=1.08)
 
 
 # ---------------------------------------------------------------------------
@@ -207,7 +208,7 @@ def _draw_multi_seed(fig: plt.Figure, region, report_path: Path) -> None:
         logger.warning("Multi-seed report not found: %s", report_path)
         ax = region.add_axes(fig)
         _draw_placeholder(ax, "Multi-seed data not available")
-        add_panel_label(ax, "b", x=-0.10, y=1.04)
+        add_panel_label(ax, "b", x=-0.12, y=1.08)
         return
 
     with open(report_path) as f:
@@ -218,7 +219,7 @@ def _draw_multi_seed(fig: plt.Figure, region, report_path: Path) -> None:
         logger.warning("No recognized regimes in multi-seed report")
         ax = region.add_axes(fig)
         _draw_placeholder(ax, "No regime data")
-        add_panel_label(ax, "b", x=-0.10, y=1.04)
+        add_panel_label(ax, "b", x=-0.12, y=1.08)
         return
 
     ax = region.add_axes(fig)
@@ -270,7 +271,7 @@ def _draw_multi_seed(fig: plt.Figure, region, report_path: Path) -> None:
             fontsize=FONT_LEGEND_DENSE, color=COLORS["neutral"])
 
     ax.set_title("Multi-Seed Robustness", fontsize=FONT_TITLE, fontweight="normal", pad=8)
-    add_panel_label(ax, "b", x=-0.10, y=1.04)
+    add_panel_label(ax, "b", x=-0.12, y=1.08)
 
 
 # ---------------------------------------------------------------------------
@@ -283,7 +284,7 @@ def _draw_ood_showcase(fig: plt.Figure, region, ood_path: Path) -> None:
         logger.warning("OOD results not found: %s", ood_path)
         ax = region.add_axes(fig)
         _draw_placeholder(ax, "OOD data not available")
-        add_panel_label(ax, "c", x=-0.10, y=1.04)
+        add_panel_label(ax, "c", x=-0.12, y=1.08)
         return
 
     with open(ood_path) as f:
@@ -296,7 +297,7 @@ def _draw_ood_showcase(fig: plt.Figure, region, ood_path: Path) -> None:
         logger.warning("No OOD entries found")
         ax = region.add_axes(fig)
         _draw_placeholder(ax, "No OOD entries")
-        add_panel_label(ax, "c", x=-0.10, y=1.04)
+        add_panel_label(ax, "c", x=-0.12, y=1.08)
         return
 
     # Split region into left (novel types) and right (free-form). The right
@@ -304,40 +305,51 @@ def _draw_ood_showcase(fig: plt.Figure, region, ood_path: Path) -> None:
     # colliding with the description column at article scale.
     left, right = region.split_cols([0.98, 1.22], wspace=0.10)
 
+    # Cap entries to avoid text overcrowding at article scale
+    _MAX_OOD_ROWS = 7
+    novel_items = list(novel_types.items())[:_MAX_OOD_ROWS]
+    ff_items = list(free_form.items())[:_MAX_OOD_ROWS]
+
+    # Vertical spacing factor — spread rows apart for readability
+    _ROW_STEP = 1.25
+
     # ── Left: Novel cell types ──
     ax_l = left.add_axes(fig)
     ax_l.set_xlim(0, 11.5)
-    ax_l.set_ylim(-1.2, max(len(novel_types), 1) - 0.5)
+    n_novel = max(len(novel_items), 1)
+    ax_l.set_ylim(-1.4, (n_novel - 1) * _ROW_STEP + 0.4)
     ax_l.invert_yaxis()
     ax_l.axis("off")
 
     # Header
-    ax_l.text(0.0, -1.0, "Cell Type", fontsize=FONT_LABEL + 1, fontweight="medium", va="center")
-    ax_l.text(5.1, -1.0, "Prompt Excerpt", fontsize=FONT_LABEL + 1, fontweight="medium", va="center")
+    ax_l.text(0.0, -1.1, "Cell Type", fontsize=FONT_LABEL + 1, fontweight="medium", va="center")
+    ax_l.text(5.1, -1.1, "Prompt Excerpt", fontsize=FONT_LABEL + 1, fontweight="medium", va="center")
 
-    for i, (type_name, info) in enumerate(novel_types.items()):
+    for i, (type_name, info) in enumerate(novel_items):
+        y_pos = i * _ROW_STEP
         prompt = info.get("prompt", "")
-        excerpt = prompt[:58] + "\u2026" if len(prompt) > 58 else prompt
-        ax_l.text(0.0, i, type_name, fontsize=FONT_LABEL, va="center",
+        excerpt = prompt[:38] + "\u2026" if len(prompt) > 38 else prompt
+        short_name = type_name if len(type_name) <= 20 else type_name[:18] + "\u2026"
+        ax_l.text(0.0, y_pos, short_name, fontsize=FONT_LABEL, va="center",
                   color=COLORS["real"], fontweight="medium")
-        ax_l.text(5.1, i, excerpt, fontsize=max(FONT_TICK - 1, 8), va="center",
+        ax_l.text(5.1, y_pos, excerpt, fontsize=FONT_TICK, va="center",
                   color=COLORS["annotation_dark"], style="italic")
-        if i < len(novel_types) - 1:
-            ax_l.axhline(y=i + 0.5, color=COLORS["border_light"], linewidth=0.5,
-                         xmin=0, xmax=1)
+        if i < len(novel_items) - 1:
+            ax_l.axhline(y=y_pos + _ROW_STEP * 0.5, color=COLORS["border_light"],
+                         linewidth=0.5, xmin=0, xmax=1)
 
     ax_l.set_title("Novel Cell Types", fontsize=FONT_TITLE, fontweight="normal", pad=10)
 
     # ── Right: Free-form prompts ──
     ax_r = right.add_axes(fig)
     ax_r.set_xlim(0, 12.8)
-    n_ff = max(len(free_form), 1)
-    ax_r.set_ylim(-1.2, n_ff - 0.5)
+    n_ff = max(len(ff_items), 1)
+    ax_r.set_ylim(-1.4, (n_ff - 1) * _ROW_STEP + 0.4)
     ax_r.invert_yaxis()
     ax_r.axis("off")
 
-    ax_r.text(0.0, -1.0, "Prompt ID", fontsize=FONT_LABEL + 1, fontweight="medium", va="center")
-    ax_r.text(4.6, -1.0, "Free-form Description", fontsize=FONT_LABEL + 1, fontweight="medium",
+    ax_r.text(0.0, -1.1, "Prompt ID", fontsize=FONT_LABEL + 1, fontweight="medium", va="center")
+    ax_r.text(4.6, -1.1, "Free-form Description", fontsize=FONT_LABEL + 1, fontweight="medium",
               va="center")
 
     style_aliases = {
@@ -351,25 +363,26 @@ def _draw_ood_showcase(fig: plt.Figure, region, ood_path: Path) -> None:
         "clinical note style": "Clinical note",
     }
 
-    for i, (prompt_id, info) in enumerate(free_form.items()):
+    for i, (prompt_id, info) in enumerate(ff_items):
+        y_pos = i * _ROW_STEP
         ff_prompt = info.get("free_form_prompt", "")
-        excerpt = ff_prompt[:58] + "\u2026" if len(ff_prompt) > 58 else ff_prompt
+        excerpt = ff_prompt[:38] + "\u2026" if len(ff_prompt) > 38 else ff_prompt
         display_id = prompt_id.replace("_", " ")
         display_id = style_aliases.get(display_id, display_id.title())
         if len(display_id) > 16:
             display_id = display_id[:14] + "\u2026"
-        ax_r.text(0.0, i, display_id, fontsize=max(FONT_TICK - 1, 8), va="center",
+        ax_r.text(0.0, y_pos, display_id, fontsize=FONT_TICK, va="center",
                   color=COLORS["generated"], fontweight="medium")
-        ax_r.text(4.6, i, excerpt, fontsize=max(FONT_TICK - 1, 8), va="center",
+        ax_r.text(4.6, y_pos, excerpt, fontsize=FONT_TICK, va="center",
                   color=COLORS["annotation_dark"], style="italic")
-        if i < len(free_form) - 1:
-            ax_r.axhline(y=i + 0.5, color=COLORS["border_light"], linewidth=0.5,
-                         xmin=0, xmax=1)
+        if i < len(ff_items) - 1:
+            ax_r.axhline(y=y_pos + _ROW_STEP * 0.5, color=COLORS["border_light"],
+                         linewidth=0.5, xmin=0, xmax=1)
 
     ax_r.set_title("Free-form Prompts", fontsize=FONT_TITLE, fontweight="normal", pad=10)
 
     # Overall panel label on left sub-panel
-    add_panel_label(ax_l, "c", x=-0.10, y=1.04)
+    add_panel_label(ax_l, "c", x=-0.12, y=1.08)
 
 
 # ===========================================================================

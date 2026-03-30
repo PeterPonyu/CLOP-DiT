@@ -96,9 +96,10 @@ def _panel_a(ax: plt.Axes, results_dir: Path) -> None:
     ax.set_xticks(x)
     ax.set_xticklabels(tissue_labels, fontsize=FONT_TICK_DENSE, rotation=40, ha="right")
     ax.set_ylabel("Correlation", fontsize=FONT_LABEL)
-    ax.set_title("Cross-Dataset Corr.", fontsize=FONT_TITLE, fontweight="normal")
+    ax.set_title("Cross-Dataset", fontsize=FONT_TITLE, fontweight="normal")
     ax.set_ylim(0, max(max(pearson_vals, default=0), max(spearman_vals, default=0)) * 1.2)
-    ax.legend(fontsize=FONT_LEGEND_DENSE, loc="upper left", frameon=False)
+    ax.legend(fontsize=FONT_LEGEND_DENSE, loc="upper center",
+              bbox_to_anchor=(0.5, -0.28), frameon=False, ncol=2)
     style_axes(ax)
 
 
@@ -132,7 +133,7 @@ def _panel_b(fig: plt.Figure, ax: plt.Axes, results_dir: Path) -> None:
 
     metrics = ["logfc_pearson_r", "logfc_spearman_rho", "top_k_jaccard", "top_k_sign_agreement"]
     metric_labels = ["Pearson r", "Spearman \u03c1", "Jacc@100", "Sign Agr."]
-    contrast_labels = [_abbrev_contrast(c, max_len=10) for c in contrasts]
+    contrast_labels = [_abbrev_contrast(c, max_len=5) for c in contrasts]
 
     n_contrasts = len(contrasts)
     heatmap_data = np.full((n_contrasts, len(metrics)), np.nan)
@@ -144,8 +145,8 @@ def _panel_b(fig: plt.Figure, ax: plt.Axes, results_dir: Path) -> None:
     ax.set_xticks(range(len(metrics)))
     ax.set_xticklabels(metric_labels, fontsize=FONT_TICK_DENSE, rotation=40, ha="right")
     ax.set_yticks(range(n_contrasts))
-    ax.set_yticklabels(contrast_labels, fontsize=max(FONT_HEATMAP_CELL, 10))
-    ax.set_title("DE Concordance", fontsize=FONT_TITLE, fontweight="normal")
+    ax.set_yticklabels(contrast_labels, fontsize=FONT_HEATMAP_CELL)
+    ax.set_title("DE Concord.", fontsize=FONT_TITLE, fontweight="normal")
 
     # Cell annotations removed: at 0.48\textwidth render scale the small
     # numbers (0.17, 0.14 …) become illegible and create VCD text-overlap
@@ -222,8 +223,8 @@ def _panel_c(ax: plt.Axes, results_dir: Path) -> None:
 
     legend_patches = [Patch(facecolor=cat_colors[c], label=cat_labels[c], alpha=0.85)
                       for c in categories if any(cc == c for cc in prompt_cats)]
-    ax.legend(handles=legend_patches, fontsize=FONT_LEGEND_DENSE, loc="upper right",
-              frameon=False, borderaxespad=0.3)
+    ax.legend(handles=legend_patches, fontsize=FONT_LEGEND_DENSE, loc="upper center",
+              bbox_to_anchor=(0.5, -0.15), frameon=False, ncol=2)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -272,8 +273,9 @@ def _panel_d(ax: plt.Axes, results_dir: Path) -> None:
     ax.set_xticks(ks)
     ax.set_ylim(-0.05, 1.05)
     ax.set_xlim(5, 110)
-    ax.legend(fontsize=FONT_LEGEND_DENSE, loc="lower right",
-              frameon=False, ncol=2, columnspacing=0.6, handlelength=1.0)
+    ax.legend(fontsize=FONT_LEGEND_DENSE, loc="upper center",
+              bbox_to_anchor=(0.5, -0.18), frameon=False, ncol=2,
+              columnspacing=0.6, handlelength=1.0)
     style_axes(ax)
 
 
@@ -439,7 +441,7 @@ def _panel_e(fig: plt.Figure, rect: list[float], results_dir: Path) -> plt.Axes:
     ax.grid(False)
     ax.set_title("Validation Radar", fontsize=FONT_TITLE, fontweight="normal", pad=16)
     ax.legend(fontsize=FONT_LEGEND_DENSE, loc="lower left",
-              bbox_to_anchor=(-0.05, -0.18), frameon=False)
+              bbox_to_anchor=(-0.05, -0.28), frameon=False)
 
     return ax
 
