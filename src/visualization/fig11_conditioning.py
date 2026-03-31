@@ -16,6 +16,7 @@ import numpy as np
 from matplotlib.colors import Normalize
 from matplotlib.ticker import MaxNLocator
 
+from ..utils.constants import RANDOM_SEED
 from .direct_layout import bind_figure_region
 from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
 from .style import (
@@ -238,7 +239,7 @@ def plot_panel_m(
         _adjust_axes_rect(ax_c3, dx=ax_c3.get_position().width * 0.08, width_scale=0.92)
 
         # PCA reduce full-dim data for KNN
-        pca_full = _PCA(n_components=30, random_state=42)
+        pca_full = _PCA(n_components=30, random_state=RANDOM_SEED)
         fd_pca = pca_full.fit_transform(full_dim_data)
 
         real_fd_mask = full_dim_source == "Real"

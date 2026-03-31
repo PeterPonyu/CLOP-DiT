@@ -50,6 +50,7 @@ from sklearn.preprocessing import LabelEncoder
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(_PROJECT_ROOT))
 
+from src.utils.constants import CLASSIFIER_MAX_ITER, RANDOM_SEED
 from src.utils.logging_config import setup_logging
 from src.visualization.style import COLORS as VIZ_COLORS, apply_style, save_with_vcd
 
@@ -145,7 +146,7 @@ def _get_embeddings(adata: ad.AnnData, embedding_key: str = "X_clop_dit") -> np.
     n_components = min(50, X.shape[0], X.shape[1])
     if n_components == 0:
         return np.zeros((len(adata), 1), dtype=np.float64)
-    features = PCA(n_components=n_components, random_state=42).fit_transform(X)
+    features = PCA(n_components=n_components, random_state=RANDOM_SEED).fit_transform(X)
     # Safety: ensure no residual NaN after PCA
     features = np.nan_to_num(features, nan=0.0, posinf=0.0, neginf=0.0)
     return features
@@ -422,7 +423,7 @@ class RareCellAugmenter:
 
         # Train logistic regression
         clf = LogisticRegression(
-            max_iter=2000,
+            max_iter=CLASSIFIER_MAX_ITER,
             multi_class="multinomial",
             solver="lbfgs",
             random_state=self.seed,

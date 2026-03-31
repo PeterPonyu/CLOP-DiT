@@ -13,6 +13,8 @@ import matplotlib
 from pathlib import Path
 from typing import Optional, List, Dict
 
+from ..utils.constants import RANDOM_SEED
+
 # Publication-quality style (Nature/Cell convention)
 matplotlib.rcParams.update({
     "font.family": "sans-serif",
@@ -73,10 +75,10 @@ class EmbeddingVisualizer:
 
         if method == "umap":
             import umap
-            reducer = umap.UMAP(n_components=2, random_state=42)
+            reducer = umap.UMAP(n_components=2, random_state=RANDOM_SEED)
         else:
             from sklearn.manifold import TSNE
-            reducer = TSNE(n_components=2, random_state=42)
+            reducer = TSNE(n_components=2, random_state=RANDOM_SEED)
 
         coords = reducer.fit_transform(combined)
 
@@ -135,10 +137,10 @@ class EmbeddingVisualizer:
 
         if method == "umap":
             import umap
-            reducer = umap.UMAP(n_components=2, random_state=42)
+            reducer = umap.UMAP(n_components=2, random_state=RANDOM_SEED)
         else:
             from sklearn.manifold import TSNE
-            reducer = TSNE(n_components=2, random_state=42)
+            reducer = TSNE(n_components=2, random_state=RANDOM_SEED)
 
         coords = reducer.fit_transform(combined)
 

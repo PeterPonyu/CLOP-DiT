@@ -16,6 +16,7 @@ from matplotlib.lines import Line2D
 from sklearn.decomposition import PCA
 from sklearn.metrics import r2_score
 
+from ...utils.constants import UMAP_N_NEIGHBORS
 from . import constants
 from .metrics import (
     to_dense,
@@ -134,7 +135,7 @@ def _plot_umap_panel(real_recon, fake_adata, ax):
         sc.pp.highly_variable_genes(combined, n_top_genes=min(2000, n_genes), flavor="seurat_v3", subset=True)
     sc.pp.scale(combined, max_value=10)
     sc.tl.pca(combined, n_comps=min(50, combined.shape[1] - 1))
-    sc.pp.neighbors(combined, n_neighbors=15)
+    sc.pp.neighbors(combined, n_neighbors=UMAP_N_NEIGHBORS)
     sc.tl.umap(combined)
 
     umap = combined.obsm["X_umap"]

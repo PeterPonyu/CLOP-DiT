@@ -6,6 +6,17 @@ except Exception:  # pragma: no cover - allow path/config usage without torch
     get_device = None
     count_parameters = None
     format_time = None
+from .constants import (
+    RANDOM_SEED,
+    LATENT_DIM,
+    TEXT_DIM_LARGE,
+    TEXT_DIM_BASE,
+    PROJ_DIM,
+    CFG_SCALE,
+    INFERENCE_STEPS,
+    BIOMEDBERT_LARGE,
+    BIOMEDBERT_BASE,
+)
 from .logging_config import setup_logging
 from .paths import (
     PROJECT_ROOT,

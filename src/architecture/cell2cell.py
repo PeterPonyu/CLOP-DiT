@@ -40,6 +40,19 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Optional, Tuple, Dict
 
+from ..utils.constants import (
+    CFG_SCALE,
+    COND_DROP_PROB,
+    DEFAULT_ATTN_DROP,
+    DEFAULT_PROJ_DROP,
+    DIT_HIDDEN_DIM,
+    DIT_MLP_RATIO,
+    DIT_NUM_BLOCKS,
+    DIT_NUM_HEADS,
+    DIT_NUM_TOKENS,
+    LATENT_DIM,
+    PROJ_DIM,
+)
 from .dit import (
     TimestepEmbedder,
     ConditionEmbedder,
@@ -120,17 +133,17 @@ class Cell2CellDiT(nn.Module):
 
     def __init__(
         self,
-        latent_dim: int = 512,
-        hidden_dim: int = 384,
-        cond_dim: int = 256,
-        num_blocks: int = 8,
-        num_heads: int = 6,
-        mlp_ratio: float = 4.0,
-        num_tokens: int = 16,
-        cond_drop_prob: float = 0.1,
-        src_drop_prob: float = 0.1,
-        attn_drop: float = 0.0,
-        proj_drop: float = 0.1,
+        latent_dim: int = LATENT_DIM,
+        hidden_dim: int = DIT_HIDDEN_DIM,
+        cond_dim: int = PROJ_DIM,
+        num_blocks: int = DIT_NUM_BLOCKS,
+        num_heads: int = DIT_NUM_HEADS,
+        mlp_ratio: float = DIT_MLP_RATIO,
+        num_tokens: int = DIT_NUM_TOKENS,
+        cond_drop_prob: float = COND_DROP_PROB,
+        src_drop_prob: float = COND_DROP_PROB,
+        attn_drop: float = DEFAULT_ATTN_DROP,
+        proj_drop: float = DEFAULT_PROJ_DROP,
     ):
         super().__init__()
         assert latent_dim % num_tokens == 0
@@ -248,7 +261,7 @@ class Cell2CellDiT(nn.Module):
         z_src: torch.Tensor,
         cond: torch.Tensor,
         edit_strength: Optional[torch.Tensor] = None,
-        cfg_scale: float = 3.0,
+        cfg_scale: float = CFG_SCALE,
         src_cfg_scale: float = 1.5,
     ) -> torch.Tensor:
         """Classifier-Free Guidance with dual conditioning.
@@ -275,7 +288,7 @@ class Cell2CellDiT(nn.Module):
         cond: torch.Tensor,
         edit_strength: float = 0.5,
         num_steps: int = 4,
-        cfg_scale: float = 3.0,
+        cfg_scale: float = CFG_SCALE,
         src_cfg_scale: float = 1.5,
     ) -> torch.Tensor:
         """Edit cells: source cell + condition → edited cell.
@@ -310,7 +323,7 @@ class Cell2CellDiT(nn.Module):
         self,
         cond: torch.Tensor,
         num_steps: int = 4,
-        cfg_scale: float = 3.0,
+        cfg_scale: float = CFG_SCALE,
     ) -> torch.Tensor:
         """Fallback: pure text-to-cell generation (no source cell)."""
         B = cond.shape[0]

@@ -15,6 +15,7 @@ from typing import Callable, Dict, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
+from ..utils.constants import RANDOM_SEED
 from .direct_layout import bind_figure_region
 from .style import COLORS, FONT_LEGEND_DENSE, FONT_LABEL, FONT_SMALL, FONT_TITLE, FONT_TICK_DENSE, FONT_ANNOTATION, abbreviate_cell_type, add_panel_label, apply_style, save_with_vcd, set_figure_suptitle
 from ._utils import sample_pairwise_cosines
@@ -115,9 +116,9 @@ def plot_diversity_distributions_violin(
         if len(real_subset) < 2 or len(gen_subset) < 2:
             continue
 
-        rr = sample_pairwise_cosines(real_subset, None, seed=42 + idx)
-        gg = sample_pairwise_cosines(gen_subset, None, seed=142 + idx)
-        rg = sample_pairwise_cosines(real_subset, gen_subset, seed=242 + idx)
+        rr = sample_pairwise_cosines(real_subset, None, seed=RANDOM_SEED + idx)
+        gg = sample_pairwise_cosines(gen_subset, None, seed=RANDOM_SEED + 100 + idx)
+        rg = sample_pairwise_cosines(real_subset, gen_subset, seed=RANDOM_SEED + 200 + idx)
         if min(len(rr), len(gg), len(rg)) == 0:
             continue
 

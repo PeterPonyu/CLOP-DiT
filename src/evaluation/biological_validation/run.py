@@ -14,6 +14,7 @@ import anndata as ad
 from src.utils.logging_config import setup_logging
 from src.utils.helpers import seed_everything
 from src.utils.paths import PROJECT_ROOT, FIG_DIR
+from src.utils.constants import BIOMEDBERT_LARGE, CFG_SCALE, INFERENCE_STEPS
 from src.architecture.decoder import ScGPTDecoder
 
 from .io import load_prompt_file, load_subcluster_metadata, load_dataset_specs, load_dataset_indices
@@ -82,14 +83,14 @@ def main():
     parser.add_argument("--prompt_min_conf", type=float, default=0.25)
     parser.add_argument("--output_dir", default=str(FIG_DIR / "biological_validation"))
     parser.add_argument("--num_cells_per_type", type=int, default=200)
-    parser.add_argument("--num_steps", type=int, default=20)
-    parser.add_argument("--cfg_scale", type=float, default=3.0)
+    parser.add_argument("--num_steps", type=int, default=INFERENCE_STEPS)
+    parser.add_argument("--cfg_scale", type=float, default=CFG_SCALE)
     parser.add_argument("--edit_strength", type=float, default=0.5)
     parser.add_argument("--dit_checkpoint", default="models/checkpoints/dit_best.pth")
     parser.add_argument("--clop_checkpoint", default="models/checkpoints/clop_best.pth")
     parser.add_argument("--cell2cell_checkpoint", default="models/checkpoints/cell2cell_best.pth")
     parser.add_argument("--scgpt_model_dir", default="models/scgpt_human")
-    parser.add_argument("--text_encoder", default="microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract")
+    parser.add_argument("--text_encoder", default=BIOMEDBERT_LARGE)
     parser.add_argument("--celltypist_model", default="Human_Lung_Atlas.pkl")
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--seed", type=int, default=42)

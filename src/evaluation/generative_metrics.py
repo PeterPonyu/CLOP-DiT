@@ -23,6 +23,8 @@ import torch
 import torch.nn.functional as F
 from sklearn.metrics import silhouette_score
 
+from ..utils.constants import CFG_SCALE, INFERENCE_STEPS, RANDOM_SEED
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -278,7 +280,7 @@ class GenerativeEvaluator:
             return {"wasserstein_2d": float('nan')}
         
         # Fit UMAP on real data
-        umap_model = UMAP(n_neighbors=n_neighbors, min_dist=min_dist, random_state=42)
+        umap_model = UMAP(n_neighbors=n_neighbors, min_dist=min_dist, random_state=RANDOM_SEED)
         real_2d = umap_model.fit_transform(real_emb)
         fake_2d = umap_model.transform(fake_emb)
         
@@ -300,7 +302,7 @@ class GenerativeEvaluator:
         real_cell_embeddings: np.ndarray,
         cell_type_labels: Optional[np.ndarray] = None,
         num_samples: int = 1000,
-        cfg_scale: float = 3.0,
+        cfg_scale: float = CFG_SCALE,
         decode_expression: bool = False,
     ) -> Dict:
         """Run full evaluation suite.
@@ -341,7 +343,7 @@ class GenerativeEvaluator:
         logger.info("Generating cell embeddings...")
         generated_embeddings = self.dit_model.sample(
             cond=text_emb_torch,
-            num_steps=20,
+            num_steps=INFERENCE_STEPS,
             cfg_scale=cfg_scale,
             device=self.device,
         ).cpu().numpy()

@@ -25,6 +25,27 @@ from torch.amp import GradScaler, autocast
 from ..architecture.clop import CLOPAligner
 from ..data_pipeline.dataset import CLOPDataset, create_dataloaders
 from ..evaluation.embedding_quality import compute_all_quality_metrics
+from ..utils.constants import (
+    CLOP_COHESION_WEIGHT,
+    CLOP_DROPOUT,
+    CLOP_LABEL_SMOOTHING,
+    CLOP_MAX_TEMPERATURE,
+    CLOP_MIN_TEMPERATURE,
+    CLOP_NUM_LAYERS,
+    CLOP_SEPARATION_THRESHOLD,
+    CLOP_SOFT_LABEL_ALPHA,
+    CLOP_SOFT_LABEL_BIAS,
+    CLOP_TEMPERATURE,
+    CLOP_WHITENING_EPS,
+    DEFAULT_GRAD_CLIP,
+    DEFAULT_NUM_WORKERS,
+    DEFAULT_VAL_SPLIT,
+    DEFAULT_WEIGHT_DECAY,
+    LATENT_DIM,
+    PROJ_DIM,
+    RANDOM_SEED,
+    TEXT_DIM_BASE,
+)
 from .schedulers import CosineWarmupScheduler
 
 logger = logging.getLogger(__name__)
@@ -67,13 +88,13 @@ class CLOPTrainer:
         train_loader: DataLoader,
         val_loader: DataLoader,
         lr: float = 3e-4,
-        weight_decay: float = 0.01,
+        weight_decay: float = DEFAULT_WEIGHT_DECAY,
         num_epochs: int = 100,
         warmup_epochs: int = 5,
         save_dir: str = "models/checkpoints",
         device: str = "cuda",
         use_amp: bool = True,
-        grad_clip: float = 1.0,
+        grad_clip: float = DEFAULT_GRAD_CLIP,
         log_interval: int = 50,
         early_stopping_patience: int = 0,
         temp_lr_multiplier: float = 10.0,
@@ -606,7 +627,7 @@ class CLOPTrainer:
         """
         from .reproducibility import seed_everything
         seed_everything(
-            seed=config.get("seed", 42),
+            seed=config.get("seed", RANDOM_SEED),
             deterministic=config.get("deterministic", False),
         )
 
@@ -643,37 +664,37 @@ class CLOPTrainer:
         ds = train_loader.dataset
         if hasattr(ds, 'dataset'):  # Subset wrapper from random_split
             ds = ds.dataset
-        actual_text_dim = ds.text_dim if hasattr(ds, 'text_dim') else config.get("text_dim", 768)
-        actual_cell_dim = ds.cell_dim if hasattr(ds, 'cell_dim') else config.get("cell_dim", 512)
+        actual_text_dim = ds.text_dim if hasattr(ds, 'text_dim') else config.get("text_dim", TEXT_DIM_BASE)
+        actual_cell_dim = ds.cell_dim if hasattr(ds, 'cell_dim') else config.get("cell_dim", LATENT_DIM)
         logger.info(f"Auto-detected dims: text_dim={actual_text_dim}, cell_dim={actual_cell_dim}")
 
         # Build model
         model = CLOPAligner(
             text_dim=config.get("text_dim", actual_text_dim),
             cell_dim=config.get("cell_dim", actual_cell_dim),
-            proj_dim=config.get("proj_dim", 256),
-            text_layers=config.get("text_layers", 3),
-            cell_layers=config.get("cell_layers", 3),
-            dropout=config.get("dropout", 0.1),
+            proj_dim=config.get("proj_dim", PROJ_DIM),
+            text_layers=config.get("text_layers", CLOP_NUM_LAYERS),
+            cell_layers=config.get("cell_layers", CLOP_NUM_LAYERS),
+            dropout=config.get("dropout", CLOP_DROPOUT),
             use_batch_norm=config.get("use_batch_norm", True),
-            temperature=config.get("temperature", 0.07),
-            min_temperature=config.get("min_temperature", 0.01),
-            max_temperature=config.get("max_temperature", 0.5),
-            label_smoothing=config.get("label_smoothing", 0.1),
+            temperature=config.get("temperature", CLOP_TEMPERATURE),
+            min_temperature=config.get("min_temperature", CLOP_MIN_TEMPERATURE),
+            max_temperature=config.get("max_temperature", CLOP_MAX_TEMPERATURE),
+            label_smoothing=config.get("label_smoothing", CLOP_LABEL_SMOOTHING),
             use_ema=config.get("use_ema", False),
             ema_decay=config.get("ema_decay", 0.999),
             use_soft_labels=config.get("use_soft_labels", False),
-            soft_label_alpha=config.get("soft_label_alpha", 2.0),
-            soft_label_bias=config.get("soft_label_bias", 5.0),
+            soft_label_alpha=config.get("soft_label_alpha", CLOP_SOFT_LABEL_ALPHA),
+            soft_label_bias=config.get("soft_label_bias", CLOP_SOFT_LABEL_BIAS),
             cell_noise_std=config.get("cell_noise_std", 0.0),
             use_whitening=config.get("use_whitening", False),
-            whitening_eps=config.get("whitening_eps", 1e-4),
+            whitening_eps=config.get("whitening_eps", CLOP_WHITENING_EPS),
             loss_type=config.get("loss_type", "infonce"),
             auto_duplicate_mask=config.get("auto_duplicate_mask", False),
-            cohesion_weight=config.get("cohesion_weight", 0.1),
+            cohesion_weight=config.get("cohesion_weight", CLOP_COHESION_WEIGHT),
             temp_reg_weight=config.get("temp_reg_weight", 0.0),
             separation_margin=config.get("separation_margin", 0.0),
-            separation_threshold=config.get("separation_threshold", 0.3),
+            separation_threshold=config.get("separation_threshold", CLOP_SEPARATION_THRESHOLD),
         )
 
         # Freeze temperature if configured as non-learnable (prevents temp runaway)

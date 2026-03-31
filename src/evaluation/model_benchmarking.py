@@ -15,6 +15,7 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
+from ..utils.constants import RANDOM_SEED
 from .baseline_registry import (
     MethodSpec,
     expected_artifact_contract,
@@ -175,11 +176,11 @@ def _evaluate_method(
     if dim_mismatch:
         from sklearn.decomposition import PCA
         common_dim = min(real_sub.shape[1], gen_sub.shape[1], 32)
-        pca = PCA(n_components=common_dim, random_state=42)
+        pca = PCA(n_components=common_dim, random_state=RANDOM_SEED)
         pca.fit(real_sub)
         real_proj = pca.transform(real_sub)
         # For gen_sub with different dims, fit a separate PCA and project
-        pca_gen = PCA(n_components=common_dim, random_state=42)
+        pca_gen = PCA(n_components=common_dim, random_state=RANDOM_SEED)
         gen_proj = pca_gen.fit_transform(gen_sub)
         logger.warning(
             "Dimension mismatch: real=%dD, gen=%dD → PCA projection to %dD for distributional metrics",

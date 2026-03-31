@@ -25,6 +25,13 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
+from ..utils.constants import (
+    CLASSIFIER_MAX_ITER,
+    DISC_CLASSIFIER_MAX_ITER,
+    EVAL_TEST_FRACTION,
+    RANDOM_SEED,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -238,10 +245,10 @@ def classifier_alignment(
 
     # Split real into train/test
     X_train, X_test, y_train, y_test = train_test_split(
-        real_pca, real_y, test_size=test_fraction, random_state=42, stratify=real_y
+        real_pca, real_y, test_size=test_fraction, random_state=RANDOM_SEED, stratify=real_y
     )
 
-    clf = LogisticRegression(max_iter=2000, random_state=42, n_jobs=-1,
+    clf = LogisticRegression(max_iter=CLASSIFIER_MAX_ITER, random_state=RANDOM_SEED, n_jobs=-1,
                              class_weight="balanced")
     clf.fit(X_train, y_train)
 
@@ -266,7 +273,7 @@ def classifier_alignment(
     # Real-vs-generated discriminator (should be near 0.5 if distributions match)
     disc_X = np.vstack([real_pca, gen_pca])
     disc_y = np.concatenate([np.zeros(len(real_pca)), np.ones(len(gen_pca))])
-    disc_clf = LogisticRegression(max_iter=1000, random_state=42)
+    disc_clf = LogisticRegression(max_iter=DISC_CLASSIFIER_MAX_ITER, random_state=RANDOM_SEED)
     # Use cross-val-like approach: train on 80%, test on 20%
     from sklearn.model_selection import cross_val_predict
     with warnings.catch_warnings():

@@ -30,6 +30,27 @@ from torch.utils.data import Dataset, DataLoader
 from torch.amp import GradScaler, autocast
 
 from ..architecture.cell2cell import Cell2CellDiT
+from ..utils.constants import (
+    ADAMW_BETAS,
+    CFG_SCALE,
+    COND_DROP_PROB,
+    DEFAULT_BATCH_SIZE,
+    DEFAULT_EMA_DECAY,
+    DEFAULT_GRAD_CLIP,
+    DEFAULT_LR,
+    DEFAULT_NUM_EPOCHS,
+    DEFAULT_NUM_WORKERS,
+    DEFAULT_VAL_SPLIT,
+    DEFAULT_WARMUP_EPOCHS,
+    DEFAULT_WEIGHT_DECAY,
+    DIT_HIDDEN_DIM,
+    DIT_MLP_RATIO,
+    DIT_NUM_BLOCKS,
+    DIT_NUM_HEADS,
+    DIT_NUM_TOKENS,
+    INFERENCE_STEPS,
+    RANDOM_SEED,
+)
 from .schedulers import CosineWarmupScheduler
 
 logger = logging.getLogger(__name__)
@@ -173,15 +194,15 @@ class Cell2CellTrainer:
         model: Cell2CellDiT,
         train_loader: DataLoader,
         val_loader: DataLoader,
-        lr: float = 1e-4,
-        weight_decay: float = 0.01,
-        num_epochs: int = 200,
-        warmup_epochs: int = 10,
+        lr: float = DEFAULT_LR,
+        weight_decay: float = DEFAULT_WEIGHT_DECAY,
+        num_epochs: int = DEFAULT_NUM_EPOCHS,
+        warmup_epochs: int = DEFAULT_WARMUP_EPOCHS,
         save_dir: str = "models/checkpoints",
         device: str = "cuda",
         use_amp: bool = True,
-        grad_clip: float = 1.0,
-        ema_decay: float = 0.9999,
+        grad_clip: float = DEFAULT_GRAD_CLIP,
+        ema_decay: float = DEFAULT_EMA_DECAY,
         identity_weight: float = 0.1,
         log_interval: int = 50,
         eval_interval: int = 25,
@@ -201,7 +222,7 @@ class Cell2CellTrainer:
         self.save_dir.mkdir(parents=True, exist_ok=True)
 
         self.optimizer = torch.optim.AdamW(
-            model.parameters(), lr=lr, weight_decay=weight_decay, betas=(0.9, 0.999)
+            model.parameters(), lr=lr, weight_decay=weight_decay, betas=ADAMW_BETAS
         )
 
         steps_per_epoch = len(train_loader)
@@ -370,7 +391,7 @@ class Cell2CellTrainer:
         edited = model.edit(
             sources, conditions,
             edit_strength=0.5,
-            num_steps=20, cfg_scale=3.0, src_cfg_scale=1.5
+            num_steps=INFERENCE_STEPS, cfg_scale=CFG_SCALE, src_cfg_scale=1.5
         )
 
         real_np = real_tgts.cpu().numpy()
@@ -478,14 +499,14 @@ class Cell2CellTrainer:
 
         # Train/val split
         n = len(full_ds)
-        n_val = int(n * config.get("val_split", 0.1))
+        n_val = int(n * config.get("val_split", DEFAULT_VAL_SPLIT))
         n_train = n - n_val
         train_ds, val_ds = torch.utils.data.random_split(full_ds, [n_train, n_val])
 
-        nw = config.get("num_workers", 4)
+        nw = config.get("num_workers", DEFAULT_NUM_WORKERS)
         train_loader = DataLoader(
             train_ds,
-            batch_size=config.get("batch_size", 512),
+            batch_size=config.get("batch_size", DEFAULT_BATCH_SIZE),
             shuffle=True,
             num_workers=nw,
             pin_memory=True,
@@ -494,7 +515,7 @@ class Cell2CellTrainer:
         )
         val_loader = DataLoader(
             val_ds,
-            batch_size=config.get("batch_size", 512),
+            batch_size=config.get("batch_size", DEFAULT_BATCH_SIZE),
             shuffle=False,
             num_workers=nw,
             pin_memory=True,
@@ -504,14 +525,14 @@ class Cell2CellTrainer:
         # Build model
         model = Cell2CellDiT(
             latent_dim=config.get("latent_dim", full_ds.latent_dim),
-            hidden_dim=config.get("hidden_dim", 384),
+            hidden_dim=config.get("hidden_dim", DIT_HIDDEN_DIM),
             cond_dim=config.get("cond_dim", full_ds.cond_dim),
-            num_blocks=config.get("num_blocks", 8),
-            num_heads=config.get("num_heads", 6),
-            mlp_ratio=config.get("mlp_ratio", 4.0),
-            num_tokens=config.get("num_tokens", 16),
-            cond_drop_prob=config.get("cond_drop_prob", 0.1),
-            src_drop_prob=config.get("src_drop_prob", 0.1),
+            num_blocks=config.get("num_blocks", DIT_NUM_BLOCKS),
+            num_heads=config.get("num_heads", DIT_NUM_HEADS),
+            mlp_ratio=config.get("mlp_ratio", DIT_MLP_RATIO),
+            num_tokens=config.get("num_tokens", DIT_NUM_TOKENS),
+            cond_drop_prob=config.get("cond_drop_prob", COND_DROP_PROB),
+            src_drop_prob=config.get("src_drop_prob", COND_DROP_PROB),
         )
 
         return cls(

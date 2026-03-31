@@ -32,6 +32,8 @@ from typing import Dict, List, Optional, Union, Tuple
 import numpy as np
 import torch
 import scanpy as sc
+
+from ..utils.constants import BIOMEDBERT_LARGE, DEFAULT_MAX_SEQ_LENGTH, LATENT_DIM, TEXT_DIM_LARGE
 import anndata as ad
 
 logger = logging.getLogger(__name__)
@@ -62,9 +64,9 @@ class LatentCacheBuilder:
         self,
         cache_dir: Union[str, Path] = "data/cached_latents",
         cell_encoder: str = "scgpt",
-        text_encoder: str = "microsoft/BiomedNLP-BiomedBERT-large-uncased-abstract",
-        cell_dim: int = 512,
-        text_dim: int = 1024,
+        text_encoder: str = BIOMEDBERT_LARGE,
+        cell_dim: int = LATENT_DIM,
+        text_dim: int = TEXT_DIM_LARGE,
         device: str = "cuda",
         batch_size: int = 64,
     ):
@@ -120,7 +122,7 @@ class LatentCacheBuilder:
                 batch_texts,
                 padding=True,
                 truncation=True,
-                max_length=512,
+                max_length=DEFAULT_MAX_SEQ_LENGTH,
                 return_tensors="pt",
             ).to(self.device)
 

@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Optional, Union, Dict, Tuple, List
 import logging
 
+from ..utils.constants import BIOMEDBERT_BASE, DEFAULT_MAX_SEQ_LENGTH
 from .group_aware_sampler import GroupAwareBatchSampler
 
 logger = logging.getLogger(__name__)
@@ -523,7 +524,7 @@ class InferenceDataset(Dataset):
     def __init__(
         self,
         descriptions: list,
-        text_encoder_name: str = "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract",
+        text_encoder_name: str = BIOMEDBERT_BASE,
         clop_projector=None,
         num_cells_per_condition: int = 100,
         device: str = "cuda",
@@ -542,7 +543,7 @@ class InferenceDataset(Dataset):
         with torch.no_grad():
             inputs = tokenizer(
                 descriptions, padding=True, truncation=True,
-                max_length=512, return_tensors="pt"
+                max_length=DEFAULT_MAX_SEQ_LENGTH, return_tensors="pt"
             ).to(device)
             outputs = model(**inputs)
             text_emb = outputs.last_hidden_state[:, 0, :].cpu()

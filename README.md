@@ -83,7 +83,7 @@ CLOP-DiT/
 │   ├── evaluation/             #   Metrics, benchmarking, biological validation
 │   ├── experiments/            #   OOD evaluation, rare cell augmentation
 │   ├── visualization/          #   Publication figure generation (Figs 1-30)
-│   └── utils/                  #   Path resolution, logging, helpers
+│   └── utils/                  #   Path resolution, constants, logging, helpers
 ├── scripts/                    # Pipeline entry points
 │   ├── data_prep/              #   Steps 00-03: data preparation & caching
 │   ├── training/               #   Steps 04a-c: model training & experiments
@@ -95,6 +95,9 @@ CLOP-DiT/
 ├── configs/                    # YAML/JSON configuration
 │   ├── clop.yaml               #   CLOP training config
 │   ├── dit.yaml                #   DiT training config
+│   ├── models.yaml             #   Encoder/decoder catalog & ablation matrix
+│   ├── thresholds.yaml         #   Quality gates & evaluation cutoffs
+│   ├── marker_genes.yaml       #   Biologically curated marker panels
 │   ├── pipeline.yaml           #   Centralized path configuration
 │   └── baselines/              #   Baseline method configs
 ├── articles/                   # LaTeX manuscript
@@ -115,6 +118,30 @@ CLOP-DiT/
 ├── requirements.txt
 ├── setup.py
 └── README.md
+```
+
+## Configuration
+
+All runtime parameters are resolved through a layered configuration system:
+
+1. **YAML configs** (`configs/clop.yaml`, `configs/dit.yaml`, etc.) define per-experiment hyperparameters.
+2. **`src/utils/constants.py`** provides named default constants (model dimensions, guidance scale, random seed, optimizer betas, etc.) used as fallbacks when YAML keys are absent. This eliminates scattered magic numbers and keeps code-level defaults consistent with the YAML files.
+3. **`src/utils/paths.py`** centralizes all directory paths with a resolution order: environment variables > `configs/pipeline.yaml` > built-in defaults.
+4. **`configs/thresholds.yaml`** stores quality gates, statistical cutoffs, and visualization band thresholds loaded via `load_thresholds()`.
+
+Key constants available from `src.utils.constants`:
+
+```python
+from src.utils.constants import (
+    RANDOM_SEED,          # 42 — used across all evaluation and training
+    LATENT_DIM,           # 512 — scGPT cell embedding dimension
+    TEXT_DIM_LARGE,       # 1024 — BiomedBERT-large output dimension
+    PROJ_DIM,             # 512 — CLOP shared projection space
+    CFG_SCALE,            # 3.0 — classifier-free guidance scale
+    INFERENCE_STEPS,      # 20 — ODE solver steps for generation
+    BIOMEDBERT_LARGE,     # HuggingFace model ID string
+    ADAMW_BETAS,          # (0.9, 0.999) — optimizer momentum
+)
 ```
 
 ## Reproducibility

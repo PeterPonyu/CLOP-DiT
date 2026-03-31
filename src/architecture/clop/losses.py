@@ -6,6 +6,23 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Optional, Tuple
 
+from ...utils.constants import (
+    CLOP_COHESION_WEIGHT,
+    CLOP_DROPOUT,
+    CLOP_LABEL_SMOOTHING,
+    CLOP_MAX_TEMPERATURE,
+    CLOP_MIN_TEMPERATURE,
+    CLOP_NUM_LAYERS,
+    CLOP_SEPARATION_THRESHOLD,
+    CLOP_SOFT_LABEL_ALPHA,
+    CLOP_SOFT_LABEL_BIAS,
+    CLOP_TEMPERATURE,
+    CLOP_WHITENING_EPS,
+    PROJ_DIM,
+    SIGLIP_INIT_BIAS,
+    SIGLIP_INIT_TEMPERATURE,
+)
+
 class TextWhiteningTransform(nn.Module):
     """Fixed (non-learnable) PCA whitening transform for text embeddings.
 
@@ -24,7 +41,7 @@ class TextWhiteningTransform(nn.Module):
         Regularization to prevent amplifying noise dimensions.
     """
 
-    def __init__(self, dim: int, eps: float = 1e-4):
+    def __init__(self, dim: int, eps: float = CLOP_WHITENING_EPS):
         super().__init__()
         self.dim = dim
         self.eps = eps
@@ -92,10 +109,10 @@ class ProjectionHead(nn.Module):
     def __init__(
         self,
         input_dim: int,
-        proj_dim: int = 256,
+        proj_dim: int = PROJ_DIM,
         hidden_dim: Optional[int] = None,
-        num_layers: int = 3,
-        dropout: float = 0.1,
+        num_layers: int = CLOP_NUM_LAYERS,
+        dropout: float = CLOP_DROPOUT,
         use_batch_norm: bool = True,
     ):
         super().__init__()
@@ -159,8 +176,8 @@ class SigLIPLoss(nn.Module):
 
     def __init__(
         self,
-        init_temperature: float = 10.0,
-        init_bias: float = -10.0,
+        init_temperature: float = SIGLIP_INIT_TEMPERATURE,
+        init_bias: float = SIGLIP_INIT_BIAS,
     ):
         super().__init__()
         self.log_temperature = nn.Parameter(torch.tensor(np.log(init_temperature)))
@@ -271,13 +288,13 @@ class PrototypeSigLIPLoss(nn.Module):
 
     def __init__(
         self,
-        init_temperature: float = 10.0,
-        init_bias: float = -10.0,
-        cohesion_weight: float = 0.1,
+        init_temperature: float = SIGLIP_INIT_TEMPERATURE,
+        init_bias: float = SIGLIP_INIT_BIAS,
+        cohesion_weight: float = CLOP_COHESION_WEIGHT,
         max_temperature: float = 100.0,
         temp_reg_weight: float = 0.0,
         separation_margin: float = 0.0,
-        separation_threshold: float = 0.3,
+        separation_threshold: float = CLOP_SEPARATION_THRESHOLD,
     ):
         super().__init__()
         self.log_temperature = nn.Parameter(torch.tensor(np.log(init_temperature)))
@@ -558,13 +575,13 @@ class InfoNCELoss(nn.Module):
 
     def __init__(
         self,
-        init_temperature: float = 0.07,
-        min_temperature: float = 0.01,
-        max_temperature: float = 0.5,
-        label_smoothing: float = 0.1,
+        init_temperature: float = CLOP_TEMPERATURE,
+        min_temperature: float = CLOP_MIN_TEMPERATURE,
+        max_temperature: float = CLOP_MAX_TEMPERATURE,
+        label_smoothing: float = CLOP_LABEL_SMOOTHING,
         use_soft_labels: bool = False,
-        soft_label_alpha: float = 2.0,
-        soft_label_bias: float = 5.0,
+        soft_label_alpha: float = CLOP_SOFT_LABEL_ALPHA,
+        soft_label_bias: float = CLOP_SOFT_LABEL_BIAS,
     ):
         super().__init__()
         self.log_temperature = nn.Parameter(torch.tensor(np.log(init_temperature)))

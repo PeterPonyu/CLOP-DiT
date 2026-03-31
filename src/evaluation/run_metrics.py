@@ -14,6 +14,24 @@ from typing import Any
 import numpy as np
 import torch
 
+from ..utils.constants import (
+    CFG_SCALE,
+    CLOP_COHESION_WEIGHT,
+    CLOP_DROPOUT,
+    CLOP_LABEL_SMOOTHING,
+    CLOP_NUM_LAYERS,
+    DIT_HIDDEN_DIM,
+    DIT_NUM_TOKENS,
+    EVAL_BATCH_SIZE,
+    EVAL_NUM_SAMPLES,
+    INFERENCE_STEPS,
+    LATENT_DIM,
+    NORM_EPS,
+    PROJ_DIM,
+    SIGLIP_INIT_TEMPERATURE,
+    TEXT_DIM_LARGE,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -29,19 +47,19 @@ def load_clop(checkpoint_path: str | Path, device: str = "cuda"):
     config = ckpt.get("config", {})
 
     model = CLOPAligner(
-        text_dim=config.get("text_dim", 1024),
-        cell_dim=config.get("cell_dim", 512),
-        proj_dim=config.get("proj_dim", 256),
-        text_layers=config.get("text_layers", 3),
-        cell_layers=config.get("cell_layers", 3),
-        dropout=config.get("dropout", 0.1),
+        text_dim=config.get("text_dim", TEXT_DIM_LARGE),
+        cell_dim=config.get("cell_dim", LATENT_DIM),
+        proj_dim=config.get("proj_dim", PROJ_DIM),
+        text_layers=config.get("text_layers", CLOP_NUM_LAYERS),
+        cell_layers=config.get("cell_layers", CLOP_NUM_LAYERS),
+        dropout=config.get("dropout", CLOP_DROPOUT),
         use_batch_norm=config.get("use_batch_norm", True),
-        label_smoothing=config.get("label_smoothing", 0.1),
+        label_smoothing=config.get("label_smoothing", CLOP_LABEL_SMOOTHING),
         loss_type=config.get("loss_type", "prototype_siglip"),
         auto_duplicate_mask=config.get("auto_duplicate_mask", True),
-        temperature=config.get("temperature", 10.0),
+        temperature=config.get("temperature", SIGLIP_INIT_TEMPERATURE),
         use_whitening=config.get("use_whitening", False),
-        cohesion_weight=config.get("cohesion_weight", 0.1),
+        cohesion_weight=config.get("cohesion_weight", CLOP_COHESION_WEIGHT),
         max_temperature=config.get("max_temperature", 100.0),
     )
     model.load_state_dict(ckpt["model_state_dict"])
@@ -66,15 +84,15 @@ def load_dit(
     config = ckpt.get("config", {})
 
     if cond_dim is None and clop_config is not None:
-        cond_dim = clop_config.get("proj_dim", 256)
+        cond_dim = clop_config.get("proj_dim", PROJ_DIM)
     if cond_dim is None:
-        cond_dim = 256
+        cond_dim = PROJ_DIM
 
     model = DiT1D(
-        latent_dim=config.get("latent_dim", 512),
-        hidden_dim=config.get("hidden_dim", 384),
+        latent_dim=config.get("latent_dim", LATENT_DIM),
+        hidden_dim=config.get("hidden_dim", DIT_HIDDEN_DIM),
         cond_dim=cond_dim,
-        num_tokens=config.get("num_tokens", 16),
+        num_tokens=config.get("num_tokens", DIT_NUM_TOKENS),
     )
     if "ema_state_dict" in ckpt:
         model.load_state_dict(ckpt["ema_state_dict"])
@@ -143,7 +161,7 @@ def evaluate_clop(clop_model, cache_dir: str | Path, device: str = "cuda") -> di
 
     cell_proj_list = []
     text_proj_list = []
-    batch_size = 512
+    batch_size = EVAL_BATCH_SIZE
     for i in range(0, len(cell_emb), batch_size):
         c_batch = torch.from_numpy(cell_emb[i : i + batch_size]).float().to(device)
         t_batch = torch.from_numpy(text_emb[i : i + batch_size]).float().to(device)
@@ -156,8 +174,8 @@ def evaluate_clop(clop_model, cache_dir: str | Path, device: str = "cuda") -> di
     unique_ids = np.unique(sample_ids)
     sample_cell_proj = np.array([cell_proj[sample_ids == sid].mean(axis=0) for sid in unique_ids])
     sample_text_proj = np.array([text_proj[sample_ids == sid].mean(axis=0) for sid in unique_ids])
-    sample_cell_proj = sample_cell_proj / (np.linalg.norm(sample_cell_proj, axis=1, keepdims=True) + 1e-8)
-    sample_text_proj = sample_text_proj / (np.linalg.norm(sample_text_proj, axis=1, keepdims=True) + 1e-8)
+    sample_cell_proj = sample_cell_proj / (np.linalg.norm(sample_cell_proj, axis=1, keepdims=True) + NORM_EPS)
+    sample_text_proj = sample_text_proj / (np.linalg.norm(sample_text_proj, axis=1, keepdims=True) + NORM_EPS)
 
     retrieval_metrics = GenerationMetrics.clop_retrieval(
         sample_text_proj, sample_cell_proj, k_values=(1, 3, 5, 10)
@@ -181,9 +199,9 @@ def evaluate_generation(
     dit_model,
     clop_model,
     cache_dir: str | Path,
-    num_samples: int = 500,
-    num_steps: int = 20,
-    cfg_scale: float = 3.0,
+    num_samples: int = EVAL_NUM_SAMPLES,
+    num_steps: int = INFERENCE_STEPS,
+    cfg_scale: float = CFG_SCALE,
     device: str = "cuda",
 ) -> dict[str, Any] | None:
     """Evaluate DiT generation quality (FD, MMD, coverage, density, KL)."""
@@ -218,7 +236,7 @@ def evaluate_generation(
 
     cond_tensor = torch.from_numpy(conditions).float().to(device)
     generated_list = []
-    batch_size = 256
+    batch_size = EVAL_BATCH_SIZE // 2
     for i in range(0, len(cond_tensor), batch_size):
         batch = cond_tensor[i : i + batch_size]
         gen = dit_model.sample(batch, num_steps=num_steps, cfg_scale=cfg_scale)
@@ -228,7 +246,7 @@ def evaluate_generation(
     metrics = GenerationMetrics.full_evaluation(real, generated)
     real_norms = np.linalg.norm(real, axis=1)
     gen_norms = np.linalg.norm(generated, axis=1)
-    cosine_sims = np.sum(generated * real, axis=1) / (gen_norms * real_norms + 1e-8)
+    cosine_sims = np.sum(generated * real, axis=1) / (gen_norms * real_norms + NORM_EPS)
     metrics["real_norm_mean"] = float(real_norms.mean())
     metrics["gen_norm_mean"] = float(gen_norms.mean())
     metrics["paired_cosine_mean"] = float(cosine_sims.mean())
@@ -245,9 +263,9 @@ def run_embedding_metrics(
     clop_checkpoint: str | Path,
     dit_checkpoint: str | Path,
     output_dir: str | Path | None = None,
-    num_samples: int = 500,
-    num_steps: int = 20,
-    cfg_scale: float = 3.0,
+    num_samples: int = EVAL_NUM_SAMPLES,
+    num_steps: int = INFERENCE_STEPS,
+    cfg_scale: float = CFG_SCALE,
     device: str = "cuda",
     skip_clop: bool = False,
     skip_gen: bool = False,
@@ -285,7 +303,7 @@ def run_embedding_metrics(
             "cosine_sim_std": out["clop_results"]["cosine_sim_std"],
         }
 
-    cond_dim = clop_config.get("proj_dim", 256)
+    cond_dim = clop_config.get("proj_dim", PROJ_DIM)
     if not skip_gen and dit_path.exists():
         if clop_model is None and clop_path.exists():
             _, clop_config = load_clop(clop_path, device)

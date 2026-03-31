@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import FuncFormatter, MaxNLocator
 
+from ..utils.constants import RANDOM_SEED
 from .direct_layout import bind_figure_region
 from .style import (
     COLORS,
@@ -176,7 +177,7 @@ def plot_embedding_space_merged(
 
         combined_b = np.vstack([cell_sub, text_proto])
         reducer_b = umap_lib.UMAP(n_components=2, n_neighbors=30, min_dist=0.3,
-                                   metric="cosine", random_state=42)
+                                   metric="cosine", random_state=RANDOM_SEED)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             coords_b = reducer_b.fit_transform(combined_b)
@@ -258,7 +259,7 @@ def plot_embedding_space_merged(
             g_gids = gen_gids[gi] if gen_gids is not None else None
 
             combined_e = np.vstack([r_sub, g_sub])
-            reducer_e = umap_lib.UMAP(n_components=2, random_state=42, metric="cosine")
+            reducer_e = umap_lib.UMAP(n_components=2, random_state=RANDOM_SEED, metric="cosine")
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 coords_e = reducer_e.fit_transform(combined_e)
@@ -431,7 +432,7 @@ def plot_clop_embedding_space(
     combined = np.vstack([cell_sub, text_proto])
     reducer = umap_lib.UMAP(
         n_components=2, n_neighbors=30, min_dist=0.3,
-        metric="cosine", random_state=42,
+        metric="cosine", random_state=RANDOM_SEED,
     )
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -618,7 +619,7 @@ def plot_real_vs_generated(
 
     import umap as umap_lib
 
-    reducer = umap_lib.UMAP(n_components=2, random_state=42, metric="cosine")
+    reducer = umap_lib.UMAP(n_components=2, random_state=RANDOM_SEED, metric="cosine")
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         coords = reducer.fit_transform(combined)

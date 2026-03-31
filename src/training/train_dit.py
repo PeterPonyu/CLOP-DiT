@@ -26,6 +26,31 @@ from torch.amp import GradScaler, autocast
 
 from ..architecture.dit import DiT1D
 from ..data_pipeline.dataset import DiTDataset, create_dataloaders
+from ..utils.constants import (
+    ADAMW_BETAS,
+    CFG_SCALE,
+    COND_DROP_PROB,
+    DEFAULT_ATTN_DROP,
+    DEFAULT_BATCH_SIZE,
+    DEFAULT_EMA_DECAY,
+    DEFAULT_GRAD_CLIP,
+    DEFAULT_LR,
+    DEFAULT_NUM_EPOCHS,
+    DEFAULT_NUM_WORKERS,
+    DEFAULT_PROJ_DROP,
+    DEFAULT_VAL_SPLIT,
+    DEFAULT_WARMUP_EPOCHS,
+    DEFAULT_WEIGHT_DECAY,
+    DIT_HIDDEN_DIM,
+    DIT_MLP_RATIO,
+    DIT_NUM_BLOCKS,
+    DIT_NUM_HEADS,
+    DIT_NUM_TOKENS,
+    INFERENCE_STEPS,
+    LATENT_DIM,
+    PROJ_DIM,
+    RANDOM_SEED,
+)
 from .schedulers import CosineWarmupScheduler
 
 logger = logging.getLogger(__name__)
@@ -71,15 +96,15 @@ class DiTTrainer:
         model: DiT1D,
         train_loader: DataLoader,
         val_loader: DataLoader,
-        lr: float = 1e-4,
-        weight_decay: float = 0.01,
-        num_epochs: int = 200,
-        warmup_epochs: int = 10,
+        lr: float = DEFAULT_LR,
+        weight_decay: float = DEFAULT_WEIGHT_DECAY,
+        num_epochs: int = DEFAULT_NUM_EPOCHS,
+        warmup_epochs: int = DEFAULT_WARMUP_EPOCHS,
         save_dir: str = "models/checkpoints",
         device: str = "cuda",
         use_amp: bool = True,
-        grad_clip: float = 1.0,
-        ema_decay: float = 0.9999,
+        grad_clip: float = DEFAULT_GRAD_CLIP,
+        ema_decay: float = DEFAULT_EMA_DECAY,
         log_interval: int = 50,
         eval_interval: int = 10,
         **kwargs,
@@ -97,8 +122,8 @@ class DiTTrainer:
         self.save_dir = Path(save_dir)
 
         # Inference config (settable from config)
-        self.inference_steps = kwargs.get("inference_steps", 20)
-        self.cfg_scale = kwargs.get("cfg_scale", 3.0)
+        self.inference_steps = kwargs.get("inference_steps", INFERENCE_STEPS)
+        self.cfg_scale = kwargs.get("cfg_scale", CFG_SCALE)
         self.variance_loss_weight = kwargs.get("variance_loss_weight", 0.0)
         self.covariance_loss_weight = kwargs.get("covariance_loss_weight", 0.0)
         self.cov_num_slices = kwargs.get("cov_num_slices", 32)
@@ -106,7 +131,7 @@ class DiTTrainer:
 
         # Optimizer
         self.optimizer = torch.optim.AdamW(
-            model.parameters(), lr=lr, weight_decay=weight_decay, betas=(0.9, 0.999)
+            model.parameters(), lr=lr, weight_decay=weight_decay, betas=ADAMW_BETAS
         )
 
         # Scheduler
@@ -530,30 +555,30 @@ class DiTTrainer:
         """
         from .reproducibility import seed_everything
         seed_everything(
-            seed=config.get("seed", 42),
+            seed=config.get("seed", RANDOM_SEED),
             deterministic=config.get("deterministic", False),
         )
 
         model = DiT1D(
-            latent_dim=config.get("latent_dim", 512),
-            hidden_dim=config.get("hidden_dim", 384),
-            cond_dim=config.get("cond_dim", 256),
-            num_blocks=config.get("num_blocks", 8),
-            num_heads=config.get("num_heads", 6),
-            mlp_ratio=config.get("mlp_ratio", 4.0),
-            num_tokens=config.get("num_tokens", 16),
-            cond_drop_prob=config.get("cond_drop_prob", 0.1),
-            attn_drop=config.get("attn_drop", 0.0),
-            proj_drop=config.get("proj_drop", 0.1),
+            latent_dim=config.get("latent_dim", LATENT_DIM),
+            hidden_dim=config.get("hidden_dim", DIT_HIDDEN_DIM),
+            cond_dim=config.get("cond_dim", PROJ_DIM),
+            num_blocks=config.get("num_blocks", DIT_NUM_BLOCKS),
+            num_heads=config.get("num_heads", DIT_NUM_HEADS),
+            mlp_ratio=config.get("mlp_ratio", DIT_MLP_RATIO),
+            num_tokens=config.get("num_tokens", DIT_NUM_TOKENS),
+            cond_drop_prob=config.get("cond_drop_prob", COND_DROP_PROB),
+            attn_drop=config.get("attn_drop", DEFAULT_ATTN_DROP),
+            proj_drop=config.get("proj_drop", DEFAULT_PROJ_DROP),
         )
 
         train_loader, val_loader = create_dataloaders(
             cache_dir=config.get("cache_dir", "data/cached_latents"),
-            batch_size=config.get("batch_size", 512),
-            val_split=config.get("val_split", 0.1),
+            batch_size=config.get("batch_size", DEFAULT_BATCH_SIZE),
+            val_split=config.get("val_split", DEFAULT_VAL_SPLIT),
             n_folds=config.get("n_folds", 1),
             fold_idx=config.get("fold_idx", 0),
-            num_workers=config.get("num_workers", 4),
+            num_workers=config.get("num_workers", DEFAULT_NUM_WORKERS),
             stage="dit",
             projected_text_path=config.get("projected_text_path", None),
             time_sampling=config.get("time_sampling", "logit_normal"),
@@ -568,19 +593,19 @@ class DiTTrainer:
             model=model,
             train_loader=train_loader,
             val_loader=val_loader,
-            lr=config.get("lr", 1e-4),
-            weight_decay=config.get("weight_decay", 0.01),
-            num_epochs=config.get("num_epochs", 200),
-            warmup_epochs=config.get("warmup_epochs", 10),
+            lr=config.get("lr", DEFAULT_LR),
+            weight_decay=config.get("weight_decay", DEFAULT_WEIGHT_DECAY),
+            num_epochs=config.get("num_epochs", DEFAULT_NUM_EPOCHS),
+            warmup_epochs=config.get("warmup_epochs", DEFAULT_WARMUP_EPOCHS),
             save_dir=config.get("save_dir", "models/checkpoints"),
             device=config.get("device", "cuda"),
             use_amp=config.get("use_amp", True),
-            grad_clip=config.get("grad_clip", 1.0),
-            ema_decay=config.get("ema_decay", 0.9999),
+            grad_clip=config.get("grad_clip", DEFAULT_GRAD_CLIP),
+            ema_decay=config.get("ema_decay", DEFAULT_EMA_DECAY),
             log_interval=config.get("log_interval", 50),
             eval_interval=config.get("eval_interval", 10),
-            inference_steps=config.get("inference_steps", 20),
-            cfg_scale=config.get("cfg_scale", 3.0),
+            inference_steps=config.get("inference_steps", INFERENCE_STEPS),
+            cfg_scale=config.get("cfg_scale", CFG_SCALE),
             variance_loss_weight=config.get("variance_loss_weight", 0.0),
             covariance_loss_weight=config.get("covariance_loss_weight", 0.0),
             cov_num_slices=config.get("cov_num_slices", 32),

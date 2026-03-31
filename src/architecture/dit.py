@@ -27,6 +27,21 @@ import torch.nn.functional as F
 from torch.utils.checkpoint import checkpoint as torch_checkpoint
 from typing import Optional, Tuple
 
+from ..utils.constants import (
+    CFG_SCALE,
+    COND_DROP_PROB,
+    DEFAULT_ATTN_DROP,
+    DEFAULT_PROJ_DROP,
+    DIT_HIDDEN_DIM,
+    DIT_MLP_RATIO,
+    DIT_NUM_BLOCKS,
+    DIT_NUM_HEADS,
+    DIT_NUM_TOKENS,
+    LATENT_DIM,
+    LAYERNORM_EPS,
+    PROJ_DIM,
+)
+
 
 # ============================================================================
 #  Timestep & Condition Embedders
@@ -202,8 +217,8 @@ class DiTBlock(nn.Module):
         proj_drop: float = 0.0,
     ):
         super().__init__()
-        self.norm1 = nn.LayerNorm(hidden_dim, elementwise_affine=False, eps=1e-6)
-        self.norm2 = nn.LayerNorm(hidden_dim, elementwise_affine=False, eps=1e-6)
+        self.norm1 = nn.LayerNorm(hidden_dim, elementwise_affine=False, eps=LAYERNORM_EPS)
+        self.norm2 = nn.LayerNorm(hidden_dim, elementwise_affine=False, eps=LAYERNORM_EPS)
 
         # Use F.scaled_dot_product_attention for automatic Flash/Memory-efficient dispatch
         self.num_heads = num_heads
@@ -358,16 +373,16 @@ class DiT1D(nn.Module):
 
     def __init__(
         self,
-        latent_dim: int = 512,
-        hidden_dim: int = 384,
-        cond_dim: int = 256,
-        num_blocks: int = 8,
-        num_heads: int = 6,
-        mlp_ratio: float = 4.0,
-        num_tokens: int = 16,
-        cond_drop_prob: float = 0.1,
-        attn_drop: float = 0.0,
-        proj_drop: float = 0.1,
+        latent_dim: int = LATENT_DIM,
+        hidden_dim: int = DIT_HIDDEN_DIM,
+        cond_dim: int = PROJ_DIM,
+        num_blocks: int = DIT_NUM_BLOCKS,
+        num_heads: int = DIT_NUM_HEADS,
+        mlp_ratio: float = DIT_MLP_RATIO,
+        num_tokens: int = DIT_NUM_TOKENS,
+        cond_drop_prob: float = COND_DROP_PROB,
+        attn_drop: float = DEFAULT_ATTN_DROP,
+        proj_drop: float = DEFAULT_PROJ_DROP,
         gradient_checkpointing: bool = False,
     ):
         super().__init__()
@@ -468,7 +483,7 @@ class DiT1D(nn.Module):
         z_t: torch.Tensor,
         t: torch.Tensor,
         cond: torch.Tensor,
-        cfg_scale: float = 3.0,
+        cfg_scale: float = CFG_SCALE,
     ) -> torch.Tensor:
         """Classifier-Free Guidance inference.
 
@@ -514,7 +529,7 @@ class DiT1D(nn.Module):
         self,
         cond: torch.Tensor,
         num_steps: int = 4,
-        cfg_scale: float = 3.0,
+        cfg_scale: float = CFG_SCALE,
         device: Optional[torch.device] = None,
     ) -> torch.Tensor:
         """Generate cell embeddings via Euler ODE integration.
@@ -554,7 +569,7 @@ class DiT1D(nn.Module):
         self,
         cond: torch.Tensor,
         num_steps: int = 4,
-        cfg_scale: float = 3.0,
+        cfg_scale: float = CFG_SCALE,
         device: Optional[torch.device] = None,
     ) -> torch.Tensor:
         """Generate cell embeddings via Midpoint method (2nd-order ODE solver).
@@ -600,7 +615,7 @@ class DiT1D(nn.Module):
     def sample_adaptive(
         self,
         cond: torch.Tensor,
-        cfg_scale: float = 3.0,
+        cfg_scale: float = CFG_SCALE,
         atol: float = 1e-5,
         rtol: float = 1e-5,
         device: Optional[torch.device] = None,
