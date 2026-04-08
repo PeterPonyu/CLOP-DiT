@@ -348,38 +348,42 @@ def _draw_ood_showcase(fig: plt.Figure, region, ood_path: Path) -> None:
     ax_r.invert_yaxis()
     ax_r.axis("off")
 
-    ax_r.text(0.0, -1.1, "Prompt ID", fontsize=FONT_LABEL + 1, fontweight="medium", va="center")
-    ax_r.text(4.6, -1.1, "Free-form Description", fontsize=FONT_LABEL + 1, fontweight="medium",
+    ax_r.text(0.0, -1.1, "Target cell type", fontsize=FONT_LABEL + 1, fontweight="medium", va="center")
+    ax_r.text(4.6, -1.1, "Prompt style", fontsize=FONT_LABEL + 1, fontweight="medium",
               va="center")
 
-    style_aliases = {
-        "informal cd8": "CD8",
-        "informal macrophage": "Macrophage",
-        "informal stem": "Stem/prog.",
-        "informal neuron": "Neuron",
-        "expert sergio": "Expert note",
-        "question style": "Q&A",
-        "shorthand nk": "NK",
-        "clinical note style": "Clinical note",
+    # Sanitized, publication-quality display labels for free-form prompt IDs.
+    # The raw prompt text is deliberately NOT rendered in the figure to avoid
+    # baking internal test strings into the submission manuscript PDF.
+    display_labels = {
+        "informal cd8": ("CD8 T cell", "Colloquial sentence"),
+        "informal macrophage": ("Macrophage", "Colloquial sentence"),
+        "informal stem": ("Stem cell", "Colloquial sentence"),
+        "informal neuron": ("Neuron", "Colloquial sentence"),
+        "verbose treg": ("Treg", "Verbose paragraph"),
+        "question style": ("Fibroblast", "Interrogative"),
+        "shorthand nk": ("NK cell", "Shorthand list"),
+        "expert sergio": ("Expert note", "Free-text note"),
+        "clinical note style": ("Clinical", "Clinical note"),
     }
 
-    for i, (prompt_id, info) in enumerate(ff_items):
+    for i, (prompt_id, _info) in enumerate(ff_items):
         y_pos = i * _ROW_STEP
-        ff_prompt = info.get("free_form_prompt", "")
-        excerpt = ff_prompt[:38] + "\u2026" if len(ff_prompt) > 38 else ff_prompt
-        display_id = prompt_id.replace("_", " ")
-        display_id = style_aliases.get(display_id, display_id.title())
-        if len(display_id) > 16:
-            display_id = display_id[:14] + "\u2026"
-        ax_r.text(0.0, y_pos, display_id, fontsize=FONT_TICK, va="center",
+        key = prompt_id.replace("_", " ")
+        label, style_tag = display_labels.get(
+            key, (key.title()[:16], "Free-form prompt")
+        )
+        if len(label) > 16:
+            label = label[:14] + "\u2026"
+        ax_r.text(0.0, y_pos, label, fontsize=FONT_TICK, va="center",
                   color=COLORS["generated"], fontweight="medium")
-        ax_r.text(4.6, y_pos, excerpt, fontsize=FONT_TICK, va="center",
+        ax_r.text(4.6, y_pos, style_tag, fontsize=FONT_TICK, va="center",
                   color=COLORS["annotation_dark"], style="italic")
         if i < len(ff_items) - 1:
             ax_r.axhline(y=y_pos + _ROW_STEP * 0.5, color=COLORS["border_light"],
                          linewidth=0.5, xmin=0, xmax=1)
 
-    ax_r.set_title("Free-form Prompts", fontsize=FONT_TITLE, fontweight="normal", pad=10)
+    ax_r.set_title("Free-form Prompt Styles", fontsize=FONT_TITLE, fontweight="normal", pad=10)
 
     # Overall panel label on left sub-panel
     add_panel_label(ax_l, "c", x=-0.12, y=1.08)
