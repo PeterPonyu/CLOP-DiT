@@ -1,45 +1,34 @@
-# CLOP-DiT: Contrastive Language-Omics Pre-training + Diffusion Transformer
+# CLOP-DiT
 
-> Text-conditioned generation of single-cell gene expression profiles via flow matching
+> Text-conditioned single-cell latent generation via contrastive language–omics pretraining and diffusion transformers.
 
-![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
-![License: MIT](https://img.shields.io/badge/license-MIT-green)
+CLOP-DiT is a three-stage pipeline that samples single-cell expression embeddings conditioned on a structured five-field text prompt (cell type, tissue, organism, marker genes, disease context). The first stage is a prototype-aware contrastive aligner that maps frozen BiomedBERT text embeddings and frozen scGPT cell embeddings into a shared 512-dimensional latent space. The second stage is a 1-D Diffusion Transformer trained with conditional flow matching and classifier-free guidance, which samples a latent vector from a Gaussian prior toward the conditioned region of that space. The third stage is the frozen scGPT decoder, used to map the generated latent back to per-gene expression for downstream inspection.
 
-## Overview
+The training corpus is 220,304 cells from 80 publicly available Gene Expression Omnibus (GEO) datasets, deduplicated to 69 evaluation cell types covering human and mouse tumour-microenvironment and developmental contexts.
 
-CLOP-DiT is a three-stage generative framework that produces realistic single-cell gene expression profiles from natural language descriptions of biological conditions. Given a text prompt such as _"CD8+ cytotoxic T cells from human lung adenocarcinoma"_, the model generates synthetic transcriptomic profiles that recapitulate expected marker gene expression patterns, cell-type-specific signatures, and inter-cellular diversity.
+For the full method, results, and limitations, see the manuscript:
 
-The pipeline chains three pre-trained components:
+> Zeyu Fu, JianXu Zheng, Jiawei Fu. *CLOP-DiT: Text-Conditioned Single-Cell Latent Generation via Contrastive Language–Omics Pretraining and Diffusion Transformers.* Submitted to *PeerJ Computer Science*, 2026.
 
-1. **CLOP** (Contrastive Language-Omics Pre-training) aligns BiomedBERT text embeddings with scGPT cell embeddings into a shared 512-d space using Prototype-SigLIP loss with ZCA-whitened inputs.
-2. **DiT** (Diffusion Transformer) learns the conditional distribution of cell embeddings via 1D flow matching with classifier-free guidance.
-3. **scGPT Decoder** maps generated 512-d embeddings back to per-gene expression values through its native `generate()` pathway.
+## Reported results
 
-Training data comprises 220,304 cells from 80 GEO datasets spanning cancer, developmental, and normal tissue contexts.
+The headline metrics from the manuscript, evaluated on 69 deduplicated cell types and reproduced here for convenience:
 
-## Architecture
+| Method | KNN-1 | Steering | DivR | LinAcc |
+|---|---|---|---|---|
+| Real data | 0.890 | – | 1.000 | 0.942 |
+| CLOP-DiT, high-fidelity setting (CFG = 2.0) | 0.369 | 0.810 | 0.513 | 0.511 |
+| CLOP-DiT, high-diversity setting (CFG = 1.0) | 0.288 | 0.807 | 0.929 | 0.357 |
+| Embedding-VAE baseline | 0.112 | 0.547 | 0.744 | 0.189 |
+| Gaussian baseline | 0.011 | 0.466 | 2.277 | 0.009 |
 
-```
-User Text --> BiomedBERT-large (1024-d) --> ZCA Whitening --> CLOP Projector --> Condition c (512-d)
-                                                                                       |
-                              z0 ~ N(0,I) --> DiT(z_t, t, c) --> ODE Integrate --> z1 (512-d)
-                                                                                       |
-                                                                        scGPT Decoder --> Gene Expression (G genes)
-```
+KNN-1 is reported over the 69-class problem with random chance ≈ 0.0145; CLOP-DiT at CFG = 2.0 is therefore about 25× above random. DivR ideal = 1.0.
 
-## Key Results
+The reported strength of CLOP-DiT is controllable text-conditioned generation. The reported limitations, also discussed in the manuscript, are that within-type variance and gene–gene correlation are only weakly preserved, and that a Gaussian mean-matching baseline outperforms CLOP-DiT on the nine shared distributional metrics. See the manuscript Discussion for the full set of caveats.
 
-| Method | KNN-1 | Steering | DivR | LinAcc | KNN/Rand |
-|--------|-------|----------|------|--------|----------|
-| **Real Data** | 0.890 | -- | 1.000 | 0.942 | 89x |
-| **CLOP-DiT** (CFG=2.0) | 0.369 | 0.810 | 0.513 | 0.511 | 37x |
-| CLOP-DiT (CFG=1.0) | 0.288 | 0.807 | 0.929 | 0.357 | 29x |
-| Embedding-VAE | 0.112 | 0.547 | 0.744 | 0.189 | 11x |
-| Gaussian baseline | 0.011 | 0.466 | 2.277 | 0.009 | 1x |
+## Installation
 
-## Quick Start
-
-### Installation
+The code targets Python 3.10. The full dependency list is in `requirements.txt`.
 
 ```bash
 conda create -n clopdit python=3.10
@@ -47,7 +36,11 @@ conda activate clopdit
 pip install -e .
 ```
 
-### Generate Cells from Text
+The training and evaluation experiments were carried out with PyTorch 2.1, CUDA 12.0, scGPT v0.2.1, and Hugging Face Transformers 4.36 on a single NVIDIA RTX 5090 Laptop GPU.
+
+## Generating cells from a text prompt
+
+Once the trained checkpoints are placed under `models/`, a single text prompt can be sampled and decoded with the inference entry point:
 
 ```bash
 python scripts/inference/05_inference.py \
@@ -56,117 +49,40 @@ python scripts/inference/05_inference.py \
     --output generated_cells.h5ad
 ```
 
-### Full Pipeline
+Training the contrastive aligner and the diffusion transformer from cached embeddings:
 
 ```bash
-# Train CLOP + DiT from cached embeddings
 python scripts/training/04a_train_clop.py --config configs/clop.yaml
 python scripts/training/04b_train_dit.py --config configs/dit.yaml
-
-# Regenerate all 30 article figures
-python scripts/pipeline/run_regeneration.py
-
-# Or run the full orchestrated pipeline
-python scripts/pipeline/run_pipeline.py --stage all
 ```
 
-See [PIPELINE.md](PIPELINE.md) for stage-by-stage details and [REPRODUCIBILITY.md](REPRODUCIBILITY.md) for numeric reproduction.
+## Data
 
-## Project Structure
+The training and validation data are derived entirely from public Gene Expression Omnibus (GEO) records. The 80 GEO accession identifiers used in this study are listed in the manuscript appendix (Table S1), and the eight held-out validation studies are listed in Table S2. Each accession is resolvable at `https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSExxxxxx`.
 
-```
-CLOP-DiT/
-├── src/                        # Core Python library (pip install -e .)
-│   ├── architecture/           #   DiT, CLOP aligner, scGPT decoder
-│   ├── data_pipeline/          #   Dataset loading, caching, ZCA whitening
-│   ├── training/               #   CLOPTrainer, DiTTrainer, schedulers
-│   ├── evaluation/             #   Metrics, benchmarking, biological validation
-│   ├── experiments/            #   OOD evaluation, rare cell augmentation
-│   ├── visualization/          #   Publication figure generation (Figs 1-30)
-│   └── utils/                  #   Path resolution, constants, logging, helpers
-├── scripts/                    # Pipeline entry points
-│   ├── data_prep/              #   Steps 00-03: data preparation & caching
-│   ├── training/               #   Steps 04a-c: model training & experiments
-│   ├── inference/              #   Steps 05-08: generation & evaluation
-│   ├── analysis/               #   Post-hoc analysis & figure scripts
-│   ├── pipeline/               #   Orchestrators (run_pipeline.py)
-│   ├── baselines/              #   Baseline method training
-│   └── vcd/                    #   Visual Conflict Detector
-├── configs/                    # YAML/JSON configuration
-│   ├── clop.yaml               #   CLOP training config
-│   ├── dit.yaml                #   DiT training config
-│   ├── models.yaml             #   Encoder/decoder catalog & ablation matrix
-│   ├── thresholds.yaml         #   Quality gates & evaluation cutoffs
-│   ├── marker_genes.yaml       #   Biologically curated marker panels
-│   ├── pipeline.yaml           #   Centralized path configuration
-│   └── baselines/              #   Baseline method configs
-├── articles/                   # LaTeX manuscript
-│   ├── clop_dit_biology.tex    #   Main article (MDPI Biology)
-│   └── figures/                #   Symlinks to results/figures/
-├── tests/                      # Test suite (pytest)
-├── docs/                       # Documentation
-├── data/                       # Training data (not in repo)
-├── models/                     # Model checkpoints (not in repo)
-├── results/                    # Generated outputs (not in repo)
-├── .gitignore
-├── .gitattributes
-├── LICENSE
-├── CONTRIBUTING.md
-├── PIPELINE.md                 # Pipeline stage documentation
-├── REPRODUCIBILITY.md          # Reproduction guide
-├── VERSIONS.md                 # Version history
-├── requirements.txt
-├── setup.py
-└── README.md
-```
+The deterministic preprocessing pipeline included in this repository (quality control, highly-variable-gene selection, scGPT encoding, study-level stratified split, and deduplication) can rebuild the analysis cache from those GEO records.
 
-## Configuration
-
-All runtime parameters are resolved through a layered configuration system:
-
-1. **YAML configs** (`configs/clop.yaml`, `configs/dit.yaml`, etc.) define per-experiment hyperparameters.
-2. **`src/utils/constants.py`** provides named default constants (model dimensions, guidance scale, random seed, optimizer betas, etc.) used as fallbacks when YAML keys are absent. This eliminates scattered magic numbers and keeps code-level defaults consistent with the YAML files.
-3. **`src/utils/paths.py`** centralizes all directory paths with a resolution order: environment variables > `configs/pipeline.yaml` > built-in defaults.
-4. **`configs/thresholds.yaml`** stores quality gates, statistical cutoffs, and visualization band thresholds loaded via `load_thresholds()`.
-
-Key constants available from `src.utils.constants`:
-
-```python
-from src.utils.constants import (
-    RANDOM_SEED,          # 42 — used across all evaluation and training
-    LATENT_DIM,           # 512 — scGPT cell embedding dimension
-    TEXT_DIM_LARGE,       # 1024 — BiomedBERT-large output dimension
-    PROJ_DIM,             # 512 — CLOP shared projection space
-    CFG_SCALE,            # 3.0 — classifier-free guidance scale
-    INFERENCE_STEPS,      # 20 — ODE solver steps for generation
-    BIOMEDBERT_LARGE,     # HuggingFace model ID string
-    ADAMW_BETAS,          # (0.9, 0.999) — optimizer momentum
-)
-```
-
-## Reproducibility
-
-Model checkpoints and pre-processed embeddings are available upon request from the corresponding author. Once placed in `models/` and `data/`, all 30 article figures can be regenerated with:
-
-```bash
-python scripts/pipeline/run_regeneration.py
-```
-
-See [REPRODUCIBILITY.md](REPRODUCIBILITY.md) for environment setup, data layout, and expected numeric results.
+The trained model checkpoints (the CLOP aligner and the DiT generator) and the preprocessed embedding cache are not redistributed in this repository because of single-cell data licensing and file-size constraints. Both are available from the co-corresponding authors on reasonable request.
 
 ## Citation
 
 ```bibtex
 @article{fu2026clopdit,
-  author  = {Fu, Zeyu},
-  title   = {CLOP-DiT: Text-Guided Single-Cell Gene Expression Generation
-             via Contrastive Language-Omics Pretraining and Diffusion Transformers},
-  journal = {Biology},
+  author  = {Fu, Zeyu and Zheng, JianXu and Fu, Jiawei},
+  title   = {{CLOP-DiT}: Text-Conditioned Single-Cell Latent Generation
+             via Contrastive Language--Omics Pretraining and
+             Diffusion Transformers},
+  journal = {PeerJ Computer Science},
   year    = {2026},
-  url     = {https://github.com/PeterPonyu/CLOP-DiT}
+  note    = {Submitted}
 }
 ```
 
 ## License
 
-MIT License -- see [LICENSE](LICENSE) for details.
+Released under the MIT License — see `LICENSE`.
+
+## Contact
+
+Zeyu Fu — fuzeyu09@gmail.com
+Jiawei Fu — fjw813130855@163.com

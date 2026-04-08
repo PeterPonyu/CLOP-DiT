@@ -49,9 +49,12 @@ generated_*.h5ad
 configs/archive/
 scripts/archive/
 
-# === Claude Code agent artifacts ===
+# === Claude Code / agent runtime artifacts ===
 .claude/
+.omc/
 CLAUDE.md
+prd.json
+progress.txt
 
 # === Agent / IDE / working artifacts ===
 prompts.md
@@ -97,13 +100,19 @@ Thumbs.db
 # === Environment ===
 .env
 
-# === Articles & cover letters (not for remote) ===
+# === Articles, journal templates & cover letters (not for remote) ===
 articles/
 articles_elsevier/
 articles_elsevier copy/
 articles.zip
+Elsevier_Array_Submission/
+LaTeX_Template_for_PeerJ_Journal_Submissions/
 cover_letter.md
 cover_letter.pdf
+cover_letter_peerj_cs.md
+cover_letter_peerj_cs.pdf
+SUBMISSION_AUDIT_PEERJ_CS.md
+ZENODO_WORKFLOW.md
 
 # === Intermediate project markdown files ===
 PIPELINE.md
