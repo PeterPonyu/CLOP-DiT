@@ -12,6 +12,8 @@ article_figures_dir: "articles/figures"
 processed_h5ad_dir: "data/processed_h5ad"
 scgpt_dir: "models/scgpt_human"
 
-# Article build
+# Article build (local development only; the manuscript source is not
+# redistributed through the public repository, so the build_article stage
+# of run_pipeline.py is a no-op when cloning from GitHub).
 article_dir: "articles"
-article_tex: "clop_dit_genes.tex"
+article_tex: "main.tex"
