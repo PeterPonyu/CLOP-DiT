@@ -1,19 +1,22 @@
-# CLOP-DiT: Contrastive Language-Omics Pre-training + Diffusion Transformer
-# For conditional single-cell gene expression generation
-# Author: Zeyu Fu
-"""
-CLOP-DiT — A text-conditioned generative framework for single-cell transcriptomics.
+"""CLOP-DiT — text-conditioned single-cell latent generation.
 
-Pipeline:
-    1. Data Ingestion  → GEO metadata + expression matrices
-    2. SFT Cleaning    → Structured JSON labels via Llama-3
-    3. Latent Caching  → scGPT cell embeddings + PubMedBERT text embeddings
-    3b. Preprocessing  → ZCA whitening (fixes embedding space collapse)
-    3c. Enrichment     → Evidence-based caption generation (v6.2)
-    4. CLOP Alignment  → Prototype-SigLIP contrastive text-cell alignment (v6.1+)
-    5. DiT Training    → Flow-Matching 1D-DiT with AdaLN-Zero conditioning
-    6. Inference        → Text → ODE sampling → scGPT decode → expression matrix
+A three-stage pipeline that generates single-cell expression embeddings from
+a structured five-field text prompt (cell type, tissue, organism, marker
+genes, disease context):
+
+    1. Data preparation  — curate GEO datasets, build per-type captions,
+                            and cache frozen scGPT cell embeddings and frozen
+                            BiomedBERT text embeddings with ZCA whitening.
+    2. CLOP alignment    — prototype-aware SigLIP contrastive alignment
+                            between text and cell embeddings in a shared
+                            512-dimensional latent space.
+    3. DiT generation    — 1-D Diffusion Transformer trained by conditional
+                            flow matching with classifier-free guidance;
+                            decoded to gene expression through the frozen
+                            scGPT decoder for downstream inspection.
+
+See the top-level README for installation, usage, and citation.
 """
 
-__version__ = "6.2.0"
-__author__ = "Zeyu Fu"
+__version__ = "1.0.0"
+__author__ = "Zeyu Fu, JianXu Zheng, Jiawei Fu"

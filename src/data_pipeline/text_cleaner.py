@@ -252,7 +252,7 @@ class TextCleaner:
         }
 
     def create_natural_text(self, structured: Dict) -> str:
-        """Convert structured metadata to natural language for PubMedBERT.
+        """Convert structured metadata to natural language for the BiomedBERT text encoder.
 
         Parameters
         ----------

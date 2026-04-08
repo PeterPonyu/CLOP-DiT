@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
-# 05_inference.py — Full CLOP-DiT inference pipeline v0.3
-"""
-End-to-end inference: Text → Condition → DiT Sampling → scGPT Decoding → Gene Expression
+"""CLOP-DiT end-to-end text-to-expression inference entry point.
 
-v0.3 improvements:
-  - scGPT generate() decoding: cell embeddings → gene expression matrix
-  - BiomedBERT-large (1024-d) text encoding
-  - Single-cell-type prompts for cleaner generation
-  - Output as proper AnnData with gene names
+Pipeline: structured text prompt → BiomedBERT-large encoding → CLOP
+projection → DiT flow-matching sampling in the 512-d latent space →
+frozen scGPT decoding to per-gene expression → AnnData output.
 
-Usage:
-    python scripts/05_inference.py \
-        --prompt "CD8+ cytotoxic T cells from human lung adenocarcinoma" \
-        --num_cells 500 \
-        --output generated_cells.h5ad \
-        --decode_expression
+This file is the implementation behind the installed ``clopdit-generate``
+console command; it can also be invoked directly via Python:
+
+    clopdit-generate \\
+        --prompt "CD8+ cytotoxic T cells from human lung adenocarcinoma" \\
+        --num_cells 500 \\
+        --cfg_scale 2.0 \\
+        --decode_expression \\
+        --output generated_cells.h5ad
 """
 
 import argparse
@@ -42,7 +41,7 @@ logger = logging.getLogger(__name__)
 class CLOPDiTInference:
     """Full CLOP-DiT inference pipeline.
 
-    v0.3: Supports scGPT generate() decoding for gene expression output.
+    Supports scGPT generate() decoding for gene expression output.
 
     Parameters
     ----------
@@ -134,7 +133,7 @@ class CLOPDiTInference:
             self.dit.load_state_dict(dit_ckpt["model_state_dict"])
         self.dit.to(self.device).eval()
 
-        # Load scGPT decoder (v0.3: primary decoder)
+        # Load scGPT decoder (primary decoder for expression output)
         self.scgpt_decoder = None
         if scgpt_model_dir and Path(scgpt_model_dir).exists():
             logger.info(f"Loading scGPT decoder from {scgpt_model_dir}")
@@ -277,7 +276,7 @@ class CLOPDiTInference:
     ) -> dict:
         """Decode cell embeddings to gene expression via scGPT generate().
 
-        v0.3: Uses proper scGPT reconstruction:
+        Uses the frozen scGPT reconstruction pathway:
             cell_emb → inject at [CLS] → transformer → ExprDecoder → per-gene expression
 
         Parameters
@@ -342,7 +341,7 @@ class CLOPDiTInference:
         embeddings = self.generate(prompt, num_cells=num_cells, **kwargs)
 
         if decode_expression and self.scgpt_decoder is not None:
-            # v0.3: scGPT generate() decoding
+            # scGPT generate() decoding pathway
             result = self.decode_scgpt(
                 embeddings,
                 reference_adata=reference_adata,
@@ -371,7 +370,9 @@ class CLOPDiTInference:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="CLOP-DiT v0.3 Inference")
+    parser = argparse.ArgumentParser(
+        description="CLOP-DiT text-to-expression inference (clopdit-generate)."
+    )
     parser.add_argument("--prompt", type=str, required=True, help="Biological description")
     parser.add_argument("--num_cells", type=int, default=500, help="Number of cells to generate")
     parser.add_argument("--dit_checkpoint", type=str, default="models/checkpoints/dit_best.pth")

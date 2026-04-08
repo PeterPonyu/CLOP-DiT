@@ -83,11 +83,11 @@ class LatentCacheBuilder:
         self._text_tokenizer = None
 
     # ========================================================================
-    #  Text Encoding (PubMedBERT)
+    #  Text Encoding (BiomedBERT)
     # ========================================================================
 
     def _load_text_encoder(self):
-        """Load PubMedBERT for text encoding."""
+        """Load the BiomedBERT text encoder."""
         if self._text_model is not None:
             return
 
