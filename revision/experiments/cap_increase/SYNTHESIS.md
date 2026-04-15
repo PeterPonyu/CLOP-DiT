@@ -54,6 +54,19 @@ under the same seed collapses the IQR to `[0.984, 1.035]`, reveals
 the per-dataset effect is essentially null, and exposes the bimodal
 tails as noise.
 
+### Confirmation: seed drift alone reproduces the bimodal tails
+
+Controlling-by-contrast, we also computed cap3k_seed0 vs the historical
+unseeded cap3k cache — same cap, same preprocessing, same scGPT,
+only the subsample seed differs. The resulting ratio distribution is
+median 1.006, mean 1.237, IQR `[0.717, 1.448]`, min 0.151, max 5.035.
+This is statistically indistinguishable from the original cap10k vs
+cap3k_historical distribution (median 0.989, mean 1.247,
+IQR `[0.744, 1.445]`, min 0.16, max 5.17) and fully accounts for
+the apparent cap effect. The cap itself contributes essentially zero
+signal; stochastic draw drift at cap=3000 already shifts per-dataset
+latent variance by up to 7 x, swamping any real cap signal.
+
 ## Mechanistic read
 
 Within-type variance in **scGPT latent space saturates long before
