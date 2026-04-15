@@ -1,0 +1,264 @@
+{
+  "novel_types": {
+    "Goblet cells": {
+      "prompt": "Mucus-secreting goblet cells from human intestinal epithelium. These specialized secretory cells produce and release gel-forming mucins that form the protective mucus layer of the gastrointestinal tract, expressing MUC2, TFF3, and FCGBP.",
+      "expected_markers": [
+        "MUC2",
+        "TFF3",
+        "FCGBP"
+      ],
+      "markers_in_vocabulary": 1,
+      "markers_upregulated": 1,
+      "marker_hit_rate": 1.0,
+      "marker_details": {
+        "MUC2": {
+          "status": "not_in_vocabulary"
+        },
+        "TFF3": {
+          "status": "not_in_vocabulary"
+        },
+        "FCGBP": {
+          "mean_expression": 28.5156,
+          "pct_nonzero": 1.0,
+          "percentile_rank": 79.9,
+          "upregulated_top25pct": true
+        }
+      },
+      "intra_sample_cosine_sim": 1.0,
+      "num_genes_decoded": 1530
+    },
+    "Purkinje cells": {
+      "prompt": "Purkinje neurons from human cerebellar cortex. Large GABAergic inhibitory neurons in the Purkinje layer of the cerebellum, characterized by extensive dendritic arbors and expression of CALB1, PCP2, and ITPR1.",
+      "expected_markers": [
+        "CALB1",
+        "PCP2",
+        "ITPR1"
+      ],
+      "markers_in_vocabulary": 0,
+      "markers_upregulated": 0,
+      "marker_hit_rate": 0.0,
+      "marker_details": {
+        "CALB1": {
+          "status": "not_in_vocabulary"
+        },
+        "PCP2": {
+          "status": "not_in_vocabulary"
+        },
+        "ITPR1": {
+          "status": "not_in_vocabulary"
+        }
+      },
+      "intra_sample_cosine_sim": 1.0,
+      "num_genes_decoded": 1530
+    },
+    "Podocytes": {
+      "prompt": "Glomerular podocytes from human kidney. Highly specialized epithelial cells wrapping the capillaries of the renal glomerulus, forming the slit diaphragm filtration barrier and expressing NPHS1, NPHS2, WT1, and PODXL.",
+      "expected_markers": [
+        "NPHS1",
+        "NPHS2",
+        "WT1",
+        "PODXL"
+      ],
+      "markers_in_vocabulary": 0,
+      "markers_upregulated": 0,
+      "marker_hit_rate": 0.0,
+      "marker_details": {
+        "NPHS1": {
+          "status": "not_in_vocabulary"
+        },
+        "NPHS2": {
+          "status": "not_in_vocabulary"
+        },
+        "WT1": {
+          "status": "not_in_vocabulary"
+        },
+        "PODXL": {
+          "status": "not_in_vocabulary"
+        }
+      },
+      "intra_sample_cosine_sim": 1.0,
+      "num_genes_decoded": 1530
+    },
+    "Leydig cells": {
+      "prompt": "Interstitial Leydig cells from human testis. Steroidogenic cells located in the interstitial compartment between seminiferous tubules, responsible for testosterone biosynthesis and expressing STAR, CYP11A1, and HSD3B2.",
+      "expected_markers": [
+        "STAR",
+        "CYP11A1",
+        "HSD3B2"
+      ],
+      "markers_in_vocabulary": 0,
+      "markers_upregulated": 0,
+      "marker_hit_rate": 0.0,
+      "marker_details": {
+        "STAR": {
+          "status": "not_in_vocabulary"
+        },
+        "CYP11A1": {
+          "status": "not_in_vocabulary"
+        },
+        "HSD3B2": {
+          "status": "not_in_vocabulary"
+        }
+      },
+      "intra_sample_cosine_sim": 1.0,
+      "num_genes_decoded": 1530
+    },
+    "Club cells": {
+      "prompt": "Non-ciliated bronchiolar club cells (formerly Clara cells) from human distal airways. Secretory epithelial cells expressing SCGB1A1 and CYP2F1, contributing to airway surface liquid and xenobiotic metabolism in the terminal bronchioles.",
+      "expected_markers": [
+        "SCGB1A1",
+        "CYP2F1"
+      ],
+      "markers_in_vocabulary": 0,
+      "markers_upregulated": 0,
+      "marker_hit_rate": 0.0,
+      "marker_details": {
+        "SCGB1A1": {
+          "status": "not_in_vocabulary"
+        },
+        "CYP2F1": {
+          "status": "not_in_vocabulary"
+        }
+      },
+      "intra_sample_cosine_sim": 1.0,
+      "num_genes_decoded": 1530
+    },
+    "Merkel cells": {
+      "prompt": "Merkel cells from human skin epidermis. Neuroendocrine mechanoreceptor cells in the basal layer of the epidermis, associated with light-touch sensation and expressing KRT20, ATOH1, and ISL1.",
+      "expected_markers": [
+        "KRT20",
+        "ATOH1",
+        "ISL1"
+      ],
+      "markers_in_vocabulary": 1,
+      "markers_upregulated": 0,
+      "marker_hit_rate": 0.0,
+      "marker_details": {
+        "KRT20": {
+          "mean_expression": 27.732,
+          "pct_nonzero": 1.0,
+          "percentile_rank": 43.1,
+          "upregulated_top25pct": false
+        },
+        "ATOH1": {
+          "status": "not_in_vocabulary"
+        },
+        "ISL1": {
+          "status": "not_in_vocabulary"
+        }
+      },
+      "intra_sample_cosine_sim": 1.0,
+      "num_genes_decoded": 1530
+    }
+  },
+  "free_form_vs_structured": {
+    "informal_cd8": {
+      "free_form_prompt": "immune cells that kill infected cells in the lung",
+      "structured_prompt": "CD8+ cytotoxic T lymphocytes from human lung tissue. Adaptive immune cells expressing CD8A, CD8B, GZMB, PRF1, and IFNG.",
+      "expression_pearson_r": 1.0,
+      "expression_pearson_p": 0.0,
+      "expression_cosine_sim": 1.0
+    },
+    "informal_macrophage": {
+      "free_form_prompt": "the big cells that eat bacteria and dead cells in inflamed tissue",
+      "structured_prompt": "Macrophages from human inflamed tissue. Innate immune phagocytic cells expressing CD68, CD163, CSF1R, and MRC1.",
+      "expression_pearson_r": 1.0,
+      "expression_pearson_p": 0.0,
+      "expression_cosine_sim": 1.0
+    },
+    "informal_stem": {
+      "free_form_prompt": "undifferentiated cells that can become many different cell types in the bone marrow",
+      "structured_prompt": "Hematopoietic stem cells from human bone marrow. Multipotent progenitor cells expressing CD34, KIT, THY1, and CXCR4.",
+      "expression_pearson_r": 1.0,
+      "expression_pearson_p": 0.0,
+      "expression_cosine_sim": 1.0
+    },
+    "informal_neuron": {
+      "free_form_prompt": "brain cells that fire electrical signals and talk to each other with chemicals",
+      "structured_prompt": "Excitatory neurons from human cerebral cortex. Glutamatergic neurons expressing SLC17A7, RBFOX3, SNAP25, and SYN1.",
+      "expression_pearson_r": 1.0,
+      "expression_pearson_p": 0.0,
+      "expression_cosine_sim": 1.0
+    },
+    "verbose_treg": {
+      "free_form_prompt": "I am looking for a type of T cell that suppresses immune responses rather than promoting them. They are often found in tumors and express FOXP3 and CD25. Sometimes called regulatory T cells.",
+      "structured_prompt": "CD4+ regulatory T cells from human tumor microenvironment. Immunosuppressive T lymphocytes expressing FOXP3, IL2RA, CTLA4, and IKZF2.",
+      "expression_pearson_r": 1.0,
+      "expression_pearson_p": 0.0,
+      "expression_cosine_sim": 1.0
+    },
+    "question_style": {
+      "free_form_prompt": "what would a fibroblast in a wound healing context look like at the single-cell level",
+      "structured_prompt": "Activated fibroblasts from human wound healing tissue. Mesenchymal cells expressing COL1A1, ACTA2, FAP, and POSTN.",
+      "expression_pearson_r": 1.0,
+      "expression_pearson_p": 0.0,
+      "expression_cosine_sim": 1.0
+    },
+    "shorthand_nk": {
+      "free_form_prompt": "NK cells, cytotoxic, blood",
+      "structured_prompt": "Natural killer cells from human peripheral blood. Cytotoxic innate lymphocytes expressing NCAM1, KLRD1, NKG7, and GNLY.",
+      "expression_pearson_r": 1.0,
+      "expression_pearson_p": 0.0,
+      "expression_cosine_sim": 1.0
+    },
+    "clinical_note_style": {
+      "free_form_prompt": "Patient sample shows atypical large B-cells consistent with diffuse large B-cell lymphoma, germinal center subtype",
+      "structured_prompt": "Diffuse large B-cell lymphoma cells, germinal center subtype, from human lymph node. Malignant B lymphocytes expressing BCL6, CD10, LMO2, and CD20.",
+      "expression_pearson_r": 1.0,
+      "expression_pearson_p": 0.0,
+      "expression_cosine_sim": 1.0
+    }
+  },
+  "summary": {
+    "novel_types_mean_marker_hit_rate": 0.167,
+    "novel_types_marker_hit_rates": {
+      "Goblet cells": 1.0,
+      "Purkinje cells": 0.0,
+      "Podocytes": 0.0,
+      "Leydig cells": 0.0,
+      "Club cells": 0.0,
+      "Merkel cells": 0.0
+    },
+    "free_form_mean_expression_cosine": 1.0,
+    "free_form_expression_cosines": {
+      "informal_cd8": 1.0,
+      "informal_macrophage": 1.0,
+      "informal_stem": 1.0,
+      "informal_neuron": 1.0,
+      "verbose_treg": 1.0,
+      "question_style": 1.0,
+      "shorthand_nk": 1.0,
+      "clinical_note_style": 1.0
+    },
+    "interpretation": "Marker hit rate measures whether genes named in the prompt appear in the top 25% of expressed genes in the generated cells. A high rate suggests text-conditional generation; a low rate suggests the model ignores specific gene references and falls back to generic expression profiles. Expression cosine similarity between free-form and structured equivalents measures whether informal prompts produce similar profiles to template-style prompts.",
+    "decoder_collapse_note": "All free-form vs. structured expression cosines are 1.0 because the scGPT decoder produces identical expression profiles regardless of the input embedding. The text conditioning generates distinct latent representations (cosine sim 0.39-0.54 in DiT output space), but these differences are lost in scGPT decoding."
+  },
+  "embedding_differentiation": {
+    "description": "While conditioning vectors and DiT latent embeddings differentiate between prompts, the scGPT decoder collapses all latent variation to near-identical expression profiles.",
+    "conditioning_vector_cosine_range": [
+      0.73,
+      0.94
+    ],
+    "dit_latent_cosine_range": [
+      0.39,
+      0.54
+    ],
+    "expression_cosine": 1.0,
+    "test_prompts": {
+      "free_cd8": "immune cells that kill infected cells in the lung",
+      "struct_cd8": "CD8+ cytotoxic T lymphocytes from human lung tissue expressing CD8A CD8B GZMB PRF1 IFNG",
+      "free_neuron": "brain cells that fire electrical signals and talk to each other with chemicals"
+    },
+    "conditioning_cosine_matrix": {
+      "free_cd8_vs_struct_cd8": 0.7465,
+      "free_cd8_vs_free_neuron": 0.8251,
+      "struct_cd8_vs_free_neuron": 0.747
+    },
+    "latent_cosine_matrix": {
+      "free_cd8_vs_struct_cd8": 0.3915,
+      "free_cd8_vs_free_neuron": 0.4681,
+      "struct_cd8_vs_free_neuron": 0.5366
+    },
+    "conclusion": "The text conditioning pipeline (CLOP + DiT) produces differentiated latent representations, but the frozen scGPT decoder maps all embeddings to near-identical expression profiles. This confirms the decoder-dominance artifact: reported gene-level correlations reflect decoder reconstruction rather than generation fidelity."
+  }
+}

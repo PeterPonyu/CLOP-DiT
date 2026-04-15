@@ -1,0 +1,14 @@
+{
+  "Gaussian N(\u03bc,\u03c3\u00b2I)": {
+    "frechet_distance": 0.08877536161398528,
+    "mean_centroid_cosine": 0.9384520907086518,
+    "diversity_ratio": 1.021592861126076,
+    "coverage": 0.0106
+  },
+  "Shuffled Labels": {
+    "frechet_distance": 0.11027423467342187,
+    "mean_centroid_cosine": 0.025154140305475914,
+    "diversity_ratio": 1.0,
+    "coverage": 0.0278
+  }
+}
