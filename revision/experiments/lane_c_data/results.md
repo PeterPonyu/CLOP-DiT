@@ -7,7 +7,9 @@ here only as a reporting slice, not as an active Lane C science target.
 **Current gates:** A3 is already complete; before any curation or retrain
 work starts, Lane C now requires the B-7 engineer-day cap sign-off and
 the B-6 regression stop-rule decision documented in
-`feasibility_and_blockers.md`.
+`go_no_go_decision.md`. The older budget estimates in
+`feasibility_and_blockers.md` are now historical inputs, not the active
+gate.
 
 See `revision/experiments/lane_c_data/README.md` for priority-ordered
 data additions and the five-slice evaluation contract.

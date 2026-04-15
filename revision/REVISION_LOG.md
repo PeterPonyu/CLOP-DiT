@@ -618,7 +618,9 @@ weeks wall-clock depending on curator parallelism.
 - **B-5** `compute_five_slice.py` shared reporter.
 - **B-6** stop rule: reject Lane C if overall centroid cosine drops
   > 0.01 or FD rises > 0.05 vs frozen baseline.
-- **B-7** 40-engineer-day hard cap gate before curation starts.
+- **B-7** historical feasibility estimate only; superseded by section 14,
+  which closes the full lane and keeps only a narrowed `<= 18 engineer-day`
+  conditional path open.
 
 ### Recommended decision
 

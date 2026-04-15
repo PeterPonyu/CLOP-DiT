@@ -130,6 +130,9 @@ class TestLaneCResults:
         assert "confirms the long-tail gap is material" not in text, (
             "results.md must not retain the stale pre-A3 gate wording"
         )
+        assert "go_no_go_decision.md" in text, (
+            "results.md should point the active B-7/B-6 gate to go_no_go_decision.md"
+        )
 
     def test_r27_is_descope_but_slice_retained(self, text: str) -> None:
         assert "r2.7 is already discharged" in text, (
@@ -266,6 +269,13 @@ class TestLaneCFeasibilityPlan:
             "feasibility plan must contain an explicit 'blocker' section"
         )
 
+    def test_historical_b7_is_marked_superseded(self, plan: tuple[Path, str]) -> None:
+        _, text = plan
+        assert "superseded" in text, (
+            "feasibility plan should mark the old B-7 estimate as superseded once"
+            " the decision memo exists"
+        )
+
     def test_frozen_baseline_reference(self, plan: tuple[Path, str]) -> None:
         _, text = plan
         assert "baseline" in text and (
@@ -372,4 +382,9 @@ class TestRevisionLogSync:
     def test_head_line_uses_stable_contract(self, log_text: str) -> None:
         assert "current `revision/major` head: run `git rev-parse --short head`." in log_text, (
             "REVISION_LOG should point readers to git for the exact moving HEAD"
+        )
+
+    def test_obsolete_b7_is_marked_historical(self, log_text: str) -> None:
+        assert "b-7" in log_text and "historical feasibility estimate only" in log_text, (
+            "REVISION_LOG should mark the old B-7 budget as historical once section 14 supersedes it"
         )
