@@ -2,6 +2,8 @@
 
 > Text-conditioned single-cell latent generation via contrastive language–omics pretraining and diffusion transformers.
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19584069.svg)](https://doi.org/10.5281/zenodo.19584069)
+
 CLOP-DiT is a three-stage pipeline that samples single-cell expression embeddings conditioned on a structured five-field text prompt (cell type, tissue, organism, marker genes, disease context). The first stage is a prototype-aware contrastive aligner that maps frozen BiomedBERT text embeddings and frozen scGPT cell embeddings into a shared 512-dimensional latent space. The second stage is a 1-D Diffusion Transformer trained with conditional flow matching and classifier-free guidance, which samples a latent vector from a Gaussian prior toward the conditioned region of that space. The third stage is the frozen scGPT decoder, used to map the generated latent back to per-gene expression for downstream inspection.
 
 The training corpus is 220,304 cells from 80 publicly available Gene Expression Omnibus (GEO) datasets, deduplicated to 69 evaluation cell types covering human and mouse tumour-microenvironment and developmental contexts.
@@ -67,14 +69,15 @@ The trained model checkpoints (the CLOP aligner and the DiT generator) and the p
 ## Citation
 
 ```bibtex
-@article{fu2026clopdit,
+@article{Fu2026CLOPDiT,
   author  = {Fu, Zeyu and Zheng, JianXu and Fu, Jiawei},
   title   = {{CLOP-DiT}: Text-Conditioned Single-Cell Latent Generation
              via Contrastive Language--Omics Pretraining and
              Diffusion Transformers},
-  journal = {PeerJ Computer Science},
   year    = {2026},
-  note    = {Submitted}
+  note    = {Preprint; submitted to PeerJ Computer Science},
+  doi     = {10.64898/2026.03.26.714457},
+  url     = {https://doi.org/10.64898/2026.03.26.714457}
 }
 ```
 
