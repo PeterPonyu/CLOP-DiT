@@ -1,0 +1,43 @@
+A5 Rare-cell failure mechanism
+==============================
+Q25 training count = 967  (18 types are rare-by-count)
+
+gid n_train cell_type                              lat_ratio exp_ratio latICgen/real mechanism                               
+----------------------------------------------------------------------------------------------------------------------------------
+-- Reviewer-flagged Cycling (group 4) --
+  4    6145 Actively cycling cells in S/G2/M phase     0.880     0.951        4.610 approximately matched                   
+
+-- Rare-by-training-count (bottom quartile) --
+ 51     967 Megakaryocytes                             0.662     0.738        3.834 upstream compression, decoder expands   
+ 52     935 Multiciliated epithelial cells             0.365     1.134        2.672 upstream compression, decoder expands   
+ 53     887 Lymphatic endothelial cells                0.531     1.397        3.133 upstream compression, decoder expands   
+ 54     853 Mast cells                                 0.415     0.472        3.895 upstream+downstream (both compressed)   
+ 55     727 Neuroendocrine cells                       0.345     0.940        3.611 upstream compression, decoder expands   
+ 56     713 Melanocytes                                0.585     0.794        2.709 upstream compression, decoder expands   
+ 57     673 Lower motor neurons                        0.462     1.217        2.341 upstream compression, decoder expands   
+ 58     669 Oligodendrocyte precursor cells (OPCs)     0.296     0.752        2.059 upstream compression, decoder expands   
+ 59     656 Dorsal horn sensory neurons                0.401     1.101        2.978 upstream compression, decoder expands   
+ 60     492 Conventional dendritic cells               0.540     0.455        2.475 upstream+downstream (both compressed)   
+ 61     489 Pancreatic delta cells                     0.658     1.249        3.895 upstream compression, decoder expands   
+ 62     396 Pituitary gonadotroph cells                0.636     1.896        2.925 upstream compression, decoder expands   
+ 63     394 Mesenchymal stem and stromal cells (MS     0.547     1.245        2.606 upstream compression, decoder expands   
+ 64     384 Ameloblasts                                0.647     0.698        3.142 upstream+downstream (both compressed)   
+ 65     295 Pituitary thyrotroph cells                 0.487     0.649        2.578 upstream+downstream (both compressed)   
+ 66     242 Myoepithelial and basal cells              0.331     1.135        1.863 upstream compression, decoder expands   
+ 67     138 Pericytes and mural cells                  0.500     1.559        1.766 upstream compression, decoder expands   
+ 68      77 Kidney proximal tubule cells               1.059     1.855        0.899 approximately matched                   
+
+-- Reference (top-5 by training count) --
+  0    8782 CD8+ cytotoxic T lymphocytes               0.892     1.168        5.387 approximately matched                   
+  1    6827 MHC-II-high antigen-presenting cells       0.902     1.072        3.858 approximately matched                   
+  2    8283 Heat-shock and stress response cells       0.888     0.884        4.459 approximately matched                   
+  5    6191 Tissue-resident macrophages                0.898     1.436        4.400 approximately matched                   
+  6    7061 CD4+ helper T lymphocytes                  0.872     1.326        4.573 approximately matched                   
+
+Mechanism counts over rare-by-count types:
+   13 x  upstream compression, decoder expands
+    4 x  upstream+downstream (both compressed)
+    1 x  approximately matched
+
+Mechanism counts over reference (non-rare) types:
+    5 x  approximately matched
