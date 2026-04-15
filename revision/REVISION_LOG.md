@@ -669,3 +669,5 @@ Do **not** start curation or retraining yet. First confirm:
 
 If any of those fail, Lane C stays closed for this revision round and
 the limitation-path rebuttal is the honest delivery.
+
+**Checklist:** `revision/experiments/lane_c_data/conditional_go_staffing_checklist.md`

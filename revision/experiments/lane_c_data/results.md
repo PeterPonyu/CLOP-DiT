@@ -37,6 +37,8 @@ regressing overall metrics?
 - [ ] Strict-OOD leakage check script committed (B-2)
 - [ ] Label-vocabulary bridge reviewed (B-3)
 - [x] Regression stop-rule decision committed (B-6)
+- [x] Conditional-go staffing checklist committed
+      (`conditional_go_staffing_checklist.md`)
 - [ ] Conditional-go staffing check complete (`<= 18 engineer-days`)
 - [ ] Full CLOP + DiT retrain complete
 - [ ] Five-slice metric comparison committed

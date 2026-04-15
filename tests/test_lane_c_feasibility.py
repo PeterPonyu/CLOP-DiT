@@ -25,6 +25,7 @@ LANE_C_DIR = REVISION_DIR / "experiments" / "lane_c_data"
 LANE_C_README = LANE_C_DIR / "README.md"
 LANE_C_RESULTS = LANE_C_DIR / "results.md"
 GO_NO_GO_DECISION = LANE_C_DIR / "go_no_go_decision.md"
+STAFFING_CHECKLIST = LANE_C_DIR / "conditional_go_staffing_checklist.md"
 FEASIBILITY_CANDIDATES = [
     LANE_C_DIR / "feasibility_and_blockers.md",
     LANE_C_DIR / "feasibility_and_data_plan.md",
@@ -172,6 +173,25 @@ class TestLaneCDecisionMemo:
     def test_next_step_is_staffing_not_retrain(self, text: str) -> None:
         assert "do not start curation or retraining yet" in text
         assert "b-2" in text and "b-3" in text
+
+
+class TestLaneCStaffingChecklist:
+    @pytest.fixture
+    def text(self) -> str:
+        if not STAFFING_CHECKLIST.exists():
+            pytest.skip(f"missing {STAFFING_CHECKLIST}")
+        return _read(STAFFING_CHECKLIST).lower()
+
+    def test_contains_engineer_day_gate(self, text: str) -> None:
+        assert "<= 18 engineer-days" in text
+
+    def test_contains_b2_b3_owner_requirements(self, text: str) -> None:
+        assert "b-2 owner assigned" in text
+        assert "b-3 owner assigned" in text
+
+    def test_contains_binary_outcome(self, text: str) -> None:
+        assert "conditional go approved" in text
+        assert "no-go retained" in text
 
 
 # ---------------------------------------------------------------------------
