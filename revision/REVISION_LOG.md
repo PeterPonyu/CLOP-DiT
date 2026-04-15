@@ -6,7 +6,7 @@ has already been done, what the current state is, and where the
 unfinished work lives. Commit hashes and line numbers link directly
 back to the workspace so nothing has to be reconstructed from memory.
 
-Last updated: 2026-04-15 (end of Lane A).
+Last updated: 2026-04-15 (end of Lane A + B1 latent-level first pass).
 
 ---
 
@@ -21,7 +21,7 @@ Last updated: 2026-04-15 (end of Lane A).
 | Zenodo DOI | To auto-issue from the tagged release |
 | Venue-sensitive information in tracked files | **None.** All public docs are journal-neutral; manuscript sources are local-only under `revision/manuscripts/` and gitignored. |
 | Lane A (post-hoc analysis) | **Complete (5/5).** All scripts deterministic, rerunnable, SHA-256 pinned to inputs. |
-| Lane B (partial retrain) | Not started. |
+| Lane B (partial retrain) | B1 latent-level first pass complete; B2/B3/B4 not started. |
 | Lane C (data expansion) | Not started — gated on A3. |
 | Lane D (encoder comparison) | Not started — supplementary. |
 
@@ -164,14 +164,37 @@ If the next session starts cold, the minimal orientation is:
 
 ---
 
-## 5. Immediate next steps (Lane B)
+## 5. B1 latent-level summary (2026-04-15)
+
+Within-type mean Pearson `r_var` on the in-distribution CLOP latent
+slice, with identical per-type sample counts:
+
+| Generator | within-type mean r_var | within-type median variance ratio | fraction of 69 types with r_var > 0 |
+|---|---:|---:|---:|
+| Gaussian-per-type (oracle) | +0.813 | 1.05 | 100 % |
+| **CLOP-DiT** | **+0.201** | 0.71 | 100 % |
+| Pooled Gaussian (CFG = 0 stand-in) | +0.014 | 1.20 | 60.9 % |
+
+CLOP-DiT is strictly above the type-agnostic floor and strictly below
+the type-aware oracle. The near-zero variance recovery reported in
+the baseline's cross-dataset held-out slice is therefore not a shared
+feature of latent generators; CLOP-DiT's gap to the oracle is the
+improvement headroom targeted by Lane B3 and Lane C.
+
+Scope note: B1 is currently latent-level only. A decoder-level
+extension (reproducing the cross-dataset `median_variance_ratio`
+column for all three generators) is queued but not required to
+answer R2.9; the decoder is expansive (A5), so the latent limitation
+is what propagates.
+
+## 6. Immediate next steps (Lane B continued)
 
 | Order | Experiment | Cost | Why now |
 |---:|---|---|---|
-| 1 | **B1 — Gaussian / unconditional `r_var` baseline** | Inference only (hours) | Answers R2.9 directly and reconciles A4's three-slice variance story against a statistical floor. |
-| 2 | **B3 — Rare-cell mixing strategy sweep** | Downstream classifier training only | A5 already points the diagnosis at the upstream generator, so B3 can target latent-stage mixing strategies (random oversampling / SMOTE / hybrid). |
-| 3 | **B4 — CLOP→full bridge (3 DiT retrains)** | 3 × DiT retrain | Only once A3 has identified the dominant predictor (heterogeneity) is the right set of CLOP ablations clear. |
-| 4 | **B2 — ZCA formal ablation** | 4 × CLOP + 2–3 × DiT retrain | Most expensive; saved for when the reviewer-direct experiments are done. |
+| 1 | **B3 — Rare-cell mixing strategy sweep** | Downstream classifier training only | A5 + B1 both point at upstream latent under-dispersion; B3 tests whether latent-stage mixing recovers rare-class F1. |
+| 2 | **B1-decoder extension** | Decoder inference only | Reproduce the cross-dataset `median_variance_ratio` column for Gaussian and pooled baselines to complete the R2.9 response at the expression scale. |
+| 3 | **B4 — CLOP→full bridge (3 DiT retrains)** | 3 × DiT retrain | Turn the selected CLOP ablations into end-to-end comparisons. |
+| 4 | **B2 — ZCA formal ablation** | 4 × CLOP + 2–3 × DiT retrain | Most expensive; saved for last. |
 
 Lane C is gated on Lane A3 (already complete); Lane D is the
 lowest-priority supplementary lane.
