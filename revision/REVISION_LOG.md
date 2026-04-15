@@ -633,3 +633,39 @@ B4 is the honest outcome for this round.
 
 (this commit) Lane-C feasibility + blocker-to-action plan doc and
 `results.md` checklist re-alignment
+
+## 14. Lane-C decision gate: full-lane no-go, narrowed strict-OOD conditional go (2026-04-16)
+
+**Doc:** `revision/experiments/lane_c_data/go_no_go_decision.md`
+**Driver question:** After the Lane-C feasibility note quantified the
+real budget, do we actually start Lane C in this revision round?
+
+### Decision
+
+- **No-go** on the original full Lane C plan (~28-34 engineer-days,
+  ~16 GPU-hours).
+- **Conditional go** only for a narrowed **Priority-2 strict-OOD**
+  run, and only if it can be staffed at `<= 18 engineer-days`.
+- Keep **B-6** as a hard stop-rule: reject the narrowed run if overall
+  centroid cosine drops > 0.01 or FD rises > 0.05 vs the frozen
+  baseline.
+
+### Why
+
+1. R3.1 strict OOD is the only reviewer question that still needs new
+   data.
+2. R3.2 is already answered at the type level by A2 and only needs
+   confirmatory strengthening.
+3. R2.7 is discharged by A3 + B3-forced-scarcity and should not drive
+   new Lane C scope.
+
+### Next executable step
+
+Do **not** start curation or retraining yet. First confirm:
+
+- narrowed Priority-2-only staffing at `<= 18 engineer-days`
+- an owner for B-2 strict-OOD leakage checking
+- an owner for B-3 label-vocabulary bridge review
+
+If any of those fail, Lane C stays closed for this revision round and
+the limitation-path rebuttal is the honest delivery.

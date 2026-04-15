@@ -24,6 +24,7 @@ LANE_C_DIR = REVISION_DIR / "experiments" / "lane_c_data"
 
 LANE_C_README = LANE_C_DIR / "README.md"
 LANE_C_RESULTS = LANE_C_DIR / "results.md"
+GO_NO_GO_DECISION = LANE_C_DIR / "go_no_go_decision.md"
 FEASIBILITY_CANDIDATES = [
     LANE_C_DIR / "feasibility_and_blockers.md",
     LANE_C_DIR / "feasibility_and_data_plan.md",
@@ -136,6 +137,41 @@ class TestLaneCResults:
         assert "reporting slice" in text, (
             "results.md should clarify that low-abundance remains a reporting slice"
         )
+
+    def test_b7_and_b6_are_committed(self, text: str) -> None:
+        assert "b-7 decision committed" in text, (
+            "results.md should record the committed B-7 decision state"
+        )
+        assert "regression stop-rule decision committed (b-6)" in text, (
+            "results.md should record the committed B-6 state"
+        )
+
+
+class TestLaneCDecisionMemo:
+    """The B-7/B-6 decision memo must convert planning into an executable gate."""
+
+    @pytest.fixture
+    def text(self) -> str:
+        if not GO_NO_GO_DECISION.exists():
+            pytest.skip(f"missing {GO_NO_GO_DECISION}")
+        return _read(GO_NO_GO_DECISION).lower()
+
+    def test_full_lane_is_no_go(self, text: str) -> None:
+        assert "no-go for the full lane c plan" in text
+
+    def test_priority_2_only_is_conditional_go(self, text: str) -> None:
+        assert "conditional go" in text
+        assert "priority-2" in text or "priority 2" in text
+        assert "<= 18 engineer-days" in text
+
+    def test_stop_rule_is_explicit(self, text: str) -> None:
+        assert "> 0.01" in text and "> 0.05" in text, (
+            "go/no-go memo must encode the B-6 numeric stop-rule thresholds"
+        )
+
+    def test_next_step_is_staffing_not_retrain(self, text: str) -> None:
+        assert "do not start curation or retraining yet" in text
+        assert "b-2" in text and "b-3" in text
 
 
 # ---------------------------------------------------------------------------

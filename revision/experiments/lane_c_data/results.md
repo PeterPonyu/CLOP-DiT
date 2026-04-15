@@ -25,8 +25,9 @@ regressing overall metrics?
 - [x] A3 gate cleared
 - [x] Feasibility + blocker-to-action plan committed
       (`feasibility_and_blockers.md`)
-- [ ] Engineer-day cap gate (B-7) signed off — precondition for any
-      curation start
+- [x] B-7 decision committed
+      (`go_no_go_decision.md`): no-go for full Lane C; conditional go
+      only for Priority-2 strict-OOD at `<= 18 engineer-days`
 - [ ] Priority-1 mouse datasets curated (confirmatory; A2 already
       answers R3.2 at type level)
 - [ ] Priority-2 OOD tissue datasets curated + held out
@@ -35,7 +36,8 @@ regressing overall metrics?
       `real_intra_cos`) datasets curated — redefined per A3
 - [ ] Strict-OOD leakage check script committed (B-2)
 - [ ] Label-vocabulary bridge reviewed (B-3)
-- [ ] Regression stop-rule decision committed (B-6)
+- [x] Regression stop-rule decision committed (B-6)
+- [ ] Conditional-go staffing check complete (`<= 18 engineer-days`)
 - [ ] Full CLOP + DiT retrain complete
 - [ ] Five-slice metric comparison committed
 - [ ] Rebuttal paragraph drafted
@@ -53,8 +55,12 @@ Current gating read:
    directly answer strict-OOD generalisation (R3.1) and upgrade the
    current type-level cross-species answer into a stronger cell-level
    / held-out-tissue evaluation.
-4. The practical blocker is therefore not conceptual uncertainty but
-   the cost of fresh data curation plus a full CLOP + DiT retrain.
+4. The full Lane C plan is now a documented **no-go** for this revision
+   round; only a narrowed Priority-2-only strict-OOD run remains
+   conditionally open.
+5. The practical blocker is therefore no longer ambiguity about scope;
+   it is whether the narrowed run can be staffed at `<= 18 engineer-days`
+   with B-2 and B-3 ownership assigned.
 
 ## Rebuttal-ready sentence
 
