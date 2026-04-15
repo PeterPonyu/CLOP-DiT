@@ -38,7 +38,7 @@ already shown to be expansive (A5).
 - [x] Latent-level variance metrics computed for all three generators
 - [x] Comparison table drafted
 - [x] Rebuttal verdict sentence committed
-- [ ] Expression-level decoded comparison (scoped extension)
+- [x] Expression-level diagonal-Gaussian comparison (see §"Expression-scale extension" below)
 
 ## Results
 
@@ -89,6 +89,38 @@ says two things at once:
 2. The gap between CLOP-DiT and the type-aware Gaussian is the
    **improvement headroom** that Lane B3 (latent-stage mixing) and
    Lane C (data expansion) should target.
+
+## Expression-scale extension (added 2026-04-15)
+
+Script: `compute_expression_baselines.py`. Fits **diagonal**
+Gaussians directly on `results/real_expression.npy` (1 932 cells,
+1 790 genes) rather than on latents, then compares against
+`results/generated_expression.npy` (CLOP-DiT decoded output). The
+diagonal form matches per-gene mean and variance exactly; correlation
+structure is intentionally ignored so this is the simplest tenable
+moment-matching oracle at the expression scale.
+
+| Generator | r_mean pooled | r_var pooled | pooled median variance ratio | within-type mean r_var | within-type pooled median ratio |
+|---|---:|---:|---:|---:|---:|
+| Gaussian-per-type (expression-scale oracle) | +1.000 | +0.999 | 1.00 | **+0.957** | **0.94** |
+| CLOP-DiT | +1.000 | +0.988 | 1.76 | **+0.827** | **1.13** |
+| Pooled Gaussian (CFG = 0, expression-scale) | +1.000 | +0.999 | 1.00 | +0.797 | **1.79** |
+
+Pooled metrics converge at the expression scale because HVGs dominate
+the gene-wise variance structure regardless of type awareness — a
+pooled diagonal Gaussian already matches pooled per-gene variance by
+construction. The discriminating signal is the **within-type pooled
+median ratio**, which preserves the latent-scale ordering:
+
+- 0.94 (type-aware oracle) — perfectly calibrated.
+- 1.13 (CLOP-DiT) — modest within-type over-spread, consistent with
+  A5's finding that the decoder is expansive.
+- 1.79 (pooled Gaussian, CFG = 0) — severe over-spread because the
+  single pooled covariance pours between-type variance into every
+  sampled gene.
+
+The expression-scale numbers, together with the latent-scale numbers
+above, close the answer to R2.9 at both levels of the pipeline.
 
 ## Rebuttal-ready sentence (paste into R2.9 response)
 
