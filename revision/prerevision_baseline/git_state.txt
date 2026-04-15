@@ -2,19 +2,14 @@ Pre-revision baseline — frozen reference
 =======================================
 
 Date:     2026-04-15
-Branch:   github-ready
 Tag:      pre-revision-2026-04-15
-Commit:   3b6f38a67e8d2237e1c3e9b51a96be1d4a5c2c6b
-Short:    3b6f38a
+Purpose:  Immutable anchor for the major-revision diff base. Points to
+          the commit that represents the submitted-version repository
+          tree at the time revision work began.
 
-Recent commits at snapshot:
-3b6f38a chore: align package metadata and docstrings with the PeerJ CS submission
-d15c3fa fix: sanitize free-form prompt panel in figS01 to remove test-prompt leakage
-a679107 feat: wrap CLOP-DiT as installable application with clopdit-generate console command
-782b72f chore: untrack article sources and rewrite README for PeerJ CS resubmission
-c4408c2 refactor: centralize hardcoded constants into src/utils/constants.py
-809a3eb feat: reframe manuscript for computational audience + Elsevier Array template
-f55a64f fix: update authors, polish title, clean bibliography
-d2250fd fix: improve PeerJ template — figS01 sizing, label fix, add CRediT
-26cf99d feat: migrate manuscript to PeerJ journal LaTeX template
-e016410 feat: enhance visualization panels and layout for supplementary figures
+Verification:
+  git cat-file -e pre-revision-2026-04-15^{commit} && echo "tag present"
+  sha256sum -c revision/prerevision_baseline/artifact_hashes.txt | \
+    grep -v ': OK$' | head
+  # the second command prints nothing if all baseline artifacts are
+  # unchanged relative to the freeze.

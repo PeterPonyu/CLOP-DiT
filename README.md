@@ -6,13 +6,9 @@ CLOP-DiT is a three-stage pipeline that samples single-cell expression embedding
 
 The training corpus is 220,304 cells from 80 publicly available Gene Expression Omnibus (GEO) datasets, deduplicated to 69 evaluation cell types covering human and mouse tumour-microenvironment and developmental contexts.
 
-For the full method, results, and limitations, see the manuscript:
-
-> Zeyu Fu, JianXu Zheng, Jiawei Fu. *CLOP-DiT: Text-Conditioned Single-Cell Latent Generation via Contrastive Language–Omics Pretraining and Diffusion Transformers.* Submitted to *PeerJ Computer Science*, 2026.
-
 ## Reported results
 
-The headline metrics from the manuscript, evaluated on 69 deduplicated cell types and reproduced here for convenience:
+The headline metrics, evaluated on 69 deduplicated cell types:
 
 | Method | KNN-1 | Steering | DivR | LinAcc |
 |---|---|---|---|---|
@@ -24,7 +20,7 @@ The headline metrics from the manuscript, evaluated on 69 deduplicated cell type
 
 KNN-1 is reported over the 69-class problem with random chance ≈ 0.0145; CLOP-DiT at CFG = 2.0 is therefore about 25× above random. DivR ideal = 1.0.
 
-The reported strength of CLOP-DiT is controllable text-conditioned generation. The reported limitations, also discussed in the manuscript, are that within-type variance and gene–gene correlation are only weakly preserved, and that a Gaussian mean-matching baseline outperforms CLOP-DiT on the nine shared distributional metrics. See the manuscript Discussion for the full set of caveats.
+The reported strength of CLOP-DiT is controllable text-conditioned generation. The reported limitations are that within-type variance and gene–gene correlation are only weakly preserved, and that a Gaussian mean-matching baseline outperforms CLOP-DiT on the nine shared distributional metrics.
 
 ## Installation
 
@@ -58,7 +54,7 @@ python scripts/training/04b_train_dit.py --config configs/dit.yaml
 
 ## Data
 
-The training and validation data are derived entirely from public Gene Expression Omnibus (GEO) records. The 80 GEO accession identifiers used in this study are listed in the manuscript appendix (Table S1), and the eight held-out validation studies are listed in Table S2. Each accession is resolvable at `https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSExxxxxx`.
+The training and validation data are derived entirely from public Gene Expression Omnibus (GEO) records. Each accession is resolvable at `https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSExxxxxx`.
 
 The deterministic preprocessing pipeline included in this repository (quality control, highly-variable-gene selection, scGPT encoding, study-level stratified split, and deduplication) can rebuild the analysis cache from those GEO records.
 
@@ -72,9 +68,7 @@ The trained model checkpoints (the CLOP aligner and the DiT generator) and the p
   title   = {{CLOP-DiT}: Text-Conditioned Single-Cell Latent Generation
              via Contrastive Language--Omics Pretraining and
              Diffusion Transformers},
-  journal = {PeerJ Computer Science},
-  year    = {2026},
-  note    = {Submitted}
+  year    = {2026}
 }
 ```
 

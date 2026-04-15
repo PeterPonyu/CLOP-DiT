@@ -1,9 +1,9 @@
-# Revision Workspace — PeerJ CS Major Revision
+# Revision Workspace — Major Revision
 
 **Branch:** `revision/major`
 **Started:** 2026-04-15
 **Target submission:** 2026-05-04
-**Pre-revision anchor:** tag `pre-revision-2026-04-15` @ commit `3b6f38a`
+**Pre-revision anchor:** tag `pre-revision-2026-04-15`
 
 This directory is the single workspace for all major-revision activity. It is deliberately separate from `articles/`, `results/`, `data/`, and `models/` so that the revision work never overwrites the submitted-version artifacts.
 
@@ -23,7 +23,7 @@ revision/
 │   ├── baseline_snapshot_2026-04-15.md   headline pre-revision metrics
 │   └── metrics_frozen/               JSON snapshots of key results
 │
-├── manuscripts/                      📝 LaTeX diff workflow
+├── manuscripts/                      📝 LaTeX diff workflow (local-only; gitignored)
 │   ├── README.md
 │   ├── v1_prerevision/               frozen .tex/.bib/figures for diff base
 │   ├── v2_revision/                  active revision working tree
@@ -44,7 +44,7 @@ revision/
     │   ├── b2_zca_ablation/
     │   ├── b3_mixing_sweep/
     │   └── b4_clop_to_full_bridge/
-    ├── lane_c_data/                  targeted data expansion (OOD, mouse, rare)
+    ├── lane_c_data/                  targeted data expansion (OOD, species, rare)
     └── lane_d_encoder/               alternative text-encoder comparison
 ```
 
@@ -63,9 +63,9 @@ See `reviewer_response_draft.md` for the full comment-by-comment rebuttal.
 
 1. **Never modify `prerevision_baseline/`.** It is the only fixed reference for all comparisons.
 2. **Never commit changes to `data/`, `models/`, or `results/`.** Those directories stay `.gitignore`'d; artifact provenance is tracked via `artifact_hashes.txt`.
-3. **Each experiment lives in its own subdir under `experiments/lane_X/`.** Use the template in `performance_tracking/comparison_template.md` for the results note.
-4. **Manuscript edits go in `manuscripts/v2_revision/`, not `articles/`.** When ready, `latexdiff v1_prerevision/clop_dit_genes.tex v2_revision/clop_dit_genes.tex` produces the diff PDF.
-5. **Branch discipline:** all revision work commits to `revision/major`. `github-ready` remains the submitted-version branch.
+3. **Manuscript sources are local-only.** `manuscripts/v1_prerevision/`, `manuscripts/v2_revision/`, and `manuscripts/diff/` are gitignored. The pre-revision tex, figures, and compiled PDF live on disk for LaTeX diff purposes but are never tracked, so the public repository stays free of venue-specific templating.
+4. **Each experiment lives in its own subdir under `experiments/lane_X/`.** Use the template in `performance_tracking/comparison_template.md` for the results note.
+5. **Branch discipline:** all revision work commits to `revision/major`.
 
 ## Verification
 
