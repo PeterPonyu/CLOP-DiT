@@ -251,3 +251,33 @@ under-dispersion of within-type heterogeneity**, not decoder
 collapse, not species imbalance, not data scarcity, and not a
 correctable-by-mixing downstream artefact." Each subsequent
 sentence can then cite one of the six findings above.
+
+---
+
+## R2.11 addendum — cap-increase negative control (2026-04-15)
+
+**Source:** `revision/experiments/cap_increase/`
+**Supporting artifact:** `seed0_variance_comparison.json`,
+`within_cluster_variance.json`, `SYNTHESIS.md`.
+**Suggested manuscript location:** Results §Rare-Cell Augmentation
+(reframed) + Discussion paragraph on encoder-stage bottleneck.
+
+> At the reviewer's suggestion, we also tested whether relaxing the
+> per-dataset cell cap from 3 000 to 10 000 would expose additional
+> within-type latent variance. Preprocessing and scGPT encoding were
+> re-run on 50 datasets at both caps with a fixed `sc.pp.subsample`
+> seed so only the cap itself differed. The median per-dataset total
+> variance ratio cap10k / cap3k in scGPT latent space is 1.008 (IQR
+> [0.984, 1.035]), and the median within-cluster variance ratio,
+> pooled over 475 matched (dataset, cell-type) pairs, is 0.976 (IQR
+> [0.895, 1.079]). A 3.12 x increase in input cells therefore
+> produces no practically-meaningful gain in latent heterogeneity.
+> Earlier first-pass comparisons appeared bimodal (5 x gains and
+> 0.16 x losses) but that was fully explained by `sc.pp.subsample`
+> draw drift between the original unseeded cap3k cache and the new
+> seed-0 cap10k cache; matching the seed on both caps collapses the
+> IQR into a tight band around 1. This further corroborates the
+> A5 + B1 diagnosis that the bottleneck is upstream of the DiT at
+> the scGPT encoder / CLOP interface, not in the data volume, and
+> that generator-side heterogeneity objectives (not data-scaling)
+> are the productive next direction.

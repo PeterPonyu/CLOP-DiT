@@ -211,3 +211,82 @@ All Lane B experiments must:
 - Save new checkpoints under `models/revision/<experiment_id>/` so
   `artifact_hashes.txt` stays valid for the frozen baseline.
 - Emit `run_log.txt` with seed, config hash, commit, wall-clock.
+
+## 7. Cap-increase experiment (2026-04-15, Lane B follow-up)
+
+**Tag:** `pre-cap-increase-2026-04-15` (pushed to origin before
+anything was re-run).
+**Scripts:** `revision/experiments/cap_increase/`
+**Driver question:** would a larger per-dataset cell cap
+(`max_cells=10000` vs the baseline 3000) expose additional within-type
+latent variance and thereby address R2.11's heterogeneity concern?
+
+### What was run
+
+1. Added `--subsample_seed` flag to `scripts/data_prep/00_prepare_all_data.py`
+   so `sc.pp.subsample` is reproducible (commit `c33e90e`).
+2. Cap10k: re-preprocessed the 50 non-geodh datasets with
+   `max_cells=10000 seed=0`. 432 354 cells at cap10k vs 138 477 at
+   cap3k (same 50 datasets). Output: `data/processed_h5ad_cap10k/`.
+3. Cap3k_seed0: matched control run with `max_cells=3000 seed=0`.
+   Output: `data/processed_h5ad_cap3k_seed0/`.
+4. Both caches re-embedded with scGPT (`03_cache_latents.py`, frozen
+   scGPT weights), 512-d latents.
+5. Leiden + signature-based subcluster annotation on both caches
+   (`02_subcluster_descriptions.py`, adaptive resolution).
+
+### Headline result
+
+With the seed fixed on both caps (so **only the cap differs**):
+
+| metric | median | mean | IQR |
+|---|---:|---:|---:|
+| per-dataset variance ratio | **1.008** | 1.010 | [0.984, 1.035] |
+| within-cluster variance ratio (475 pairs) | **0.976** | 0.987 | [0.895, 1.079] |
+| within-cluster mean-L2 ratio | 0.988 | 0.988 | [0.948, 1.036] |
+
+3.12 x more cells in → **no practically-meaningful gain in scGPT
+latent variance, per-dataset or per-cluster**.
+
+### Why the first-pass diagnostic looked bimodal
+
+The first cap3k-vs-cap10k comparison used the historic unseeded
+cap3k cache and reported gains up to 5 x and losses down to 0.16 x.
+The seed-aligned rerun collapses that IQR to `[0.984, 1.035]` and
+`[0.895, 1.079]`; the tails were pure `sc.pp.subsample` draw drift,
+not cap effect.
+
+### Mechanistic read
+
+Within-type variance in **scGPT latent space saturates well before
+3 000 cells**. The encoder's raw-count → rank-binning → frozen
+transformer path lacks the capacity to represent the fine-grained
+variation R2.11 points at. A cap-increase cannot fix an
+encoder-side bottleneck; this is consistent with the A5 + B1 Lane
+diagnosis.
+
+### Implications for the revision
+
+- **Do not advertise cap-increase as a heterogeneity fix.** The
+  seed-aligned comparison disproves it at the scGPT latent level.
+- **Do not retrain CLOP / DiT on the cap10k cache.** There is no
+  new signal to train on.
+- **Report the experiment as a negative result** that corroborates
+  the existing story: the bottleneck is at the encoder / generator
+  stage, upstream of data volume.
+- Paste-ready rebuttal paragraph is in
+  `revision/experiments/cap_increase/SYNTHESIS.md`.
+
+### Artefacts (gitignored; referenced by path only)
+
+- `data/processed_h5ad_cap10k/` and `data/processed_h5ad_cap3k_seed0/`
+- `data/cached_latents_cap10k/` and `data/cached_latents_cap3k_seed0/`
+- `data/processed_h5ad_{cap10k, cap3k_seed0}/subcluster_metadata.json`
+- Versioned JSONs under `revision/experiments/cap_increase/`:
+  `seed0_variance_comparison.json`, `within_cluster_variance.json`,
+  `cap3k_vs_cap10k_cellcounts.json`, `per_dataset_variance_ratio.json`
+  (first-pass, confounded), `smoke_report.json`.
+
+### Commit trail
+
+`85d64e6` → `c33e90e` → `c7271ee` → `dd605ed` → `de378ea`.
