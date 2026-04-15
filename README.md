@@ -1,3 +1,9 @@
+<div align="center">
+  <a href="https://peterponyu.github.io/">
+    <img src="https://peterponyu.github.io/assets/badges/CLOP-DiT.svg" width="64" alt="ZF Lab · CLOP-DiT">
+  </a>
+</div>
+
 # CLOP-DiT
 
 > Text-conditioned single-cell latent generation via contrastive language–omics pretraining and diffusion transformers.
