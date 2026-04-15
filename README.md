@@ -10,7 +10,7 @@ The training corpus is 220,304 cells from 80 publicly available Gene Expression 
 
 For the full method, results, and limitations, see the manuscript:
 
-> Zeyu Fu, JianXu Zheng, Jiawei Fu. *CLOP-DiT: Text-Conditioned Single-Cell Latent Generation via Contrastive Language–Omics Pretraining and Diffusion Transformers.* Submitted to *PeerJ Computer Science*, 2026.
+> Zeyu Fu, JianXu Zheng, Jiawei Fu. *CLOP-DiT: Text-Conditioned Single-Cell Latent Generation via Contrastive Language–Omics Pretraining and Diffusion Transformers.* Preprint, 2026.
 
 ## Reported results
 
@@ -75,7 +75,7 @@ The trained model checkpoints (the CLOP aligner and the DiT generator) and the p
              via Contrastive Language--Omics Pretraining and
              Diffusion Transformers},
   year    = {2026},
-  note    = {Preprint; submitted to PeerJ Computer Science},
+  note    = {Preprint},
   doi     = {10.64898/2026.03.26.714457},
   url     = {https://doi.org/10.64898/2026.03.26.714457}
 }
