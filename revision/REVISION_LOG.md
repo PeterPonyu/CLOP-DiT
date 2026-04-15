@@ -21,7 +21,7 @@ Last updated: 2026-04-15 (end of Lane A + B1 latent-level first pass).
 | Zenodo DOI | To auto-issue from the tagged release |
 | Venue-sensitive information in tracked files | **None.** All public docs are journal-neutral; manuscript sources are local-only under `revision/manuscripts/` and gitignored. |
 | Lane A (post-hoc analysis) | **Complete (5/5).** All scripts deterministic, rerunnable, SHA-256 pinned to inputs. |
-| Lane B (partial retrain) | B1 latent-level first pass complete; B2/B3/B4 not started. |
+| Lane B (partial retrain) | B1 latent-level first pass complete; **B2 ZCA ablation complete (section 9)**; B3/B4 not started. |
 | Lane C (data expansion) | Not started — gated on A3. |
 | Lane D (encoder comparison) | Not started — supplementary. |
 
@@ -320,3 +320,47 @@ paragraph in the synthesis doc.
 
 `0b73b71` (raw-vs-latent) -> `e72124b` (HVG partial 500/1k/2k) ->
 `addd49f` (HVG complete 4k/8k).
+
+## 9. ZCA whitening ablation (2026-04-15, Lane B2)
+
+**Scripts:** `revision/experiments/zca_ablation/`
+**Synthesis:** `revision/experiments/zca_ablation/SYNTHESIS.md`
+**Driver question:** Is ZCA whitening a critical component of the CLOP
+pipeline, or is the aligner robust to its removal?
+
+### Design
+
+Three CLOP training runs (100 epochs, seed 42, PrototypeSigLIP,
+identical architecture) differing only in embedding preprocessing:
+
+| condition | preprocessing | cell pairwise cos after |
+|---|---|---:|
+| whiten (ZCA) | mean-center + ZCA + L2 | 0.43 |
+| center_norm | mean-center + L2 | 0.87 |
+| none | raw collapsed | 0.99 |
+
+### Results
+
+| condition | quality | proto_acc | tc_align | sep | cos_sim | best ep |
+|---|---:|---:|---:|---:|---:|---:|
+| whiten | **0.966** | 0.999 | 0.978 | 1.011 | **0.851** | 98 |
+| center_norm | 0.960 | 1.000 | 0.984 | 1.010 | 0.815 | 96 |
+| none | 0.956 | 0.998 | 0.977 | 1.010 | 0.809 | 99 |
+
+Quality drop from whiten → none: **1.0 %**. Prototype accuracy
+near-perfect (≥ 0.998) in all conditions. Main ZCA contribution is
+a 5 % improvement in positive-pair cosine similarity.
+
+### Conclusion
+
+ZCA whitening is a modest refinement, not a critical component. The
+3-layer MLP projectors + PrototypeSigLIP loss learn through raw
+embedding collapse. ZCA's benefit is in fine-grained cosine
+structure (decorrelating the 512-d scGPT dimensions). This is
+consistent with the encoder-bottleneck finding: most useful signal
+is in between-type centroid structure, well-preserved without
+preprocessing.
+
+### Commit trail
+
+(single commit with all ablation infrastructure + results)

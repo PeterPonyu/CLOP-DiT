@@ -37,6 +37,7 @@ models/scgpt_pancancer/
 models/checkpoints/
 !models/checkpoints/.gitkeep
 models/baselines/
+models/revision/
 
 # === Generated outputs ===
 results/
