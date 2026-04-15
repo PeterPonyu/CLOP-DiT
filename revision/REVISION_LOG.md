@@ -290,3 +290,33 @@ diagnosis.
 ### Commit trail
 
 `85d64e6` → `c33e90e` → `c7271ee` → `dd605ed` → `de378ea`.
+
+## 8. Encoder bottleneck experiment trio (2026-04-15)
+
+Three experiments converge on the same diagnosis: scGPT encoder
+saturates within-type latent variance regardless of input.
+
+**Scripts:** `revision/experiments/encoder_bottleneck/`
+**Synthesis:** `revision/experiments/encoder_bottleneck/SYNTHESIS.md`
+
+### Three experiments
+
+| experiment | lever | range | within-type latent var change |
+|---|---|---|---:|
+| Cap-increase (sec. 7) | `max_cells` | 3000 -> 10000 | median ratio 1.008 (null) |
+| HVG ablation | `n_top_genes` | 500 -> 8000 | median 11.18 -> 8.49 -> 8.78 (saturates >= 2000) |
+| Raw-vs-latent | (no lever) | – | within L2 ratio 0.168 (encoder compresses 6 x) |
+
+### Conclusion
+
+The within-type heterogeneity gap that R2.11 flags is a property of
+the frozen scGPT latent manifold, not of CLOP or the DiT. No
+input-side lever (cap-cells, HVG count, seed) can move it. Productive
+future levers: encoder replacement (Lane D), CLOP variance-preserving
+loss, or DiT variance-preserving objective. Paste-ready Discussion
+paragraph in the synthesis doc.
+
+### Commit trail
+
+`0b73b71` (raw-vs-latent) -> `e72124b` (HVG partial 500/1k/2k) ->
+`addd49f` (HVG complete 4k/8k).
