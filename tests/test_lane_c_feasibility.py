@@ -14,7 +14,6 @@ artifact exists but does not meet the documented contract.
 from __future__ import annotations
 
 import re
-import subprocess
 from pathlib import Path
 
 import pytest
@@ -314,12 +313,7 @@ class TestRevisionLogSync:
             "summary once the integrated feasibility section is present"
         )
 
-    def test_final_head_matches_repo_head(self, log_text: str) -> None:
-        current_head = subprocess.check_output(
-            ["git", "rev-parse", "--short", "HEAD"],
-            cwd=REPO_ROOT,
-            text=True,
-        ).strip().lower()
-        assert f"final `revision/major` head: `{current_head}`." in log_text, (
-            "REVISION_LOG final HEAD line must match the actual repo HEAD"
+    def test_head_line_uses_stable_contract(self, log_text: str) -> None:
+        assert "current `revision/major` head: run `git rev-parse --short head`." in log_text, (
+            "REVISION_LOG should point readers to git for the exact moving HEAD"
         )
