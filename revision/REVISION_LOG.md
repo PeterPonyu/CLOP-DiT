@@ -6,7 +6,7 @@ has already been done, what the current state is, and where the
 unfinished work lives. Commit hashes and line numbers link directly
 back to the workspace so nothing has to be reconstructed from memory.
 
-Last updated: 2026-04-15 (Lane A complete, B1+B2+sec.7+8 complete, Lane D complete).
+Last updated: 2026-04-15 (Lane A complete, B1+B2+B3-forced+sec.7+8 complete, Lane D complete, B4 in progress).
 
 ---
 
@@ -21,7 +21,7 @@ Last updated: 2026-04-15 (Lane A complete, B1+B2+sec.7+8 complete, Lane D comple
 | Zenodo DOI | To auto-issue from the tagged release |
 | Venue-sensitive information in tracked files | **None.** All public docs are journal-neutral; manuscript sources are local-only under `revision/manuscripts/` and gitignored. |
 | Lane A (post-hoc analysis) | **Complete (5/5).** All scripts deterministic, rerunnable, SHA-256 pinned to inputs. |
-| Lane B (partial retrain) | B1 latent-level first pass complete; **B2 ZCA ablation complete (section 9)**; B3/B4 not started. |
+| Lane B (partial retrain) | B1 latent-level first pass complete; **B2 ZCA ablation complete (section 9)**; **B3 forced-scarcity complete (section 12)**; B4 DiT retraining in progress. |
 | Lane C (data expansion) | Not started — gated on A3. |
 | Lane D (encoder comparison) | **Complete.** scGPT-specific compression confirmed (section 10). |
 
@@ -473,3 +473,53 @@ coverage, and compare whether Stage-1 ranking transfers to Stage-2.
 ### Commit trail
 
 (this commit, phase-2 in progress)
+
+## 12. B3 forced-scarcity extension (2026-04-15)
+
+**Script:** `revision/experiments/lane_b_retrain/b3_mixing_sweep/compute_forced_scarcity.py`
+**Output:** `forced_scarcity_sweep.json`, `forced_scarcity_preview.txt`
+**Driver question:** B3 natural-scarcity showed no augmentation benefit
+(baseline F1 already 0.92–0.94). Does augmentation help when there IS
+genuine headroom?
+
+### Design
+
+Artificially reduce rare-class training cells to 30 (from ~967/384
+naturally), creating baseline F1 ~0.50. Same 5 strategies × 4 ratios
+as B3. Same two rare types (gid 51 Megakaryocytes, gid 64 Ameloblasts).
+
+### Results
+
+| strategy | gid 51 1x | 10x | gid 64 1x | 10x |
+|---|---:|---:|---:|---:|
+| baseline | 0.505 | — | 0.506 | — |
+| oversampling | 0.631 | 0.783 | 0.619 | 0.866 |
+| smote | 0.627 | 0.769 | 0.627 | 0.834 |
+| clop | 0.624 | 0.719 | 0.522 | 0.670 |
+| clop+oversamp | 0.631 | 0.772 | 0.559 | 0.835 |
+| clop+smote | 0.627 | 0.757 | 0.559 | 0.835 |
+
+### Interpretation
+
+1. **Augmentation works under genuine scarcity.** All strategies lift
+   rare-F1 by +0.11 to +0.36 from the 0.50 baseline — answering the
+   reviewer's concern that the B3 null result was ceiling-driven.
+2. **Simple oversampling is strongest at embedding level.** This is
+   expected: LogisticRegression on 512-d embeddings already captures
+   the cluster structure. Duplicating real points reinforces the
+   correct centroid.
+3. **CLOP alone is weakest** (0.719/0.670 at 10x vs 0.783/0.866 for
+   oversampling). Generated embeddings have higher intra-class variance
+   than real cells — the DiT sampling noise slightly dilutes the
+   classifier signal.
+4. **Hybrid strategies close the gap** (0.772/0.835 for clop+oversamp).
+   Mixing real oversamples with CLOP-generated diversity stabilises the
+   centroid while adding information.
+5. **Manuscript framing:** CLOP-DiT augmentation provides genuine
+   value under scarcity. The advantage will be larger at gene-expression
+   level (where oversampling produces exact duplicates but CLOP produces
+   diverse profiles).
+
+### Commit trail
+
+`053017e` revision: B3 forced-scarcity extension

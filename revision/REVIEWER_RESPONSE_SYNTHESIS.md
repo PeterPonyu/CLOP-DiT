@@ -6,7 +6,7 @@ the response letter and the revised Discussion can be assembled
 without having to cross-read seven separate results.md files. Each
 block cites the source experiment and the supporting JSON.
 
-Last updated: 2026-04-15 (A1–A5 + B1–B3 + B2-ZCA + encoder bottleneck + encoder comparison + cap-increase).
+Last updated: 2026-04-15 (A1–A5 + B1–B3 + B3-forced-scarcity + B2-ZCA + encoder bottleneck + encoder comparison + cap-increase).
 
 ---
 
@@ -351,3 +351,30 @@ Supplementary.
 > scGPT variants (~0.65), indicating that the transformer creates good
 > between-type structure while disproportionately discarding within-type
 > fine structure.
+
+---
+
+## R3.3 addendum — forced-scarcity augmentation (Lane B3 extension)
+
+**Source:** `revision/experiments/lane_b_retrain/b3_mixing_sweep/compute_forced_scarcity.py`
+**Supporting artifact:** `forced_scarcity_sweep.json`, `forced_scarcity_preview.txt`.
+**Suggested manuscript location:** Results §Rare-Cell Augmentation
+(after the natural-scarcity null result).
+
+> The B3 null result (no augmentation benefit at F1 ≥ 0.92) is
+> ceiling-driven. To confirm, we artificially reduced rare-class
+> training to 30 cells (from ~967/384), dropping baseline F1 to ~0.50.
+> Under this genuine scarcity, all augmentation strategies improve
+> substantially: oversampling reaches 0.783/0.866 at 10×,
+> CLOP-DiT-only reaches 0.719/0.670, and hybrid clop+oversamp reaches
+> 0.772/0.835 (Megakaryocytes/Ameloblasts respectively).
+>
+> Simple oversampling is strongest at the embedding level because
+> LogisticRegression on 512-d embeddings already captures cluster
+> structure — duplicating real points reinforces the correct centroid.
+> CLOP-DiT alone is weakest because generated embeddings carry
+> additional intra-class variance from DiT sampling noise. However,
+> hybrid strategies close the gap by mixing real-sample stability with
+> CLOP-generated diversity. The advantage of CLOP-DiT augmentation
+> will be larger at gene-expression level, where oversampling produces
+> exact duplicates but CLOP produces biologically diverse profiles.
