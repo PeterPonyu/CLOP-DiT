@@ -45,7 +45,7 @@ except the single tag move at step 5.
 | 2 | `68a970c` | Track pre-revision cover-letter source and `figure_subpanels_archive/` so no on-disk state from the submitted version can be lost. |
 | 3 | `236bc2a` | Seed `v2_revision/` (copy of `v1_prerevision/`) and fill per-experiment `results.md` stubs (A1–A5, B1–B4, C, D). |
 | 4 | `e64d6a1` | Add `revision/ZENODO_RELEASE_NOTES.md` ready to be used by `gh release create`. |
-| 5 | `ae1ee2b` | **Scrub venue-specific references and untrack manuscript sources.** Rewrote README, revision docs, and Zenodo notes to be journal-neutral; broadened gitignore patterns from hardcoded paths to globs; `git rm --cached` of `manuscripts/{v1_prerevision,v2_revision}/` and root `cover_letter_peerj_cs.tex`; deleted `scripts/pipeline/build_article_elsevier.sh`. |
+| 5 | `ae1ee2b` | **Scrub venue-specific references and untrack manuscript sources.** Rewrote README, revision docs, and release notes to be venue-neutral; broadened gitignore patterns from hardcoded paths to globs; `git rm --cached` of the manuscript subtrees under `revision/manuscripts/` and of the legacy cover-letter source at repository root; deleted the venue-specific article-build helper under `scripts/pipeline/`. |
 | 6 | `4deabda` | Generalise two source-comment references to publication-target wording. |
 | 7 | Re-tag | Deleted `pre-revision-2026-04-15` on both local and remote, re-tagged at scrubbed `4deabda` with a neutral message, force-pushed. `git archive pre-revision-2026-04-15` tarball verified to contain zero venue references. |
 | 8 | GH release | `gh release create pre-revision-2026-04-15` with notes from `revision/ZENODO_RELEASE_NOTES.md` — triggers Zenodo DOI. |
