@@ -6,7 +6,7 @@ has already been done, what the current state is, and where the
 unfinished work lives. Commit hashes and line numbers link directly
 back to the workspace so nothing has to be reconstructed from memory.
 
-Last updated: 2026-04-15 (end of Lane A + B1 latent-level first pass).
+Last updated: 2026-04-15 (Lane A complete, B1+B2+sec.7+8 complete, Lane D complete).
 
 ---
 
@@ -23,7 +23,7 @@ Last updated: 2026-04-15 (end of Lane A + B1 latent-level first pass).
 | Lane A (post-hoc analysis) | **Complete (5/5).** All scripts deterministic, rerunnable, SHA-256 pinned to inputs. |
 | Lane B (partial retrain) | B1 latent-level first pass complete; **B2 ZCA ablation complete (section 9)**; B3/B4 not started. |
 | Lane C (data expansion) | Not started — gated on A3. |
-| Lane D (encoder comparison) | Not started — supplementary. |
+| Lane D (encoder comparison) | **Complete.** scGPT-specific compression confirmed (section 10). |
 
 Integrity verification (run any time):
 
@@ -364,3 +364,63 @@ preprocessing.
 ### Commit trail
 
 (single commit with all ablation infrastructure + results)
+
+## 10. Encoder comparison experiment (2026-04-15, Lane D)
+
+**Scripts:** `revision/experiments/encoder_comparison/`
+**Synthesis:** `revision/experiments/encoder_comparison/SYNTHESIS.md`
+**Driver question:** Is the within-type compression diagnosed in Section 8
+specific to the scGPT transformer architecture, or universal to all cell
+embedding methods?
+
+### Design
+
+Three encoders applied to 8 representative datasets spanning the full
+tightness ratio range (0.39–1.12 from experiment A):
+
+| encoder | architecture | training data | embedding dim |
+|---|---|---|---:|
+| scGPT-human | 12-layer transformer | 33M human cells | 512 |
+| scGPT-pancancer | 12-layer transformer | 5.7M cancer cells | 512 |
+| PCA | linear (TruncatedSVD) | fitted per-dataset | 512 |
+
+### Results
+
+**Within-L2 compression ratio** (encoder / raw; lower = more compression):
+
+| encoder | median | mean | IQR |
+|---|---:|---:|---|
+| scGPT-human | **0.144** | 0.154 | [0.121, 0.181] |
+| scGPT-pancancer | **0.066** | 0.072 | [0.051, 0.086] |
+| PCA | **0.899** | 0.903 | [0.890, 0.922] |
+
+**Tightness ratio** (encoder / raw):
+
+| encoder | median | mean | IQR |
+|---|---:|---:|---|
+| scGPT-human | 0.647 | 0.666 | [0.459, 0.797] |
+| scGPT-pancancer | 0.670 | 0.779 | [0.537, 0.958] |
+| PCA | 0.900 | 0.904 | [0.891, 0.923] |
+
+### Conclusion
+
+The within-type compression is **scGPT-architecture-specific, not
+universal**. PCA preserves within-type L2 almost perfectly (0.90 ratio)
+while both scGPT variants compress aggressively (0.07–0.14). Since PCA
+maps to the same 512-d dimensionality, dimensionality reduction is ruled
+out as the cause. The compression arises from the transformer's learned
+representation, which prioritises cell-type identity over within-type
+fine structure.
+
+scGPT-pancancer compresses ~2× more aggressively than scGPT-human
+(0.066 vs 0.144), confirming that training data diversity modulates but
+does not eliminate the compression. Both variants produce similarly
+separable clusters (tightness ratio ~0.65–0.67).
+
+This sharpens the Section 8 diagnosis from "frozen encoder" to
+"transformer learned representation" and confirms scGPT-human as the
+better production choice.
+
+### Commit trail
+
+(this commit)
