@@ -149,9 +149,9 @@ class TestLaneCFeasibilityPlan:
 
     def test_five_slice_eval_contract(self, plan: tuple[Path, str]) -> None:
         _, text = plan
-        for slice_name in FIVE_SLICES:
-            assert slice_name.lower() in text, (
-                f"feasibility plan missing evaluation slice '{slice_name}'"
+        for name, pattern in FIVE_SLICES:
+            assert re.search(pattern, text), (
+                f"feasibility plan missing evaluation slice '{name}'"
             )
 
     def test_cost_and_retrain_budget(self, plan: tuple[Path, str]) -> None:
