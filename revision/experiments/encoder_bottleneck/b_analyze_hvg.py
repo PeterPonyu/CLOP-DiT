@@ -111,8 +111,8 @@ def main() -> None:
     sub = json.loads(SUB_META.read_text())
     rows = []
     for n, (cache, h5ad_dir) in HVG_VARIANTS.items():
-        if not cache.exists():
-            print(f"[skip hvg={n}] cache {cache} missing")
+        if not (cache / "cell_embeddings.npy").exists():
+            print(f"[skip hvg={n}] cache {cache} not yet complete")
             continue
         per = within_cluster_L2(cache, sub)
         s = summarize(per)

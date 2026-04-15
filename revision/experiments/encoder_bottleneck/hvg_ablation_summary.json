@@ -1,0 +1,43 @@
+{
+  "summary_per_variant": [
+    {
+      "n_pairs": 522,
+      "median_total_variance": 11.178,
+      "mean_total_variance": 11.524,
+      "median_mean_L2": 3.2438,
+      "mean_mean_L2": 3.2329,
+      "n_top_genes": 500,
+      "cache": "data/cached_latents_hvg500"
+    },
+    {
+      "n_pairs": 522,
+      "median_total_variance": 10.126,
+      "mean_total_variance": 10.684,
+      "median_mean_L2": 3.0912,
+      "mean_mean_L2": 3.0932,
+      "n_top_genes": 1000,
+      "cache": "data/cached_latents_hvg1000"
+    },
+    {
+      "n_pairs": 522,
+      "median_total_variance": 9.185,
+      "mean_total_variance": 9.746,
+      "median_mean_L2": 2.937,
+      "mean_mean_L2": 2.932,
+      "n_top_genes": 2000,
+      "cache": "data/cached_latents_cap3k_seed0"
+    }
+  ],
+  "ratios_to_2000_baseline": [
+    {
+      "n_top_genes": 500,
+      "var_ratio": 1.217,
+      "L2_ratio": 1.1045
+    },
+    {
+      "n_top_genes": 1000,
+      "var_ratio": 1.1024,
+      "L2_ratio": 1.0525
+    }
+  ]
+}
