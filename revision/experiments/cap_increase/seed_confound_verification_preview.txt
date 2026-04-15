@@ -1,0 +1,16 @@
+Seed-confound verification
+===========================
+Compares: cap3k_seed0 vs cap3k_historical (unseeded). Same cap,
+same preprocessing, same scGPT. Only sc.pp.subsample seed differs.
+
+Paired datasets: 50
+Variance ratio (seed0 / hist):
+  median=1.006  mean=1.237  IQR=[0.717, 1.448]
+  min=0.151  max=5.035
+  > 1.5 (seed0 wins big) : 12
+  < 0.67 (hist won big)  : 10
+
+Interpretation: an IQR much wider than ~[0.95, 1.05] means
+seed-drift alone shifts per-dataset latent variance by O(10%)
+or more, which fully accounts for the bimodal tails observed
+in the first-pass cap10k vs cap3k_historical diagnostic.
