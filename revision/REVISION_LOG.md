@@ -424,3 +424,52 @@ better production choice.
 ### Commit trail
 
 (this commit)
+
+## 11. B4 CLOP→full-pipeline bridge — Phase 1 diagnostic (2026-04-15)
+
+**Scripts:** `revision/experiments/b4_clop_bridge/`
+**Driver question (R2.10):** Do CLOP Stage-1 ablation conclusions
+transfer to the full generation pipeline, or are they specific to the
+CLOP-only evaluation?
+
+### Phase 1: Projected text space diagnostic
+
+Projected 1,088 unique text embeddings through 5 CLOP checkpoints
+(production, ablation baseline, no_cohesion, no_cell_noise,
+fixed_temperature) and compared the resulting 512-d projected text
+spaces structurally (Pearson r of the 1088 × 1088 inter-group cosine
+similarity matrix).
+
+| comparison | absolute cos | structural Pearson r |
+|---|---:|---:|
+| production vs abl_baseline | 0.267 | 0.053 |
+| production vs no_cohesion | 0.347 | 0.064 |
+| abl_baseline vs no_cell_noise | 0.884 | 0.756 |
+| abl_baseline vs fixed_temperature | 0.646 | 0.738 |
+| abl_baseline vs no_cohesion | 0.778 | 0.549 |
+
+**Key finding:** Production CLOP and ablation baseline (identical config)
+produce **structurally unrelated** projected text spaces (r ≈ 0.05).
+This is expected from contrastive learning's rotational invariance:
+separately trained projectors converge to different orientations.
+Within the ablation suite, variants show moderate structural similarity
+(r = 0.36–0.76), confirming the hyperparameter changes DO alter the
+embedding geometry.
+
+**Verdict:** Full DiT retraining per variant IS needed for the
+end-to-end bridge. No shortcut available.
+
+### Phase 2: DiT retraining (in progress)
+
+Three DiT retrains (300 epochs each, ~90 min/variant on RTX 5090):
+- `abl_baseline` → control for ablation-internal comparison
+- `no_cohesion` → largest structural divergence from baseline
+- `no_cell_noise` → highest Stage-1 proto_acc with most structural
+  similarity to baseline
+
+After training: generate embeddings, compute FD / centroid cosine /
+coverage, and compare whether Stage-1 ranking transfers to Stage-2.
+
+### Commit trail
+
+(this commit, phase-2 in progress)
