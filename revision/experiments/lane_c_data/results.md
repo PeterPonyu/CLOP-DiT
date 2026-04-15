@@ -19,9 +19,19 @@ regressing overall metrics?
 ## Status
 
 - [x] A3 gate cleared
-- [ ] Priority-1 mouse datasets curated
+- [x] Feasibility + blocker-to-action plan committed
+      (`feasibility_and_blockers.md`)
+- [ ] Engineer-day cap gate (B-7) signed off — precondition for any
+      curation start
+- [ ] Priority-1 mouse datasets curated (confirmatory; A2 already
+      answers R3.2 at type level)
 - [ ] Priority-2 OOD tissue datasets curated + held out
-- [ ] Priority-3 rare-state datasets curated
+      (unavoidable for R3.1)
+- [ ] Priority-3 heterogeneity-targeted (bottom-quartile
+      `real_intra_cos`) datasets curated — redefined per A3
+- [ ] Strict-OOD leakage check script committed (B-2)
+- [ ] Label-vocabulary bridge reviewed (B-3)
+- [ ] Regression stop-rule decision committed (B-6)
 - [ ] Full CLOP + DiT retrain complete
 - [ ] Five-slice metric comparison committed
 - [ ] Rebuttal paragraph drafted
