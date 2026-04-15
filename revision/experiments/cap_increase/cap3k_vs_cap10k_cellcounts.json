@@ -1,0 +1,312 @@
+{
+  "seed": 0,
+  "max_cells_cap3k": 3000,
+  "max_cells_cap10k": 10000,
+  "n_common_datasets": 50,
+  "n_cap3k_total": 80,
+  "n_cap10k_total": 50,
+  "total_cells_cap3k": 138477,
+  "total_cells_cap10k": 432354,
+  "per_dataset": [
+    {
+      "dataset": "GSE115571_LPSMmDev",
+      "cap3k_cells": 442,
+      "cap10k_cells": 1505,
+      "ratio": 3.405
+    },
+    {
+      "dataset": "GSE117988_MCCPBMCCancer",
+      "cap3k_cells": 2638,
+      "cap10k_cells": 8799,
+      "ratio": 3.335
+    },
+    {
+      "dataset": "GSE117988_MCCTumorCancer",
+      "cap3k_cells": 2990,
+      "cap10k_cells": 7412,
+      "ratio": 2.479
+    },
+    {
+      "dataset": "GSE120505_bloodAged",
+      "cap3k_cells": 3000,
+      "cap10k_cells": 10000,
+      "ratio": 3.333
+    },
+    {
+      "dataset": "GSE123813_bccHmCancer",
+      "cap3k_cells": 3000,
+      "cap10k_cells": 10000,
+      "ratio": 3.333
+    },
+    {
+      "dataset": "GSE123813_sccHmCancer",
+      "cap3k_cells": 3000,
+      "cap10k_cells": 10000,
+      "ratio": 3.333
+    },
+    {
+      "dataset": "GSE123902_LungAdreHmCancer",
+      "cap3k_cells": 2753,
+      "cap10k_cells": 9216,
+      "ratio": 3.348
+    },
+    {
+      "dataset": "GSE124310_MMHmCancer",
+      "cap3k_cells": 2833,
+      "cap10k_cells": 9458,
+      "ratio": 3.339
+    },
+    {
+      "dataset": "GSE130148_LungHmDev",
+      "cap3k_cells": 3000,
+      "cap10k_cells": 10000,
+      "ratio": 3.333
+    },
+    {
+      "dataset": "GSE132509_acutelymluekPBMCHmCancer",
+      "cap3k_cells": 2984,
+      "cap10k_cells": 9958,
+      "ratio": 3.337
+    },
+    {
+      "dataset": "GSE138709_LiverCancer",
+      "cap3k_cells": 2891,
+      "cap10k_cells": 9640,
+      "ratio": 3.334
+    },
+    {
+      "dataset": "GSE142653pitHmDev",
+      "cap3k_cells": 2885,
+      "cap10k_cells": 4967,
+      "ratio": 1.722
+    },
+    {
+      "dataset": "GSE143423_lbm_CancerBrainHm",
+      "cap3k_cells": 3000,
+      "cap10k_cells": 10000,
+      "ratio": 3.333
+    },
+    {
+      "dataset": "GSE143423_tnbc_CancerBrainHm",
+      "cap3k_cells": 2332,
+      "cap10k_cells": 5646,
+      "ratio": 2.421
+    },
+    {
+      "dataset": "GSE145929_ProgastinMmDev",
+      "cap3k_cells": 2830,
+      "cap10k_cells": 9409,
+      "ratio": 3.325
+    },
+    {
+      "dataset": "GSE145929_UrineMmDev",
+      "cap3k_cells": 2745,
+      "cap10k_cells": 9159,
+      "ratio": 3.337
+    },
+    {
+      "dataset": "GSE148218_bmALLHmCancer",
+      "cap3k_cells": 2807,
+      "cap10k_cells": 9406,
+      "ratio": 3.351
+    },
+    {
+      "dataset": "GSE149655_CAHmCancer",
+      "cap3k_cells": 2087,
+      "cap10k_cells": 6995,
+      "ratio": 3.352
+    },
+    {
+      "dataset": "GSE155109_bcECHmCancer",
+      "cap3k_cells": 3000,
+      "cap10k_cells": 8433,
+      "ratio": 2.811
+    },
+    {
+      "dataset": "GSE155109_bcStromaHmCancer",
+      "cap3k_cells": 3000,
+      "cap10k_cells": 10000,
+      "ratio": 3.333
+    },
+    {
+      "dataset": "GSE163558_stomachHmCancer",
+      "cap3k_cells": 2467,
+      "cap10k_cells": 8227,
+      "ratio": 3.335
+    },
+    {
+      "dataset": "GSE165784_RetinaHmDev",
+      "cap3k_cells": 2622,
+      "cap10k_cells": 8776,
+      "ratio": 3.347
+    },
+    {
+      "dataset": "GSE165844_LSKMmBatch",
+      "cap3k_cells": 2881,
+      "cap10k_cells": 9639,
+      "ratio": 3.346
+    },
+    {
+      "dataset": "GSE167597_spineMm",
+      "cap3k_cells": 3000,
+      "cap10k_cells": 10000,
+      "ratio": 3.333
+    },
+    {
+      "dataset": "GSE168181_BreastHmCancer",
+      "cap3k_cells": 2863,
+      "cap10k_cells": 9519,
+      "ratio": 3.325
+    },
+    {
+      "dataset": "GSE183904_GastricHmCancer",
+      "cap3k_cells": 3000,
+      "cap10k_cells": 10000,
+      "ratio": 3.333
+    },
+    {
+      "dataset": "GSE189070_astrocytesSCIMmDev",
+      "cap3k_cells": 2960,
+      "cap10k_cells": 9863,
+      "ratio": 3.332
+    },
+    {
+      "dataset": "GSE189357_lungAdreHmCancer",
+      "cap3k_cells": 2886,
+      "cap10k_cells": 9646,
+      "ratio": 3.342
+    },
+    {
+      "dataset": "GSE192857_hESCHmTimes",
+      "cap3k_cells": 2696,
+      "cap10k_cells": 8998,
+      "ratio": 3.338
+    },
+    {
+      "dataset": "GSE213740_ADHm",
+      "cap3k_cells": 2704,
+      "cap10k_cells": 9093,
+      "ratio": 3.363
+    },
+    {
+      "dataset": "GSE222002_TcellsHmCancer",
+      "cap3k_cells": 2962,
+      "cap10k_cells": 9883,
+      "ratio": 3.337
+    },
+    {
+      "dataset": "GSE222369_NKsLymphomaHmCancer",
+      "cap3k_cells": 2778,
+      "cap10k_cells": 9181,
+      "ratio": 3.305
+    },
+    {
+      "dataset": "GSE225600_breast_CancerHm",
+      "cap3k_cells": 2333,
+      "cap10k_cells": 7825,
+      "ratio": 3.354
+    },
+    {
+      "dataset": "GSE225857_liverColonMetasisHmCancer",
+      "cap3k_cells": 2986,
+      "cap10k_cells": 9948,
+      "ratio": 3.332
+    },
+    {
+      "dataset": "GSE226131_HSCMmAged",
+      "cap3k_cells": 2608,
+      "cap10k_cells": 8743,
+      "ratio": 3.352
+    },
+    {
+      "dataset": "GSE228499_breastHmCancer",
+      "cap3k_cells": 2448,
+      "cap10k_cells": 8239,
+      "ratio": 3.366
+    },
+    {
+      "dataset": "GSE235787_bcellsALLHmCancer",
+      "cap3k_cells": 2798,
+      "cap10k_cells": 9327,
+      "ratio": 3.333
+    },
+    {
+      "dataset": "GSE253355_bmNicheHm",
+      "cap3k_cells": 2835,
+      "cap10k_cells": 9466,
+      "ratio": 3.339
+    },
+    {
+      "dataset": "GSE262288_breastMetasisHmCancer",
+      "cap3k_cells": 2321,
+      "cap10k_cells": 7749,
+      "ratio": 3.339
+    },
+    {
+      "dataset": "GSE275119_TeethMmDev",
+      "cap3k_cells": 2963,
+      "cap10k_cells": 6683,
+      "ratio": 2.255
+    },
+    {
+      "dataset": "GSE283205_hepatoblastomaCancer",
+      "cap3k_cells": 2994,
+      "cap10k_cells": 9965,
+      "ratio": 3.328
+    },
+    {
+      "dataset": "GSE98638_TcellLiverHmCancer",
+      "cap3k_cells": 3000,
+      "cap10k_cells": 5063,
+      "ratio": 1.688
+    },
+    {
+      "dataset": "bm_GSE120446",
+      "cap3k_cells": 2890,
+      "cap10k_cells": 9624,
+      "ratio": 3.33
+    },
+    {
+      "dataset": "dentate",
+      "cap3k_cells": 3000,
+      "cap10k_cells": 10000,
+      "ratio": 3.333
+    },
+    {
+      "dataset": "endo",
+      "cap3k_cells": 2531,
+      "cap10k_cells": 2531,
+      "ratio": 1.0
+    },
+    {
+      "dataset": "hESC_GSE144024",
+      "cap3k_cells": 3000,
+      "cap10k_cells": 9485,
+      "ratio": 3.162
+    },
+    {
+      "dataset": "hemato",
+      "cap3k_cells": 3000,
+      "cap10k_cells": 10000,
+      "ratio": 3.333
+    },
+    {
+      "dataset": "ifnHSPC_GSE226824",
+      "cap3k_cells": 2739,
+      "cap10k_cells": 9105,
+      "ratio": 3.324
+    },
+    {
+      "dataset": "lung",
+      "cap3k_cells": 3000,
+      "cap10k_cells": 10000,
+      "ratio": 3.333
+    },
+    {
+      "dataset": "setty",
+      "cap3k_cells": 2995,
+      "cap10k_cells": 5773,
+      "ratio": 1.928
+    }
+  ]
+}
