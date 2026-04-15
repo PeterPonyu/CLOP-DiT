@@ -130,6 +130,14 @@ class TestLaneCResults:
             "results.md must not retain the stale pre-A3 gate wording"
         )
 
+    def test_r27_is_descope_but_slice_retained(self, text: str) -> None:
+        assert "r2.7 is already discharged" in text, (
+            "results.md should say that R2.7 is already discharged outside Lane C"
+        )
+        assert "reporting slice" in text, (
+            "results.md should clarify that low-abundance remains a reporting slice"
+        )
+
 
 # ---------------------------------------------------------------------------
 # Feasibility / data plan artifact (produced by worker-1)

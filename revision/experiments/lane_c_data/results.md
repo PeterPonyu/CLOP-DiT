@@ -1,7 +1,8 @@
 # Lane C — Data expansion (planned, not started)
 
-**Reviewer comments:** R3.1 (strict OOD), R3.2 (species stratification),
-R2.7 (low abundance).
+**Reviewer comments:** R3.1 (strict OOD), R3.2 (species stratification).
+R2.7 is already discharged by A3 + B3-forced-scarcity and is retained
+here only as a reporting slice, not as an active Lane C science target.
 **Retraining:** Full pipeline.
 **Current gates:** A3 is already complete; before any curation or retrain
 work starts, Lane C now requires the B-7 engineer-day cap sign-off and
@@ -14,7 +15,8 @@ data additions and the five-slice evaluation contract.
 ## Question
 
 Can targeted data expansion (mouse-heavy, strict-OOD tissues, rare /
-transitional states) move the five reviewer-facing slices — overall,
+transitional states) answer the still-open R3.1 / R3.2 questions while
+preserving the five reviewer-facing reporting slices — overall,
 low-abundance, mouse, strict-OOD, rare-classification — without
 regressing overall metrics?
 

@@ -6,7 +6,7 @@ has already been done, what the current state is, and where the
 unfinished work lives. Commit hashes and line numbers link directly
 back to the workspace so nothing has to be reconstructed from memory.
 
-Last updated: 2026-04-16 (ledger synced to current `revision/major` HEAD `04dd71e`; Lane A complete, B1+B2+B3+B4 complete, Lane D complete, Lane C planning complete but no new-data run started).
+Last updated: 2026-04-16 (ledger synced to current `revision/major` HEAD `c4a9563`; Lane A complete, B1+B2+B3+B4 complete, Lane D complete, Lane C planning complete but no new-data run started).
 
 ---
 
@@ -66,8 +66,9 @@ except the single tag move at step 5.
 | 23 | `a04b3ff` | **B4 CLOP→full bridge complete.** Stage-1 ablation rankings shown to be a partial-reversal proxy for end-to-end quality. |
 | 24 | `f0d7c96` | Sync revision ledger and experiment status pages to current branch evidence; prepare clean workspace for OMX team launch. |
 | 25 | `04dd71e` | Integrate Lane C feasibility / blocker plan and structural tests from the healthy Claude-worker team run. |
+| 26 | `c4a9563` | Restore ledger consistency after architect review by aligning top-level Lane C scope, post-A3 gate wording, and structural tests. |
 
-Final `revision/major` HEAD: `04dd71e`.
+Final `revision/major` HEAD: `c4a9563`.
 
 ---
 
