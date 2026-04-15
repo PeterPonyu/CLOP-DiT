@@ -39,8 +39,8 @@ from .panel_geometry import (
 # ──────────────────────────────────────────────────────────────
 # Publication rcParams — Nature/Cell conventions
 # ──────────────────────────────────────────────────────────────
-# Calibrated for MDPI column: half-width panels at figsize=(4.5,3.2) scale ~0.71x
-# at 0.48\linewidth (3.21" print on A4 170mm text width).
+# Calibrated for a typical two-column page: half-width panels at figsize=(4.5,3.2)
+# scale ~0.71x at 0.48\linewidth (3.21" print on A4 170mm text width).
 # With composed_scale=0.70, sizes must satisfy: size * 0.70 >= 7pt.
 # → min body text ~11pt, titles ~14pt, ticks ~11pt, legends ~11pt.
 VIS_STYLE: dict = {

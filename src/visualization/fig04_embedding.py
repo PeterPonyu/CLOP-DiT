@@ -447,7 +447,7 @@ def plot_clop_embedding_space(
         gap=[0.020, 0.048],
     )
     # REMOVED: set_figure_suptitle(fig, "CLOP Alignment Space...", ...)
-    # Title information moved to LaTeX caption per MDPI style guidelines
+    # Title information moved to LaTeX caption per publication style guidelines
 
     ax_b0 = ax_rect_1.add_axes(fig)
     add_panel_label(ax_b0, 'a', x=-0.18, y=1.02)
