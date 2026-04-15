@@ -6,7 +6,7 @@ the response letter and the revised Discussion can be assembled
 without having to cross-read seven separate results.md files. Each
 block cites the source experiment and the supporting JSON.
 
-Last updated: 2026-04-15.
+Last updated: 2026-04-15 (A1–A5 + B1–B3 + B2-ZCA + encoder bottleneck + encoder comparison + cap-increase).
 
 ---
 
@@ -281,3 +281,73 @@ sentence can then cite one of the six findings above.
 > the scGPT encoder / CLOP interface, not in the data volume, and
 > that generator-side heterogeneity objectives (not data-scaling)
 > are the productive next direction.
+
+---
+
+## R2.10 addendum — ZCA whitening ablation (Lane B2)
+
+**Source:** `revision/experiments/zca_ablation/`
+**Supporting artifact:** `zca_ablation_summary.json`, `SYNTHESIS.md`.
+**Suggested manuscript location:** Results §CLOP Aligner Ablation
+(expanded) + Supplementary Table.
+
+> We isolated the contribution of ZCA whitening by training three
+> CLOP aligners differing only in embedding preprocessing: full ZCA
+> (production), center + L2-normalise, and no preprocessing. CLOP
+> quality score drops by just 1.0 % from ZCA (0.966) to no
+> preprocessing (0.956), with prototype accuracy near-perfect
+> (≥ 0.998) in all conditions. ZCA's measurable contribution is a
+> 5 % improvement in positive-pair cosine similarity (0.851 vs
+> 0.809), reflecting decorrelation of the 512-d scGPT dimensions
+> rather than a structural alignment gain. The 3-layer MLP projectors
+> combined with the PrototypeSigLIP loss are sufficient to learn
+> through raw embedding collapse, confirming ZCA as a modest
+> refinement rather than a critical pipeline component.
+
+---
+
+## Encoder bottleneck mechanistic trio (Sections 7 + 8)
+
+**Source:** `revision/experiments/cap_increase/`,
+`revision/experiments/encoder_bottleneck/`.
+**Supporting artifact:** `SYNTHESIS.md` in each directory.
+**Suggested manuscript location:** Discussion §Limitations and Future
+Directions.
+
+> Three complementary experiments converge on the same diagnosis:
+> within-type heterogeneity in the scGPT latent space saturates
+> regardless of input-side manipulation. (i) A cap-increase from
+> 3 000 to 10 000 cells per dataset yields median variance ratio
+> 1.008 — no gain. (ii) Varying the HVG count from 500 to 8 000
+> genes changes within-type latent variance by < 5 % once HVG ≥
+> 2 000 — the encoder saturates. (iii) Direct comparison of raw
+> HVG space to scGPT latent space shows the encoder compresses
+> within-type L2 distance by 6 × while preserving between-type
+> separation. No input-side lever (cell count, gene count, seed)
+> moves the within-type latent variance; the bottleneck is a
+> property of the frozen scGPT transformer representation.
+
+---
+
+## Encoder comparison — scGPT vs PCA (Section 10, Lane D supplement)
+
+**Source:** `revision/experiments/encoder_comparison/`
+**Supporting artifact:** `encoder_comparison_summary.json`,
+`SYNTHESIS.md`.
+**Suggested manuscript location:** Discussion §Limitations, or
+Supplementary.
+
+> Comparing cell encoders on eight representative datasets, we find
+> that within-type L2 compression is specific to the scGPT transformer
+> architecture, not an artefact of dimensionality reduction. PCA
+> embeddings in the same 512-d space preserve within-type distance
+> almost perfectly (median ratio 0.90), while scGPT-human compresses
+> it by ~7× (median ratio 0.14) and scGPT-pancancer by ~15× (median
+> ratio 0.07). The pancancer model, trained on a narrower 5.7M-cell
+> cancer corpus, produces an even more centroid-biased representation
+> than the 33M-cell whole-human model, confirming that training data
+> diversity modulates but does not eliminate the compression.
+> Cluster separability (tightness ratio) is comparable across both
+> scGPT variants (~0.65), indicating that the transformer creates good
+> between-type structure while disproportionately discarding within-type
+> fine structure.
