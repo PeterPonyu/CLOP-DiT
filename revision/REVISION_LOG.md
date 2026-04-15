@@ -6,7 +6,7 @@ has already been done, what the current state is, and where the
 unfinished work lives. Commit hashes and line numbers link directly
 back to the workspace so nothing has to be reconstructed from memory.
 
-Last updated: 2026-04-15 (Lane A complete, B1+B2+B3-forced+sec.7+8 complete, Lane D complete, B4 in progress).
+Last updated: 2026-04-15 (Lane A complete, B1+B2+B3-forced+sec.7+8 complete, Lane D complete, B4 complete).
 
 ---
 
@@ -21,7 +21,7 @@ Last updated: 2026-04-15 (Lane A complete, B1+B2+B3-forced+sec.7+8 complete, Lan
 | Zenodo DOI | To auto-issue from the tagged release |
 | Venue-sensitive information in tracked files | **None.** All public docs are journal-neutral; manuscript sources are local-only under `revision/manuscripts/` and gitignored. |
 | Lane A (post-hoc analysis) | **Complete (5/5).** All scripts deterministic, rerunnable, SHA-256 pinned to inputs. |
-| Lane B (partial retrain) | B1 latent-level first pass complete; **B2 ZCA ablation complete (section 9)**; **B3 forced-scarcity complete (section 12)**; B4 DiT retraining in progress. |
+| Lane B (partial retrain) | B1 latent-level first pass complete; **B2 ZCA ablation complete (section 9)**; **B3 forced-scarcity complete (section 12)**; **B4 CLOP→full bridge complete (section 11)** — PARTIAL_REVERSAL verdict. |
 | Lane C (data expansion) | Not started — gated on A3. |
 | Lane D (encoder comparison) | **Complete.** scGPT-specific compression confirmed (section 10). |
 
@@ -459,7 +459,7 @@ embedding geometry.
 **Verdict:** Full DiT retraining per variant IS needed for the
 end-to-end bridge. No shortcut available.
 
-### Phase 2: DiT retraining (in progress)
+### Phase 2: DiT retraining (complete)
 
 Three DiT retrains (300 epochs each, ~90 min/variant on RTX 5090):
 - `abl_baseline` → control for ablation-internal comparison
@@ -467,12 +467,53 @@ Three DiT retrains (300 epochs each, ~90 min/variant on RTX 5090):
 - `no_cell_noise` → highest Stage-1 proto_acc with most structural
   similarity to baseline
 
-After training: generate embeddings, compute FD / centroid cosine /
-coverage, and compare whether Stage-1 ranking transfers to Stage-2.
+| variant | best val loss | DiT val cosine | DiT FD (train) |
+|---|---:|---:|---:|
+| abl_baseline | 0.0226 | 0.990 | 0.915 |
+| no_cohesion | 0.0205 | 0.990 | 0.849 |
+| no_cell_noise | 0.0205 | 0.990 | 0.915 |
+
+All three converged to comparable val loss and cosine similarity,
+confirming the DiT can learn each projected text space equally well.
+
+### Phase 3: Generation evaluation (complete)
+
+Generated 6,900 embeddings per variant (100 per type × 69 types,
+cfg=1.5, 20 ODE steps, condition_noise mode with σ=0.03) and
+computed overall + per-type metrics.
+
+| variant | Stage-1 proto_acc | Stage-2 FD ↓ | coverage ↑ | centroid cos ↑ |
+|---|---:|---:|---:|---:|
+| abl_baseline | 0.7617 | 0.1750 | 0.1440 | 0.9291 |
+| no_cohesion | 0.8641 | 0.2303 | 0.0790 | 0.8535 |
+| no_cell_noise | 0.8623 | 0.1450 | 0.1206 | 0.9232 |
+
+### Phase 4: Transfer verdict — PARTIAL_REVERSAL
+
+**no_cohesion** had the best Stage-1 proto_acc (+10.2 pp over baseline)
+but produced the **worst** Stage-2 generation quality: highest FD
+(0.23 vs 0.18), lowest coverage (0.08 vs 0.14), and lowest centroid
+cosine (0.85 vs 0.93). The Stage-1 advantage fully reverses.
+
+**no_cell_noise** partially transfers: FD improves (0.145 vs 0.175,
+matches the Stage-1 direction) but centroid cosine drops slightly
+(0.923 vs 0.929, reverses). The effect magnitude is small.
+
+**Overall verdict:** CLOP Stage-1 ablation rankings are NOT a
+reliable proxy for end-to-end generation quality. The cohesion loss,
+despite reducing Stage-1 proto_acc, is essential for producing
+well-structured projected text spaces that the DiT can leverage for
+high-fidelity generation. Removing it improves prototype retrieval
+but collapses the inter-type geometric structure that the diffusion
+model needs.
+
+**Output:** `revision/experiments/b4_clop_bridge/b4_bridge_comparison.json`
 
 ### Commit trail
 
-(this commit, phase-2 in progress)
+- `d50cc00` Phase-1 diagnostic
+- `78b39da` Phase-2 infrastructure (retrain + evaluate scripts)
+- (this commit) Phase 2–4 complete with results
 
 ## 12. B3 forced-scarcity extension (2026-04-15)
 

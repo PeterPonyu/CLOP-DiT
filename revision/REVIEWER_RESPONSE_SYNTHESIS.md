@@ -6,7 +6,7 @@ the response letter and the revised Discussion can be assembled
 without having to cross-read seven separate results.md files. Each
 block cites the source experiment and the supporting JSON.
 
-Last updated: 2026-04-15 (A1–A5 + B1–B3 + B3-forced-scarcity + B2-ZCA + encoder bottleneck + encoder comparison + cap-increase).
+Last updated: 2026-04-15 (A1–A5 + B1–B3 + B3-forced-scarcity + B2-ZCA + B4-bridge + encoder bottleneck + encoder comparison + cap-increase).
 
 ---
 
@@ -378,3 +378,39 @@ Supplementary.
 > CLOP-generated diversity. The advantage of CLOP-DiT augmentation
 > will be larger at gene-expression level, where oversampling produces
 > exact duplicates but CLOP produces biologically diverse profiles.
+
+---
+
+## R2.10 addendum — CLOP→full-pipeline bridge (Lane B4)
+
+**Source:** `revision/experiments/b4_clop_bridge/`
+**Supporting artifact:** `b4_bridge_comparison.json`,
+`b4_bridge_comparison_preview.txt`, per-variant `generation_metrics.json`.
+**Suggested manuscript location:** Results §CLOP Aligner Ablation
+(bridge paragraph) + Discussion §Limitations.
+
+> To test whether CLOP Stage-1 ablation rankings transfer to end-to-end
+> generation quality, we retrained three DiTs (300 epochs each) on
+> projected text spaces from the ablation suite (abl_baseline,
+> no_cohesion, no_cell_noise) and generated 6,900 embeddings per variant
+> (100/type × 69 types). The transfer verdict is **PARTIAL_REVERSAL**:
+> Stage-1 improvements do not reliably predict Stage-2 generation
+> quality.
+>
+> no_cohesion achieved the highest Stage-1 prototype accuracy (0.864 vs
+> 0.762 baseline, +10.2 pp) but produced the worst generation quality:
+> FD 0.230 vs 0.175 (+31 %), coverage 0.079 vs 0.144 (−45 %), and mean
+> per-type centroid cosine 0.854 vs 0.929 (−8.1 %). The cohesion loss,
+> despite reducing prototype accuracy, is essential for maintaining
+> inter-type geometric structure in the projected text space — structure
+> that the DiT relies on for faithful conditional generation.
+>
+> no_cell_noise partially transfers: FD improves slightly (0.145 vs
+> 0.175, −17 %) but centroid cosine drops marginally (0.923 vs 0.929).
+> The effect is small and directionally inconsistent across metrics.
+>
+> **Implication for the ablation study narrative:** CLOP ablation results
+> (Table 2 in the manuscript) remain valid as a characterisation of the
+> aligner's loss landscape, but should not be over-interpreted as
+> predicting downstream generation quality. We recommend adding a
+> caveat noting this partial reversal.

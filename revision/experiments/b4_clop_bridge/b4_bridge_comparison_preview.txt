@@ -1,0 +1,15 @@
+B4 — CLOP ablation → full pipeline bridge comparison
+============================================================
+
+variant               proto_acc         FD   coverage centroid_cos
+--------------------------------------------------------------
+abl_baseline             0.7617     0.1750     0.1440       0.9291
+no_cohesion              0.8641     0.2303     0.0790       0.8535
+no_cell_noise            0.8623     0.1450     0.1206       0.9232
+
+Transfer verdicts:
+  no_cohesion: REVERSED (FD Δ=0.0553, cos Δ=-0.0756, FD reverses, cos reverses)
+  no_cell_noise: REVERSED (FD Δ=-0.0301, cos Δ=-0.0059, FD matches, cos reverses)
+
+OVERALL: PARTIAL_REVERSAL
+Some Stage-1 improvements reverse at the generation stage. CLOP ablation study is not a reliable proxy for end-to-end quality.

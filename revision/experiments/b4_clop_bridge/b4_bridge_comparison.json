@@ -1,0 +1,60 @@
+{
+  "experiment": "b4_clop_bridge",
+  "n_variants": 3,
+  "per_variant": [
+    {
+      "variant": "abl_baseline",
+      "stage1_proto_acc": 0.7617,
+      "frechet_distance": 0.1750192937816625,
+      "coverage": 0.144,
+      "mmd": null,
+      "mean_centroid_cosine": 0.9291181391563968,
+      "min_centroid_cosine": 0.42241352796554565,
+      "mean_fd_per_type": 0.9848087422432146
+    },
+    {
+      "variant": "no_cohesion",
+      "stage1_proto_acc": 0.8641,
+      "frechet_distance": 0.2303435886035876,
+      "coverage": 0.079,
+      "mmd": null,
+      "mean_centroid_cosine": 0.8535371729429218,
+      "min_centroid_cosine": 0.2615259289741516,
+      "mean_fd_per_type": 1.146367990087648
+    },
+    {
+      "variant": "no_cell_noise",
+      "stage1_proto_acc": 0.8623,
+      "frechet_distance": 0.14495930809660879,
+      "coverage": 0.1206,
+      "mmd": null,
+      "mean_centroid_cosine": 0.9231916722180187,
+      "min_centroid_cosine": 0.3984728157520294,
+      "mean_fd_per_type": 1.0060092433964076
+    }
+  ],
+  "transfer_verdicts": [
+    {
+      "variant": "no_cohesion",
+      "stage1_proto_acc_delta": 0.1024,
+      "stage2_fd_delta": 0.0553,
+      "stage2_cos_delta": -0.0756,
+      "fd_direction": "reverses",
+      "cos_direction": "reverses",
+      "verdict": "REVERSED",
+      "detail": "Stage-1 improvement does not translate \u2014 generation quality worsens"
+    },
+    {
+      "variant": "no_cell_noise",
+      "stage1_proto_acc_delta": 0.1006,
+      "stage2_fd_delta": -0.0301,
+      "stage2_cos_delta": -0.0059,
+      "fd_direction": "matches",
+      "cos_direction": "reverses",
+      "verdict": "REVERSED",
+      "detail": "Stage-1 improvement does not translate \u2014 generation quality worsens"
+    }
+  ],
+  "overall_verdict": "PARTIAL_REVERSAL",
+  "overall_detail": "Some Stage-1 improvements reverse at the generation stage. CLOP ablation study is not a reliable proxy for end-to-end quality."
+}
