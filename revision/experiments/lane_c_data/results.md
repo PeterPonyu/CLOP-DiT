@@ -1,10 +1,12 @@
-# Lane C — Data expansion (gated)
+# Lane C — Data expansion (planned, not started)
 
 **Reviewer comments:** R3.1 (strict OOD), R3.2 (species stratification),
 R2.7 (low abundance).
 **Retraining:** Full pipeline.
-**Gate:** Do not start until A3 (abundance–fidelity) is complete and
-confirms the long-tail gap is material.
+**Current gates:** A3 is already complete; before any curation or retrain
+work starts, Lane C now requires the B-7 engineer-day cap sign-off and
+the B-6 regression stop-rule decision documented in
+`feasibility_and_blockers.md`.
 
 See `revision/experiments/lane_c_data/README.md` for priority-ordered
 data additions and the five-slice evaluation contract.

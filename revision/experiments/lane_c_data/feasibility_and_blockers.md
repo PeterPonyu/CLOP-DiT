@@ -114,7 +114,7 @@ curation plus a full CLOP + DiT retrain". Decomposed:
 | B-4 | Full CLOP + DiT retrain cost | Piggy-back on the B4 retrain scaffolding (`revision/experiments/b4_clop_bridge/`). Single run, not per-variant, using the extended corpus. | compute | One CLOP checkpoint + one DiT checkpoint on `processed_h5ad_revision`. |
 | B-5 | Five-slice metric discipline (README contract) | Factor the A2 / A3 reporting code into a shared `revision/experiments/lane_c_data/compute_five_slice.py`; run once on the baseline and once on the Lane-C model; commit a diff table. | engineering | Diff table committed with overall + 4 slices, no silent overall-only reporting. |
 | B-6 | Regression risk on overall metrics | **Stop rule:** if overall centroid cosine drops > 0.01 or FD rises > 0.05 vs frozen baseline, Lane C is rejected and a Limitations paragraph is drafted instead. | reviewer-defence | Stop-rule decision committed before retrain; no silent acceptance of regressions. |
-| B-7 | Go / no-go gating | Milestone gate **before** any retrain: the 28–34 engineer-days of curation must be below a 40-engineer-day hard cap, otherwise Lane C is converted into a Limitations paragraph referencing A2 / A3 / B3-forced-scarcity. | PM | Go / no-go memo committed at end of curation. |
+| B-7 | Go / no-go gating | Milestone gate **before** any curation starts: the 28–34 engineer-days of curation must be below a 40-engineer-day hard cap, otherwise Lane C is converted into a Limitations paragraph referencing A2 / A3 / B3-forced-scarcity. | PM | Go / no-go memo committed before any curation work begins. |
 
 **B-6 and B-7 are the most important.** Without them the lane has a
 failure mode where partial new data regresses overall metrics while
@@ -129,9 +129,10 @@ comment that **requires** Lane C. If the engineer-day budget for
 curation (B-1 + B-3) cannot be secured inside the revision window:
 
 - Narrow Lane C to **Priority 2 only** (strict-OOD tissues).
-- Keep the five-slice contract but report "mouse-only" and
-  "heterogeneity" slices from the frozen baseline, cross-referencing
-  A2 / A3.
+- Keep the five-slice contract unchanged; for slices not newly improved
+  by the narrowed run, report the frozen-baseline values and explicitly
+  cross-reference A2 / A3 for the existing mouse-only and low-abundance
+  interpretation.
 - Retain B-6 stop rule unchanged.
 
 This narrowed plan costs ~18 engineer-days and ~8 GPU-hours and

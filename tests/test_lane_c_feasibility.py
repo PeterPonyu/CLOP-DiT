@@ -14,6 +14,7 @@ artifact exists but does not meet the documented contract.
 from __future__ import annotations
 
 import re
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -54,7 +55,7 @@ FIVE_SLICES = [
 PRIORITY_TIERS = [
     ("priority-1", r"mouse"),
     ("priority-2", r"(ood|out[- ]?of[- ]?distribution|held[- ]?out)"),
-    ("priority-3", r"(rare|transitional)"),
+    ("priority-3", r"(heterogeneity|real_intra_cos|transitional|rare)"),
 ]
 
 
@@ -120,6 +121,15 @@ class TestLaneCResults:
                 f"results.md missing required slice '{name}'"
             )
 
+    def test_current_gate_text_is_post_a3(self, text: str) -> None:
+        assert "current gates" in text, "results.md should describe the post-A3 gate state"
+        assert "current gates:** a3 is already complete" in text, (
+            "results.md should explicitly state that A3 is already complete"
+        )
+        assert "confirms the long-tail gap is material" not in text, (
+            "results.md must not retain the stale pre-A3 gate wording"
+        )
+
 
 # ---------------------------------------------------------------------------
 # Feasibility / data plan artifact (produced by worker-1)
@@ -148,6 +158,17 @@ class TestLaneCFeasibilityPlan:
                 f"feasibility plan missing content for tier '{label}' "
                 f"(looking for regex '{pattern}')"
             )
+
+    def test_narrowed_plan_keeps_five_slice_contract(self, plan: tuple[Path, str]) -> None:
+        _, text = plan
+        if "priority 2 only" not in text:
+            pytest.skip("narrowed fallback plan not present")
+        assert "five-slice contract" in text, (
+            "narrowed fallback must explicitly preserve the five-slice contract"
+        )
+        assert '"heterogeneity" slices' not in text, (
+            "narrowed fallback must not invent a non-contract 'heterogeneity' slice"
+        )
 
     def test_five_slice_eval_contract(self, plan: tuple[Path, str]) -> None:
         _, text = plan
@@ -273,3 +294,24 @@ class TestRevisionLogSync:
             r"lane c[^.\n]{0,80}(pending|not started|gated|complete|in progress|feasibility|data plan)",
             log_text,
         ), "REVISION_LOG must make Lane C status explicit"
+
+    def test_lane_c_summary_matches_integrated_plan(self, log_text: str) -> None:
+        has_integrated_plan = "lane-c feasibility and blocker-to-action synthesis" in log_text
+        stale_top_summary = (
+            "lane c (data expansion) | not started — gated on a3." in log_text
+            or "lane c still pending" in log_text
+        )
+        assert not (has_integrated_plan and stale_top_summary), (
+            "REVISION_LOG cannot claim Lane C is still gated/pending in the top "
+            "summary once the integrated feasibility section is present"
+        )
+
+    def test_final_head_matches_repo_head(self, log_text: str) -> None:
+        current_head = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=REPO_ROOT,
+            text=True,
+        ).strip().lower()
+        assert f"final `revision/major` head: `{current_head}`." in log_text, (
+            "REVISION_LOG final HEAD line must match the actual repo HEAD"
+        )
