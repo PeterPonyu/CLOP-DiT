@@ -53,9 +53,13 @@ except the single tag move at step 5.
 | 10 | `5676065` | **A3 — Abundance vs fidelity quantitative analysis.** |
 | 11 | `1375701` | **A2 — Organism-stratified evaluation.** |
 | 12 | `f7364a7` | **A5 — Rare-cell augmentation failure mechanism.** |
-| 13 | `44238ab` | **A1 — KNN error taxonomy + close Lane A.** |
+| 13 | `44238ab` | **A1 — KNN error taxonomy + close Lane A (R2.6).** |
+| 14 | `185cc36` | Add this `REVISION_LOG.md` master handoff document. |
+| 15 | `6808237` | Remove residual venue name from `REVISION_LOG.md`. |
+| 16 | `d0023f1` | **B1 — Gaussian / unconditional `r_var` latent-level baseline (R2.9 first pass).** |
+| 17 | `8cb4241` | Update `REVISION_LOG.md` with B1 results + refreshed Lane-B priority order. |
 
-Final `revision/major` HEAD: `44238ab`.
+Final `revision/major` HEAD: `8cb4241`.
 
 ---
 
