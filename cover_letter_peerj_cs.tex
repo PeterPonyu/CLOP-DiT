@@ -1,0 +1,136 @@
+\documentclass[11pt,letterpaper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=blue!60!black,
+  citecolor=black,
+}
+
+\setlist[itemize]{leftmargin=1.4em,itemsep=2pt,topsep=3pt,parsep=0pt}
+
+\title{}
+\author{}
+\date{}
+
+\begin{document}
+
+\noindent
+{\Large\bfseries Cover Letter\par}
+\vspace{0.8em}
+
+\noindent\textbf{Date:} April 8, 2026
+
+\noindent\textbf{To:} Editorial Office, \emph{PeerJ Computer Science}
+
+\noindent\textbf{Authors:} Zeyu Fu, JianXu Zheng, Jiawei Fu
+
+\vspace{0.6em}
+\noindent\textbf{From:}
+
+\noindent Zeyu Fu (co-first author and co-corresponding author)\\
+State Key Laboratory of Trauma and Chemical Poisoning, Institute of Combined Injury,\\
+College of Preventive Medicine, Army Medical University, Chongqing 400038, China\\
+Email: \href{mailto:fuzeyu09@gmail.com}{fuzeyu09@gmail.com}
+
+\vspace{0.4em}
+\noindent JianXu Zheng (co-first author)\\
+Chongqing Key Laboratory of Intelligent Diagnosis, Treatment and Rehabilitation of Central Nervous System Injuries, Southwest Hospital, Third Military Medical University (Army Medical University), Chongqing 400038, China\\
+Email: \href{mailto:zhengjianxu@tmmu.edu.cn}{zhengjianxu@tmmu.edu.cn}
+
+\vspace{0.4em}
+\noindent Jiawei Fu (co-corresponding author)\\
+Department of Orthopedics, Xinqiao Hospital, Army Medical University, Chongqing 400037, China\\
+Email: \href{mailto:fjw813130855@163.com}{fjw813130855@163.com}
+
+\vspace{0.8em}
+\hrule
+\vspace{0.8em}
+
+\noindent Dear Editors,
+
+Thank you for your guidance on our previous submission. Following your recommendation, we resubmit the manuscript \textbf{``CLOP-DiT: Text-Conditioned Single-Cell Latent Generation via Contrastive Language--Omics Pretraining and Diffusion Transformers''} to \emph{PeerJ Computer Science} under the \textbf{AI Application} article type. We have revised the manuscript and the project repository to align with the AI Application requirements at \url{https://peerj.com/about/policies-and-procedures/cs#discipline-standards} and \url{https://peerj.com/about/author-instructions/cs#cs-ai-standard-section}.
+
+\section*{Why \emph{PeerJ Computer Science} (AI Application)}
+
+CLOP-DiT is a methods contribution centred on three machine-learning components: a prototype-aware contrastive aligner (PrototypeSigLIP) for foundation-model embeddings, a 1-D Diffusion Transformer trained with conditional flow matching and classifier-free guidance, and a modular three-stage pipeline that decouples alignment, generation, and decoding. The downstream application domain is single-cell biology, but the algorithmic content and intended audience (contrastive multimodal alignment, flow matching, conditional generation in continuous latent spaces) sit within computer science and machine learning. We agree that \emph{PeerJ Computer Science} is the appropriate venue and that the AI Application track matches the contribution profile.
+
+\section*{Revisions made for the AI Application requirements}
+
+\noindent\textbf{Reproducibility --- algorithms and code.} Each pipeline stage (CLOP alignment, DiT flow matching, scGPT decoding) is described in its own subsection of \emph{Materials and Methods}, with the loss formulation, the structured five-field caption template, and the full hyperparameter tables (Tables S3 and S5) in Appendix~A. The complete source code, configuration files, training and evaluation scripts, the figure-regeneration pipeline, and the test suite are released under the MIT license in the project GitHub repository at \textbf{\url{https://github.com/PeterPonyu/CLOP-DiT}}. After installation, the pipeline is invoked through a dedicated console command, \texttt{clopdit-generate}, documented on the repository landing page.
+
+\noindent\textbf{README file.} The repository contains a top-level README in plain Markdown that follows the structure required by PeerJ:
+\begin{itemize}
+  \item Title --- CLOP-DiT: Contrastive Language--Omics Pre-training + Diffusion Transformer
+  \item Description --- three-stage generative framework for text-conditioned single-cell gene expression
+  \item Dataset Information --- 80 GEO datasets, 220{,}304 cells, 69 evaluation cell types
+  \item Code Information --- overview of the contrastive aligner, the diffusion transformer, and the frozen scGPT decoder, with entry-point scripts called out by section
+  \item Usage Instructions --- installation, single-prompt inference, and pipeline commands as plain text
+  \item Requirements --- Python 3.10, PyTorch 2.1, CUDA 12.0, scGPT v0.2.1, Hugging Face Transformers 4.36; the full pinned dependency list is included with the release
+  \item Methodology --- pipeline stages described in natural language inline with the README
+  \item Citation --- BibTeX entry for this manuscript
+  \item License --- MIT license
+\end{itemize}
+
+\noindent\textbf{Materials \& Methods --- third-party dataset URL in main text.} The \emph{Datasets and preprocessing} subsection now cites the Gene Expression Omnibus with its institutional URL (\url{https://www.ncbi.nlm.nih.gov/geo/}), and all 80 GEO accession identifiers are listed in Table~S1. The eight held-out validation studies are listed separately in Table~S2. Each accession is individually resolvable via the GEO query URL by appending the accession identifier.
+
+\noindent\textbf{Computer code.} All Python source code is released in the GitHub repository above under the MIT license. The Data Availability statement gives the explicit URL.
+
+\noindent\textbf{Curated dataset.} The training and validation data are derived entirely from public GEO records; the corresponding accession numbers (Tables S1 and S2) are sufficient for an independent reproducer to obtain the raw data. The repository contains the deterministic preprocessing pipeline (quality control, highly-variable-gene selection, scGPT encoding, study-level stratified split, and deduplication) needed to rebuild the analysis cache from those GEO records. We have not included the binary preprocessed cache or the trained model checkpoints in the public repository because of single-cell data licensing and file-size constraints; both are available from the co-corresponding authors on reasonable request.
+
+\noindent\textbf{LaTeX submission --- embedded bibliography.} The manuscript is prepared with the \texttt{wlpeerj} document class. As requested, all bibliographic entries have been embedded inline in \texttt{main.tex} inside a \texttt{thebibliography} block at the end of the file, so the manuscript compiles standalone. All submission files (the main \texttt{.tex}, the class file, the \texttt{.bib} source, and all figure PDFs) are placed at the root of the LaTeX submission folder, with no subdirectories, to simplify the portal upload.
+
+\section*{Submission system metadata}
+
+We have updated the submission-system metadata to reflect the final author list, equal-contribution status, co-corresponding authors, affiliations, contributions, funding, and competing-interest disclosures, in line with PeerJ Computer Science author limits (up to two co-first authors and up to two co-corresponding authors).
+
+\begin{itemize}
+  \item \textbf{Authors (in order):} Zeyu Fu*\textdagger, JianXu Zheng\textdagger, Jiawei Fu*
+  \item \textbf{Equal first-author contribution (\textdagger):} Zeyu Fu and JianXu Zheng share first authorship.
+  \item \textbf{Co-corresponding authors (*):} Zeyu Fu (\href{mailto:fuzeyu09@gmail.com}{fuzeyu09@gmail.com}) and Jiawei Fu (\href{mailto:fjw813130855@163.com}{fjw813130855@163.com}).
+  \item \textbf{Affiliations:} see manuscript title page.
+  \item \textbf{Funding:} National Key Research and Development Program of China (Grant No.~2024YFA1107101); National Key Laboratory of Trauma and Chemical Poisoning (Grant No.~2024K004).
+  \item \textbf{Competing interests:} none declared.
+  \item \textbf{Ethics:} only publicly available, de-identified GEO data were used; no new human or animal subjects research was conducted, and no ethical approval was required.
+  \item \textbf{AI use disclosure:} AI-assisted tools (Claude, GitHub Copilot) were used for code development, drafting, and language editing; all AI-generated text and code were reviewed and revised by the corresponding authors, who take responsibility for the accuracy of the manuscript. AI tools were not used for data collection, experimental design, or interpretation of results.
+\end{itemize}
+
+We understand that the metadata entered in the submission system --- not the manuscript file --- is recorded after acceptance and cannot be changed post-acceptance.
+
+\section*{Summary of contributions}
+
+CLOP-DiT is a three-stage pipeline for structured-text-conditioned generation in continuous biological latent spaces. CLOP aligns frozen BiomedBERT text embeddings and frozen scGPT cell embeddings into a shared 512-dimensional space using a prototype-aware SigLIP loss. A 1-D Diffusion Transformer then performs conditional flow matching in that latent space with classifier-free guidance, group-aware variance matching, and sliced covariance regularization. A frozen scGPT decoder is used for downstream expression-level inspection.
+
+On 69 deduplicated cell types from 80 GEO datasets (220{,}304 cells), classifier-free guidance produces a controllable fidelity--diversity trade-off. A high-fidelity setting (CFG\,=\,2.0) reaches 36.9\% KNN-1 accuracy (about $25\times$ the $1/69 = 1.45\%$ random chance over 69 types; seed 42, three-seed mean $34.8\% \pm 8.2\%$) and 81.0\% steering. A high-diversity setting (CFG\,=\,1.0) attains a diversity ratio of 0.929 at 80.7\% steering. Conditioning-field ablation and swap-label permutation tests indicate that marker genes are the dominant steering signal. Multi-seed validation shows inter-run standard deviations below 1 percentage point for steering and below 2 percentage points for diversity ratio.
+
+The manuscript also reports negative results: a Gaussian baseline outperforms CLOP-DiT on the nine shared distributional metrics (composite 0.747 vs.\ 0.694), within-type variance and gene--gene correlation are only weakly preserved, and a pilot rare-cell augmentation experiment did not produce a measurable benefit. These limitations are discussed in \emph{Discussion} and identify concrete next steps (trajectory-level diversity objectives, decoder fine-tuning, out-of-distribution evaluation).
+
+\section*{Confirmations}
+
+\begin{itemize}
+  \item This manuscript has not been published elsewhere and is not under consideration at any other journal.
+  \item All authors have read and approved the submitted version.
+  \item No competing interests exist.
+  \item Only publicly available, de-identified GEO data were analyzed; no new human or animal subjects research was conducted.
+\end{itemize}
+
+We thank the editorial team for the constructive guidance on journal and article-type selection, and we look forward to the reviewers' feedback.
+
+\vspace{0.8em}
+\noindent Sincerely,
+
+\vspace{0.6em}
+\noindent\textbf{Zeyu Fu} (co-corresponding author) --- \href{mailto:fuzeyu09@gmail.com}{fuzeyu09@gmail.com}\\
+\noindent\textbf{Jiawei Fu} (co-corresponding author) --- \href{mailto:fjw813130855@163.com}{fjw813130855@163.com}
+
+\end{document}
