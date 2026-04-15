@@ -570,3 +570,63 @@ as B3. Same two rare types (gid 51 Megakaryocytes, gid 64 Ameloblasts).
 ### Commit trail
 
 `053017e` revision: B3 forced-scarcity extension
+
+## 13. Lane-C feasibility and blocker-to-action synthesis (2026-04-15)
+
+**Doc:** `revision/experiments/lane_c_data/feasibility_and_blockers.md`
+**Driver question:** With A2 (species), A3 (abundance vs
+heterogeneity), B3-forced-scarcity (augmentation headroom), and B4
+(Stage-1 → full-pipeline transfer) now committed, what exactly does
+Lane C still need to answer, at what cost, and what are the concrete
+actions that unblock it?
+
+### Reviewer scope after Lanes A + B
+
+- **R3.1 strict OOD:** fully open — only Lane C can close this.
+- **R3.2 cross-species:** type-level answered by A2 (no gap,
+  p = 0.14–0.87). Cell-level held-out mouse is confirmatory only.
+- **R2.7 low-abundance:** discharged by A3 + B3-forced-scarcity.
+  De-scoped from Lane C.
+
+### Redefined priorities
+
+1. **Priority 1 mouse-heavy → confirmatory.** 3–4 datasets,
+   ~6–8 engineer-days.
+2. **Priority 2 strict-OOD tissues → unavoidable.** 1–2 datasets per
+   tissue across kidney, testis, intestine, cerebellum, distal airway,
+   Merkel-like; ~18 engineer-days with leakage-check script.
+3. **Priority 3 heterogeneity-targeted (redefined per A3).** Bottom
+   quartile of `real_intra_cos` — cycling, stress-response,
+   progenitor, transitional epithelial — replaces the original
+   "rare-by-count" framing; ~4.5–7.5 engineer-days.
+
+### Feasibility budget
+
+~28–34 engineer-days total curation, ~16 GPU-hours total (single
+CLOP retrain + single DiT retrain + five-slice eval sweep), ~1.5–3
+weeks wall-clock depending on curator parallelism.
+
+### Blocker-to-action (abbreviated)
+
+- **B-1** ingest manifest + validator (curation labour).
+- **B-2** `check_strict_ood.py` precondition on training entrypoints.
+- **B-3** label-vocabulary bridge with two-reviewer sign-off.
+- **B-4** single retrain piggy-backed on B4 scaffolding.
+- **B-5** `compute_five_slice.py` shared reporter.
+- **B-6** stop rule: reject Lane C if overall centroid cosine drops
+  > 0.01 or FD rises > 0.05 vs frozen baseline.
+- **B-7** 40-engineer-day hard cap gate before curation starts.
+
+### Recommended decision
+
+If the full engineer-day budget cannot be secured in the revision
+window, narrow Lane C to **Priority 2 only** (~18 engineer-days,
+~8 GPU-hours) — this still answers R3.1 while R3.2 / R2.7 rest on
+already-committed A2 / A3 / B3-forced evidence. If even that is
+infeasible, a Limitations paragraph citing A2, A3, B3-forced and
+B4 is the honest outcome for this round.
+
+### Commit trail
+
+(this commit) Lane-C feasibility + blocker-to-action plan doc and
+`results.md` checklist re-alignment
