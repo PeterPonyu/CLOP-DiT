@@ -6,7 +6,7 @@ has already been done, what the current state is, and where the
 unfinished work lives. Commit hashes and line numbers link directly
 back to the workspace so nothing has to be reconstructed from memory.
 
-Last updated: 2026-04-15 (Lane A complete, B1+B2+B3-forced+sec.7+8 complete, Lane D complete, B4 complete).
+Last updated: 2026-04-16 (ledger synced to current `revision/major` HEAD; Lane A complete, B1+B2+B3+B4 complete, Lane D complete, Lane C still pending).
 
 ---
 
@@ -58,8 +58,14 @@ except the single tag move at step 5.
 | 15 | `6808237` | Remove residual venue name from `REVISION_LOG.md`. |
 | 16 | `d0023f1` | **B1 — Gaussian / unconditional `r_var` latent-level baseline (R2.9 first pass).** |
 | 17 | `8cb4241` | Update `REVISION_LOG.md` with B1 results + refreshed Lane-B priority order. |
+| 18 | `438b6fc` | **B2 — ZCA whitening ablation complete (R3.4).** |
+| 19 | `a6fbb86` | **Lane D — encoder comparison complete.** scGPT-specific compression confirmed. |
+| 20 | `d6c81a9` | Update synthesis docs with B2, encoder bottleneck, and encoder-comparison findings. |
+| 21 | `053017e` | **B3 forced-scarcity extension.** Augmentation helps when genuine scarcity headroom exists. |
+| 22 | `c2e9709` | Update docs with B3 forced-scarcity results and synthesis addendum. |
+| 23 | `a04b3ff` | **B4 CLOP→full bridge complete.** Stage-1 ablation rankings shown to be a partial-reversal proxy for end-to-end quality. |
 
-Final `revision/major` HEAD: `8cb4241`.
+Final `revision/major` HEAD: `a04b3ff`.
 
 ---
 

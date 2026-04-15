@@ -34,16 +34,47 @@ evaluation?
 
 ## Status
 
-- [ ] Variants selected and CLOP checkpoints confirmed
-- [ ] 3× DiT trained
-- [ ] Metrics computed for all variants
-- [ ] Transfer verdict committed
-- [ ] Rebuttal paragraph drafted
+- [x] Variants selected and CLOP checkpoints confirmed
+- [x] 3× DiT trained
+- [x] Metrics computed for all variants
+- [x] Transfer verdict committed
+- [x] Rebuttal paragraph drafted
 
 ## Results
 
-_(fill in after the runs complete)_
+Three end-to-end DiT retrains were completed on selected CLOP ablation
+checkpoints: `abl_baseline`, `no_cohesion`, and `no_cell_noise`.
+
+| variant | Stage-1 proto_acc | Stage-2 FD | coverage | centroid cos |
+|---|---:|---:|---:|---:|
+| abl_baseline | 0.7617 | 0.1750 | 0.1440 | **0.9291** |
+| no_cohesion | **0.8641** | 0.2303 | 0.0790 | 0.8535 |
+| no_cell_noise | 0.8623 | **0.1450** | 0.1206 | 0.9232 |
+
+Transfer verdict: **PARTIAL_REVERSAL**.
+
+1. `no_cohesion` looks best at Stage 1 but becomes the worst
+   end-to-end generator by every downstream quality metric.
+2. `no_cell_noise` partially transfers: FD improves versus the
+   ablation baseline, but centroid cosine is slightly worse.
+3. Stage-1 CLOP rankings are therefore not a reliable proxy for final
+   generation quality; the cohesion loss carries downstream geometric
+   structure that DiT uses even when it slightly hurts prototype
+   retrieval.
+
+Supporting artefacts:
+`revision/experiments/b4_clop_bridge/b4_bridge_comparison.json` and
+the Phase 1-4 summary in `revision/REVISION_LOG.md`.
 
 ## Rebuttal-ready sentence
 
-_(2–3 sentences that can be pasted into the R2.10 response)_
+We directly bridged the CLOP ablation suite to the full pipeline by
+retraining DiT on selected ablation checkpoints and re-evaluating the
+generated outputs end-to-end. The strongest Stage-1 variant
+(`no_cohesion`, prototype accuracy 0.864 vs 0.762 for the ablation
+baseline) became the weakest generator downstream, with worse
+Frechet distance, coverage, and centroid cosine, while `no_cell_noise`
+showed only a small, mixed transfer. We therefore narrow the original
+claim: Stage-1 CLOP ablation rankings are not a reliable proxy for
+end-to-end generation quality, and reviewer-facing conclusions should
+be drawn from the bridged full-pipeline results instead.

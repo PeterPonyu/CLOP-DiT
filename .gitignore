@@ -142,3 +142,4 @@ scripts/analysis/audit_data.py
 
 # === VCD tooling (internal development tool) ===
 scripts/vcd/
+.omx/

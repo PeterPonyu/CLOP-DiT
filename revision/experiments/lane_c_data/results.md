@@ -18,7 +18,7 @@ regressing overall metrics?
 
 ## Status
 
-- [ ] A3 gate cleared
+- [x] A3 gate cleared
 - [ ] Priority-1 mouse datasets curated
 - [ ] Priority-2 OOD tissue datasets curated + held out
 - [ ] Priority-3 rare-state datasets curated
@@ -28,8 +28,22 @@ regressing overall metrics?
 
 ## Results
 
-_(fill in after the runs complete)_
+No new-data run has been started in this branch yet.
+
+Current gating read:
+
+1. The original A3 dependency is resolved.
+2. A3 also showed that abundance alone is not the dominant predictor of
+   failure, which lowers the expected value of generic data-scaling.
+3. Even so, Lane C remains the only remaining revision lane that can
+   directly answer strict-OOD generalisation (R3.1) and upgrade the
+   current type-level cross-species answer into a stronger cell-level
+   / held-out-tissue evaluation.
+4. The practical blocker is therefore not conceptual uncertainty but
+   the cost of fresh data curation plus a full CLOP + DiT retrain.
 
 ## Rebuttal-ready sentence
 
-_(2–3 sentences mapping the expansion result to R3.1 / R3.2 / R2.7)_
+Pending new-data execution. If this lane is started, the rebuttal must
+explicitly report which of the five required slices improved, stayed
+flat, or regressed relative to the frozen baseline.
