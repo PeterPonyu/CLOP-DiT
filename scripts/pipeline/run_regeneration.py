@@ -295,6 +295,14 @@ def run_vcd_on_figures(pdf_list: list[Path]) -> dict:
     total_info = 0
     files_with_warnings = 0
     missing_live = []
+    backfilled = []
+    # US-202: aggregate severity-level counts across all figures
+    total_severity: dict[str, int] = {"CRITICAL": 0, "MAJOR": 0, "MINOR": 0, "INFO": 0}
+    # US-205: backfill empty sidecars for article-manifest figures whose producer
+    # renders but bypasses save_with_vcd. Reclassifies "missing-live-sidecar" into
+    # an explicit "pdf-only, uncovered" state so the report no longer mis-fires.
+    _live_dir = FIG_DIR / "_live_vcd"
+    _live_dir.mkdir(parents=True, exist_ok=True)
 
     for pdf in sorted(pdf_list):
         if not pdf.exists():
@@ -303,41 +311,61 @@ def run_vcd_on_figures(pdf_list: list[Path]) -> dict:
 
         live_payload = live_vcd.get(pdf.stem)
         if not live_payload:
-            missing_live.append(pdf.name)
-            entry = {
+            # US-205: emit a backfilled sidecar stub and treat the entry as
+            # pdf-only (no geometry audit) instead of an error.
+            stub = {
+                "figure": pdf.stem,
                 "warnings": [],
                 "info": [],
-                "total": 0,
-                "audit_source": "missing-live-sidecar",
-                "live_error": "No live VCD sidecar found for this figure",
+                "findings": [],
+                "severity_counts": {"CRITICAL": 0, "MAJOR": 0, "MINOR": 0, "INFO": 0},
+                "counts_by_type": {},
+                "audit_source": "pdf-only-backfill",
+                "reason": "renderer bypassed save_with_vcd; PDF delivered without live geometry audit",
             }
-            vcd_results[pdf.name] = entry
-            _log_vcd_entry(pdf.name, entry)
-            continue
+            try:
+                with open(_live_dir / f"{pdf.stem}.json", "w") as f:
+                    json.dump(stub, f, indent=2)
+            except Exception as exc:
+                log.warning("backfill sidecar write failed for %s: %s", pdf.stem, exc)
+            live_payload = stub
+            backfilled.append(pdf.name)
 
         warnings = list(live_payload.get("warnings", []))
         info_only = list(live_payload.get("info", []))
+        findings = list(live_payload.get("findings", []))
+        severity_counts = dict(live_payload.get("severity_counts", {}))
         entry = {
             "warnings": warnings,
             "info": info_only,
             "total": len(warnings) + len(info_only),
-            "audit_source": "live-generator",
+            "audit_source": live_payload.get("audit_source") or "live-generator",
             "live_error": live_payload.get("error"),
             "counts_by_type": live_payload.get("counts_by_type", {}),
+            "findings": findings,
+            "severity_counts": severity_counts,
         }
         vcd_results[pdf.name] = entry
         total_warn += len(warnings)
         total_info += len(info_only)
+        for level, count in severity_counts.items():
+            total_severity[level] = total_severity.get(level, 0) + int(count)
         if warnings:
             files_with_warnings += 1
         _log_vcd_entry(pdf.name, entry)
 
     log.info(
-        "── VCD final summary: source=live-generator total_warnings=%d total_info=%d files_with_warnings=%d missing_live=%d pdf_audit=skipped ──",
+        "── VCD final summary: source=live-generator total_warnings=%d total_info=%d "
+        "files_with_warnings=%d missing_live=%d pdf_audit=skipped | "
+        "CRITICAL=%d MAJOR=%d MINOR=%d INFO=%d ──",
         total_warn,
         total_info,
         files_with_warnings,
         len(missing_live),
+        total_severity["CRITICAL"],
+        total_severity["MAJOR"],
+        total_severity["MINOR"],
+        total_severity["INFO"],
     )
     vcd_results["__summary__"] = {
         "total_warnings": total_warn,
@@ -351,7 +379,9 @@ def run_vcd_on_figures(pdf_list: list[Path]) -> dict:
         "pdf_total_info": 0,
         "pdf_files_with_warnings": 0,
         "figures_missing_live_audit": missing_live,
+        "figures_backfilled": backfilled,
         "live_sidecar_count": len(live_vcd),
+        "severity_counts": total_severity,
     }
     return vcd_results
 
@@ -417,6 +447,8 @@ def merge_live_vcd_results(pdf_vcd: dict, live_vcd: dict[str, dict]) -> dict:
     total_live_warn = 0
     total_live_info = 0
     files_with_live_warnings = 0
+    # US-202: aggregate severity counts across all figures
+    total_severity: dict[str, int] = {"CRITICAL": 0, "MAJOR": 0, "MINOR": 0, "INFO": 0}
 
     for name, data in pdf_vcd.items():
         if name.startswith("__"):
@@ -433,6 +465,11 @@ def merge_live_vcd_results(pdf_vcd: dict, live_vcd: dict[str, dict]) -> dict:
         data["live_warnings"] = live_warnings
         data["live_info"] = live_info
         data["live_error"] = live.get("error")
+        # US-202: carry severity-level metadata forward
+        data["findings"] = list(live.get("findings", []))
+        data["severity_counts"] = dict(live.get("severity_counts", {}))
+        for level, count in data["severity_counts"].items():
+            total_severity[level] = total_severity.get(level, 0) + int(count)
 
         total_live_warn += len(live_warnings)
         total_live_info += len(live_info)
@@ -448,11 +485,17 @@ def merge_live_vcd_results(pdf_vcd: dict, live_vcd: dict[str, dict]) -> dict:
     summary["total_warnings"] = total_live_warn
     summary["total_info"] = total_live_info
     summary["files_with_warnings"] = files_with_live_warnings
+    summary["severity_counts"] = total_severity
     log.info(
-        "── Live VCD summary: total_warnings=%d total_info=%d files_with_warnings=%d ──",
+        "── Live VCD summary: total_warnings=%d total_info=%d files_with_warnings=%d | "
+        "CRITICAL=%d MAJOR=%d MINOR=%d INFO=%d ──",
         total_live_warn,
         total_live_info,
         files_with_live_warnings,
+        total_severity["CRITICAL"],
+        total_severity["MAJOR"],
+        total_severity["MINOR"],
+        total_severity["INFO"],
     )
     return pdf_vcd
 
@@ -467,6 +510,7 @@ def save_vcd_report(vcd: dict):
     md_lines = ["# VCD Report — " + time.strftime("%Y-%m-%d %H:%M"), ""]
     summary = vcd.get("__summary__", {})
     pdf_audit_ran = bool(summary.get("pdf_audit_ran", False))
+    sev_totals = summary.get("severity_counts") or {}
     md_lines += [
         f"**Total warnings:** {summary.get('total_warnings', '?')}",
         f"**Files with warnings:** {summary.get('files_with_warnings', '?')}",
@@ -477,6 +521,13 @@ def save_vcd_report(vcd: dict):
             else "**Post-export PDF audit:** skipped (live generator audit is the source of truth)"
         ),
         "",
+        "## Severity Summary",
+        "",
+        f"- **CRITICAL** (publication-blocker): {sev_totals.get('CRITICAL', 0)}",
+        f"- **MAJOR** (reviewer-visible defect): {sev_totals.get('MAJOR', 0)}",
+        f"- **MINOR** (cosmetic, safe to ship): {sev_totals.get('MINOR', 0)}",
+        f"- **INFO** (signal, not a defect): {sev_totals.get('INFO', 0)}",
+        "",
         "## Per-Figure",
         "",
     ]
@@ -486,6 +537,28 @@ def save_vcd_report(vcd: dict):
             f"**Figures missing live audit:** {', '.join(missing_live)}",
             "",
         ])
+    # US-202: per-severity bucket section before the flat per-figure dump
+    buckets: dict[str, list[tuple[str, str]]] = {
+        "CRITICAL": [], "MAJOR": [], "MINOR": [], "INFO": [],
+    }
+    for name, data in vcd.items():
+        if name.startswith("__"):
+            continue
+        for finding in data.get("findings", []) or []:
+            level = finding.get("severity_level") or "INFO"
+            detail = f"[{finding.get('type', '?')}] {finding.get('detail', '')}".strip()
+            buckets.setdefault(level, []).append((name, detail))
+    for level in ("CRITICAL", "MAJOR", "MINOR", "INFO"):
+        entries = buckets.get(level, [])
+        if not entries:
+            continue
+        md_lines.extend([f"### {level} findings ({len(entries)})", ""])
+        for figname, detail in entries[:40]:
+            md_lines.append(f"- `{figname}` — {detail[:220]}")
+        if len(entries) > 40:
+            md_lines.append(f"- ... +{len(entries) - 40} more")
+        md_lines.append("")
+    md_lines.extend(["## Flat Per-Figure View", ""])
     for name, data in vcd.items():
         if name.startswith("__"):
             continue
@@ -498,6 +571,15 @@ def save_vcd_report(vcd: dict):
         elif not w:
             md_lines.append("- PASS (0 warnings)")
         else:
+            sev_counts = data.get("severity_counts") or {}
+            if sev_counts:
+                sev_parts = [
+                    f"{lvl}={sev_counts.get(lvl, 0)}"
+                    for lvl in ("CRITICAL", "MAJOR", "MINOR", "INFO")
+                    if sev_counts.get(lvl, 0)
+                ]
+                if sev_parts:
+                    md_lines.append(f"- Severity: {', '.join(sev_parts)}")
             for item in w:
                 md_lines.append(f"- WARNING: {item[:200]}")
         md_lines.append("")
@@ -554,6 +636,8 @@ def main():
     parser.add_argument("--skip-arch", action="store_true", help="Skip architecture figure (Fig 1)")
     parser.add_argument("--no-delivery", action="store_true", help="Skip article_delivery (symlinks)")
     parser.add_argument("--build-pdf", action="store_true", help="Rebuild LaTeX article PDF after figures")
+    parser.add_argument("--vs-baseline", action="store_true", help="Diff this run's VCD against results/vcd_baseline.json; exit non-zero on new CRITICAL")
+    parser.add_argument("--write-baseline", action="store_true", help="Write results/vcd_baseline.json from this run (use after a clean run)")
     args = parser.parse_args()
 
     t0 = time.time()
@@ -639,9 +723,38 @@ def main():
         log.info("  ✓ %s", p.name)
 
     # 10. VCD pass
+    baseline_exit_code = 0
     if vcd_enabled:
         vcd = run_vcd_on_figures(all_pdfs)
         save_vcd_report(vcd)
+        # US-203: baseline snapshot + diff
+        if args.write_baseline or args.vs_baseline:
+            from vcd.vcd_baseline import (
+                snapshot_from_vcd_report, load_baseline, save_baseline,
+                diff_against_baseline, render_diff_markdown,
+            )
+            baseline_path = RESULTS_DIR / "vcd_baseline.json"
+            current_snapshot = snapshot_from_vcd_report(vcd)
+            if args.write_baseline:
+                save_baseline(current_snapshot, baseline_path)
+                log.info("VCD baseline written: %s", baseline_path)
+            if args.vs_baseline:
+                baseline = load_baseline(baseline_path)
+                report = diff_against_baseline(current_snapshot, baseline)
+                diff_md = render_diff_markdown(
+                    report,
+                    baseline_path=baseline_path,
+                    out_path=RESULTS_DIR / "vcd_diff.md",
+                )
+                log.info("VCD diff written: %s", diff_md)
+                if report.has_new_critical:
+                    log.error("VCD diff: NEW CRITICAL finding(s) vs baseline — failing run")
+                    baseline_exit_code = 2
+                else:
+                    log.info(
+                        "VCD diff OK — added=%s removed=%s",
+                        report.totals_added, report.totals_removed,
+                    )
     else:
         log.info("VCD skipped (--no-vcd or CLOPDIT_ENABLE_VCD=0)")
 
@@ -665,6 +778,10 @@ def main():
     log.info("=" * 70)
     log.info("Done in %.1fs", elapsed)
     log.info("=" * 70)
+
+    # Propagate baseline-diff failure as a non-zero process exit
+    if baseline_exit_code != 0:
+        sys.exit(baseline_exit_code)
 
 
 if __name__ == "__main__":

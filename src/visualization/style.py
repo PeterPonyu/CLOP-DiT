@@ -568,12 +568,23 @@ def save_with_vcd(
             _scripts = Path(__file__).resolve().parent.parent.parent / "scripts"
             if str(_scripts) not in sys.path:
                 sys.path.insert(0, str(_scripts))
-            from vcd import detect_all_conflicts
+            from vcd import detect_all_conflicts, count_by_severity_level
             issues = detect_all_conflicts(fig, label=basename, verbose=False)
             warnings_only, info_only, issue_counts = _summarize_vcd_issues(issues)
             live_vcd_payload["warnings"] = [_format_vcd_issue(x) for x in warnings_only]
             live_vcd_payload["info"] = [_format_vcd_issue(x) for x in info_only]
             live_vcd_payload["counts_by_type"] = dict(issue_counts)
+            # US-202: structured findings + severity-level counts (backward-compatible)
+            live_vcd_payload["findings"] = [
+                {
+                    "type": str(x.get("type", "")),
+                    "detail": str(x.get("detail", "")),
+                    "severity": str(x.get("severity", "")),
+                    "severity_level": str(x.get("severity_level", "")),
+                }
+                for x in issues
+            ]
+            live_vcd_payload["severity_counts"] = count_by_severity_level(issues)
             _log_vcd_issues(_logging.getLogger(__name__), basename, warnings_only, info_only, issue_counts)
         except Exception as exc:
             live_vcd_payload["error"] = str(exc)
