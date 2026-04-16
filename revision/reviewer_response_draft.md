@@ -60,7 +60,10 @@ We will therefore revise the manuscript to avoid any implication that the five-f
 **Recommended additional work.**  
 A formal all-subset field ablation would strengthen the claim if space and compute allow, but we do not think such an experiment is strictly necessary if the manuscript is reworded to claim sufficiency rather than optimality.
 
-**Status.** **Additional analysis recommended**
+**Revision update.**  
+Reframed as text revision this round. The existing per-field ablation evidence (marker-gene removal cost, metadata-only steering drop from 99.8% to 62.4%) already demonstrates relative contribution, which is what the reviewer actually needs once "optimal" is replaced with "sufficient". No new experiment added this round; a formal all-subset ablation is listed as explicit future work.
+
+**Status.** **Text revision only**
 
 ---
 
@@ -311,7 +314,7 @@ We can nevertheless be more concrete than before about the *shape* of a future s
 **Recommended additional work.**  
 A strict OOD dataset-based experiment is strongly recommended and would substantially strengthen the paper.
 
-**Status.** **Additional experiment recommended**
+**Status.** **Blocked — limitations fallback delivered this round.** The narrowed Priority-2 strict-OOD path is scoped, costed, and technically gated (`scripts/check_strict_ood.py` passes for the kidney / testis / cerebellum shortlist), but the staffing-gate validator (`scripts/check_lane_c_staffing_gate.py`) remains failed (no approved `<= 18 engineer-days` budget, label-bridge rows still provisional). We therefore deliver the already-drafted limitations paragraph (`revision/experiments/lane_c_data/limitations_fallback_paragraph.md`), which cites A2 (type-level species), A3 (heterogeneity > abundance), B3-forced-scarcity (augmentation headroom), and B4 (Stage-1 → full-pipeline partial reversal) as the four supporting pillars. Full strict-OOD retraining is deferred to a future round with approved staffing.
 
 ---
 
