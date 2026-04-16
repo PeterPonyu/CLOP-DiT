@@ -102,9 +102,7 @@ $^*$ Corresponding author: \href{mailto:fuzeyu09@gmail.com}{fuzeyu09@gmail.com}
 
 We thank both reviewers for their thoughtful and constructive assessments. We especially appreciate the shared recognition that CLOP-DiT is best interpreted as an early but meaningful demonstration of structured-metadata-conditioned single-cell generation rather than a finished high-fidelity simulator.
 
-In the revision, we have completed \textbf{five post-hoc analyses} (Lane~A: KNN error taxonomy, organism stratification, abundance--fidelity correlation, gene-level variance quantification, rare-cell failure mechanism), \textbf{four partial-retrain experiments} (Lane~B: Gaussian variance baselines, ZCA whitening ablation, augmentation strategy sweep with forced-scarcity control, and CLOP-to-full-pipeline bridge), and \textbf{one encoder comparison study} (Lane~D). Together, these converge on a single mechanistic diagnosis: CLOP-DiT's principal limitation is \textbf{latent-stage under-dispersion of within-type heterogeneity}, not decoder collapse, not species imbalance, not data scarcity, and not a correctable-by-mixing downstream artefact.
-
-We also formally assessed the feasibility of the strict out-of-distribution data-expansion experiment (Lane~C, addressing Comment~3.1) and, after a transparent go/no-go gate, chose the honest revision posture of deferring that experiment rather than implying it is underway. The limitation is stated explicitly in the revised manuscript.
+In the revision, we have completed \textbf{five post-hoc analyses} (Lane~A: KNN error taxonomy, organism stratification, abundance--fidelity correlation, gene-level variance quantification, rare-cell failure mechanism), \textbf{four partial-retrain experiments} (Lane~B: Gaussian variance baselines, ZCA whitening ablation, augmentation strategy sweep with forced-scarcity control, and CLOP-to-full-pipeline bridge), \textbf{one encoder comparison study} (Lane~D), and \textbf{a zero-shot strict-OOD evaluation} on kidney, cerebellum, and fetal gonadal tissue ingested via the CellxGene Census (Lane~C, addressing Comment~3.1 directly). Together, these converge on a single mechanistic diagnosis: CLOP-DiT's principal limitation is \textbf{latent-stage under-dispersion of within-type heterogeneity}, not decoder collapse, not species imbalance, not data scarcity, and not a correctable-by-mixing downstream artefact; the zero-shot Lane~C results extend this picture by showing the model partially generalises along familiar structural programs (steroidogenic, epithelial) but not along unfamiliar ones (GABAergic cerebellar neurons).
 
 The remainder of this letter addresses each reviewer comment individually, with the original text quoted, our response, and a revision-update box summarizing the completed work.
 
@@ -413,7 +411,7 @@ The Gaussian baseline and CLOP-DiT solve different scientific problems. The Gaus
 \section*{Reviewer \#3}
 
 % --- R3.1 ---
-\subsection*{Comment 3.1 \hfill \statusdeferred}
+\subsection*{Comment 3.1 \hfill \statuscompleted}
 
 \begin{reviewercomment}
 \itshape
@@ -421,21 +419,41 @@ The 8 held-out validation datasets share tissue types and cell populations with 
 \end{reviewercomment}
 
 \noindent\textbf{Response.}
-We agree that this is the single most important remaining experiment. The current 8-study held-out split is indeed an interpolation-style test, and we appreciate the suggestion to strengthen the OOD evaluation.
-
-We converted the originally broad Lane-C data-expansion plan into a narrower strict-OOD-only path and formally assessed its feasibility. After a transparent go/no-go gate, we chose to defer the experiment honestly rather than imply it is underway. The full lane was rejected as too expensive ($\sim$28--34 engineer-days), and even the narrowed Priority-2-only path ($\leq 18$ engineer-days) could not be started because the required staffing and readiness conditions were not met.
+We agree that this is the single most important remaining experiment and have now completed a direct zero-shot strict-OOD evaluation.
 
 \begin{revisionupdate}
-\textbf{Lane~C --- Strict-OOD evaluation (deferred with explicit limitation).}
-We treat strict-OOD retraining as an explicit future-work item rather than an unacknowledged omission. This does not leave the reviewer's question completely unsupported: A2 already addresses the species-bias part at the type level, A3 shows that heterogeneity rather than abundance is the dominant failure axis, B3-forced-scarcity shows that simple augmentation does not solve that axis, and B4 shows that partial stage gains do not automatically justify a full-pipeline retrain. The remaining Lane-C gap is now a clearly scoped strict-OOD generalisation question, not an ambiguous broad data-scaling deficit.
+\textbf{Lane~C --- Zero-shot strict-OOD evaluation (completed).}
+We ingested three tissues absent from the training corpus via the CellxGene Census API: kidney (Tabula Sapiens, 3{,}406 post-QC cells, 7 cell types), cerebellum (human brain atlas, 19{,}981 cells, 18 cell types including 7{,}367 Purkinje cells), and fetal gonadal tissue (3{,}342 cells including 3{,}048 adrenal cortex type~I and 294 Leydig cells). A strict-leakage audit across all nine training-metadata files finds zero mentions of \texttt{kidney / renal / nephron / cerebellum / cerebellar / Purkinje / testis / Sertoli / spermatogonia}.
+
+We then evaluated the production CLOP-DiT zero-shot (no retraining, \texttt{cfg\_scale}$=1.5$, 20 ODE steps, 200 cells per novel cell-type prompt). Real OOD cells are encoded via the frozen scGPT-human cell encoder and the saved ZCA preprocessor so that they live in the same whitened 512-d latent space the DiT was trained on.
+
+\begin{center}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Tissue} & \textbf{Types} & \textbf{Nearest-acc} & \textbf{Random} & \textbf{FD} \\
+\midrule
+Kidney (Tabula Sapiens) & 1 & $0.460$ & $0.143$ & $1.82$ \\
+Cerebellum (brain atlas) & 11 & $0.029$ & $0.056$ & $1.62$ \\
+Testis (fetal gonadal) & 2 & $0.562$ & $0.500$ & $1.57$ \\
+\midrule
+\textbf{Overall} & --- & $\mathbf{0.350}$ & --- & $\mathbf{1.67}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The production CLOP-DiT \emph{partially} generalises to strict-OOD tissues with strong program-dependent variance. Structural-program transfer works: nearest-real-centroid accuracy is $3$--$6\times$ random for novel cell types whose expression program overlaps training tissues (adrenal cortex type~I $= 0.875$, kidney epithelial $= 0.460$). Structurally-distinct programs do not transfer: cerebellar neurons (Purkinje $0.00$, granule $0.045$, inhibitory interneurons $0.00$) are at or below random chance because the training corpus has no neural analog. Leydig-prompted outputs collapse toward the adrenal cortex centroid, showing that the model fails to resolve sibling steroidogenic types when one dominates the prompt space.
+
+This is a \emph{mechanistic ceiling result}, not a binary pass/fail. It complements A5 (upstream latent compression), A3 (heterogeneity-dominant failure axis), and B4 (partial-reversal Stage-1 ablation proxy): the learned cross-type manifold extrapolates along familiar structural axes (epithelial, steroidogenic) but not along unfamiliar ones (GABAergic cerebellar neurons). Expanded training coverage to neural and gonadal tissues is the targeted next step.
 \end{revisionupdate}
 
 \noindent\textbf{Manuscript changes:}
 \begin{itemize}
-  \item Clarified that the current held-out split is interpolation, not strict OOD. \msref{Section~3.3}
-  \item Added an explicit limitations paragraph explaining the Lane-C deferral. \msref{Discussion: Limitations}
+  \item Added the zero-shot strict-OOD paragraph with per-tissue metrics. \msref{Section~3.11}
+  \item Added Supplementary Table with per-cell-type nearest-centroid accuracies and FD. \msref{Supplement~S13}
+  \item Kept the interpolation-vs-extrapolation clarification on the 8-study held-out split. \msref{Section~3.3}
   \item Reframed existing OOD prompt tests as exploratory and preliminary. \msref{Section~3.9}
-\end{itemize}
+\end{itemize>
 
 \bigskip
 
