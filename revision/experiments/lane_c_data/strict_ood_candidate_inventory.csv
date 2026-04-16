@@ -1,0 +1,7 @@
+target_tissue,candidate_source,candidate_label,baseline_overlap_count,baseline_overlap_examples,recommendation
+kidney,MULTI_TISSUE_PILOT + feasibility note,GSE131685 / GSE140989 / HCA kidney v2,0,,preferred_zero_overlap_candidate
+testis,feasibility note,GTEx testis snRNA-seq,0,,preferred_zero_overlap_candidate
+intestine,feasibility note,HCA gut v2,5,GSE225857_liverColonMetasisHmCancer;GSE307774_scRNA25100;GSE236565_scRNA25100;GSE280847_scRNA25100;GSE279781_geodh,manual_overlap_audit_required
+cerebellum,feasibility note,Allen cerebellum snRNA-seq,0,,preferred_zero_overlap_candidate
+distal airway,feasibility note,HCA lung upper airway,2,lung;GSE130148_LungHmDev,manual_overlap_audit_required
+merkel-like,feasibility note,NCBI GEO Merkel-cell carcinoma scRNA-seq,2,GSE117988_MCCPBMCCancer;GSE117988_MCCTumorCancer,manual_overlap_audit_required

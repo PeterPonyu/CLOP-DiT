@@ -6,7 +6,7 @@ has already been done, what the current state is, and where the
 unfinished work lives. Commit hashes and line numbers link directly
 back to the workspace so nothing has to be reconstructed from memory.
 
-Last updated: 2026-04-16 (ledger synced through the latest integrated Lane C planning/test fixes; Lane A complete, B1+B2+B3+B4 complete, Lane D complete, Lane C planning complete but no new-data run started).
+Last updated: 2026-04-16 (ledger synced through the latest integrated Lane C planning/test fixes plus the explicit conditional-go staffing assessment, rebuttal fallback paragraph, and machine-checkable staffing/strict-OOD gate scaffolding; Lane A complete, B1+B2+B3+B4 complete, Lane D complete, Lane C planning complete, staffing gate assessed, no-go retained, and no new-data run started).
 
 ---
 
@@ -22,7 +22,7 @@ Last updated: 2026-04-16 (ledger synced through the latest integrated Lane C pla
 | Venue-sensitive information in tracked files | **None.** All public docs are journal-neutral; manuscript sources are local-only under `revision/manuscripts/` and gitignored. |
 | Lane A (post-hoc analysis) | **Complete (5/5).** All scripts deterministic, rerunnable, SHA-256 pinned to inputs. |
 | Lane B (partial retrain) | B1 latent-level first pass complete; **B2 ZCA ablation complete (section 9)**; **B3 forced-scarcity complete (section 12)**; **B4 CLOP→full bridge complete (section 11)** — PARTIAL_REVERSAL verdict. |
-| Lane C (data expansion) | Feasibility and blocker plan committed (section 13); no new-data run started yet. |
+| Lane C (data expansion) | Feasibility/blocker plan, staffing assessment, fallback paragraph, and machine-checkable staffing/strict-OOD gate scaffolding committed (sections 13-17); no-go retained and no new-data run started yet. |
 | Lane D (encoder comparison) | **Complete.** scGPT-specific compression confirmed (section 10). |
 
 Integrity verification (run any time):
@@ -673,3 +673,124 @@ If any of those fail, Lane C stays closed for this revision round and
 the limitation-path rebuttal is the honest delivery.
 
 **Checklist:** `revision/experiments/lane_c_data/conditional_go_staffing_checklist.md`
+
+## 15. Lane-C staffing gate assessment: narrowed path still closed (2026-04-16)
+
+**Doc:** `revision/experiments/lane_c_data/conditional_go_staffing_assessment.md`
+**Driver question:** Does the narrowed Priority-2-only Lane-C path
+actually have enough staffing/readiness evidence to open now?
+
+### Assessment result
+
+- **Conditional go not approved.**
+- **NO-GO retained** for the current revision window.
+
+### Why
+
+The repo still lacks the concrete approved staffing/readiness artifacts the
+conditional-go gate requires:
+
+- no committed reconfirmation of a real `<= 18 engineer-days` staffing budget
+- only provisional single-author owner slots, not an approved staffing decision
+- no populated revision-side ingest pack, even though template
+  scaffolding now exists for `data/processed_h5ad_revision/`,
+  `scripts/check_strict_ood.py`, and `label_bridge.csv`
+
+### Practical implication
+
+Lane C remains planned but not started. The correct near-term posture is
+still the limitations/rebuttal fallback already justified by A2, A3,
+B3-forced-scarcity, and B4, unless a future session commits the missing
+staffing/readiness artifacts first.
+
+## 16. Lane-C fallback paragraph drafted after failed staffing gate (2026-04-16)
+
+**Doc:** `revision/experiments/lane_c_data/limitations_fallback_paragraph.md`
+**Driver question:** If Lane C remains closed, is the fallback language
+already drafted in a form that can be pasted into the manuscript or
+rebuttal?
+
+### Result
+
+- **Yes.** The repo now contains a direct limitations/rebuttal paragraph
+  that explains why strict-OOD retraining was not started in this round.
+
+### Required evidence cited in the paragraph
+
+- **A2**: no type-level species bias
+- **A3**: heterogeneity, not abundance, is the dominant failure axis
+- **B3-forced-scarcity**: naive augmentation-by-mixing does not recover
+  the missing headroom
+- **B4**: stage-1 CLOP gains do not automatically justify full-pipeline retraining
+
+### Practical implication
+
+If the conditional-go staffing gate stays closed, the revision can now
+say so cleanly and defensibly instead of leaving Lane C in a vague
+"planned next" state.
+
+## 17. Lane-C technical gate scaffolding committed, but gate still fails (2026-04-16)
+
+**Docs / scripts:** `data/processed_h5ad_revision/`, `scripts/check_strict_ood.py`,
+`revision/experiments/lane_c_data/conditional_go_staffing_plan.json`,
+`scripts/check_lane_c_staffing_gate.py`
+**Driver question:** Have we reduced the remaining Lane-C blocker to a
+concrete execution gate rather than a vague missing-plan problem?
+
+### Result
+
+- **Yes.** The repo now contains the minimum technical scaffolding needed
+  to make the strict-OOD and staffing gates machine-checkable.
+- **No**, this does **not** reopen Lane C yet. The gate still fails on
+  lack of approval and missing populated revision-side execution inputs.
+
+### Practical implication
+
+The blocker has moved from "missing technical plan" to "missing real
+staffing / ownership / populated inputs". That is progress, but still
+not enough to claim that Reviewer 3.1 has been experimentally closed.
+
+## 18. Lane-C strict-OOD candidate inventory narrows first-wave targets (2026-04-16)
+
+**Docs / scripts:** `revision/experiments/lane_c_data/strict_ood_candidate_inventory.md`,
+`revision/experiments/lane_c_data/strict_ood_candidate_inventory.csv`,
+`scripts/build_strict_ood_candidate_inventory.py`
+**Driver question:** Among the README target tissues, which ones still
+look like the cleanest first-wave strict-OOD candidates after auditing
+the current baseline metadata text?
+
+### Result
+
+- **Best first-wave candidates:** kidney, testis, cerebellum
+- **Needs extra overlap review:** intestine, distal airway, merkel-like
+
+### Why this matters
+
+This does not start Lane C, but it narrows the future execution search
+space. If a later session tries to reopen Reviewer 3.1 honestly, the
+most defensible starting point is now a kidney / testis / cerebellum
+strict-OOD shortlist rather than the full broad tissue list.
+
+## 19. Lane-C proposal rows committed; strict-OOD gate passes but staffing gate still fails (2026-04-16)
+
+**Docs / scripts:** `data/processed_h5ad_revision/MANIFEST.csv`,
+`data/processed_h5ad_revision/label_bridge.csv`,
+`scripts/check_strict_ood.py`,
+`scripts/check_lane_c_staffing_gate.py`
+**Driver question:** Can we now separate the technical strict-OOD gate
+from the staffing/approval gate?
+
+### Result
+
+- **Yes.** The technical strict-OOD gate now passes for the first-wave
+  proposal shortlist (`kidney`, `testis`, `cerebellum`).
+- **No.** Lane C still cannot reopen, because the staffing gate remains
+  in `draft_not_approved` state even though the proposal label bridge
+  now contains provisional reviewed/novel rows.
+
+### Practical implication
+
+Reviewer 3.1 is now blocked by a much narrower set of issues than
+before: the remaining gap is no longer "where do we even start?", but
+"who formally approves the shortlist execution pack and upgrades the
+provisional label-bridge review into a fully accepted execution input?".

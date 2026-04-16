@@ -26,6 +26,8 @@ LANE_C_README = LANE_C_DIR / "README.md"
 LANE_C_RESULTS = LANE_C_DIR / "results.md"
 GO_NO_GO_DECISION = LANE_C_DIR / "go_no_go_decision.md"
 STAFFING_CHECKLIST = LANE_C_DIR / "conditional_go_staffing_checklist.md"
+STAFFING_ASSESSMENT = LANE_C_DIR / "conditional_go_staffing_assessment.md"
+LIMITATIONS_FALLBACK = LANE_C_DIR / "limitations_fallback_paragraph.md"
 FEASIBILITY_CANDIDATES = [
     LANE_C_DIR / "feasibility_and_blockers.md",
     LANE_C_DIR / "feasibility_and_data_plan.md",
@@ -150,6 +152,11 @@ class TestLaneCResults:
             "results.md should record the committed B-6 state"
         )
 
+    def test_staffing_assessment_and_no_go_state_are_recorded(self, text: str) -> None:
+        assert "conditional-go staffing assessment committed" in text
+        assert "no-go retained for the current revision window" in text
+        assert "limitations_fallback_paragraph.md" in text
+
 
 class TestLaneCDecisionMemo:
     """The B-7/B-6 decision memo must convert planning into an executable gate."""
@@ -195,6 +202,48 @@ class TestLaneCStaffingChecklist:
     def test_contains_binary_outcome(self, text: str) -> None:
         assert "conditional go approved" in text
         assert "no-go retained" in text
+
+    def test_marks_no_go_retained(self, text: str) -> None:
+        assert "- [x] no-go retained" in text
+        assert "- [ ] conditional go approved" in text
+
+
+class TestLaneCStaffingAssessment:
+    @pytest.fixture
+    def text(self) -> str:
+        if not STAFFING_ASSESSMENT.exists():
+            pytest.skip(f"missing {STAFFING_ASSESSMENT}")
+        return _read(STAFFING_ASSESSMENT).lower()
+
+    def test_explicit_no_go_result(self, text: str) -> None:
+        assert "no-go is retained" in text or "no-go retained" in text
+        assert "conditional go is not approved" in text or "conditional go not approved" in text
+
+    def test_names_missing_readiness_artifacts(self, text: str) -> None:
+        assert "data/processed_h5ad_revision/" in text
+        assert "check_strict_ood.py" in text
+        assert "label_bridge.csv" in text
+
+    def test_names_missing_owner_gate(self, text: str) -> None:
+        assert "b-2" in text and "owner" in text
+        assert "b-3" in text and "owner" in text
+
+
+class TestLaneCLimitationsFallback:
+    @pytest.fixture
+    def text(self) -> str:
+        if not LIMITATIONS_FALLBACK.exists():
+            pytest.skip(f"missing {LIMITATIONS_FALLBACK}")
+        return _read(LIMITATIONS_FALLBACK).lower()
+
+    def test_references_failed_staffing_gate(self, text: str) -> None:
+        assert "no-go" in text
+        assert "<= 18 engineer-days" in text
+        assert "b-2" in text and "b-3" in text
+
+    def test_cites_a2_a3_b3_b4(self, text: str) -> None:
+        for token in ("a2", "a3", "b3", "b4"):
+            assert token in text, f"fallback paragraph should cite {token}"
 
 
 # ---------------------------------------------------------------------------
@@ -388,3 +437,12 @@ class TestRevisionLogSync:
         assert "b-7" in log_text and "historical feasibility estimate only" in log_text, (
             "REVISION_LOG should mark the old B-7 budget as historical once section 14 supersedes it"
         )
+
+    def test_revision_log_records_failed_staffing_gate(self, log_text: str) -> None:
+        assert "staffing gate assessed" in log_text
+        assert "no-go retained" in log_text
+        assert "check_strict_ood.py" in log_text
+
+    def test_revision_log_records_fallback_paragraph(self, log_text: str) -> None:
+        assert "fallback paragraph" in log_text
+        assert "limitations_fallback_paragraph.md" in log_text

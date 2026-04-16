@@ -41,10 +41,14 @@ regressing overall metrics?
 - [x] Regression stop-rule decision committed (B-6)
 - [x] Conditional-go staffing checklist committed
       (`conditional_go_staffing_checklist.md`)
-- [ ] Conditional-go staffing check complete (`<= 18 engineer-days`)
+- [x] Conditional-go staffing assessment committed
+      (`conditional_go_staffing_assessment.md`)
+- [ ] Conditional-go staffing gate passed (`<= 18 engineer-days`)
+- [x] NO-GO retained for the current revision window
 - [ ] Full CLOP + DiT retrain complete
 - [ ] Five-slice metric comparison committed
-- [ ] Rebuttal paragraph drafted
+- [x] Rebuttal / limitations fallback paragraph drafted
+      (`limitations_fallback_paragraph.md`)
 
 ## Results
 
@@ -62,9 +66,25 @@ Current gating read:
 4. The full Lane C plan is now a documented **no-go** for this revision
    round; only a narrowed Priority-2-only strict-OOD run remains
    conditionally open.
-5. The practical blocker is therefore no longer ambiguity about scope;
-   it is whether the narrowed run can be staffed at `<= 18 engineer-days`
-   with B-2 and B-3 ownership assigned.
+5. The practical blocker is therefore no longer ambiguity about scope.
+   The staffing assessment now records a concrete **failed conditional-go
+   gate**: no approved `<= 18 engineer-days` staffing decision and no
+   populated/owned revision-side execution pack, even though provisional
+   owner slots plus the ingest directory, leakage-check script,
+   staffing-plan template, staffing-gate validator, and proposal-level
+   manifest / label-bridge rows now exist.
+6. Because that gate failed, the repo now carries an explicit
+   limitations/rebuttal fallback paragraph rather than pretending that a
+   strict-OOD run is still merely "about to start".
+7. A baseline-overlap candidate inventory now narrows the cleanest
+   first-wave strict-OOD options to **kidney, testis, and cerebellum**;
+   intestine, distal-airway, and merkel-like proposals still require
+   extra overlap audit before they could be used honestly.
+8. The technical strict-OOD gate for that shortlist now passes at the
+   **proposal** level (`MANIFEST.csv` contains held-out rows and
+   `check_strict_ood.py` reports zero leakage), but the staffing gate
+   still fails because the plan remains draft even though the label
+   bridge now has provisional reviewed/novel rows.
 
 ## Rebuttal-ready sentence
 
