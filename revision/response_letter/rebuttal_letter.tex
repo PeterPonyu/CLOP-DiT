@@ -1,0 +1,582 @@
+\documentclass[11pt,letterpaper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage[most]{tcolorbox}
+\usepackage{amsmath}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!60!black,
+  urlcolor=blue!60!black,
+  citecolor=black,
+}
+
+\setlist[itemize]{leftmargin=1.4em,itemsep=2pt,topsep=3pt,parsep=0pt}
+\setlist[enumerate]{leftmargin=1.8em,itemsep=2pt,topsep=3pt,parsep=0pt}
+
+% --- tcolorbox styles ---
+\definecolor{reviewblue}{RGB}{70,130,180}
+\definecolor{reviewbg}{RGB}{240,245,250}
+\definecolor{statusgreen}{RGB}{34,139,34}
+\definecolor{statusblue}{RGB}{30,100,180}
+\definecolor{statusamber}{RGB}{200,140,20}
+\definecolor{updatebg}{RGB}{245,250,245}
+
+\newtcolorbox{reviewercomment}{
+  colback=reviewbg,
+  colframe=reviewblue,
+  fonttitle=\bfseries,
+  left=8pt,
+  right=8pt,
+  top=6pt,
+  bottom=6pt,
+  boxrule=1.2pt,
+  arc=2pt,
+  before skip=8pt,
+  after skip=4pt,
+}
+
+\newtcolorbox{revisionupdate}{
+  colback=updatebg,
+  colframe=statusgreen!70!black,
+  fonttitle=\bfseries,
+  left=8pt,
+  right=8pt,
+  top=5pt,
+  bottom=5pt,
+  boxrule=0.8pt,
+  arc=2pt,
+  before skip=6pt,
+  after skip=8pt,
+}
+
+% --- Status badges ---
+\newcommand{\statuscompleted}{\textcolor{statusgreen}{\textbf{[Completed]}}}
+\newcommand{\statustext}{\textcolor{statusblue}{\textbf{[Text revision]}}}
+\newcommand{\statusdeferred}{\textcolor{statusamber}{\textbf{[Deferred]}}}
+
+% --- Manuscript cross-reference ---
+\newcommand{\msref}[1]{\textcolor{blue!60!black}{\textsf{[Manuscript: #1]}}}
+
+\title{}
+\author{}
+\date{}
+
+\begin{document}
+
+% ================================================================
+% TITLE BLOCK
+% ================================================================
+\noindent
+{\LARGE\bfseries Response to Reviewers\par}
+\vspace{0.6em}
+
+\noindent\textbf{Manuscript:} CLOP-DiT: Structured-Metadata-Conditioned Single-Cell Latent Generation via Contrastive Language--Omics Pretraining and Diffusion Transformers
+
+\noindent\textbf{Authors:} Zeyu Fu$^{1,*}$, Yiyao Liu$^{2}$, Junping Wang$^{3}$, Song Wang$^{4}$\\
+$^*$ Corresponding author: \href{mailto:fuzeyu09@gmail.com}{fuzeyu09@gmail.com}
+
+\noindent\textbf{Date:} April 2026
+
+\noindent\textbf{Venue:} \emph{Array} (Elsevier)
+
+\vspace{0.8em}
+\hrule
+\vspace{0.8em}
+
+% ================================================================
+% OVERALL FRAMING
+% ================================================================
+\section*{Overall Response}
+
+We thank both reviewers for their thoughtful and constructive assessments. We especially appreciate the shared recognition that CLOP-DiT is best interpreted as an early but meaningful demonstration of structured-metadata-conditioned single-cell generation rather than a finished high-fidelity simulator.
+
+In the revision, we have completed \textbf{five post-hoc analyses} (Lane~A: KNN error taxonomy, organism stratification, abundance--fidelity correlation, gene-level variance quantification, rare-cell failure mechanism), \textbf{four partial-retrain experiments} (Lane~B: Gaussian variance baselines, ZCA whitening ablation, augmentation strategy sweep with forced-scarcity control, and CLOP-to-full-pipeline bridge), and \textbf{one encoder comparison study} (Lane~D). Together, these converge on a single mechanistic diagnosis: CLOP-DiT's principal limitation is \textbf{latent-stage under-dispersion of within-type heterogeneity}, not decoder collapse, not species imbalance, not data scarcity, and not a correctable-by-mixing downstream artefact.
+
+We also formally assessed the feasibility of the strict out-of-distribution data-expansion experiment (Lane~C, addressing Comment~3.1) and, after a transparent go/no-go gate, chose the honest revision posture of deferring that experiment rather than implying it is underway. The limitation is stated explicitly in the revised manuscript.
+
+The remainder of this letter addresses each reviewer comment individually, with the original text quoted, our response, and a revision-update box summarizing the completed work.
+
+\vspace{0.4em}
+\noindent\textbf{Status legend:}
+\begin{itemize}
+  \item \statuscompleted{} --- additional analysis or experiment completed and integrated
+  \item \statustext{} --- addressed by text or figure revision only
+  \item \statusdeferred{} --- experiment scoped and honestly deferred to future work
+\end{itemize}
+
+\newpage
+
+% ================================================================
+% REVIEWER 2
+% ================================================================
+\section*{Reviewer \#2}
+
+% --- R2.1 ---
+\subsection*{Comment 2.1 \hfill \statustext}
+
+\begin{reviewercomment}
+\itshape
+The abstract lacks a statement of research background and fails to explain the specific challenges currently faced in the field of single-cell generation to support the necessity of this study.
+\end{reviewercomment}
+
+\noindent\textbf{Response.}
+We agree. The original abstract stated the task and framework but did not foreground the scientific gap. In the revision, we have added context explaining that most existing single-cell generative models condition on categorical labels, perturbation labels, or batch covariates rather than on richer structured biological descriptions, and that the central challenge is not only generation itself but preserving biologically meaningful within-type structure under such conditioning.
+
+\noindent\textbf{Manuscript changes:}
+\begin{itemize}
+  \item Added 1--2 sentences to the abstract stating the limitation of label-based conditioning. \msref{Abstract}
+  \item Explicitly stated that the main challenge is balancing conditional controllability with preservation of within-type heterogeneity. \msref{Abstract}
+\end{itemize}
+
+\bigskip
+
+% --- R2.2 ---
+\subsection*{Comment 2.2 \hfill \statustext}
+
+\begin{reviewercomment}
+\itshape
+The author proposes using a template with five fields: cell type, tissue, species, marker genes, and disease background. Although these fields cover the main biological dimensions, there is a lack of justification: why choose these five? Has an ablation experiment been conducted to prove that the combination of these five fields is optimal?
+\end{reviewercomment}
+
+\noindent\textbf{Response.}
+We appreciate this point. Our intent was not to claim mathematical or biological optimality. The five fields were chosen because they form a practical, interpretable, and consistently extractable scaffold across the 80-GEO-dataset corpus: \textbf{cell type} captures identity, \textbf{tissue} captures anatomical context, \textbf{organism} captures species background, \textbf{marker genes} provide molecular specificity, and \textbf{disease context} captures pathological state. The design criterion was portability and semantic coverage, not combinatorial optimality.
+
+We do have conditioning-field ablation evidence showing that the fields contribute unequally: removing marker genes reduces centroid cosine, and retaining only metadata causes steering to drop from 99.8\% to 62.4\%. However, these results demonstrate usefulness and relative contribution, not global optimality.
+
+\noindent\textbf{Manuscript changes:}
+\begin{itemize}
+  \item Replaced any wording implying ``optimality'' with ``practical structured scaffold.'' \msref{Section~2.2}
+  \item Expanded the Discussion to note that future work could formalize field-wise prompt optimization. \msref{Discussion}
+\end{itemize}
+
+\bigskip
+
+% --- R2.3 ---
+\subsection*{Comment 2.3 \hfill \statustext}
+
+\begin{reviewercomment}
+\itshape
+The author used Wilcoxon rank sum test on the training set to extract marker genes. How to prove that the model understands biological semantics during the generation process, rather than just ``remembering'' a specific gene list in the training set.
+\end{reviewercomment}
+
+\noindent\textbf{Response.}
+We do not claim that the model has human-like biological understanding. The scientifically defensible claim is narrower: the model learns a conditioning pathway that responds to biologically meaningful marker-bearing prompts rather than merely replaying fixed training captions. Three pieces of evidence support this: (i)~training-split Wilcoxon markers overlap substantially with independent external resources (PanglaoDB and CellMarker~2.0, Jaccard $\approx 0.39$--$0.45$); (ii)~substituting external marker sets produces generations close to the full-prompt variant (pairwise cosine 0.702); and (iii)~in swap-label permutation tests, generated latents follow prompt semantics in all 15/15 mismatched cases.
+
+\noindent\textbf{Manuscript changes:}
+\begin{itemize}
+  \item Replaced ``understands biological semantics'' with ``responds to biologically relevant conditioning content.'' \msref{Results, Discussion}
+  \item Emphasized the independent-marker substitution and swap-label evidence more clearly. \msref{Section~3.9}
+\end{itemize}
+
+\bigskip
+
+% --- R2.4 ---
+\subsection*{Comment 2.4 \hfill \statustext}
+
+\begin{reviewercomment}
+\itshape
+The quality of Figures~1 and~2 needs improvement, as the text, arrows, and rectangles appear very cluttered and have low readability. The font color and size in the experimental results also need to be modified to ensure the clarity and consistency of the font, and not to obscure the data (Figure~11(c)).
+\end{reviewercomment}
+
+\noindent\textbf{Response.}
+We agree. In the revision, we have:
+\begin{itemize}
+  \item Regenerated Figures~1 and~2 with increased canvas height, larger font sizes (labels bumped from 11\,pt to 12\,pt, sublabels from 10\,pt to 11\,pt), wider spacing between components, and thicker arrow line weights. \msref{Figures~1--2}
+  \item Increased stage-background contrast (alpha $0.15 \to 0.20$) for print legibility.
+  \item Fixed an overcompensated panel label in the evaluation pipeline figure ($21\,\text{pt} \to 15\,\text{pt}$).
+  \item Harmonized figure fonts and legend positions across the manuscript.
+\end{itemize}
+
+\bigskip
+
+% --- R2.5 ---
+\subsection*{Comment 2.5 \hfill \statustext}
+
+\begin{reviewercomment}
+\itshape
+The training accuracy mentioned in Section~3.1 is 87\%, but the validation accuracy is only 2.5\%. Although significantly higher than random (0.39\%), the absolute level is still very low. This means that in most cases, the model cannot correctly match text and corresponding cells from a small batch. It is not yet clear whether this low accuracy will affect the quality of the generated data.
+\end{reviewercomment}
+
+\noindent\textbf{Response.}
+The CLOP validation accuracy is a stage-specific retrieval-style proxy measured in a highly difficult contrastive setting, not the final generation metric. Because the raw scGPT type centroids are extremely compressed (mean pairwise cosine $\approx 0.994$), even moderate improvement in prototype separation is meaningful for downstream conditioning. The unconditional control collapses to chance-level type specificity (KNN $\approx 1.0\%$, steering $\approx 47.5\%$), whereas the conditional generator reaches 36.9\% KNN and 81.0\% steering---indicating the learned condition space is functionally useful despite the low retrieval proxy.
+
+\noindent\textbf{Manuscript changes:}
+\begin{itemize}
+  \item Clarified that CLOP validation accuracy is a stage-specific proxy. \msref{Section~3.1}
+  \item Explained why generation quality should be judged by KNN, steering, and DivR, not CLOP accuracy alone. \msref{Section~3.1}
+\end{itemize}
+
+\bigskip
+
+% --- R2.6 ---
+\subsection*{Comment 2.6 \hfill \statuscompleted}
+
+\begin{reviewercomment}
+\itshape
+The indicator values of KNN-1 and KNN-5 mentioned in sections 3.3 and 3.4 are approximately 36\% and 55\%, respectively. This means that about 2/3 of the generating cells are assigned to the ``wrong'' cell type. But to what extent is the `error'? Are they classified into similar types (such as CD4+T vs CD8+T) or completely unrelated types (such as T cells vs epithelial cells)? The author did not provide a confusion matrix or finer grained analysis.
+\end{reviewercomment}
+
+\noindent\textbf{Response.}
+We agree that the biological severity of a KNN error depends on \emph{where} the error goes. A confusion between adjacent immune states is not equivalent to a confusion across major lineages. We have now added a latent-space KNN error taxonomy using a 10-family biologically grounded classification over all 69 evaluation cell types.
+
+\begin{revisionupdate}
+\textbf{Lane~A1 --- KNN error taxonomy (completed).}
+Using a 10-family taxonomy, 49.2\% of all KNN mis-typings stay within the same biological family. Of the top-15 most-confused cell-type pairs, 9 are within-family (e.g., pancreatic $\delta$ $\leftrightarrow$ neuroendocrine, tissue-resident macrophages $\leftrightarrow$ MHC-II$^+$ antigen-presenting cells). Only the proliferation/stress/pluripotent family, which cuts across lineages by definition, shows within-family accuracy below 0.94. Many failures are biologically local rather than catastrophic cross-lineage confusions.
+\end{revisionupdate}
+
+\noindent\textbf{Manuscript changes:}
+\begin{itemize}
+  \item Added a KNN error-taxonomy subsection with the family-level analysis. \msref{Section~3.4}
+  \item Added Supplementary Table~S6 with the full confusion breakdown. \msref{Supplement}
+\end{itemize}
+
+\bigskip
+
+% --- R2.7 ---
+\subsection*{Comment 2.7 \hfill \statuscompleted}
+
+\begin{reviewercomment}
+\itshape
+The conclusion in Section~3.5 that failure modes are concentrated in a few biologically difficult or underrepresented types lacks quantitative support. The authors did not define what ``biologically difficult'' or ``underrepresented'' means, nor did they provide statistical evidence (such as whether there is a significant difference in centroid cosine between low abundance and high abundance types).
+\end{reviewercomment}
+
+\noindent\textbf{Response.}
+We agree that ``biologically difficult'' was too vague. We have now replaced this phrase throughout the manuscript with an operational definition grounded in quantitative analysis.
+
+\begin{revisionupdate}
+\textbf{Lane~A3 --- Abundance vs.\ fidelity analysis (completed).}
+Across 68 matched cell types, per-type Frechet distance is only weakly related to training-set abundance (Spearman $\rho = +0.57$, $p = 4.9 \times 10^{-7}$) but is strongly explained by within-type heterogeneity ($\rho = -0.77$, $p = 3 \times 10^{-13}$). A bottom-quartile-by-training-count slice does \emph{not} show the expected fidelity gap (centroid cosine 0.907 vs.\ 0.896 for top quartile, Mann--Whitney $p = 0.02$, favouring the underrepresented set). Within-type heterogeneity (\texttt{real\_intra\_cos}) is the dominant predictor; abundance is secondary.
+\end{revisionupdate}
+
+\noindent\textbf{Manuscript changes:}
+\begin{itemize}
+  \item Replaced ``biologically difficult'' with ``cell types with broad intrinsic within-type heterogeneity'' ($\texttt{real\_intra\_cos} < P_{25}$). \msref{Section~3.5, Discussion}
+  \item Added abundance--fidelity correlation statistics to the main text. \msref{Section~3.5}
+  \item Added Supplementary Table~S8 with per-type correlations. \msref{Supplement}
+\end{itemize}
+
+\bigskip
+
+% --- R2.8 ---
+\subsection*{Comment 2.8 \hfill \statuscompleted}
+
+\begin{reviewercomment}
+\itshape
+Section~3.7, Figure~9(d) clearly shows the ``residual distribution of each gene'' and ``percentage within the tolerance band'', while Figure~10(d) displays the ``highly variable genes sorted by standard deviation ratio''. These graphs involve variance and residuals, but there is no explanation or analysis of the results of these graphs in the main text.
+\end{reviewercomment}
+
+\noindent\textbf{Response.}
+We agree these panels were inadequately discussed. We have now added explicit interpretation.
+
+\begin{revisionupdate}
+\textbf{Lane~A4 --- Gene-level variance quantification (completed).}
+Across the 1,790 genes scored in the in-distribution evaluation, 85\% fall inside the $[0.5, 2.0]$ tolerance band for the gen/real variance ratio, with a median standard-deviation ratio of 1.33 and a pooled gene-wise variance Pearson $r_\text{var} = 0.988$. Within-type median $r_\text{var}$ across 69 cell types is $+0.85$, with 100\% of types exhibiting a positive correlation. The cross-dataset held-out evaluation remains the stricter test and continues to show variance collapse (median ratio 0.01--0.02), motivating the strict-OOD experiments scoped for future work.
+\end{revisionupdate}
+
+\noindent\textbf{Manuscript changes:}
+\begin{itemize}
+  \item Added explicit interpretation of the residual-distribution and tolerance-band panels. \msref{Section~3.7}
+  \item Connected HVG standard-deviation ratios to the first-order vs.\ second-order fidelity narrative. \msref{Section~3.7}
+\end{itemize}
+
+\bigskip
+
+% --- R2.9 ---
+\subsection*{Comment 2.9 \hfill \statuscompleted}
+
+\begin{reviewercomment}
+\itshape
+Table~4 mentions that ``per gene variation correlation ($r_\text{var}$) is near zero or slightly negative across all datasets.'' In the high diversity mode, the overall diversity ratio (DivR) reaches 0.93, which seems close to the ideal value, but the variance correlation of each gene is almost zero. The paper did not explain why the overall variance is close to reality, while the variance of individual genes has no linear relationship with reality. This contradiction weakens the credibility of DivR as a quality indicator. No baseline methods were provided for the variance correlation of each gene.
+\end{reviewercomment}
+
+\noindent\textbf{Response.}
+DivR and $r_\text{var}$ are not contradictory---they measure different aspects of variability. DivR is a group-level aggregate asking whether the \emph{amount} of within-type spread is approximately correct, while $r_\text{var}$ asks whether the \emph{same genes} are variable in generated and real data. A model can recover the amount of spread while allocating it to the wrong genes, producing DivR~$\approx 1$ but $r_\text{var} \approx 0$.
+
+\begin{revisionupdate}
+\textbf{Lane~B1 --- Variance recovery baselines (completed).}
+At the latent scale, CLOP-DiT recovers within-type variance with mean across-type Pearson $r_\text{var} = +0.201$ (median $+0.183$), strictly between a type-agnostic pooled-Gaussian floor ($+0.014$, only 60.9\% of types above zero) and a type-aware Gaussian oracle ($+0.813$). At the decoded-expression scale, the discriminating statistic is the within-type pooled median variance ratio: 0.94 for the oracle, 1.13 for CLOP-DiT, and 1.79 for the pooled Gaussian. This makes clear that the near-zero $r_\text{var}$ is not unique to CLOP-DiT---it reflects a general challenge of latent-space generation through a frozen decoder.
+
+\medskip
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Generator} & \textbf{mean $r_\text{var}$} & \textbf{median var.\ ratio} & \textbf{\% types $r_\text{var} > 0$} \\
+\midrule
+Gaussian-per-type (oracle) & $+0.813$ & 1.05 & 100\% \\
+\textbf{CLOP-DiT} & $\mathbf{+0.201}$ & 0.71 & 100\% \\
+Pooled Gaussian (floor) & $+0.014$ & 1.20 & 60.9\% \\
+\bottomrule
+\end{tabular}
+\end{revisionupdate}
+
+\noindent\textbf{Manuscript changes:}
+\begin{itemize}
+  \item Added explicit DivR vs.\ $r_\text{var}$ distinction paragraph. \msref{Section~3.7}
+  \item Added variance-baseline comparison table (Supplementary Table~S9). \msref{Supplement}
+\end{itemize}
+
+\bigskip
+
+% --- R2.10 ---
+\subsection*{Comment 2.10 \hfill \statuscompleted}
+
+\begin{reviewercomment}
+\itshape
+The results of the CLOP ablation study in Section~3.12 are severely disconnected from the production model, as the fixed temperature used in the production model ($\tau=14.0$) is completely different from the learnable temperature in the ablation baseline. Does the conclusion drawn from the ablation experiment hold true in the production model? If the ablation experiment can only reflect the performance of the CLOP alignment stage and cannot reflect the impact on the final generated quality, then these ablation results have almost zero overall value for evaluating CLOP-DiT.
+\end{reviewercomment}
+
+\noindent\textbf{Response.}
+We agree with the central concern. The CLOP ablation table is informative as a stage-specific mechanistic analysis, but should not be interpreted as direct evidence about end-to-end generation quality. To address this, we added a bridge experiment.
+
+\begin{revisionupdate}
+\textbf{Lane~B4 --- CLOP$\to$full-pipeline bridge (completed).}
+We retrained three DiTs (300 epochs each) on projected text spaces from the ablation suite and generated 6,900 embeddings per variant. The transfer verdict is \textbf{PARTIAL\_REVERSAL}: Stage-1 improvements do not reliably predict Stage-2 quality.
+
+\texttt{no\_cohesion} achieved the highest Stage-1 prototype accuracy ($0.864$ vs.\ $0.762$ baseline, $+10.2$\,pp) but produced the \emph{worst} generation quality: FD $0.230$ ($+31\%$), coverage $0.079$ ($-45\%$), centroid cosine $0.854$ ($-8.1\%$). The cohesion loss, despite reducing prototype accuracy, is essential for maintaining inter-type geometric structure that the DiT relies on.
+
+\medskip
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Variant} & \textbf{Stage-1 acc} & \textbf{Stage-2 FD}$\downarrow$ & \textbf{Coverage}$\uparrow$ & \textbf{Centroid cos}$\uparrow$ \\
+\midrule
+abl\_baseline & 0.762 & 0.175 & 0.144 & 0.929 \\
+no\_cohesion & \textbf{0.864} & 0.230 & 0.079 & 0.854 \\
+no\_cell\_noise & 0.862 & \textbf{0.145} & 0.121 & 0.923 \\
+\bottomrule
+\end{tabular}
+\end{revisionupdate}
+
+\noindent\textbf{Manuscript changes:}
+\begin{itemize}
+  \item Added caveat that ablation rankings are not reliable proxies for end-to-end quality. \msref{Section~3.12}
+  \item Added bridge-experiment results as Supplementary Table~S12. \msref{Supplement}
+\end{itemize}
+
+\bigskip
+
+% --- R2.11 ---
+\subsection*{Comment 2.11 \hfill \statuscompleted}
+
+\begin{reviewercomment}
+\itshape
+The author reported rare cell enhancement failures, but lacked deeper analysis. Is it because the generated cells are too homogeneous (averaged), or is it because the small shift in latent variable space is amplified in the expression space? Increasing exploration in this area will greatly enhance the academic depth of the paper.
+\end{reviewercomment}
+
+\noindent\textbf{Response.}
+We have now decomposed the rare-cell failure mechanism at both the latent and expression scales.
+
+\begin{revisionupdate}
+\textbf{Lane~A5 --- Rare-cell failure mechanism (completed).}
+Across the 18 lowest-abundance cell types, the generator produces latents whose within-type total variance is 30--66\% of real (median $0.50\times$), yet the scGPT decoder recovers expression-space variance to 47--190\% of real (median $1.07\times$). The decoder is already expansive; the generator is centroid-biased. For the Cycling population specifically, intra-cluster cosine similarity is $4.6\times$ higher in generated than real samples, indicating highly directional synthetic diversity. The failure is \textbf{upstream latent under-dispersion}, not decoder collapse.
+\end{revisionupdate}
+
+\noindent\textbf{Manuscript changes:}
+\begin{itemize}
+  \item Expanded rare-cell augmentation discussion to distinguish ``realistic but too homogeneous'' from ``grossly misplaced.'' \msref{Section~3.10, Discussion}
+\end{itemize}
+
+\bigskip
+
+% --- Gaussian benchmark ---
+\subsection*{Additional Concern: Gaussian benchmark \hfill \statustext}
+
+\begin{reviewercomment}
+\itshape
+In the discussion section, the author acknowledges that Gaussian benchmarks outperform CLOP-DiT in general metrics. If that's the case, why use a complex diffusion model? The author should provide an explanation for this.
+\end{reviewercomment}
+
+\noindent\textbf{Response.}
+The Gaussian baseline and CLOP-DiT solve different scientific problems. The Gaussian baseline is strong when evaluation is restricted to global distributional similarity within already observed types, because it samples directly around per-type statistics. CLOP-DiT provides a \emph{learned prompt-conditioned mapping} from structured biological descriptions to cell latents, without requiring access to per-type empirical statistics at generation time. It also supports causal prompt interventions (field ablation, swap-label tests) and an interpretable fidelity--diversity operating envelope through classifier-free guidance. We position CLOP-DiT as a proof-of-concept for structured-metadata-conditioned controllable generation, not as a uniformly superior replacement for moment-matching baselines.
+
+\noindent\textbf{Manuscript changes:}
+\begin{itemize}
+  \item Added Discussion paragraph distinguishing Gaussian moment-matching from prompt-conditioned amortized generation. \msref{Discussion}
+\end{itemize}
+
+
+\newpage
+
+% ================================================================
+% REVIEWER 3
+% ================================================================
+\section*{Reviewer \#3}
+
+% --- R3.1 ---
+\subsection*{Comment 3.1 \hfill \statusdeferred}
+
+\begin{reviewercomment}
+\itshape
+The 8 held-out validation datasets share tissue types and cell populations with the training corpus, representing an interpolation test. To demonstrate the robustness of the prompt-based conditioning, the authors should add a strict out-of-distribution experiment. I am very interested if the model is able to generate biologically plausible latents for a completely unseen cell type or an entirely new tissue context (using existing public datasets). I believe that this analysis would largely elevate the impact of this paper.
+\end{reviewercomment}
+
+\noindent\textbf{Response.}
+We agree that this is the single most important remaining experiment. The current 8-study held-out split is indeed an interpolation-style test, and we appreciate the suggestion to strengthen the OOD evaluation.
+
+We converted the originally broad Lane-C data-expansion plan into a narrower strict-OOD-only path and formally assessed its feasibility. After a transparent go/no-go gate, we chose to defer the experiment honestly rather than imply it is underway. The full lane was rejected as too expensive ($\sim$28--34 engineer-days), and even the narrowed Priority-2-only path ($\leq 18$ engineer-days) could not be started because the required staffing and readiness conditions were not met.
+
+\begin{revisionupdate}
+\textbf{Lane~C --- Strict-OOD evaluation (deferred with explicit limitation).}
+We treat strict-OOD retraining as an explicit future-work item rather than an unacknowledged omission. This does not leave the reviewer's question completely unsupported: A2 already addresses the species-bias part at the type level, A3 shows that heterogeneity rather than abundance is the dominant failure axis, B3-forced-scarcity shows that simple augmentation does not solve that axis, and B4 shows that partial stage gains do not automatically justify a full-pipeline retrain. The remaining Lane-C gap is now a clearly scoped strict-OOD generalisation question, not an ambiguous broad data-scaling deficit.
+\end{revisionupdate}
+
+\noindent\textbf{Manuscript changes:}
+\begin{itemize}
+  \item Clarified that the current held-out split is interpolation, not strict OOD. \msref{Section~3.3}
+  \item Added an explicit limitations paragraph explaining the Lane-C deferral. \msref{Discussion: Limitations}
+  \item Reframed existing OOD prompt tests as exploratory and preliminary. \msref{Section~3.9}
+\end{itemize}
+
+\bigskip
+
+% --- R3.2 ---
+\subsection*{Comment 3.2 \hfill \statuscompleted}
+
+\begin{reviewercomment}
+\itshape
+The training dataset is a mix of human (59 datasets) and mouse (21 datasets) samples. Currently, the performance metrics are aggregated. The authors should provide a supplementary experiment or analysis that evaluates generation quality by organism. This would reveal whether the shared CLOP pretraining space successfully facilitates cross-species transfer learning or if the model underperforms on the minority species.
+\end{reviewercomment}
+
+\noindent\textbf{Response.}
+We have now added organism-stratified evaluation.
+
+\begin{revisionupdate}
+\textbf{Lane~A2 --- Organism-stratified evaluation (completed).}
+Across the 18 human-only and 8 mouse-only cell types, the two organism groups are statistically indistinguishable on centroid cosine ($0.917$ vs.\ $0.919$, Mann--Whitney $p = 0.14$), Frechet distance ($1.052$ vs.\ $1.028$, $p = 0.85$), diversity ratio ($p = 0.18$), expression Pearson $r$ ($p = 0.43$), and real within-type cosine tightness ($p = 0.87$). Mouse-only types are marginally better on FD. We do not observe the species bias suggested by the 59/21 dataset-count imbalance; the shared CLOP space generalises across species at the type level. A stronger cell-level/held-out-tissue stratification remains the open Lane-C target.
+\end{revisionupdate}
+
+\noindent\textbf{Manuscript changes:}
+\begin{itemize}
+  \item Added organism-stratified evaluation paragraph. \msref{Section~3.4}
+  \item Added Supplementary Table~S7 with per-organism metrics. \msref{Supplement}
+\end{itemize}
+
+\bigskip
+
+% --- R3.3 ---
+\subsection*{Comment 3.3 \hfill \statuscompleted}
+
+\begin{reviewercomment}
+\itshape
+The pilot experiment on rare-cell augmentation (using ``Cycling cells'') did not yield improvements in classifier performance. Instead of concluding that augmentation is ineffective, the authors should experiment with different data-mixing strategies. Testing combinations of generated data with traditional techniques (like SMOTE or random oversampling), or fine-tuning the mix ratios, would provide a more comprehensive view of how CLOP-DiT can be leveraged for class imbalance problems.
+\end{reviewercomment}
+
+\noindent\textbf{Response.}
+We ran a systematic augmentation strategy sweep and a forced-scarcity control experiment.
+
+\begin{revisionupdate}
+\textbf{Lane~B3 --- Augmentation strategy sweep + forced-scarcity (completed).}
+A $2 \times 6 \times 4$ sweep (two rare cell types, six strategies including random oversampling, SMOTE, CLOP-DiT-only, and hybrids, at ratios $1\times$--$10\times$) showed that no tested strategy improves rare-class F1 over the no-augmentation baseline (Megakaryocytes: 0.917; Ameloblasts: 0.937). Classical methods degrade monotonically; CLOP-DiT-only stays flat. The result is ceiling-driven.
+
+To confirm, we artificially reduced training to 30 cells (baseline F1 $\sim$0.50). Under this genuine scarcity, \textbf{all strategies improve substantially}: oversampling reaches 0.783/0.866 at $10\times$, CLOP-DiT-only reaches 0.719/0.670, and hybrid clop+oversampling reaches 0.772/0.835. CLOP-DiT augmentation provides genuine value under scarcity.
+
+\medskip
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Strategy} & \multicolumn{2}{c}{\textbf{Natural (F1 base $\sim$0.92)}} & \multicolumn{2}{c}{\textbf{Forced scarcity (F1 base $\sim$0.50)}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+ & gid~51 & gid~64 & gid~51 & gid~64 \\
+\midrule
+No augmentation & 0.917 & 0.937 & 0.505 & 0.506 \\
+Oversampling $10\times$ & 0.807 & 0.859 & 0.783 & 0.866 \\
+SMOTE $10\times$ & 0.833 & 0.879 & 0.769 & 0.834 \\
+CLOP-DiT $10\times$ & 0.917 & 0.929 & 0.719 & 0.670 \\
+Hybrid $10\times$ & 0.907 & 0.928 & 0.772 & 0.835 \\
+\bottomrule
+\end{tabular}
+\end{revisionupdate}
+
+\noindent\textbf{Manuscript changes:}
+\begin{itemize}
+  \item Replaced broad ``augmentation is ineffective'' with evidence-backed narrower claim. \msref{Section~3.10}
+  \item Added augmentation strategy sweep and forced-scarcity results. \msref{Section~3.10, Supplement Table~S11}
+\end{itemize}
+
+\bigskip
+
+% --- R3.4 ---
+\subsection*{Comment 3.4 \hfill \statuscompleted}
+
+\begin{reviewercomment}
+\itshape
+In Section~2.2, the authors claim that ZCA whitening was adopted over LayerNorm or mean-centering based on `preliminary sensitivity checks'. Given the importance of the text-embedding landscape for the overall pipeline, the authors should provide a formal ablation study comparing ZCA against LayerNorm or no-whitening.
+\end{reviewercomment}
+
+\noindent\textbf{Response.}
+We have now added a formal preprocessing ablation.
+
+\begin{revisionupdate}
+\textbf{Lane~B2 --- ZCA whitening ablation (completed).}
+Three CLOP training runs (100 epochs, seed~42, PrototypeSigLIP, identical architecture) differing only in preprocessing:
+
+\medskip
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+\textbf{Condition} & \textbf{Quality} & \textbf{proto\_acc} & \textbf{cos\_sim} & \textbf{Best ep.} \\
+\midrule
+ZCA (production) & \textbf{0.966} & 0.999 & \textbf{0.851} & 98 \\
+Center + L2 & 0.960 & 1.000 & 0.815 & 96 \\
+No preprocessing & 0.956 & 0.998 & 0.809 & 99 \\
+\bottomrule
+\end{tabular}
+
+\medskip
+Quality drop from ZCA to no preprocessing is only 1.0\%. ZCA's measurable contribution is a 5\% improvement in positive-pair cosine similarity, reflecting decorrelation of the 512-d scGPT dimensions. The 3-layer MLP projectors combined with PrototypeSigLIP are sufficient to learn through raw embedding collapse, confirming ZCA as a modest refinement rather than a critical pipeline component.
+\end{revisionupdate}
+
+\noindent\textbf{Manuscript changes:}
+\begin{itemize}
+  \item Added formal ZCA ablation results. \msref{Section~3.12}
+  \item Added Supplementary Table~S10 with full ablation comparison. \msref{Supplement}
+\end{itemize}
+
+
+\newpage
+
+% ================================================================
+% APPENDIX: CHANGELOG
+% ================================================================
+\section*{Appendix: Summary of Changes}
+
+\small
+\begin{longtable}{@{}p{1.6cm}p{2.8cm}p{3.2cm}p{5.5cm}@{}}
+\toprule
+\textbf{Comment} & \textbf{Status} & \textbf{Manuscript loc.} & \textbf{Summary of change} \\
+\midrule
+\endhead
+R2.1 & Text revision & Abstract & Added research background and challenge statement \\
+R2.2 & Text revision & Sec.~2.2, Discussion & Replaced ``optimal'' with ``practical scaffold'' \\
+R2.3 & Text revision & Results, Discussion & Softened ``understanding'' to ``conditioning response'' \\
+R2.4 & Figure revision & Figs.~1--2 & Regenerated with improved readability \\
+R2.5 & Text revision & Sec.~3.1 & Clarified CLOP accuracy as stage-specific proxy \\
+R2.6 & Analysis (A1) & Sec.~3.4, Table~S6 & Added KNN error taxonomy \\
+R2.7 & Analysis (A3) & Sec.~3.5, Table~S8 & Replaced ``biologically difficult'' with operational def. \\
+R2.8 & Analysis (A4) & Sec.~3.7 & Added variance/residual interpretation \\
+R2.9 & Experiment (B1) & Sec.~3.7, Table~S9 & Added variance baselines (Gaussian oracle + floor) \\
+R2.10 & Experiment (B4) & Sec.~3.12, Table~S12 & Added ablation$\to$pipeline bridge; partial-reversal caveat \\
+R2.11 & Analysis (A5) & Sec.~3.10, Discussion & Rare-cell mechanism: upstream under-dispersion \\
+Gaussian & Text revision & Discussion & Clarified different research questions \\
+R3.1 & \textbf{Deferred} & Discussion: Limits & Strict-OOD experiment scoped and honestly deferred \\
+R3.2 & Analysis (A2) & Sec.~3.4, Table~S7 & Organism-stratified evaluation \\
+R3.3 & Experiment (B3) & Sec.~3.10, Table~S11 & Augmentation sweep + forced-scarcity control \\
+R3.4 & Experiment (B2) & Sec.~3.12, Table~S10 & Formal ZCA whitening ablation \\
+\midrule
+\multicolumn{4}{@{}l}{\textit{Cross-cutting additions:}} \\
+--- & Lanes A+B+D & Discussion & Unified mechanistic narrative (6-point synthesis) \\
+--- & Lane D & Discussion, Suppl. & Encoder bottleneck diagnosis (scGPT-specific) \\
+--- & B3 extension & Sec.~3.10 & Forced-scarcity positive control \\
+--- & Encoder trio & Discussion & Cap-increase, HVG ablation, encoder comparison \\
+\bottomrule
+\end{longtable}
+
+\end{document}
