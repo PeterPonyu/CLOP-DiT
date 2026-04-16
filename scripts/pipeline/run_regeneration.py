@@ -152,6 +152,15 @@ def run_gene_gene_correlation_figure():
     )
 
 
+def run_lane_c_zero_shot_figure():
+    """Generate the Section 3.13 strict-OOD bar chart (R3.1 deliverable)."""
+    return _run_external_script(
+        "scripts/analysis/lane_c_zero_shot_figure.py",
+        "figS_lane_c_zero_shot.pdf",
+        "figS_lane_c_zero_shot.pdf",
+    )
+
+
 def run_conditioning_figures():
     """Regenerate Figs 11 + 13 from cached conditioning data (no model inference).
 
@@ -698,6 +707,11 @@ def main():
     gg = run_gene_gene_correlation_figure()
     if gg:
         saved.append(gg)
+
+    # 7b. Section 3.13 strict-OOD (Lane C, R3.1 deliverable)
+    lc = run_lane_c_zero_shot_figure()
+    if lc:
+        saved.append(lc)
 
     # 8. Python-composed supplementary appendix figures (replace LaTeX stitching)
     _supp_figs = [

@@ -13,6 +13,7 @@ from typing import Dict, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.ticker import MaxNLocator
 
 from .direct_layout import bind_figure_region
 from .style import COLORS, apply_style, save_with_vcd, add_panel_label
@@ -88,6 +89,8 @@ def plot_expression_diversity_panel(
                     color=COLORS["annotation_dark"])
     if annotation_tops:
         ax.set_ylim(0, max(max(real_vals + gen_vals) * 1.08, max(annotation_tops) * 1.10))
+    # Prune the upper y-tick so the label does not extend past the figure border.
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=4, prune='upper'))
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=10)
     ax.set_ylabel("Standard Deviation", fontsize=11)

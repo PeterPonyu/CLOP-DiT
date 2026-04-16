@@ -33,10 +33,11 @@ def main() -> None:
         "CENSUS_CEREBELLUM": "Cerebellum\n(brain atlas)",
         "CENSUS_TESTIS_FETAL": "Fetal gonadal\n(adrenal + Leydig)",
     }
+    # Wong 2011 colorblind-safe palette (deut/prot/trit safe)
     tissue_color = {
-        "CENSUS_KIDNEY": COLORS.get("generated", "#3E7BB6"),
-        "CENSUS_CEREBELLUM": COLORS.get("real", "#C46B4E"),
-        "CENSUS_TESTIS_FETAL": COLORS.get("baseline", "#6A8E7F"),
+        "CENSUS_KIDNEY": "#0072B2",          # blue
+        "CENSUS_CEREBELLUM": "#D55E00",      # vermillion
+        "CENSUS_TESTIS_FETAL": "#009E73",    # bluish-green
     }
 
     rows: list[tuple[str, str, float, float]] = []
@@ -106,8 +107,9 @@ def main() -> None:
 
     ax.set_xticks(xs)
     ax.set_xticklabels([abbrev.get(l, l) for l in labels],
-                       rotation=50, ha="right", fontsize=8.5)
-    ax.set_ylabel("Nearest-centroid accuracy (generated → real OOD type)")
+                       rotation=50, ha="right", fontsize=10)
+    ax.set_ylabel("Nearest-centroid accuracy (generated → real OOD type)",
+                  fontsize=11)
     ax.set_ylim(-0.02, 1.05)
     ax.set_yticks(np.arange(0.0, 1.01, 0.2))
     ax.axhline(0.0, color="#999", linewidth=0.5, zorder=1)
@@ -116,9 +118,9 @@ def main() -> None:
         fontsize=13, pad=10,
     )
 
-    # Value labels on top of bars
+    # Value labels on top of bars (bumped for 7-inch article render)
     for x, h in zip(xs, heights):
-        ax.text(x, h + 0.018, f"{h:.2f}", ha="center", va="bottom", fontsize=8)
+        ax.text(x, h + 0.018, f"{h:.2f}", ha="center", va="bottom", fontsize=10)
 
     # Legend above the plot area to avoid overlapping bars
     ax.legend(loc="upper left", bbox_to_anchor=(0.0, 1.12),
@@ -130,7 +132,7 @@ def main() -> None:
     plt.subplots_adjust(bottom=0.38, top=0.88, left=0.07, right=0.98)
 
     out_png = REPO / "results/figures/figS_lane_c_zero_shot.png"
-    save_with_vcd(fig, out_png)
+    save_with_vcd(fig, out_png, dpi=300)
     plt.close(fig)
     print(f"wrote {out_png}")
 
