@@ -64,8 +64,8 @@ except the single tag move at step 5.
 | 21 | `053017e` | **B3 forced-scarcity extension.** Augmentation helps when genuine scarcity headroom exists. |
 | 22 | `c2e9709` | Update docs with B3 forced-scarcity results and synthesis addendum. |
 | 23 | `a04b3ff` | **B4 CLOP→full bridge complete.** Stage-1 ablation rankings shown to be a partial-reversal proxy for end-to-end quality. |
-| 24 | `f0d7c96` | Sync revision ledger and experiment status pages to current branch evidence; prepare clean workspace for OMX team launch. |
-| 25 | `04dd71e` | Integrate Lane C feasibility / blocker plan and structural tests from the healthy Claude-worker team run. |
+| 24 | `f0d7c96` | Sync revision ledger and experiment status pages to current branch evidence; prepare clean workspace for the Lane C follow-up. |
+| 25 | `04dd71e` | Integrate Lane C feasibility / blocker plan and structural tests. |
 | 26 | `c4a9563` | Restore ledger consistency after architect review by aligning top-level Lane C scope, post-A3 gate wording, and structural tests. |
 
 Current `revision/major` HEAD: run `git rev-parse --short HEAD`.

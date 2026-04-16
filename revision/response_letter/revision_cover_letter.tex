@@ -53,76 +53,69 @@ Email: \href{mailto:fuzeyu09@gmail.com}{fuzeyu09@gmail.com}
 
 \noindent Dear Editors,
 
-Thank you for the opportunity to revise our manuscript. We are grateful to both reviewers for their
-thorough and constructive feedback, which has substantially improved the depth, rigour, and honesty
-of the paper. We submit herewith the revised manuscript together with a detailed point-by-point
-response letter addressing all reviewer comments.
+Thank you for the opportunity to revise our manuscript. The reviewers' comments helped us sharpen
+both the scientific framing and the supporting evidence, and we are submitting a substantially
+revised version together with a marked manuscript and a detailed point-by-point response.
 
 \section*{Summary of Revision Work}
 
-In response to the 15 reviewer comments (11 from Reviewer~\#2, 4 from Reviewer~\#3), we completed
-\textbf{eleven new analyses and experiments} organised into four revision lanes:
+In the revised manuscript, we addressed the reviewers' concerns in four main ways.
 
-\subsection*{Lane A\,---\,Post-hoc analyses (5 completed, no retraining required)}
+\subsection*{1. Clarified the scope and claims}
 
 \begin{itemize}
-  \item \textbf{A1} (Comment~2.6): Latent-space KNN error taxonomy over a 10-family biological
-    classification. Key finding: 49.2\% of mis-typings stay within the same biological family;
-    cross-lineage failures are the minority.
-  \item \textbf{A2} (Comment~3.2): Organism-stratified evaluation across 18 human-only and
-    8 mouse-only cell types. Key finding: no statistically significant species gap ($p > 0.14$
-    on all headline metrics).
-  \item \textbf{A3} (Comment~2.7): Abundance vs.\ fidelity analysis replacing the vague phrase
-    ``biologically difficult.'' Key finding: within-type heterogeneity ($\rho = -0.77$), not
-    training-set abundance ($\rho = +0.57$), is the dominant predictor of per-type fidelity.
-  \item \textbf{A4} (Comment~2.8): Gene-level variance quantification with explicit tolerance-band
-    analysis. Key finding: 85\% of genes within the $[0.5, 2.0]$ tolerance band;
-    within-type median $r_\text{var} = +0.85$.
-  \item \textbf{A5} (Comment~2.11): Rare-cell failure mechanism decomposed at latent and
-    expression scales. Key finding: upstream latent under-dispersion (50\% of real), not decoder
-    collapse; the scGPT decoder is already expansive.
+  \item We revised the abstract and discussion to state more clearly what CLOP-DiT is intended to
+    demonstrate: controllable structured-metadata-conditioned generation, rather than a
+    high-fidelity substitute for real single-cell data.
+  \item We softened wording that was too strong or too vague, including claims about template
+    optimality, ``understanding'' of biological semantics, and the interpretation of rare-cell
+    failure modes.
+  \item We made the distinction between stage-specific CLOP alignment metrics and end-to-end
+    generation quality more explicit.
 \end{itemize}
 
-\subsection*{Lane B\,---\,Retraining and bridge experiments (4 completed)}
+\subsection*{2. Added targeted analyses that directly answer reviewer concerns}
 
 \begin{itemize}
-  \item \textbf{B1} (Comment~2.9): Gaussian variance-recovery baselines at both latent and
-    expression scales, bracketing CLOP-DiT between a type-agnostic floor ($r_\text{var} = +0.014$)
-    and a type-aware oracle ($+0.813$).
-  \item \textbf{B2} (Comment~3.4): Formal ZCA whitening ablation (3 CLOP training runs). Key
-    finding: 1.0\% quality drop without ZCA; ZCA is a modest refinement, not a critical component.
-  \item \textbf{B3} (Comment~3.3): Augmentation strategy sweep ($2 \times 6 \times 4$ grid) plus
-    forced-scarcity positive control. Key finding: augmentation provides genuine value under
-    artificial scarcity (F1 improvement $+$0.11--$+$0.36) but not at the natural performance
-    ceiling.
-  \item \textbf{B4} (Comment~2.10): CLOP$\to$full-pipeline bridge with 3 DiT retrains. Key
-    finding: Stage-1 ablation rankings are only a partial-reversal proxy for end-to-end quality;
-    the cohesion loss is essential for inter-type geometric structure.
+  \item We added a latent-space KNN error taxonomy, showing that 49.2\% of mis-typings remain
+    within the same biological family rather than crossing into unrelated lineages.
+  \item We added organism-stratified evaluation and found no statistically significant
+    human-only vs.\ mouse-only difference on the headline metrics.
+  \item We replaced the vague phrase ``biologically difficult'' with a quantitative analysis
+    showing that within-type heterogeneity is a stronger predictor of fidelity than training-set
+    abundance.
+  \item We expanded the variance analysis so that residual plots and variance-ratio summaries are
+    interpreted explicitly rather than left implicit.
+  \item We added a rare-cell failure analysis showing that the main problem is latent
+    under-dispersion, not decoder collapse.
 \end{itemize}
 
-\subsection*{Lane D\,---\,Encoder comparison (completed)}
+\subsection*{3. Added targeted experiments where the reviewers asked for stronger evidence}
 
 \begin{itemize}
-  \item scGPT vs.\ PCA encoder comparison on 8 representative datasets. Key finding:
-    within-type L2 compression is scGPT-architecture-specific (7--15$\times$), not a
-    universal property of dimensionality reduction.
+  \item We added Gaussian variance-recovery baselines to contextualize the near-zero
+    cross-dataset $r_{\mathrm{var}}$ values.
+  \item We added a formal ZCA whitening ablation and found that ZCA provides a modest but
+    measurable benefit rather than a dramatic dependence.
+  \item We added an augmentation-strategy sweep with a forced-scarcity control, which supports a
+    narrower conclusion: simple mixing strategies do not rescue the current generator under the
+    natural regime, but augmentation becomes useful under genuine scarcity.
+  \item We added a bridge experiment from CLOP-stage ablations to end-to-end generation and found
+    that Stage-1 rankings should not be treated as reliable proxies for final generation quality.
 \end{itemize}
 
-\subsection*{Lane C\,---\,Zero-shot strict-OOD evaluation (completed)}
+\subsection*{4. Extended the manuscript beyond the original in-distribution evaluation}
 
 \begin{itemize}
-  \item \textbf{Lane C} (Comment~3.1): Ingested three strict-OOD tissues via the CellxGene
-    Census API---kidney (Tabula Sapiens, 3{,}406 post-QC cells), cerebellum (human brain
-    atlas, 19{,}981 cells, 7{,}367 Purkinje cells), and fetal gonadal tissue (3{,}342 cells,
-    294 Leydig $+$ 3{,}048 adrenal cortex type~I). Verified zero leakage across nine
-    training-metadata files, then ran a zero-shot evaluation of the production CLOP-DiT (no
-    retraining). Key finding: the model partially generalises with sharp program-dependent
-    variance. Nearest-real-centroid accuracy is $3$--$6\times$ random for structurally-familiar
-    novel types (adrenal cortex $= 0.875$, kidney epithelial $= 0.460$) but at-or-below random
-    for structurally-distinct novel types (Purkinje $= 0.00$, cerebellar interneurons $= 0.00$).
-    This is a mechanistic ceiling result identifying training-corpus coverage at the cell-program
-    level as the limiting factor, not architecture or decoder capacity. Reported in
-    Section~3.13 with per-cell-type figure and summary table (Table~S13).
+  \item We added a matched-dimensionality encoder comparison showing that the severe loss of
+    within-type variation is specific to the scGPT encoder, not a universal property of
+    dimensionality reduction.
+  \item We added a zero-shot strict-OOD evaluation on kidney, cerebellum, and fetal gonadal
+    tissue. The model generalizes partially to structurally familiar programs, but not to
+    structurally distinct neuronal programs, which makes the current limit clearer and more
+    defensible.
+  \item We regenerated Figures~1 and~2 to improve readability and adjusted crowded visual
+    elements in the results figures.
 \end{itemize}
 
 \section*{Key Manuscript Changes}
@@ -130,23 +123,25 @@ In response to the 15 reviewer comments (11 from Reviewer~\#2, 4 from Reviewer~\
 \begin{itemize}
   \item \textbf{Abstract} (Comment~2.1): Added research-background framing and challenge
     statement for label-conditioned generation.
-  \item \textbf{Results}: Added KNN error taxonomy (Table~S6), organism-stratified evaluation
-    (Table~S7), abundance--fidelity correlation analysis, gene-level variance baselines
-    (Table~S9), expanded rare-cell failure mechanism, and augmentation strategy sweep
-    (Table~S11).
-  \item \textbf{Ablation section}: Added formal ZCA ablation table (Table~S10) and
-    CLOP$\to$full-pipeline bridge results (Table~S12) with explicit partial-reversal caveat.
-  \item \textbf{Discussion}: New unified mechanistic narrative (latent-stage under-dispersion
-    is the bottleneck), encoder bottleneck diagnosis (Lane~D), Gaussian benchmark framing
-    clarification, and updated strict-OOD paragraph reflecting the completed Lane~C zero-shot
-    evaluation.
+  \item \textbf{Results} (Section~3.4): Integrated KNN error taxonomy, organism-stratified
+    evaluation, and abundance--fidelity correlation analysis into the Per-Type Generation
+    Quality section.
+  \item \textbf{Gene-level fidelity} (Section~3.5): Added variance and residual
+    interpretation and embedded Gaussian variance-recovery baselines directly in the text.
+  \item \textbf{Ablation section} (Section~3.10, Table~\ref{tab:zca-ablation}): Added formal
+    ZCA ablation table and summarised the CLOP$\to$full-pipeline bridge experiment with
+    an explicit partial-reversal caveat.
+  \item \textbf{Rare-cell augmentation} (Section~3.11): Expanded failure-mechanism
+    discussion and included the augmentation strategy sweep with forced-scarcity control.
   \item \textbf{New Results Section~3.13} \emph{Strict-OOD Generalization (Zero-Shot)}:
     Per-tissue and per-cell-type zero-shot evaluation on kidney, cerebellum, and fetal
-    gonadal tissue; new bar-chart figure and summary table.
+    gonadal tissue (Figure~\ref{fig:strict-ood} and Table~\ref{tab:strict-ood}).
+  \item \textbf{Discussion}: New unified mechanistic narrative (latent-stage under-dispersion
+    is the bottleneck), encoder bottleneck diagnosis, Gaussian benchmark framing
+    clarification, and an updated strict-OOD paragraph reflecting the new zero-shot
+    evaluation.
   \item \textbf{Figures~1--2} (Comment~2.4): Regenerated with improved readability---larger
     fonts, wider component spacing, increased background contrast, and consistent line weights.
-  \item \textbf{Supplementary Tables S6--S13}: Eight new tables covering all experimental
-    results across Lanes A, B, and D.
   \item \textbf{Language}: Replaced vague terms (``biologically difficult,''
     ``understands biological semantics,'' ``optimal five-field template'') with precise
     operational definitions throughout.
@@ -156,18 +151,17 @@ In response to the 15 reviewer comments (11 from Reviewer~\#2, 4 from Reviewer~\
 
 \begin{enumerate}
   \item \textbf{Revised manuscript}
+  \item \textbf{Marked manuscript}
   \item \textbf{Point-by-point response letter} --- detailed responses to all 15 reviewer
     comments with original reviewer text quoted, quantitative evidence, and manuscript
     cross-references
   \item \textbf{This revision cover letter}
 \end{enumerate}
 
-All experimental scripts, result JSONs, and reproducibility artifacts are available in the
-project repository at \url{https://github.com/PeterPonyu/CLOP-DiT}.
-
 \vspace{0.8em}
-\noindent We appreciate the editors' and reviewers' continued engagement and look forward
-to their feedback.
+\noindent We believe the revised submission addresses the reviewers' concerns directly and presents
+the contribution more precisely and more honestly than the original version. We appreciate the
+editors' and reviewers' continued consideration.
 
 \vspace{0.8em}
 \noindent Sincerely,

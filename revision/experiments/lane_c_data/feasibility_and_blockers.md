@@ -1,6 +1,5 @@
 # Lane C — Feasibility, data plan, and blocker-to-action synthesis
 
-**Author:** worker-1 (team clop-dit-revision-next-step-ex)
 **Ran on:** 2026-04-15
 **Upstream inputs (read-only):**
 - `revision/experiments/lane_c_data/README.md` (scope + evaluation contract)

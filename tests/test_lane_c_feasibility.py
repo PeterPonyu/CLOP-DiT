@@ -1,6 +1,6 @@
 """Structural tests for Lane C feasibility / data plan and blocker-to-action synthesis.
 
-Scope (task-2, team clop-dit-revision-next-step-ex):
+Scope:
 - Verify that the Lane C feasibility note codifies the priority-ordered data
   additions, the five-slice evaluation contract, and the retrain-budget
   blocker called out in `revision/README.md` and `revision/REVISION_LOG.md`.
@@ -8,7 +8,7 @@ Scope (task-2, team clop-dit-revision-next-step-ex):
   to a concrete next action with a decision gate.
 
 Tests skip when the artifact file is absent (so the suite stays green
-while the implementing worker is still drafting), but fail loudly if an
+while the artifact is still being drafted), but fail loudly if an
 artifact exists but does not meet the documented contract.
 """
 from __future__ import annotations
@@ -247,12 +247,12 @@ class TestLaneCLimitationsFallback:
 
 
 # ---------------------------------------------------------------------------
-# Feasibility / data plan artifact (produced by worker-1)
+# Feasibility / data plan artifact
 # ---------------------------------------------------------------------------
 
 
 class TestLaneCFeasibilityPlan:
-    """Validate the feasibility / data plan document once worker-1 commits it."""
+    """Validate the feasibility / data plan document once it is committed."""
 
     @pytest.fixture
     def plan(self) -> tuple[Path, str]:
