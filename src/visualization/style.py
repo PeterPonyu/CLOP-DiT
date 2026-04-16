@@ -569,7 +569,9 @@ def save_with_vcd(
             if str(_scripts) not in sys.path:
                 sys.path.insert(0, str(_scripts))
             from vcd import detect_all_conflicts, count_by_severity_level
-            issues = detect_all_conflicts(fig, label=basename, verbose=False)
+            # US-307: honor adaptive profile selection via env var
+            _profile = os.environ.get("CLOPDIT_VCD_PROFILE", "full")
+            issues = detect_all_conflicts(fig, label=basename, verbose=False, profile=_profile)
             warnings_only, info_only, issue_counts = _summarize_vcd_issues(issues)
             live_vcd_payload["warnings"] = [_format_vcd_issue(x) for x in warnings_only]
             live_vcd_payload["info"] = [_format_vcd_issue(x) for x in info_only]

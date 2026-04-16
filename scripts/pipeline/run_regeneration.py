@@ -638,11 +638,19 @@ def main():
     parser.add_argument("--build-pdf", action="store_true", help="Rebuild LaTeX article PDF after figures")
     parser.add_argument("--vs-baseline", action="store_true", help="Diff this run's VCD against results/vcd_baseline.json; exit non-zero on new CRITICAL")
     parser.add_argument("--write-baseline", action="store_true", help="Write results/vcd_baseline.json from this run (use after a clean run)")
+    parser.add_argument("--adaptive", action="store_true", help="Run the VCD sweep under complexity-routed profiles (SIMPLE/COMPOUND/COMPOSED)")
     args = parser.parse_args()
 
     t0 = time.time()
     vcd_enabled = (not args.no_vcd) and _env_flag("CLOPDIT_ENABLE_VCD", True)
     os.environ["CLOPDIT_ENABLE_VCD"] = "1" if vcd_enabled else "0"
+    # US-307: adaptive profile routing — classify each figure and run only
+    # the relevant checks. The live save hook reads this env var.
+    if args.adaptive:
+        os.environ["CLOPDIT_VCD_PROFILE"] = "auto"
+        log.info("Adaptive VCD profile enabled (SIMPLE/COMPOUND/COMPOSED routing)")
+    else:
+        os.environ.setdefault("CLOPDIT_VCD_PROFILE", "full")
     # Force headless rendering in all subprocesses to prevent figures from
     # popping up in an interactive viewer.
     os.environ["MPLBACKEND"] = "Agg"
