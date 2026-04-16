@@ -82,8 +82,22 @@ with explicit quoted numbers in-line.
 > greater than two-fold. The cross-dataset held-out evaluation, which
 > contrasts generation against unseen GEO studies, remains the
 > stricter test and continues to show variance collapse (median ratio
-> 0.01 – 0.02), motivating the strict-OOD experiments scheduled for
-> Lane C.
+> 0.01 – 0.02), motivating the strict-OOD experiments scoped for
+> Lane C. In the current revision window, however, the full Lane-C
+> data-expansion path has been formally closed and the narrowed
+> strict-OOD-only fallback remains conditional rather than active:
+> the staffing/readiness gate is still unmet (no committed
+> `<= 18 engineer-days` confirmation, only provisional owner slots
+> rather than an approved staffing decision, and no
+> populated / owned revision-side execution pack, even though the
+> repo now contains technical ingest/leakage/label-bridge scaffolding
+> plus staffing-plan and gate-validator templates).
+> We therefore treat
+> strict-OOD retraining as an explicit future-work item rather than
+> as an experiment we can imply is already underway. A current
+> baseline-overlap audit also narrows the cleanest first-wave
+> strict-OOD candidates to kidney, testis, and cerebellum; airway- and
+> merkel-related options still need extra overlap review.
 
 ---
 
@@ -183,9 +197,11 @@ and `revision/experiments/lane_b_retrain/b3_mixing_sweep/`.
 > identifies as the dominant predictor of per-type fidelity.
 > Consequently, we do not observe the species bias suggested by the
 > imbalance in the dataset count (59 human vs 21 mouse); the shared
-> CLOP space generalises across species at the type level, and the
-> cell-level strict stratification remains scoped for Lane C when
-> targeted mouse data expansion is complete.
+> CLOP space generalises across species at the type level. A stronger
+> cell-level / held-out-tissue stratification remains the open Lane-C
+> future-work target, but because the strict-OOD staffing gate is not
+> yet satisfied, we will describe that experiment as explicitly
+> deferred rather than silently pending.
 
 ---
 

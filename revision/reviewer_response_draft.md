@@ -138,7 +138,10 @@ We already provide a downstream classifier confusion matrix in the joint express
 **Recommended additional work.**  
 This is best handled as an additional analysis on the existing evaluation outputs and does not require retraining.
 
-**Status.** **Additional analysis recommended**
+**Revision update.**  
+This analysis is now complete in the current revision through Lane A1. We added a latent-space KNN error taxonomy over all 69 cell types and found that 49.2% of all KNN mis-typings remain within the same biological family, with 9 of the top-15 most-confused type pairs also staying within-family. This lets us answer the reviewer’s core concern directly: many failures are biologically local rather than catastrophic cross-lineage confusions.
+
+**Status.** **Additional analysis completed**
 
 ---
 
@@ -160,7 +163,10 @@ In the revision, we will narrow the wording. Rather than claiming failure is con
 **Recommended additional work.**  
 A modest additional analysis on existing per-type outputs would strengthen this section: e.g., centroid-cosine vs. cell count, low-vs-high abundance group comparison, or abundance-stratified confidence intervals.
 
-**Status.** **Additional analysis recommended**
+**Revision update.**  
+This analysis is now complete in the current revision through Lane A3. We quantified both abundance-linked and heterogeneity-linked effects and found that `log10(training_count)` is only a weak or even misleading proxy, while `real_intra_cos` is the dominant predictor of per-type fidelity. We therefore no longer need to rely on the vague phrase “biologically difficult”; the revised wording can now refer specifically to broader intrinsic heterogeneity and lower-abundance subsets where appropriate.
+
+**Status.** **Additional analysis completed**
 
 ---
 
@@ -202,7 +208,10 @@ We agree, however, that the manuscript should make this distinction explicit and
 **Recommended additional work.**  
 We recommend adding gene-wise variance-correlation values for at least the unconditional DiT control and the Gaussian baseline on the same five-dataset validation suite.
 
-**Status.** **Additional analysis recommended**
+**Revision update.**  
+This analysis is now complete in the current revision through Lane B1. We added both latent-scale and decoded-expression baselines, including a type-agnostic Gaussian floor and a type-aware Gaussian oracle. The resulting comparison makes the DivR vs. `r_var` distinction much clearer: aggregate spread can look roughly right while per-gene variance allocation is still wrong.
+
+**Status.** **Additional analysis completed**
 
 ---
 
@@ -225,7 +234,10 @@ In the revision, we will therefore narrow the claim. We will explicitly frame th
 **Recommended additional work.**  
 If feasible, add a small bridge experiment evaluating one or two representative CLOP ablations downstream (e.g., KNN / steering / DivR for selected variants). If this is not feasible, the safer alternative is to keep the section but narrow its scope explicitly.
 
-**Status.** **Additional experiment recommended**
+**Revision update.**  
+This bridge is now partially complete in the current revision through Lane B4. We added a CLOP-to-full-pipeline bridge experiment showing that stage-1 CLOP ablation rankings are only a **partial-reversal proxy** for end-to-end quality rather than a reliable direct predictor. This lets us answer the reviewer more honestly: the ablation table retains local mechanistic value, but its end-to-end transferability is limited and explicitly bounded.
+
+**Status.** **Additional experiment completed**
 
 ---
 
@@ -246,7 +258,10 @@ This interpretation is consistent with the broader evidence in the manuscript: t
 **Recommended additional work.**  
 We recommend a small follow-up analysis comparing rare-type dispersion in latent space and expression space (for example, nearest-neighbor spread, within-type variance, or rare-type centroid shift), which would help separate the roles of latent under-dispersion and decoder compression.
 
-**Status.** **Additional analysis recommended**
+**Revision update.**  
+This analysis is now complete in the current revision through Lane A5. The new latent-vs-expression variance comparison shows that the rare-cell augmentation failure is primarily an **upstream latent under-dispersion** problem: the generator compresses within-type spread, while the frozen decoder is already expansive rather than the dominant bottleneck.
+
+**Status.** **Additional analysis completed**
 
 ---
 
@@ -283,10 +298,15 @@ We do already have preliminary OOD prompt tests in the supplementary material, i
 
 In the revision, we will either (i) add a stricter dataset-based OOD experiment if feasible, using a genuinely unseen tissue/cell-type context from public data, or (ii) more clearly label the current OOD prompt tests as exploratory failure analysis rather than robust OOD generalization.
 
+We also want to be explicit about the current execution gate around that additional experiment. We have now converted the originally broad Lane-C plan into a narrower strict-OOD-only path and assessed whether it can be started honestly in the present revision window. The result is that the full lane remains no-go and the narrowed path is also not yet approved, because the required staffing/readiness conditions are still missing (no committed `<= 18 engineer-days` staffing confirmation, only provisional owner slots rather than an approved staffing decision, and no populated / owned revision-side execution pack, even though the repo now contains technical scaffolding for the ingest directory, leakage checker, label-bridge templates, staffing-plan template, and machine-checkable gate validators). If those conditions cannot be satisfied in time, we will state this limitation explicitly rather than implying that a strict-OOD retrain is imminent.
+
+We can nevertheless be more concrete than before about the *shape* of a future strict-OOD experiment. A new baseline-overlap audit against the current corpus suggests that **kidney, testis, and cerebellum** are the cleanest first-wave strict-OOD candidates, whereas intestine, distal-airway, and merkel-like proposals require additional overlap review because related contexts already appear in the current baseline text metadata.
+
 **Planned manuscript revision.**
 
 - Clarify in the main text that the current held-out split is interpolation, not strict OOD.
 - Reframe the existing OOD prompt tests as exploratory and preliminary.
+- If the narrowed strict-OOD lane remains closed, add an explicit limitations sentence explaining that the experiment was scoped, costed, and honestly deferred rather than silently omitted.
 
 **Recommended additional work.**  
 A strict OOD dataset-based experiment is strongly recommended and would substantially strengthen the paper.
@@ -312,7 +332,10 @@ We do not want to over-interpret the pooled metrics as evidence of cross-species
 **Recommended additional work.**  
 A species-stratified evaluation is strongly recommended. This should be feasible as an additional analysis on existing metadata and outputs, without changing the model.
 
-**Status.** **Additional analysis recommended**
+**Revision update.**  
+This analysis is now complete in the current revision through Lane A2. We now have organism-stratified evaluation showing no statistically significant human-only vs. mouse-only gap at the type level, while also being careful not to over-claim that this settles the stricter cell-level / strict-OOD version of the question.
+
+**Status.** **Additional analysis completed**
 
 ---
 
@@ -333,7 +356,10 @@ In the revision, we will narrow the wording accordingly. If feasible, we will ad
 **Recommended additional work.**  
 A hybrid augmentation experiment (e.g., CLOP-DiT + random oversampling / SMOTE, with ratio sweep) would materially strengthen the paper.
 
-**Status.** **Additional experiment recommended**
+**Revision update.**  
+This experiment is now complete in the current revision through Lane B3. We ran a structured strategy sweep across random oversampling, SMOTE, CLOP-DiT-only, and hybrid variants over multiple ratios and found that no tested strategy improves rare-class F1 over the no-augmentation baseline. This does not prove that augmentation is universally ineffective, but it does let us make the narrower, evidence-backed claim that naive or hybrid mixing strategies did not rescue the current generator’s rare-cell shortcoming.
+
+**Status.** **Additional experiment completed**
 
 ---
 
@@ -354,21 +380,20 @@ We will therefore revise this section in one of two ways. If feasible, we will a
 **Recommended additional work.**  
 A formal preprocessing ablation (ZCA vs. mean-centering vs. LayerNorm-only vs. no-whitening) is recommended and would directly address this concern.
 
-**Status.** **Additional experiment recommended**
+**Revision update.**  
+This ablation is now complete in the current revision through Lane B2. We added a formal preprocessing comparison and can now support the whitening discussion with repo-level evidence instead of only internal sensitivity checks.
+
+**Status.** **Additional experiment completed**
 
 ---
 
 ## Suggested Priority Order for Extra Work
 
-If revision time is limited, the following additions would likely give the largest rebuttal value per unit effort:
+If revision time is limited, the remaining additions that would likely matter most are now:
 
-1. **Strict OOD evaluation** (Reviewer 3.1) — highest impact.
-2. **Organism-stratified evaluation** (Reviewer 3.2) — likely feasible from existing outputs.
-3. **KNN error taxonomy / confusion analysis** (Reviewer 2.6) — high interpretive value with modest cost.
-4. **Baseline gene-wise variance correlation** for Gaussian and unconditional controls (Reviewer 2.9) — directly addresses a central metric concern.
-5. **Rare-cell hybrid augmentation baseline** (Reviewer 3.3) — strengthens application discussion.
-6. **Formal whitening ablation** (Reviewer 3.4) — important, though potentially more time-consuming if reruns are needed.
-7. **Bridge ablation from CLOP to full pipeline** (Reviewer 2.10) — useful but can be replaced by stricter wording if time is constrained.
+1. **Strict OOD evaluation** (Reviewer 3.1) — still the single biggest unresolved experiment, but currently blocked by the explicit Lane-C staffing/readiness gate.
+2. **Figure readability cleanup** (Reviewer 2.4) — no longer a science blocker, but still important for reviewer trust and manuscript clarity.
+3. **Full manuscript / rebuttal integration** — many of the strongest A/B/D results now exist and should be woven into the response letter and revised manuscript text more aggressively.
 
 ---
 
