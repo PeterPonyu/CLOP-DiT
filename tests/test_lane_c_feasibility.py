@@ -439,7 +439,7 @@ class TestRevisionLogSync:
         )
 
     def test_revision_log_records_failed_staffing_gate(self, log_text: str) -> None:
-        assert "staffing gate assessed" in log_text
+        assert "staffing gate assessment" in log_text
         assert "no-go retained" in log_text
         assert "check_strict_ood.py" in log_text
 
