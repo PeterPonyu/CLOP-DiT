@@ -148,8 +148,10 @@ FONT_LEGEND = 11
 # Dense multi-panel figures where 11pt legends would crowd the layout
 FONT_LEGEND_DENSE = 10
 # Architecture diagram (Fig 1) — diagram-specific labels (min 5.5pt per VCD)
-FONT_ARCH_LABEL = 11
-FONT_ARCH_SUBLABEL = 10
+FONT_ARCH_LABEL = 12
+FONT_ARCH_SUBLABEL = 11
+FONT_ARCH_TITLE = 13
+FONT_ARCH_LEGEND = 11
 # Centralized font sizes for publication figures
 FONT_SUPTITLE = 15
 FONT_TITLE = 14

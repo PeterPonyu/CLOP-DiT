@@ -112,7 +112,7 @@ def draw_box(ax, xy, w, h, label, sublabel=None, facecolor=C_WHITE,
     return box
 
 
-def draw_arrow(ax, start, end, color=C_GREY, linewidth=1.2,
+def draw_arrow(ax, start, end, color=C_GREY, linewidth=1.4,
                style="->", connectionstyle="arc3,rad=0", zorder=2,
                shrinkA=2, shrinkB=2):
     """Draw an arrow between two points."""
@@ -164,31 +164,31 @@ def create_architecture_figure(output_dir=None):
         from src.utils.paths import FIG_DIR
         output_dir = Path(FIG_DIR)
     output_dir = Path(output_dir)
-    fig = plt.figure(figsize=(10.0, 3.6))
+    fig = plt.figure(figsize=(10.0, 4.2))
     ax = bind_figure_region(fig, (0.01, 0.02, 0.99, 0.97)).add_axes(fig)
     ax.set_xlim(-0.20, 7.65)
-    ax.set_ylim(-0.18, 3.30)
+    ax.set_ylim(-0.18, 3.80)
     ax.axis("off")
     ax.set_xticks([])
     ax.set_yticks([])
     fig.patch.set_facecolor(C_WHITE)
 
-    BW = 0.78
-    BH = 0.38
+    BW = 0.85
+    BH = 0.44
     SBW = 0.55
     SBH = 0.32
-    gap = 0.12
+    gap = 0.15
 
     # Stage backgrounds
     draw_stage_bg(ax, (-0.05, -0.05), 3.55, 3.00,
                   "Stage 1: CLOP Alignment",
-                  C_TEXT_DARK, alpha=0.15, label_color="black")
+                  C_TEXT_DARK, alpha=0.20, label_color="black")
     draw_stage_bg(ax, (3.60, -0.05), 2.48, 3.00,
                   "Stage 2: DiT Generation",
-                  C_GEN_DARK, alpha=0.15, label_color="black")
+                  C_GEN_DARK, alpha=0.20, label_color="black")
     draw_stage_bg(ax, (6.18, -0.05), 1.27, 3.00,
                   "Stage 3: Decoding",
-                  C_DECODE_DARK, alpha=0.15, label_color="black")
+                  C_DECODE_DARK, alpha=0.20, label_color="black")
 
     # Panel labels (data coordinates — track stage backgrounds regardless of bind_figure_region)
     ax.text(-0.05, 3.10, "(a)", ha="left", va="bottom", fontsize=14, fontweight="bold", color="black",
@@ -312,9 +312,9 @@ def create_architecture_figure(output_dir=None):
              r"$z_0$", sublabel="512-d",
              facecolor=C_GEN_BOX, edgecolor=C_GEN_DARK, fontsize=FONT_ARCH_SUBLABEL,
              textcolor="black")
-    ax.text(dit_x0 + z0_w / 2, dit_y_mid + SBH + 0.03,
+    ax.text(dit_x0 + z0_w / 2, dit_y_mid - 0.08,
             r"$\sim\mathcal{N}(0,I)$",
-            ha="center", va="bottom", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=5)
+            ha="center", va="top", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=5)
 
     dit_bx = dit_x0 + z0_w + 0.12
     dit_bw = 1.00

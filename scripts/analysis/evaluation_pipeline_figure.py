@@ -27,7 +27,7 @@ FIG_DIR = ROOT / "results" / "figures"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def _rounded_box(ax, xy, w, h, text, fc="#E8F4FD", ec="#2C3E50", fontsize=12,
+def _rounded_box(ax, xy, w, h, text, fc="#E8F4FD", ec="#2C3E50", fontsize=13,
                  lw=1.2, text_color="#2C3E50", bold=False):
     """Draw a rounded rectangle with centered text."""
     box = mpatches.FancyBboxPatch(
@@ -41,7 +41,7 @@ def _rounded_box(ax, xy, w, h, text, fc="#E8F4FD", ec="#2C3E50", fontsize=12,
     return box
 
 
-def _arrow(ax, start, end, color="#555", lw=1.8, style="-|>"):
+def _arrow(ax, start, end, color="#555", lw=2.0, style="-|>"):
     ax.annotate("", xy=end, xytext=start,
                 arrowprops=dict(arrowstyle=style + ",head_length=0.6,head_width=0.3",
                                 color=color, lw=lw),
@@ -50,7 +50,7 @@ def _arrow(ax, start, end, color="#555", lw=1.8, style="-|>"):
 
 def make_figure():
     apply_style()
-    fig = plt.figure(figsize=(14.4, 7.6))
+    fig = plt.figure(figsize=(14.4, 8.2))
     ax = bind_figure_region(fig, (0.03, 0.04, 0.97, 0.97)).add_axes(fig)
     ax.set_xlim(-0.12, 10.36)
     ax.set_ylim(-0.22, 7.18)
@@ -62,11 +62,11 @@ def make_figure():
     # fig01b (14.4" wide) is scaled to 0.95\textwidth while fig01a (10.0") is scaled to
     # \textwidth, so (d) needs a larger fontsize (~21pt) to match (a)–(c) at 14pt after
     # LaTeX scaling.
-    ax.text(-0.05, 6.96, "(d)", fontsize=21, fontweight="bold", color="black",
+    ax.text(-0.05, 6.96, "(d)", fontsize=15, fontweight="bold", color="black",
             ha="left", va="center", zorder=10)
 
     # Title
-    ax.text(5.0, 6.96, "Evaluation Pipeline Schematic", fontsize=16,
+    ax.text(5.0, 6.96, "Evaluation Pipeline Schematic", fontsize=17,
             ha="center", va="center", weight="bold", color="#2C3E50")
 
     # ── Row 1: Data Sources ──
@@ -202,7 +202,7 @@ def make_figure():
                                      boxstyle="round,pad=0.03",
                                      facecolor=color, edgecolor="#666", lw=0.5)
         ax.add_patch(p)
-        ax.text(x + 0.38, -0.055, label, fontsize=11.5, va="center", color="#333")
+        ax.text(x + 0.38, -0.055, label, fontsize=12, va="center", color="#333")
 
     out_png = FIG_DIR / "fig01b_evaluation_pipeline.png"
     from src.visualization.style import save_with_vcd
