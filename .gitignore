@@ -29,7 +29,15 @@ build/
 *.pickle
 
 # === Data (large files) ===
-data/
+data/*
+# Lane C strict-OOD provenance: tracked text/CSV metadata, h5ad stays ignored
+!data/processed_h5ad_revision/
+data/processed_h5ad_revision/*
+!data/processed_h5ad_revision/MANIFEST.csv
+!data/processed_h5ad_revision/label_bridge.csv
+!data/processed_h5ad_revision/README.md
+!data/processed_h5ad_revision/revision_candidate_metadata_raw.json
+!data/processed_h5ad_revision/.gitignore
 
 # === Model weights ===
 models/scgpt_human/
