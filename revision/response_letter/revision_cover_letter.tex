@@ -61,7 +61,7 @@ response letter addressing all reviewer comments.
 \section*{Summary of Revision Work}
 
 In response to the 15 reviewer comments (11 from Reviewer~\#2, 4 from Reviewer~\#3), we completed
-\textbf{ten new analyses and experiments} organised into four revision lanes:
+\textbf{eleven new analyses and experiments} organised into four revision lanes:
 
 \subsection*{Lane A\,---\,Post-hoc analyses (5 completed, no retraining required)}
 
@@ -108,16 +108,21 @@ In response to the 15 reviewer comments (11 from Reviewer~\#2, 4 from Reviewer~\
     universal property of dimensionality reduction.
 \end{itemize}
 
-\subsection*{Lane C\,---\,Strict OOD data expansion (formally deferred)}
+\subsection*{Lane C\,---\,Zero-shot strict-OOD evaluation (completed)}
 
 \begin{itemize}
-  \item We formally assessed the feasibility of the strict-OOD experiment requested by
-    Reviewer~\#3 (Comment~3.1) through an explicit go/no-go gate. The full lane was rejected
-    as infeasible within the current revision window, and the narrowed strict-OOD-only path
-    also could not be started due to unmet staffing/readiness conditions. We treat this as an
-    explicit future-work item and state the limitation honestly in the revised manuscript.
-    The current evidence base (A2, A3, B3, B4) narrows the remaining gap to a clearly scoped
-    strict-OOD generalisation question.
+  \item \textbf{Lane C} (Comment~3.1): Ingested three strict-OOD tissues via the CellxGene
+    Census API---kidney (Tabula Sapiens, 3{,}406 post-QC cells), cerebellum (human brain
+    atlas, 19{,}981 cells, 7{,}367 Purkinje cells), and fetal gonadal tissue (3{,}342 cells,
+    294 Leydig $+$ 3{,}048 adrenal cortex type~I). Verified zero leakage across nine
+    training-metadata files, then ran a zero-shot evaluation of the production CLOP-DiT (no
+    retraining). Key finding: the model partially generalises with sharp program-dependent
+    variance. Nearest-real-centroid accuracy is $3$--$6\times$ random for structurally-familiar
+    novel types (adrenal cortex $= 0.875$, kidney epithelial $= 0.460$) but at-or-below random
+    for structurally-distinct novel types (Purkinje $= 0.00$, cerebellar interneurons $= 0.00$).
+    This is a mechanistic ceiling result identifying training-corpus coverage at the cell-program
+    level as the limiting factor, not architecture or decoder capacity. Reported in
+    Section~3.13 with per-cell-type figure and summary table (Table~S13).
 \end{itemize}
 
 \section*{Key Manuscript Changes}
@@ -133,7 +138,11 @@ In response to the 15 reviewer comments (11 from Reviewer~\#2, 4 from Reviewer~\
     CLOP$\to$full-pipeline bridge results (Table~S12) with explicit partial-reversal caveat.
   \item \textbf{Discussion}: New unified mechanistic narrative (latent-stage under-dispersion
     is the bottleneck), encoder bottleneck diagnosis (Lane~D), Gaussian benchmark framing
-    clarification, and explicit Lane-C limitation paragraph.
+    clarification, and updated strict-OOD paragraph reflecting the completed Lane~C zero-shot
+    evaluation.
+  \item \textbf{New Results Section~3.13} \emph{Strict-OOD Generalization (Zero-Shot)}:
+    Per-tissue and per-cell-type zero-shot evaluation on kidney, cerebellum, and fetal
+    gonadal tissue; new bar-chart figure and summary table.
   \item \textbf{Figures~1--2} (Comment~2.4): Regenerated with improved readability---larger
     fonts, wider component spacing, increased background contrast, and consistent line weights.
   \item \textbf{Supplementary Tables S6--S13}: Eight new tables covering all experimental
