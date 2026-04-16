@@ -29,7 +29,7 @@ states whether we ship this revision round or hold.
 | **R3.3** | Rare-cell mixing strategies | **Additional experiment completed (Lane B3 + forced-scarcity)** — natural scarcity is ceiling-driven; forced-scarcity positive control shows F1 0.50 → 0.78–0.87 with oversampling and hybrid CLOP-DiT at 10× | `REVISION_LOG.md` §12 · `revision/experiments/lane_b_retrain/b3_mixing_sweep/` |
 | **R3.4** | ZCA preprocessing ablation | **Additional experiment completed (Lane B2)** — formal 3-way comparison (ZCA vs center+L2 vs raw); ZCA ~1% quality improvement | `REVISION_LOG.md` §9 · `revision/experiments/zca_ablation/` |
 
-**Tally:** 15/16 concerns closed with new evidence or text-only revision; 1/16 (R3.1) explicitly bounded as limitations with four independent supporting experiments.
+**Tally:** 15/16 concerns closed this round (9 with new experimental evidence: R2.6/2.7/2.9/2.10/2.11/3.2/3.3/3.4 + Lane D woven into R2.11; 6 with text revision supported by existing ablations or data: R2.1/2.2/2.3/2.4/2.5/2.8 + Gaussian addendum). 1/16 (R3.1) explicitly bounded as limitations with four independent supporting experiments (A2/A3/B3-forced/B4).
 
 ## Ship verdict
 
@@ -37,7 +37,7 @@ states whether we ship this revision round or hold.
 
 Rationale:
 
-1. **14/16 reviewer concerns** have either new experimental evidence (A1–A5, B1–B4, Lane D) or targeted text revision with corroborating ablation evidence already in the manuscript (R2.2, R2.8).
+1. **15/16 reviewer concerns** closed this round — 9 with new experimental evidence (Lane A1–A5, B1–B4, Lane D) and 6 with targeted text revision whose claims are backed by existing ablation evidence already in the manuscript (notably R2.2 and R2.8).
 2. **R2.10** (CLOP ablation study, the most experimentally expensive reviewer ask after R3.1) delivered a two-pronged response: B2 formal ZCA ablation + B4 Stage-1→full-pipeline bridge. The B4 PARTIAL_REVERSAL verdict actually sharpens the manuscript's self-awareness — we can now make the narrower, defensible claim instead of over-generalising.
 3. **R3.1** (strict OOD) is the only remaining gap. It is (a) explicitly bounded by a documented staffing-gate failure rather than silently omitted, (b) technically scaffolded (kidney/testis/cerebellum shortlist, leakage checker, staffing-gate validator, all committed), and (c) flanked by four independent experiments (A2, A3, B3-forced, B4) that reduce what strict-OOD can uniquely claim. The limitations fallback paragraph is paste-ready in both manuscript and response-letter forms.
 4. **Infrastructure is clean:** zero uncommitted changes, rebuttal PDF builds (12 pages, 297KB), 52 Lane-C tests pass, all figure-generation scripts bumped for R2.4 readability. Baseline SHA-256 manifest still valid against frozen `pre-revision-2026-04-15` tag.
