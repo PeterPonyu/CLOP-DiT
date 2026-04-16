@@ -119,10 +119,10 @@ def plot_clop_training(
     ax_a1.set_ylabel("Contrastive Loss", fontsize=11)
     ax_a1.set_title("Loss Convergence", fontsize=12)
     ax_a1.legend(loc="upper right", fontsize=FONT_LEGEND_DENSE, frameon=False)
-    ax_a1.set_xlim(0, max(epochs) * 1.08)
-    ax_a1.locator_params(axis='x', nbins=3)
+    ax_a1.set_xlim(0, max(epochs) * 1.05)
+    ax_a1.xaxis.set_major_locator(MaxNLocator(nbins=3, prune='upper'))
     ax_a1.yaxis.set_major_locator(MaxNLocator(nbins=4, prune='both'))
-    add_panel_label(ax_a1, 'a', x=-0.10, y=1.08)
+    add_panel_label(ax_a1, 'a', x=-0.10, y=1.12)
 
     # ── A2: Inter-type separation (replaces trivially flat temperature panel) ──
     ax_a2 = top_right.add_axes(fig)
@@ -138,9 +138,9 @@ def plot_clop_training(
                    ha="center", va="center", fontsize=FONT_LABEL, color=COLORS["neutral"])
         ax_a2.set_title("Temperature Config", fontsize=FONT_TITLE)
     ax_a2.set_xlabel("Epoch", fontsize=FONT_LABEL)
-    ax_a2.set_xlim(0, max(epochs) * 1.08)
-    ax_a2.locator_params(axis='x', nbins=4)
-    add_panel_label(ax_a2, 'b', x=-0.10, y=1.08)
+    ax_a2.set_xlim(0, max(epochs) * 1.05)
+    ax_a2.xaxis.set_major_locator(MaxNLocator(nbins=4, prune='upper'))
+    add_panel_label(ax_a2, 'b', x=-0.10, y=1.12)
 
     # ── A3: Prototype accuracy ──
     ax_a3 = bottom_left.add_axes(fig)
@@ -167,10 +167,10 @@ def plot_clop_training(
     ax_a3.set_title("Classification Accuracy", fontsize=12)
     ax_a3.set_ylim(0, 105)
     ax_a3.legend(loc="lower right", fontsize=FONT_LEGEND_DENSE, frameon=False, ncol=2)
-    ax_a3.set_xlim(0, max(epochs) * 1.08)
-    ax_a3.locator_params(axis='x', nbins=4)
-    ax_a3.locator_params(axis='y', nbins=4)
-    add_panel_label(ax_a3, 'c', x=-0.10, y=1.08)
+    ax_a3.set_xlim(0, max(epochs) * 1.05)
+    ax_a3.xaxis.set_major_locator(MaxNLocator(nbins=4, prune='upper'))
+    ax_a3.yaxis.set_major_locator(MaxNLocator(nbins=4))
+    add_panel_label(ax_a3, 'c', x=-0.10, y=1.12)
 
     # ── A4: Embedding quality metrics ──
     ax_a4 = bottom_right.add_axes(fig)
@@ -187,10 +187,10 @@ def plot_clop_training(
     ax_a4.set_title("Embedding Quality", fontsize=12)
     ax_a4.set_ylim(0, 1.05)
     ax_a4.legend(loc="center right", fontsize=FONT_LEGEND_DENSE, frameon=False)
-    ax_a4.set_xlim(0, max(epochs) * 1.08)
-    ax_a4.locator_params(axis='x', nbins=4)
-    ax_a4.locator_params(axis='y', nbins=4)
-    add_panel_label(ax_a4, 'd', x=-0.10, y=1.08)
+    ax_a4.set_xlim(0, max(epochs) * 1.05)
+    ax_a4.xaxis.set_major_locator(MaxNLocator(nbins=4, prune='upper'))
+    ax_a4.yaxis.set_major_locator(MaxNLocator(nbins=4))
+    add_panel_label(ax_a4, 'd', x=-0.10, y=1.12)
 
     # ── Save ──
     if save:
@@ -400,12 +400,12 @@ def plot_training_dynamics_combined(
         ax_a1.set_ylabel("Contrastive Loss", fontsize=11)
         ax_a1.set_title("CLOP Loss", fontsize=12)
         ax_a1.legend(**LOSS_LEGEND_KW)
-        ax_a1.set_xlim(0, max(epochs) * 1.08)
-        ax_a1.locator_params(axis='x', nbins=3)
+        ax_a1.set_xlim(0, max(epochs) * 1.05)
+        ax_a1.xaxis.set_major_locator(MaxNLocator(nbins=3, prune='upper'))
         ax_a1.yaxis.set_major_locator(MaxNLocator(nbins=3, prune='both'))
         ax_a1.tick_params(axis='y', which='both', pad=2)
         _add_training_phase_bands(ax_a1, int(max(epochs)))
-        add_panel_label(ax_a1, 'a', x=-0.12, y=1.08)
+        add_panel_label(ax_a1, 'a', x=-0.12, y=1.14)
 
         # A2: Inter-type separation (replaces trivially flat temperature panel)
         ax_a2 = top_cols[1].add_axes(fig)
@@ -421,9 +421,9 @@ def plot_training_dynamics_combined(
                        ha="center", va="center", fontsize=FONT_LABEL, color=COLORS["neutral"])
             ax_a2.set_title("Temperature Config", fontsize=FONT_TITLE)
         ax_a2.set_xlabel("Epoch", fontsize=FONT_LABEL)
-        ax_a2.set_xlim(0, max(epochs) * 1.08)
-        ax_a2.locator_params(axis='x', nbins=4)
-        add_panel_label(ax_a2, 'b', x=-0.12, y=1.08)
+        ax_a2.set_xlim(0, max(epochs) * 1.05)
+        ax_a2.xaxis.set_major_locator(MaxNLocator(nbins=3, prune='upper'))
+        add_panel_label(ax_a2, 'b', x=-0.12, y=1.14)
 
         # A3: Accuracy
         ax_a3 = top_cols[2].add_axes(fig)
@@ -442,10 +442,10 @@ def plot_training_dynamics_combined(
         ax_a3.set_title("Classification Accuracy", fontsize=12)
         ax_a3.set_ylim(0, 105)
         ax_a3.legend(loc="lower right", fontsize=FONT_LEGEND_DENSE, frameon=False, ncol=2)
-        ax_a3.set_xlim(0, max(epochs) * 1.08)
-        ax_a3.locator_params(axis='x', nbins=4)
-        ax_a3.locator_params(axis='y', nbins=4)
-        add_panel_label(ax_a3, 'c', x=-0.12, y=1.08)
+        ax_a3.set_xlim(0, max(epochs) * 1.05)
+        ax_a3.xaxis.set_major_locator(MaxNLocator(nbins=3, prune='upper'))
+        ax_a3.yaxis.set_major_locator(MaxNLocator(nbins=4))
+        add_panel_label(ax_a3, 'c', x=-0.12, y=1.14)
 
         # A4: Embedding quality
         ax_a4 = top_cols[3].add_axes(fig)
@@ -462,10 +462,10 @@ def plot_training_dynamics_combined(
         ax_a4.set_title("Embedding Quality", fontsize=12)
         ax_a4.set_ylim(0, 1.05)
         ax_a4.legend(loc="center right", fontsize=FONT_LEGEND_DENSE, frameon=False)
-        ax_a4.set_xlim(0, max(epochs) * 1.08)
-        ax_a4.locator_params(axis='x', nbins=4)
-        ax_a4.locator_params(axis='y', nbins=4)
-        add_panel_label(ax_a4, 'd', x=-0.12, y=1.08)
+        ax_a4.set_xlim(0, max(epochs) * 1.05)
+        ax_a4.xaxis.set_major_locator(MaxNLocator(nbins=3, prune='upper'))
+        ax_a4.yaxis.set_major_locator(MaxNLocator(nbins=4))
+        add_panel_label(ax_a4, 'd', x=-0.12, y=1.14)
 
     # ════════════════════════════════════════════════════════════
     # Bottom row: DiT (3 plots + 1 summary, columns 0-3)
