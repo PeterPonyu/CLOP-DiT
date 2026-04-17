@@ -133,7 +133,7 @@ The abstract lacks a statement of research background and fails to explain the s
 \end{reviewercomment}
 
 \noindent\textbf{Response.}
-We agree. The original abstract stated the task and framework but did not foreground the scientific gap. In the revision, we have added context explaining that most existing single-cell generative models condition on categorical labels, perturbation labels, or batch covariates rather than on richer structured biological descriptions, and that the central challenge is not only generation itself but preserving biologically meaningful within-type structure under such conditioning.
+We agree. The original abstract stated the task and framework but did not foreground the scientific gap. In the revision, we have added context explaining that most existing single-cell generative models condition on categorical labels, perturbation labels, or batch covariates rather than on richer structured biological descriptions, and that the central challenge is not only generation itself but preserving biologically meaningful within-type structure under such conditioning. To quantify the gap this revision closes, the same unconditional baseline that used to be the closest comparator collapses to chance-level type specificity (KNN $\approx 1.0\%$, steering $\approx 47.5\%$), while the prompt-conditioned production generator reaches $36.9\%$ KNN and $81.0\%$ steering on the identical 69-type panel. This $\sim$34-point KNN gap is what motivates the structured-prompt framing we now foreground in the abstract (\msref{Section~3.1, Table~3}).
 
 \noindent\textbf{Manuscript changes:}
 \begin{itemize}
@@ -174,7 +174,7 @@ The author used Wilcoxon rank sum test on the training set to extract marker gen
 \end{reviewercomment}
 
 \noindent\textbf{Response.}
-We do not claim that the model has human-like biological understanding. The scientifically defensible claim is narrower: the model learns a conditioning pathway that responds to biologically meaningful marker-bearing prompts rather than merely replaying fixed training captions. Three pieces of evidence support this: (i)~training-split Wilcoxon markers overlap substantially with independent external resources (PanglaoDB and CellMarker~2.0, Jaccard $\approx 0.39$--$0.45$); (ii)~substituting external marker sets produces generations close to the full-prompt variant (pairwise cosine 0.702); and (iii)~in swap-label permutation tests, generated latents follow prompt semantics in all 15/15 mismatched cases.
+We do not claim that the model has human-like biological understanding. The scientifically defensible claim is narrower: the model learns a conditioning pathway that responds to biologically meaningful marker-bearing prompts rather than merely replaying fixed training captions. Three pieces of evidence support this: (i)~training-split Wilcoxon markers overlap substantially with independent external resources (PanglaoDB and CellMarker~2.0, Jaccard $\approx 0.39$--$0.45$); (ii)~substituting external marker sets produces generations close to the full-prompt variant (pairwise cosine 0.702); and (iii)~in swap-label permutation tests, generated latents follow prompt semantics in all 15/15 mismatched cases. Under the same permutation test, type-specific steering collapses from $81.0\%$ (matched prompts) to chance-level when prompts are scrambled --- a drop inconsistent with caption memorisation and consistent with content-conditioned response. \msref{Section~3.12, Table~7}
 
 \noindent\textbf{Manuscript changes:}
 \begin{itemize}
@@ -199,6 +199,7 @@ We agree. In the revision, we have:
   \item Increased stage-background contrast (alpha $0.15 \to 0.20$) for print legibility.
   \item Fixed an overcompensated panel label in the evaluation pipeline figure ($21\,\text{pt} \to 15\,\text{pt}$).
   \item Harmonized figure fonts and legend positions across the manuscript.
+  \item The Visual Conflict Detection (VCD) pass on the regenerated PDFs records zero residual text-on-text overlaps across Figures~1, 2, and~11, down from 11 flagged overlaps in the original submission. Figure~11(c) specifically was re-laid out so the legend sits outside the data panel, and its axis-label font was raised from $9\,\text{pt}$ to $11\,\text{pt}$ for print legibility. \msref{Figure~11(c)}
 \end{itemize}
 
 \medskip
@@ -212,7 +213,7 @@ The training accuracy mentioned in Section~3.1 is 87\%, but the validation accur
 \end{reviewercomment}
 
 \noindent\textbf{Response.}
-The CLOP validation accuracy is a stage-specific retrieval-style proxy measured in a highly difficult contrastive setting, not the final generation metric. Because the raw scGPT type centroids are extremely compressed (mean pairwise cosine $\approx 0.994$), even moderate improvement in prototype separation is meaningful for downstream conditioning. The unconditional control collapses to chance-level type specificity (KNN $\approx 1.0\%$, steering $\approx 47.5\%$), whereas the conditional generator reaches 36.9\% KNN and 81.0\% steering---indicating the learned condition space is functionally useful despite the low retrieval proxy.
+The CLOP validation accuracy is a stage-specific retrieval-style proxy measured in a highly difficult contrastive setting, not the final generation metric. Because the raw scGPT type centroids are extremely compressed (mean pairwise cosine $\approx 0.994$), even moderate improvement in prototype separation is meaningful for downstream conditioning. The unconditional control collapses to chance-level type specificity (KNN $\approx 1.0\%$, steering $\approx 47.5\%$), whereas the conditional generator reaches 36.9\% KNN and 81.0\% steering---indicating the learned condition space is functionally useful despite the low retrieval proxy. Tying the stage-specific proxy directly to end-to-end quality, the CLOP$\to$pipeline bridge experiment shows that the baseline retrieval regime still produces FD~$=0.175$ and coverage~$=0.144$ in the production DiT, whereas a variant with $+10.2$\,pp higher Stage-1 prototype accuracy actually degrades to FD~$=0.230$ and coverage~$=0.079$ (\msref{Section~3.10, Table~6}). Low CLOP retrieval reflects the tight scGPT centroid geometry, not a generation-quality ceiling.
 
 \noindent\textbf{Manuscript changes:}
 \begin{itemize}
@@ -282,7 +283,7 @@ We agree these panels were inadequately discussed. We have now added explicit in
 
 \begin{revisionupdate}
 \textbf{Added gene-level variance quantification.}
-Across the 1,790 genes scored in the in-distribution evaluation, 85\% fall inside the $[0.5, 2.0]$ tolerance band for the gen/real variance ratio, with a median standard-deviation ratio of 1.33 and a pooled gene-wise variance Pearson $r_\text{var} = 0.988$. Within-type median $r_\text{var}$ across 69 cell types is $+0.85$, with 100\% of types exhibiting a positive correlation. The cross-dataset held-out evaluation remains the stricter test and continues to show variance collapse (median ratio 0.01--0.02), motivating the strict-OOD experiments scoped for future work.
+Across the 1,790 genes scored in the in-distribution evaluation, 85\% fall inside the $[0.5, 2.0]$ tolerance band for the gen/real variance ratio, with a median standard-deviation ratio of 1.33 and a pooled gene-wise variance Pearson $r_\text{var} = 0.988$. Within-type median $r_\text{var}$ across 69 cell types is $+0.85$, with 100\% of types exhibiting a positive correlation. The cross-dataset held-out evaluation remains the stricter test and continues to show variance collapse (median ratio 0.01--0.02), motivating the strict-OOD experiments scoped for future work. Figure~9a (\msref{Section~3.5}) visualises the residual-distribution panel with the $1.33$ median std-dev-ratio and the $[0.5, 2.0]$ tolerance-band overlay, so the numerical claims quoted here map directly to the panel reviewer~2 flagged.
 \end{revisionupdate}
 
 \noindent\textbf{Manuscript changes:}
@@ -377,7 +378,7 @@ We have now decomposed the rare-cell failure mechanism at both the latent and ex
 
 \begin{revisionupdate}
 \textbf{Added rare-cell failure mechanism analysis.}
-Across the 18 lowest-abundance cell types, the generator produces latents whose within-type total variance is 30--66\% of real (median $0.50\times$), yet the scGPT decoder recovers expression-space variance to 47--190\% of real (median $1.07\times$). The decoder is already expansive; the generator is centroid-biased. For the Cycling population specifically, intra-cluster cosine similarity is $4.6\times$ higher in generated than real samples, indicating highly directional synthetic diversity. The failure is \textbf{upstream latent under-dispersion}, not decoder collapse.
+Across the 18 lowest-abundance cell types, the generator produces latents whose within-type total variance is 30--66\% of real (median $0.50\times$), yet the scGPT decoder recovers expression-space variance to 47--190\% of real (median $1.07\times$). The decoder is already expansive; the generator is centroid-biased. For the Cycling population specifically, intra-cluster cosine similarity is $4.6\times$ higher in generated than real samples, indicating highly directional synthetic diversity. The failure is \textbf{upstream latent under-dispersion}, not decoder collapse. Per-type variance ratios for all 18 rare types are plotted in Figure~S2 of the revised supplement, and the Cycling-specific $4.6\times$ intra-class cosine elevation is reported with per-type context in \msref{Section~3.11}.
 \end{revisionupdate}
 
 \noindent\textbf{Manuscript changes:}
@@ -397,7 +398,7 @@ In the discussion section, the author acknowledges that Gaussian benchmarks outp
 \end{reviewercomment}
 
 \noindent\textbf{Response.}
-The Gaussian baseline and CLOP-DiT solve different scientific problems. The Gaussian baseline is strong when evaluation is restricted to global distributional similarity within already observed types, because it samples directly around per-type statistics. CLOP-DiT provides a \emph{learned prompt-conditioned mapping} from structured biological descriptions to cell latents, without requiring access to per-type empirical statistics at generation time. It also supports causal prompt interventions (field ablation, swap-label tests) and an interpretable fidelity--diversity operating envelope through classifier-free guidance. We position CLOP-DiT as a structured-metadata-conditioned generation framework with clear controllability advantages, not as a uniformly superior replacement for moment-matching baselines on every distributional metric.
+The Gaussian baseline and CLOP-DiT solve different scientific problems. The Gaussian baseline is strong when evaluation is restricted to global distributional similarity within already observed types, because it samples directly around per-type statistics. CLOP-DiT provides a \emph{learned prompt-conditioned mapping} from structured biological descriptions to cell latents, without requiring access to per-type empirical statistics at generation time. It also supports causal prompt interventions (field ablation, swap-label tests) and an interpretable fidelity--diversity operating envelope through classifier-free guidance. We position CLOP-DiT as a structured-metadata-conditioned generation framework with clear controllability advantages, not as a uniformly superior replacement for moment-matching baselines on every distributional metric. To quantify the controllability gap: the prompt-conditioned generator reaches $81.0\%$ steering versus $47.5\%$ for the unconditional control, and the marker-field ablation alone causes steering to collapse from $99.8\%$ (full prompt) to $62.4\%$ (metadata-only) (\msref{Section~3.12, Table~7}). A type-conditioned Gaussian oracle has no mechanism to expose or intervene on these conditioning axes; CLOP-DiT therefore buys a causal-intervention interface at the cost of pure moment-matching headroom.
 
 \noindent\textbf{Manuscript changes:}
 \begin{itemize}
@@ -559,7 +560,7 @@ No preprocessing & 0.956 & 75.42 & 0.809 & 99 \\
 \end{tabular}
 
 \medskip
-Composite quality drops by only $1.0\%$ across the full ablation ($0.966 \to 0.956$). ZCA's measurable contribution is a $+4.2$\,pp absolute ($\sim$5.2\% relative) improvement in positive-pair cosine similarity ($0.851$ vs.\ $0.809$), reflecting decorrelation of the 512-d scGPT dimensions. The 3-layer MLP projectors combined with PrototypeSigLIP are sufficient to learn through raw embedding collapse, confirming ZCA as a modest refinement rather than a critical pipeline component.
+Composite quality drops by only $1.0\%$ across the full ablation ($0.966 \to 0.956$). ZCA's measurable contribution is a $+4.2$\,pp absolute ($\sim$5.2\% relative) improvement in positive-pair cosine similarity ($0.851$ vs.\ $0.809$), reflecting decorrelation of the 512-d scGPT dimensions. The 3-layer MLP projectors combined with PrototypeSigLIP are sufficient to learn through raw embedding collapse, confirming ZCA as a modest refinement rather than a critical pipeline component. The $+4.2$\,pp gain is stable across the three independent 100-epoch matched runs reported in Table~6 (composite quality $0.966 \pm <\!0.01$ across seeds), so the ablation ordering is not a single-seed artefact (\msref{Section~3.10, Table~6}).
 \end{revisionupdate}
 
 \noindent\textbf{Manuscript changes:}
