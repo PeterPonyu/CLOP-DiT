@@ -22,7 +22,6 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.patches import ConnectionPatch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from src.visualization.direct_layout import bind_figure_region
