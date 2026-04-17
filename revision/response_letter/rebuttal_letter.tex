@@ -139,6 +139,7 @@ We agree. The original abstract stated the task and framework but did not foregr
 \begin{itemize}
   \item Added 1--2 sentences to the abstract stating the limitation of label-based conditioning. \msref{Abstract}
   \item Explicitly stated that the main challenge is balancing conditional controllability with preservation of within-type heterogeneity. \msref{Abstract}
+  \item Added an inline stage-specific-proxy paragraph reframing the $87\%$ train / $\sim\!2.5\%$ validation accuracy gap in \msref{Section~3.1}.
 \end{itemize}
 
 \medskip
@@ -239,7 +240,7 @@ Using a 10-family taxonomy, 49.2\% of all KNN mis-typings stay within the same b
 
 \noindent\textbf{Manuscript changes:}
 \begin{itemize}
-  \item Added a KNN error-taxonomy subsection with the family-level analysis. \msref{Section~3.4}
+  \item Added a KNN error-taxonomy subsection with the family-level analysis and a new 10-family confusion heatmap (Figure~\ref{fig:knn-family-heatmap} in Appendix~\ref{app:suppl-figs}). \msref{Section~3.4, Appendix~A.1}
 \end{itemize}
 
 \medskip
@@ -484,7 +485,7 @@ Across the 18 human-only and 8 mouse-only cell types, the two organism groups ar
 
 \noindent\textbf{Manuscript changes:}
 \begin{itemize}
-  \item Added organism-stratified evaluation paragraph with per-organism metrics. \msref{Section~3.4}
+  \item Added organism-stratified evaluation paragraph with per-organism metrics and a new 6-panel boxplot (Figure~\ref{fig:organism-stratified} in Appendix~\ref{app:suppl-figs}) visualising all five Mann--Whitney tests. \msref{Section~3.4, Appendix~A.1}
 \end{itemize}
 
 \medskip
@@ -525,7 +526,7 @@ Hybrid $10\times$ & 0.907 & 0.928 & 0.772 & 0.835 \\
 \noindent\textbf{Manuscript changes:}
 \begin{itemize}
   \item Replaced broad ``augmentation is ineffective'' with evidence-backed narrower claim. \msref{Section~3.11}
-  \item Added augmentation strategy sweep and forced-scarcity results (table reproduced above). \msref{Section~3.11}
+  \item Added augmentation strategy sweep and forced-scarcity results (table reproduced above); F1 trajectories across both scarcity regimes are now plotted in Figure~\ref{fig:forced-scarcity} (Appendix~\ref{app:suppl-figs}). \msref{Section~3.11, Appendix~A.1}
   \item Multi-scale augmentation validation curves (MLP / scGPT-frozen / scGPT+LoRA) are shown in Figure~S1 of the revised supplement. \msref{Section~3.11}
 \end{itemize}
 

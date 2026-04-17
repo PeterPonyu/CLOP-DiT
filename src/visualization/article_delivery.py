@@ -70,6 +70,10 @@ _SOURCE_BASENAMES: List[str] = [
     "figS01_supplementary_validation",
     # Supplementary display Figure S2 (single Python-composed appendix figure)
     "figS02_expression_diagnostics",
+    # Supplementary figures added in the 2026-04-17 new-evidence pass
+    "figS_lane_a1_knn_family_heatmap",
+    "figS_lane_a2_organism_stratified",
+    "figS_lane_b3_forced_scarcity",
 ]
 
 ARTICLE_FIGURE_BASENAMES: List[str] = list(_SOURCE_BASENAMES)
@@ -102,6 +106,9 @@ ARTICLE_FIGURE_PRODUCERS: List[Tuple[str, str]] = [
     ("figS_lane_c_zero_shot", "scripts/analysis/lane_c_zero_shot_figure.py"),
     ("figS01_supplementary_validation", "src/visualization/figS01_supplementary_validation.py"),
     ("figS02_expression_diagnostics", "src/visualization/figS02_expression_diagnostics.py"),
+    ("figS_lane_a1_knn_family_heatmap", "scripts/analysis/lane_a1_knn_family_heatmap.py"),
+    ("figS_lane_a2_organism_stratified", "scripts/analysis/lane_a2_organism_boxplot.py"),
+    ("figS_lane_b3_forced_scarcity", "scripts/analysis/lane_b3_forced_scarcity_figure.py"),
 ]
 
 _N_FIGURES = len(ARTICLE_FIGURE_BASENAMES)
