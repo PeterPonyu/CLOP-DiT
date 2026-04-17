@@ -49,7 +49,7 @@ def _add_training_phase_bands(ax: plt.Axes, max_epoch: int) -> None:
         transform=ax.transAxes,
         va="top",
         ha="right",
-        fontsize=8,
+        fontsize=9,
         color=COLORS.get("neutral", "#555555"),
         bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.85, edgecolor="none"),
     )

@@ -159,9 +159,9 @@ def plot_diagnostics(
         ax.set_title("CFG Scale vs Diversity & Norm")
         ax.xaxis.set_major_locator(plt.MaxNLocator(nbins=4, prune="both"))
         ax.text(0.03, 0.05, "● Div.", transform=ax.transAxes,
-            fontsize=8.5, color=COLORS["real"], ha="left", va="bottom")
+            fontsize=9, color=COLORS["real"], ha="left", va="bottom")
         ax.text(0.03, 0.13, "■ Norm", transform=ax.transAxes,
-            fontsize=8.5, color=COLORS["generated"], ha="left", va="bottom")
+            fontsize=9, color=COLORS["generated"], ha="left", va="bottom")
     else:
         ax.set_title("CFG Scale vs Diversity")
 
