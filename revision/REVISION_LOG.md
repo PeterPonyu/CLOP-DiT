@@ -6,7 +6,9 @@ has already been done, what the current state is, and where the
 unfinished work lives. Commit hashes and line numbers link directly
 back to the workspace so nothing has to be reconstructed from memory.
 
-Last updated: 2026-04-16 (Lane C zero-shot strict-OOD executed end-to-end via CellxGene Census; Lane A complete, B1+B2+B3+B4 complete, Lane D complete, **Lane C complete** — kidney/cerebellum/testis_fetal ingested, zero leakage, zero-shot eval reports partial generalisation (nearest_acc 0.35 overall, 3–6× random on structurally-familiar novel types and at/below random on structurally-distinct ones)).
+Last updated: 2026-04-17 (scivcd revision sweep: fig09a/9b/S_lane_c layout truncation CRITICALs fixed; all 22 article PDFs regenerated under `--adaptive --vs-baseline` with 0 new CRITICAL vs baseline; figures synced into v2_revision and diff manuscript dirs; rebuttal_letter.tex wired to name Figures 9a, 9b, S1, S2 in R2.8/R2.9/R2.11/R3.3; all three LaTeX products rebuilt clean; submission checksums refreshed. Close-out report at `revision/figure_fix_reports/scivcd_revision_closeout_2026-04-17.md`.)
+
+Last updated (prior): 2026-04-16 (Lane C zero-shot strict-OOD executed end-to-end via CellxGene Census; Lane A complete, B1+B2+B3+B4 complete, Lane D complete, **Lane C complete** — kidney/cerebellum/testis_fetal ingested, zero leakage, zero-shot eval reports partial generalisation (nearest_acc 0.35 overall, 3–6× random on structurally-familiar novel types and at/below random on structurally-distinct ones)).
 
 ---
 

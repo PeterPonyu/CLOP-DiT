@@ -1,6 +1,6 @@
 # Rebuttal → Manuscript Crossref Audit (US-101)
 
-**Ran:** 2026-04-16
+**Ran:** 2026-04-17
 **Rebuttal:** `revision/response_letter/rebuttal_letter.tex`
 **Manuscript:** `revision/manuscripts/v2_revision/clop_dit_genes.tex`
 
@@ -48,5 +48,12 @@ letter for cross-reference consistency.
 All `\msref{...}` targets in the edited rebuttal now resolve to real manuscript anchors.
 Rebuttal will rebuild and present accurate, verifiable cross-references to the manuscript
 under review. No supplementary-table fabrication risk remains in the cover letter either.
+
+## Additional embedding check (2026-04-17)
+
+- `revision/manuscripts/v2_revision/clop_dit_genes.tex` embeds all revised figure PDFs discussed in the current revision, including `figS_lane_c_zero_shot.pdf`, `fig09a_variance_matching.pdf`, `fig09b_gene_gene_correlation.pdf`, `figS01_supplementary_validation.pdf`, and `figS02_expression_diagnostics.pdf`.
+- `revision/manuscripts/diff/clop_dit_genes_tracked_changes.tex` embeds the same revised figure set, so the tracked manuscript exposes the new floating items rather than only their captions/text deltas.
+- `revision/response_letter/rebuttal_letter.tex` now embeds the strict-OOD revised figure preview (`../manuscripts/v2_revision/figures/figS_lane_c_zero_shot.pdf`) inside Comment 3.1, while the newly added results tables remain inline in the rebuttal boxes.
+- Rebuttal-side plain `\ref{...}` references that could only resolve inside the manuscript were replaced with explicit manuscript numbering / `\msref{...}`-style wording, eliminating `??` artifacts in the reply PDF.
 
 **Verdict:** PASS after remediation.

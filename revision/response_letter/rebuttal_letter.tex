@@ -12,6 +12,7 @@
 \usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{longtable}
+\usepackage{graphicx}
 \usepackage[most]{tcolorbox}
 \usepackage{amsmath}
 
@@ -280,8 +281,8 @@ Across the 1,790 genes scored in the in-distribution evaluation, 85\% fall insid
 
 \noindent\textbf{Manuscript changes:}
 \begin{itemize}
-  \item Added explicit interpretation of the residual-distribution and tolerance-band panels. \msref{Section~3.5}
-  \item Connected HVG standard-deviation ratios to the first-order vs.\ second-order fidelity narrative. \msref{Section~3.5}
+  \item Added explicit interpretation of the residual-distribution and tolerance-band panels (Figure~9a in the revised manuscript). \msref{Section~3.5}
+  \item Connected HVG standard-deviation ratios to the first-order vs.\ second-order fidelity narrative (see Figure~9a). \msref{Section~3.5}
 \end{itemize}
 
 \bigskip
@@ -316,6 +317,7 @@ Pooled Gaussian (floor) & $+0.014$ & 1.20 & 60.9\% \\
 \noindent\textbf{Manuscript changes:}
 \begin{itemize}
   \item Added explicit DivR vs.\ $r_\text{var}$ distinction paragraph with the variance-baseline comparison table (reproduced above). \msref{Section~3.5}
+  \item Figures~9a (variance matching) and~9b (gene-gene correlation) in the revised manuscript visualise the variance-recovery narrative supporting this reply. \msref{Section~3.5}
 \end{itemize}
 
 \bigskip
@@ -375,6 +377,7 @@ Across the 18 lowest-abundance cell types, the generator produces latents whose 
 \noindent\textbf{Manuscript changes:}
 \begin{itemize}
   \item Expanded rare-cell augmentation discussion to distinguish ``realistic but too homogeneous'' from ``grossly misplaced.'' \msref{Section~3.11, Discussion}
+  \item Supporting diagnostics for rare-cell variance behaviour appear in Figure~S2 (expression diagnostics) of the revised supplement. \msref{Section~3.11}
 \end{itemize}
 
 \bigskip
@@ -435,6 +438,14 @@ Testis (fetal gonadal) & 2 & $0.562$ & $0.500$ & $1.57$ \\
 \end{tabular}
 \end{center}
 
+To make the strict-OOD result reviewer-visible inside the rebuttal itself, we now also embed the revised per-cell-type summary figure below. It matches the manuscript figure delivered in Section~3.13 and the tracked-changes manuscript.
+
+\begin{center}
+\includegraphics[width=0.86\textwidth]{../manuscripts/v2_revision/figures/figS_lane_c_zero_shot.pdf}
+
+\small Figure preview used in the revised manuscript: strict-OOD nearest-centroid accuracy by tissue and novel cell type.
+\end{center}
+
 The production CLOP-DiT \emph{partially} generalises to strict-OOD tissues with strong program-dependent variance. Structural-program transfer works: nearest-real-centroid accuracy is $3$--$6\times$ random for novel cell types whose expression program overlaps training tissues (adrenal cortex type~I $= 0.875$, kidney epithelial $= 0.460$). Structurally-distinct programs do not transfer: cerebellar neurons (Purkinje $0.00$, granule $0.045$, inhibitory interneurons $0.00$) are at or below random chance because the training corpus has no neural analog. Leydig-prompted outputs collapse toward the adrenal cortex centroid, showing that the model fails to resolve sibling steroidogenic types when one dominates the prompt space.
 
 This is a \emph{mechanistic ceiling result}, not a binary pass/fail. It complements A5 (upstream latent compression), A3 (heterogeneity-dominant failure axis), and B4 (partial-reversal Stage-1 ablation proxy): the learned cross-type manifold extrapolates along familiar structural axes (epithelial, steroidogenic) but not along unfamiliar ones (GABAergic cerebellar neurons). Expanded training coverage to neural and gonadal tissues is the targeted next step.
@@ -442,9 +453,9 @@ This is a \emph{mechanistic ceiling result}, not a binary pass/fail. It compleme
 
 \noindent\textbf{Manuscript changes:}
 \begin{itemize}
-  \item Added the zero-shot strict-OOD paragraph with per-tissue metrics (Table~\ref{tab:strict-ood} and Figure~\ref{fig:strict-ood} in the main text). \msref{Section~3.13}
+  \item Added the zero-shot strict-OOD paragraph with per-tissue metrics (Table~8 and Figure~9 in the main text). \msref{Section~3.13}
   \item Kept the interpolation-vs-extrapolation clarification on the 8-study held-out split. \msref{Section~3.13}
-  \item Reframed existing OOD prompt tests as exploratory and preliminary. \msref{Section~3.13 and Appendix~\ref{app:suppl-figs}}
+  \item Reframed existing OOD prompt tests as exploratory and preliminary. \msref{Section~3.13 and Appendix~A.1}
 \end{itemize}
 
 \bigskip
@@ -509,6 +520,7 @@ Hybrid $10\times$ & 0.907 & 0.928 & 0.772 & 0.835 \\
 \begin{itemize}
   \item Replaced broad ``augmentation is ineffective'' with evidence-backed narrower claim. \msref{Section~3.11}
   \item Added augmentation strategy sweep and forced-scarcity results (table reproduced above). \msref{Section~3.11}
+  \item Multi-scale augmentation validation curves (MLP / scGPT-frozen / scGPT+LoRA) are shown in Figure~S1 of the revised supplement. \msref{Section~3.11}
 \end{itemize}
 
 \bigskip
@@ -545,7 +557,7 @@ Quality drop from ZCA to no preprocessing is only 1.0\%. ZCA's measurable contri
 
 \noindent\textbf{Manuscript changes:}
 \begin{itemize}
-  \item Added formal ZCA ablation results (Table~\ref{tab:zca-ablation} in the main text). \msref{Section~3.10}
+  \item Added formal ZCA ablation results (Table~6 in the main text). \msref{Section~3.10}
 \end{itemize}
 
 
@@ -574,10 +586,10 @@ R2.9 & Experiment & Sec.~3.5 & Added Gaussian variance baselines \\
 R2.10 & Experiment & Sec.~3.10 & Added ablation$\to$pipeline bridge and partial-reversal caveat \\
 R2.11 & Analysis & Sec.~3.11, Discussion & Rare-cell mechanism: upstream under-dispersion \\
 Gaussian & Text revision & Discussion & Clarified the distinct role of Gaussian and diffusion models \\
-R3.1 & Experiment & Sec.~3.13, Table~\ref{tab:strict-ood} & Added zero-shot strict-OOD evaluation \\
+R3.1 & Experiment & Sec.~3.13, Table~8 & Added zero-shot strict-OOD evaluation \\
 R3.2 & Analysis & Sec.~3.4 & Added organism-stratified evaluation \\
 R3.3 & Experiment & Sec.~3.11 & Added augmentation sweep and forced-scarcity control \\
-R3.4 & Experiment & Sec.~3.10, Table~\ref{tab:zca-ablation} & Added formal ZCA whitening ablation \\
+R3.4 & Experiment & Sec.~3.10, Table~6 & Added formal ZCA whitening ablation \\
 \midrule
 \multicolumn{4}{@{}l}{\textit{Cross-cutting additions:}} \\
 --- & Integrated revision evidence & Discussion & Unified mechanistic narrative across the new analyses and experiments \\
