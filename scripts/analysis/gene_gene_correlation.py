@@ -391,19 +391,26 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
         # would cross through other data points.
         residuals = np.abs(type_mantel - (slope * type_het + intercept))
         top3 = np.argsort(residuals)[-3:]
+        y_lo, y_hi = ax4.get_ylim()
+        x_lo, x_hi = ax4.get_xlim()
         for rank, idx in enumerate(top3[np.argsort(residuals[top3])[::-1]]):
             t_id = type_labels_d[idx]
             lbl = abbreviate_cell_type(_type_names.get(t_id, f"Type {t_id}"), max_len=18)
-            resid = type_mantel[idx] - (slope * type_het[idx] + intercept)
-            dx_pt = (18, 16, 14)[rank]
-            dy_pt = (22, -18, -22)[rank] if resid >= 0 else (-22, -18, -22)[rank]
+            # Decide label direction by where the point sits relative to the axes:
+            # top-half points → push label DOWN; bottom-half → push UP. This keeps
+            # every annotation inside the plot rectangle even on short-height panels.
+            y_frac = (type_mantel[idx] - y_lo) / (y_hi - y_lo) if y_hi > y_lo else 0.5
+            x_frac = (type_het[idx] - x_lo) / (x_hi - x_lo) if x_hi > x_lo else 0.5
+            dy_pt = -20 if y_frac >= 0.55 else 18
+            dx_pt = -18 if x_frac >= 0.75 else 16
+            ha = "right" if dx_pt < 0 else "left"
             ax4.annotate(
                 lbl,
                 xy=(type_het[idx], type_mantel[idx]),
                 xytext=(dx_pt, dy_pt),
                 textcoords="offset points",
                 fontsize=8.5,
-                ha="left",
+                ha=ha,
                 va="center",
                 color=COLORS["annotation_dark"],
                 bbox=dict(boxstyle="round,pad=0.10", fc="white", ec="none", alpha=0.86),
@@ -417,7 +424,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
                     connectionstyle="arc3,rad=0.04",
                 ),
                 zorder=6,
-                annotation_clip=False,
+                annotation_clip=True,
             )
     else:
         stat_text = "Insufficient variance for correlation"

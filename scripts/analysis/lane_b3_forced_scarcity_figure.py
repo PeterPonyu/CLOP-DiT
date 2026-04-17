@@ -63,7 +63,7 @@ def make_figure(
     natural_data: dict,
     forced_data: dict,
 ) -> plt.Figure:
-    fig, axes = plt.subplots(1, 2, figsize=(7.2, 4.2), sharey=False,
+    fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.4), sharey=False,
                              dpi=300)
 
     for ax_idx, gid in enumerate(GID_ORDER):
@@ -115,10 +115,10 @@ def make_figure(
                 "forced-scarcity baseline", fontsize=7.5,
                 color="#D55E00", ha="right", va="bottom")
 
-        # panel label
-        ax.text(-0.08, 1.06, PANEL_LABELS[ax_idx],
-                transform=ax.transAxes, fontweight="bold", fontsize=9,
-                va="top", ha="left")
+        # panel label (bold uppercase)
+        from src.visualization.style import add_panel_label
+        _letter = str(PANEL_LABELS[ax_idx]).strip("()").lower()
+        add_panel_label(ax, _letter, x=-0.12, y=1.08)
 
         ax.set_ylim(0.45, 0.97)
         ax.set_yticks([0.5, 0.6, 0.7, 0.8, 0.9])
@@ -139,13 +139,13 @@ def make_figure(
 
     # Place legend below both panels using axes-coord anchor on left panel
     axes[0].legend(handles=legend_handles, loc="upper left",
-                   bbox_to_anchor=(0.0, -0.22),
+                   bbox_to_anchor=(0.0, -0.18),
                    ncol=4, fontsize=6.5, frameon=False,
                    handlelength=1.2, borderpad=0.4, handletextpad=0.4,
                    columnspacing=0.8)
 
     fig.tight_layout()
-    fig.subplots_adjust(bottom=0.30, left=0.10, right=0.97, top=0.95)
+    fig.subplots_adjust(bottom=0.22, left=0.10, right=0.97, top=0.92)
     return fig
 
 

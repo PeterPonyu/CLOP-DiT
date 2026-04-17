@@ -126,13 +126,9 @@ def main() -> None:
     cbar.set_label("Fraction of queries", fontsize=8)
     cbar.ax.tick_params(labelsize=7.5)
 
-    # Panel label
-    ax_heat.text(
-        -0.08, 1.06, "(a)",
-        transform=ax_heat.transAxes,
-        fontsize=12, fontweight="bold",
-        va="bottom", ha="left",
-    )
+    # Panel label (bold uppercase "A")
+    from src.visualization.style import add_panel_label  # local import avoids startup cost
+    add_panel_label(ax_heat, "a", x=-0.10, y=1.06)
 
     # --- Right bar: within-family accuracy per family ---
     y_pos = np.arange(n)
@@ -145,7 +141,9 @@ def main() -> None:
     ax_bar.set_xticklabels(["0.90", "1.00"], fontsize=7.5)
     ax_bar.set_yticks(y_pos)
     ax_bar.set_yticklabels([""] * n)
-    ax_bar.invert_yaxis()
+    # Pin the bar axis y-limits to exactly match the heatmap so each bar
+    # sits on the same pixel row as its heatmap row.
+    ax_bar.set_ylim(ax_heat.get_ylim())
     ax_bar.set_xlabel("Within-family\naccuracy", fontsize=8, labelpad=4)
     ax_bar.spines["top"].set_visible(False)
     ax_bar.spines["right"].set_visible(False)

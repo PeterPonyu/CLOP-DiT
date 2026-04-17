@@ -156,7 +156,7 @@ FONT_ARCH_LEGEND = 11
 FONT_SUPTITLE = 15
 FONT_TITLE = 14
 FONT_LABEL = 12
-PANEL_LABEL_FONT_SIZE = 14
+PANEL_LABEL_FONT_SIZE = 16
 FONT_TICK = 11
 FONT_TICK_DENSE = 10
 FONT_ANNOTATION = 10
@@ -273,17 +273,20 @@ def add_panel_label(
     y: float = 1.05,
     *,
     fontsize: int = PANEL_LABEL_FONT_SIZE,
-    fontweight: str = "semibold",
+    fontweight: str = "bold",
     color: str = "black",
     stroke_linewidth: float = 3.0,
     stroke_foreground: str = "white",
     **kwargs,
 ) -> None:
-    """Add a panel label (a, b, c, etc.) outside the top-left corner of a subplot.
+    """Add a bold uppercase panel label (A, B, C, ...) above the top-left
+    corner of a subplot.
 
-    The label is placed outside the axes border (default x=-0.10, y=1.05
-    in axes coordinates) so it never overlaps with plot content.  A white
-    outline stroke (path_effects) ensures readability over any background.
+    Labels are rendered as bold uppercase letters (e.g. ``A``) with no
+    surrounding parentheses for better on-page prominence. Default
+    position (x=-0.10, y=1.05 in axes coordinates) keeps the label
+    clear of plot content, and a white outline stroke guarantees
+    readability over any background.
 
     Parameters
     ----------
@@ -307,8 +310,9 @@ def add_panel_label(
     **kwargs
         Additional keyword arguments passed to ``ax.text()``.
     """
+    rendered_label = str(label).strip().upper()
     ax.text(
-        x, y, f"({label})",
+        x, y, rendered_label,
         transform=ax.transAxes,
         fontsize=fontsize,
         fontweight=fontweight,
@@ -317,7 +321,7 @@ def add_panel_label(
         ha="left",
         zorder=120,
         clip_on=False,
-        gid=f"panel_label:{label}",
+        gid=f"panel_label:{rendered_label}",
         path_effects=[
             pe.withStroke(linewidth=stroke_linewidth, foreground=stroke_foreground),
             pe.Normal(),

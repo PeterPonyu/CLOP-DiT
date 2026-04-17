@@ -390,19 +390,24 @@ def main():
     # in display points) so leader lines stay under ~15% of panel width rather
     # than spanning to a fixed right-margin slot.
     top3 = np.argsort(swd_arr)[-3:]
+    y_lo, y_hi = ax4.get_ylim()
+    x_lo, x_hi = ax4.get_xlim()  # log10 values since xscale is log
     for rank, idx in enumerate(top3[np.argsort(swd_arr[top3])[::-1]]):
         lbl = abbreviate_cell_type(results[idx]["name"], max_len=18)
-        # Stagger offsets so three adjacent labels do not stack on top of
-        # each other: +18/+10/+4 pt horizontally, +22/+10/-4 pt vertically.
-        dx_pt = (24, 18, 14)[rank]
-        dy_pt = (24, 10, -6)[rank]
+        # Direction based on position inside the axes: push labels toward the
+        # interior of the panel rather than out of it.
+        y_frac = (swd_arr[idx] - y_lo) / (y_hi - y_lo) if y_hi > y_lo else 0.5
+        x_frac_log = (np.log10(max(n_reals[idx], 1)) - np.log10(max(x_lo, 1))) / (np.log10(max(x_hi, 1)) - np.log10(max(x_lo, 1)) + 1e-9)
+        dy_pt = -18 if y_frac >= 0.6 else 16
+        dx_pt = -16 if x_frac_log >= 0.75 else 18
+        ha = "right" if dx_pt < 0 else "left"
         ax4.annotate(
             lbl,
             xy=(n_reals[idx], swd_arr[idx]),
             xytext=(dx_pt, dy_pt),
             textcoords="offset points",
             fontsize=7.8,
-            ha="left",
+            ha=ha,
             va="center",
             color=COLORS["annotation_dark"],
             bbox=dict(boxstyle="round,pad=0.08", fc="white", ec="none", alpha=0.86),
@@ -416,7 +421,7 @@ def main():
                 connectionstyle="arc3,rad=0.05",
             ),
             zorder=6,
-            annotation_clip=False,
+            annotation_clip=True,
         )
 
     ax4.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="upper right")

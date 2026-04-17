@@ -175,12 +175,9 @@ def make_figure(df: pd.DataFrame) -> plt.Figure:
         ax.grid(axis="y", linewidth=0.5, alpha=0.5)
         ax.set_axisbelow(True)
 
-        # ---- panel label ----
-        ax.text(
-            -0.14, 1.04, f"({panel['panel']})",
-            transform=ax.transAxes,
-            fontsize=9, fontweight="bold", va="top", ha="left",
-        )
+        # ---- panel label (bold uppercase, above the title) ----
+        from src.visualization.style import add_panel_label
+        add_panel_label(ax, panel["panel"], x=-0.18, y=1.10)
 
     # ---- figure-level legend ----
     legend_patches = [
