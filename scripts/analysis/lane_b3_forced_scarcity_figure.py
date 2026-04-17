@@ -154,7 +154,9 @@ def make_figure(
                    columnspacing=0.8)
 
     fig.tight_layout()
-    fig.subplots_adjust(bottom=0.22, left=0.10, right=0.97, top=0.92, wspace=0.12)
+    # wspace is set once in gridspec_kw above; subplots_adjust only owns the
+    # outer margins here.
+    fig.subplots_adjust(bottom=0.22, left=0.10, right=0.97, top=0.92)
     return fig
 
 

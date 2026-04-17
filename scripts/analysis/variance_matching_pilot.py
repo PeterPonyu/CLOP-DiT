@@ -391,7 +391,7 @@ def main():
     # each data point. This is the same pattern used in panel (a) and avoids the
     # "label drifted outside the axes" failure mode that offset_points-in-data
     # space exhibits near the plot edges.
-    top3_idx = np.argsort(swd_arr)[-3:][::-1]  # highest SWD first
+    top3_idx = np.argsort(swd_arr)[-3:][::-1]
     # Interior anchor slots (axes-fraction) — bias toward the upper-left so the
     # connector reaches the rightmost outliers without crossing other points.
     slots = [(0.08, 0.94), (0.08, 0.82), (0.08, 0.70)]

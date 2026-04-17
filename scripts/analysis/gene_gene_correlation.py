@@ -22,6 +22,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.patches import ConnectionPatch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from src.visualization.direct_layout import bind_figure_region
@@ -408,8 +409,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
                 zorder=6,
                 clip_on=False,
             )
-            from matplotlib.patches import ConnectionPatch as _CP
-            conn = _CP(
+            conn = ConnectionPatch(
                 xyA=(type_het[idx], type_mantel[idx]),
                 coordsA=ax4.transData,
                 xyB=(slot_x + 0.02, slot_y),
