@@ -18,6 +18,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from src.visualization.direct_layout import bind_figure_region
 from src.visualization.style import apply_style, COLORS, add_panel_label, save_with_vcd
+from matplotlib.patches import ConnectionPatch
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -173,13 +174,13 @@ def main():
     )
     from scipy import stats as scipy_stats
 
-    fig = plt.figure(figsize=(14.0, 8.0))
+    fig = plt.figure(figsize=(14.0, 8.0), dpi=300)
     layout = bind_figure_region(fig, (0.11, 0.08, 0.99, 0.96))
     # Uses the repository's direct rectangle layout engine, not GridSpec or
     # matplotlib's automatic/constrained layout.
     # - split_rows(..., hspace=...) controls the vertical gap between rows.
     # - split_cols(..., wspace=...) controls the horizontal gap between columns.
-    top_row, bottom_row = layout.split_rows([1.20, 0.92], hspace=0.24)
+    top_row, bottom_row = layout.split_rows([1.20, 0.92], hspace=0.36)
     top_left, top_right = top_row.split_cols([1.2, 1.0], wspace=0.20)
     bottom_left, bottom_right = bottom_row.split_cols([1.16, 1.04], wspace=0.26)
 
@@ -192,7 +193,7 @@ def main():
     swd_std = np.std(swds)
 
     ax = top_left.inset(left=0.02, right=0.01).add_axes(fig)
-    add_panel_label(ax, 'a', x=-0.10, y=1.05)
+    add_panel_label(ax, 'a', x=-0.10, y=0.97)
 
     # Color: orange for outliers (>mean+1σ), blue otherwise; add legend
     colors = [COLORS["generated"] if s > swd_mean + swd_std else COLORS["real"] for s in swds]
@@ -217,11 +218,45 @@ def main():
     ax.axvline(swd_mean + swd_std, color=COLORS["accent"], linestyle=":", alpha=0.6,
                linewidth=1.0, label=f"+1\u03c3 = {swd_mean + swd_std:.4f}")
 
-    # Sample size annotation on right side for top outliers
-    for i, r in enumerate(sorted_results):
-        if r["swd"] > swd_mean + swd_std:
-            ax.text(r["swd"] + 0.0003, i, f"n={r['n_real']:,}",
-                    fontsize=8, va="center", color="#666")
+    # Sample-size callouts: annotate only the highest outliers and stagger them
+    # so the small `n=` labels do not collide near the right margin.
+    outlier_indices = [i for i, s in enumerate(swds) if s > swd_mean + swd_std][:4]
+    slot_ys = [0.95, 0.89, 0.83, 0.77]
+    for slot_y, idx in zip(slot_ys, outlier_indices):
+        row = sorted_results[idx]
+        anchor_x = min(row["swd"] + 0.0002, max(swds) + 0.00025)
+        label_x = 0.965
+        ax.text(
+            label_x,
+            slot_y,
+            f"n={row['n_real']:,}",
+            transform=ax.transAxes,
+            fontsize=7.8,
+            ha="left",
+            va="center",
+            color="#666",
+            bbox=dict(boxstyle="round,pad=0.08", fc="white", ec="none", alpha=0.85),
+            zorder=6,
+            clip_on=False,
+        )
+        connector = ConnectionPatch(
+            xyA=(anchor_x, idx),
+            coordsA=ax.transData,
+            xyB=(label_x - 0.01, slot_y),
+            coordsB=ax.transAxes,
+            axesA=ax,
+            axesB=ax,
+            arrowstyle="-",
+            lw=0.5,
+            color="#888",
+            alpha=0.65,
+            shrinkA=0,
+            shrinkB=0,
+            connectionstyle="arc3,rad=0.12",
+        )
+        connector.set_clip_on(False)
+        connector.set_zorder(2)
+        ax.add_artist(connector)
 
     ax.legend(fontsize=FONT_ANNOTATION, frameon=False,
               loc="lower right")
@@ -232,7 +267,7 @@ def main():
 
     # ── Panel (b): Variance Ratio — strip + box plot ──
     ax2 = top_right.inset(left=0.02, right=0.02).add_axes(fig)
-    add_panel_label(ax2, 'b', x=-0.10, y=1.05)
+    add_panel_label(ax2, 'b', x=-0.10, y=0.97)
 
     vr_arr = np.array(var_ratios)
     vr_median = np.median(vr_arr)
@@ -351,18 +386,42 @@ def main():
              transform=ax4.transAxes, ha="left", va="bottom",
              fontsize=FONT_ANNOTATION, color=COLORS["neutral"])
 
-    # Label top 3 outliers
+    # Label top 3 residual outliers with fixed slots to prevent crossed leader lines.
     top3 = np.argsort(swd_arr)[-3:]
-    for idx in top3:
+    slots = [(0.83, 0.86, "left"), (0.83, 0.76, "left"), (0.83, 0.66, "left")]
+    for idx, (slot_x, slot_y, ha) in zip(top3[np.argsort(swd_arr[top3])[::-1]], slots):
         lbl = abbreviate_cell_type(results[idx]["name"], max_len=18)
-        xoff = 8 if n_reals[idx] <= np.median(n_reals) else -8
-        yoff = -10 if swd_arr[idx] >= np.percentile(swd_arr, 75) else 6
-        ax4.annotate(lbl, (n_reals[idx], swd_arr[idx]),
-                     fontsize=7, xytext=(xoff, yoff), textcoords="offset points",
-                     ha="left" if xoff > 0 else "right",
-                     va="top" if yoff < 0 else "bottom",
-                     arrowprops=dict(arrowstyle="->", lw=0.5, color="#888"),
-                     color=COLORS["annotation_dark"])
+        ax4.text(
+            slot_x,
+            slot_y,
+            lbl,
+            transform=ax4.transAxes,
+            fontsize=7.8,
+            ha=ha,
+            va="center",
+            color=COLORS["annotation_dark"],
+            bbox=dict(boxstyle="round,pad=0.08", fc="white", ec="none", alpha=0.86),
+            zorder=6,
+            clip_on=False,
+        )
+        connector = ConnectionPatch(
+            xyA=(n_reals[idx], swd_arr[idx]),
+            coordsA=ax4.transData,
+            xyB=(slot_x - 0.015, slot_y),
+            coordsB=ax4.transAxes,
+            axesA=ax4,
+            axesB=ax4,
+            arrowstyle="-",
+            lw=0.5,
+            color="#888",
+            alpha=0.7,
+            shrinkA=0,
+            shrinkB=0,
+            connectionstyle="arc3,rad=0.10",
+        )
+        connector.set_clip_on(False)
+        connector.set_zorder(2)
+        ax4.add_artist(connector)
 
     ax4.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="upper right")
     style_axes(ax4, "scatter",
@@ -373,7 +432,7 @@ def main():
     ax4.set_title("SWD vs. Training Cell Count", fontsize=FONT_TITLE - 2, pad=0, y=0.985)
 
     fig_path = output_dir / "fig09a_variance_matching.png"
-    save_with_vcd(fig, fig_path, dpi=300, layout_rect=(0.08, 0.03, 0.99, 0.96))
+    save_with_vcd(fig, fig_path, dpi=300, layout_rect=(0.08, 0.06, 0.99, 0.96))
     print(f"\n[var_pilot] Figure saved to {fig_path}")
 
     # Also save to results/figures/ with the article-delivery basename

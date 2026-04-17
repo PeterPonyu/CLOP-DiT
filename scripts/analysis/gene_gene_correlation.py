@@ -22,6 +22,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.patches import ConnectionPatch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from src.visualization.direct_layout import bind_figure_region
@@ -161,9 +162,9 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
 
     mantel_vals = [v["mantel_r"] for v in per_type_results.values()]
 
-    fig = plt.figure(figsize=(14.0, 8.0))
+    fig = plt.figure(figsize=(14.0, 8.0), dpi=300)
     layout = bind_figure_region(fig, (0.08, 0.10, 0.93, 0.94))
-    top_row, bottom_row = layout.split_rows([0.92, 1.08], hspace=0.28)
+    top_row, bottom_row = layout.split_rows([0.92, 1.08], hspace=0.40)
     top_left, top_right = top_row.split_cols(2, wspace=0.34)
     bottom_left, bottom_right = bottom_row.split_cols([0.92, 1.08], wspace=0.34)
 
@@ -273,6 +274,8 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
         interpolation="nearest",
         alpha=1.0,
     )
+    ax2.set_ylim(49.5, -0.5)
+    ax2.set_yticks([0, 10, 20, 30, 40, 49])
     ax2.set_title(f"Best: {best_name}", fontsize=FONT_TITLE)
     ax2.set_xlabel("Gene index (top 50 HVG)", fontsize=FONT_LABEL)
     ax2.set_ylabel("Gene index", fontsize=FONT_LABEL)
@@ -320,6 +323,8 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
         interpolation="nearest",
         alpha=1.0,
     )
+    ax3.set_ylim(49.5, -0.5)
+    ax3.set_yticks([0, 10, 20, 30, 40, 49])
     ax3.set_title(f"Worst: {worst_name}", fontsize=FONT_TITLE)
     ax3.set_xlabel("Gene index (top 50 HVG)", fontsize=FONT_LABEL)
     ax3.set_ylabel("Gene index", fontsize=FONT_LABEL)
@@ -381,16 +386,45 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
         stat_text = (f"Spearman \u03c1 = {spearman_r:.3f}\n"
                  f"Pearson r = {pearson_r:.3f}")
 
-        # Label top 3 outliers by residual
+        # Label top 3 outliers by residual with fixed callout slots so the
+        # small annotation texts stay readable at manuscript scale.
         residuals = np.abs(type_mantel - (slope * type_het + intercept))
         top3 = np.argsort(residuals)[-3:]
-        for idx in top3:
+        slots = [(0.83, 0.94, "left"), (0.83, 0.14, "left"), (0.72, 0.08, "left")]
+        for idx, (slot_x, slot_y, ha) in zip(top3[np.argsort(residuals[top3])[::-1]], slots):
             t_id = type_labels_d[idx]
             lbl = abbreviate_cell_type(_type_names.get(t_id, f"Type {t_id}"), max_len=18)
-            ax4.annotate(lbl, (type_het[idx], type_mantel[idx]),
-                         fontsize=9, xytext=(8, 6), textcoords="offset points",
-                         arrowprops=dict(arrowstyle="->", lw=0.5, color="#888"),
-                         color=COLORS["annotation_dark"])
+            ax4.text(
+                slot_x,
+                slot_y,
+                lbl,
+                transform=ax4.transAxes,
+                fontsize=8.5,
+                ha=ha,
+                va="center",
+                color=COLORS["annotation_dark"],
+                bbox=dict(boxstyle="round,pad=0.10", fc="white", ec="none", alpha=0.86),
+                zorder=6,
+                clip_on=False,
+            )
+            connector = ConnectionPatch(
+                xyA=(type_het[idx], type_mantel[idx]),
+                coordsA=ax4.transData,
+                xyB=(slot_x - 0.015, slot_y),
+                coordsB=ax4.transAxes,
+                axesA=ax4,
+                axesB=ax4,
+                arrowstyle="-",
+                lw=0.55,
+                color="#888",
+                alpha=0.7,
+                shrinkA=0,
+                shrinkB=0,
+                connectionstyle="arc3,rad=0.12",
+            )
+            connector.set_clip_on(False)
+            connector.set_zorder(2)
+            ax4.add_artist(connector)
     else:
         stat_text = "Insufficient variance for correlation"
 
@@ -406,7 +440,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
                title="Preservation vs. Expression Heterogeneity")
 
     out_path = FIG_DIR / "fig09b_gene_gene_correlation.png"
-    save_with_vcd(fig, out_path, dpi=300, layout_rect=(0.02, 0.04, 0.98, 0.97))
+    save_with_vcd(fig, out_path, dpi=300, layout_rect=(0.02, 0.04, 0.98, 0.93))
     plt.close(fig)
     print(f"Saved figure to {out_path}")
 

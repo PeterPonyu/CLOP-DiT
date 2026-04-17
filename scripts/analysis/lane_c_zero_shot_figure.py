@@ -40,13 +40,15 @@ def main() -> None:
         "CENSUS_TESTIS_FETAL": "#009E73",    # bluish-green
     }
 
-    rows: list[tuple[str, str, float, float]] = []
+    rows_by_tissue: dict[str, list[tuple[str, float, float]]] = {}
     for tid in tissue_ids:
         per_type = data["per_tissue"][tid]["per_type"]
         n_types = len(per_type)
         random_chance = 1.0 / max(n_types, 1)
+        rows = []
         for ct, m in per_type.items():
-            rows.append((tid, ct, m["nearest_centroid_acc"], random_chance))
+            rows.append((ct, m["nearest_centroid_acc"], random_chance))
+        rows_by_tissue[tid] = sorted(rows, key=lambda row: (-row[1], row[0].lower()))
 
     # Abbreviate long cell-type names for legible x-axis labels
     abbrev = {
@@ -65,71 +67,76 @@ def main() -> None:
         "type I cell of adrenal cortex": "adrenal cortex I",
     }
 
-    fig, ax = plt.subplots(figsize=(14.0, 5.8))
-
-    xs, heights, colors, labels = [], [], [], []
-    tissue_group_bounds: dict[str, tuple[int, int]] = {}
-    pos = 0
-    for tid in tissue_ids:
-        start = pos
-        for tid_row, ct, acc, _ in rows:
-            if tid_row != tid:
-                continue
-            xs.append(pos)
-            heights.append(acc)
-            colors.append(tissue_color[tid])
-            labels.append(ct)
-            pos += 1
-        tissue_group_bounds[tid] = (start, pos - 1)
-        pos += 1.8  # wider spacer between tissue groups
-
-    bars = ax.bar(xs, heights, color=colors, width=0.85, edgecolor="#333", linewidth=0.5)
-
-    # Random-chance horizontal segments per tissue group
-    for tid, (a, b) in tissue_group_bounds.items():
-        n_types = len(data["per_tissue"][tid]["per_type"])
-        if n_types == 0:
-            continue
-        rc = 1.0 / n_types
-        ax.hlines(rc, a - 0.5, b + 0.5, colors="#333", linestyles="--",
-                  linewidth=1.0, zorder=3,
-                  label=f"Random (1/{n_types})" if tid == tissue_ids[0] else None)
-
-    # Tissue group bracket labels at the bottom of the figure (below x-ticks)
-    for tid, (a, b) in tissue_group_bounds.items():
-        ax.text((a + b) / 2, -0.42, tissue_labels[tid],
-                ha="center", va="top", fontsize=11, fontweight="bold",
-                transform=ax.get_xaxis_transform(), color=tissue_color[tid])
-        # horizontal bracket line under tissue group
-        ax.plot([a - 0.4, b + 0.4], [-0.30, -0.30],
-                transform=ax.get_xaxis_transform(),
-                color=tissue_color[tid], linewidth=2.2, clip_on=False)
-
-    ax.set_xticks(xs)
-    ax.set_xticklabels([abbrev.get(l, l) for l in labels],
-                       rotation=50, ha="right", fontsize=10)
-    ax.set_ylabel("Nearest-centroid accuracy (generated → real OOD type)",
-                  fontsize=11)
-    ax.set_ylim(-0.02, 1.05)
-    ax.set_yticks(np.arange(0.0, 1.01, 0.2))
-    ax.axhline(0.0, color="#999", linewidth=0.5, zorder=1)
-    ax.set_title(
-        "Zero-shot strict-OOD generalization by novel cell type",
-        fontsize=13, pad=10,
+    fig, axes = plt.subplots(
+        nrows=3,
+        ncols=1,
+        figsize=(7.6, 6.8),
+        dpi=300,
+        sharex=True,
+        gridspec_kw={"height_ratios": [1.0, 2.8, 1.0]},
     )
+    fig.set_dpi(300)
 
-    # Value labels on top of bars (bumped for 7-inch article render)
-    for x, h in zip(xs, heights):
-        ax.text(x, h + 0.018, f"{h:.2f}", ha="center", va="bottom", fontsize=10)
+    for ax, tid in zip(axes, tissue_ids):
+        rows = rows_by_tissue[tid]
+        labels = [abbrev.get(label, label) for label, _, _ in rows]
+        values = [value for _, value, _ in rows]
+        random_chance = rows[0][2] if rows else 0.0
+        y = np.arange(len(labels))
 
-    # Legend above the plot area to avoid overlapping bars
-    ax.legend(loc="upper left", bbox_to_anchor=(0.0, 1.12),
-              fontsize=9, frameon=False, ncol=3)
-    ax.grid(axis="y", alpha=0.3)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
+        ax.barh(
+            y,
+            values,
+            color=tissue_color[tid],
+            edgecolor="#333333",
+            linewidth=0.4,
+            height=0.72,
+        )
+        ax.axvline(random_chance, color="#333333", linestyle="--", linewidth=1.1)
+        random_label_x = random_chance - 0.015 if random_chance >= 0.95 else max(min(random_chance + 0.015, 0.90), 0.03)
+        random_label_ha = "right" if random_chance >= 0.95 else "left"
+        ax.text(
+            random_label_x,
+            0.98,
+            f"random = {random_chance:.2f}",
+            transform=ax.get_xaxis_transform(),
+            ha=random_label_ha,
+            va="top",
+            fontsize=9,
+            color="#333333",
+        )
 
-    plt.subplots_adjust(bottom=0.38, top=0.88, left=0.07, right=0.98)
+        for idx, value in enumerate(values):
+            ax.text(
+                min(value + 0.018, 1.01),
+                idx,
+                f"{value:.2f}",
+                va="center",
+                ha="left",
+                fontsize=9.5,
+                color="#222222",
+            )
+
+        ax.set_yticks(y)
+        ax.set_yticklabels(labels, fontsize=9.5)
+        ax.invert_yaxis()
+        ax.set_xlim(0.0, 1.08)
+        ax.set_xticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
+        ax.grid(axis="x", alpha=0.25)
+        ax.grid(axis="y", alpha=0.0)
+        ax.set_title(
+            tissue_labels[tid],
+            fontsize=10.5,
+            fontweight="bold",
+            color=tissue_color[tid],
+            loc="left",
+            pad=4,
+        )
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+
+    axes[-1].set_xlabel("Nearest-centroid accuracy (generated -> real OOD type)", fontsize=10.5)
+    plt.subplots_adjust(left=0.42, right=0.98, top=0.93, bottom=0.16, hspace=0.38)
 
     out_png = REPO / "results/figures/figS_lane_c_zero_shot.png"
     save_with_vcd(fig, out_png, dpi=300)

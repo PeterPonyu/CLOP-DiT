@@ -19,9 +19,9 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-# Single source of truth: 21 article-facing component basenames (no suffix).
-# Order matches the LaTeX \begin{figure} sequence in articles/clop_dit_genes.tex,
-# which determines the displayed Figure 1–9 plus Figures S1–S2.
+# Single source of truth: 22 article-facing component basenames (no suffix).
+# Order matches the revised manuscript sequence, including the strict-OOD figure
+# now promoted into the main revised article body.
 #
 # The manuscript now uses article-index-aware component names:
 #   Fig 1  -> fig01a_*, fig01b_*
@@ -64,6 +64,8 @@ _SOURCE_BASENAMES: List[str] = [
     # Main body display Figure 9
     "fig09a_variance_matching",
     "fig09b_gene_gene_correlation",
+    # Main body strict-OOD figure
+    "figS_lane_c_zero_shot",
     # Supplementary display Figure S1 (single Python-composed appendix figure)
     "figS01_supplementary_validation",
     # Supplementary display Figure S2 (single Python-composed appendix figure)
@@ -97,6 +99,7 @@ ARTICLE_FIGURE_PRODUCERS: List[Tuple[str, str]] = [
     ("fig08b_de_concordance", "src/visualization/fig18_de_concordance.py"),
     ("fig09a_variance_matching", "scripts/analysis/variance_matching_pilot.py"),
     ("fig09b_gene_gene_correlation", "scripts/analysis/gene_gene_correlation.py"),
+    ("figS_lane_c_zero_shot", "scripts/analysis/lane_c_zero_shot_figure.py"),
     ("figS01_supplementary_validation", "src/visualization/figS01_supplementary_validation.py"),
     ("figS02_expression_diagnostics", "src/visualization/figS02_expression_diagnostics.py"),
 ]
