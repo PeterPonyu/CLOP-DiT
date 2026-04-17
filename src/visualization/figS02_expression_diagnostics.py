@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 _TITLE_SIZE = max(FONT_TITLE - 1, 12)
 _LABEL_SIZE = 15
-_LABEL_Y = 1.08
+_LABEL_Y = 1.04
 _TIER_COLORS = {"pass": "#1B5E20", "warn": "#F9A825", "fail": "#D84315"}
 _VARIANT_DISPLAY = {
     "full": "Full prompt",
@@ -215,7 +215,8 @@ def _panel_d(ax: plt.Axes, analysis_path: Path, tiers_path: Path) -> None:
 
     ax.scatter(n_reals, scores, c=point_colors, s=30, alpha=0.7, edgecolors="white", linewidth=0.3, zorder=3)
     ax.set_xscale("log")
-    ax.xaxis.set_major_locator(plt.MaxNLocator(nbins=3))
+    ax.set_xticks([10, 100, 1000, 10000])
+    ax.set_xticklabels([r"$10^1$", r"$10^2$", r"$10^3$", r"$10^4$"])
 
     from scipy import stats as scipy_stats
 
@@ -328,6 +329,9 @@ def _panel_g(ax: plt.Axes, results_path: Path) -> None:
     for i, (bar, val) in enumerate(zip(bars, ret_vals)):
         ax.text(val + 1.0, i, f"{val:.1f}%", va="center", fontsize=FONT_ANNOTATION, color=COLORS["neutral"])
 
+    xmax = max(125, min(max(ret_vals) * 1.15 if ret_vals else 100, 150))
+    ax.set_xlim(0, xmax)
+    ax.set_xticks([0, 50, 100] + ([150] if xmax >= 150 else []))
     style_axes(ax, "bar", xlabel="Retention (%)", title="Field Contribution")
 
 
@@ -406,6 +410,7 @@ def _panel_j(ax: plt.Axes, results_path: Path) -> None:
     ax.set_yticks(range(n_types))
     ax.set_yticklabels(thin, fontsize=max(FONT_TICK - 1, 9))
     ax.invert_yaxis()
+    ax.set_xticks([0.0, 0.5, 1.0])
     ax.axvline(0.5, color="#999", linestyle=":", linewidth=1.0, alpha=0.5, label="Chance (0.5)")
     auc_mean = float(np.mean(auc_vals))
     ax.axvline(auc_mean, color="#555", linestyle="--", linewidth=1.2, label=f"Mean = {auc_mean:.3f}")
@@ -429,18 +434,22 @@ def plot_expression_diagnostics(output_dir: str | Path = "results/figures", dpi:
     field_ablation = val_dir / "field_ablation_results.json"
     discriminator = val_dir / "discriminator_analysis.json"
 
-    fig = plt.figure(figsize=(13.0, 10.0))
-    layout = bind_figure_region(fig, (0.055, 0.05, 0.988, 0.965))
-    top, bottom = layout.split_rows([1.0, 1.0], gap=0.14)
+    fig = plt.figure(figsize=(14.0, 10.5))
+    layout = bind_figure_region(fig, (0.11, 0.09, 0.955, 0.945))
+    top, bottom = layout.split_rows([1.0, 1.0], gap=0.18)
 
-    # Top row: wider gap before barh panel c (col 2)
+    # Top row: wider gap before b (col 1) to separate high-precision xticks
+    # (1.0 vs 0.99990) and before c (col 2) barh yticklabels; extra right
+    # gap before e (col 4) so panel e xticks don't run off the page edge
     top_weights = [1.55, 1.05, 1.10, 1.08, 1.55]
-    top_cols = top.split_cols(top_weights, gap=[0.05, 0.10, 0.06, 0.06])
-    # Bottom row: wider gap before g (col 1) barh; narrower j (col 4)
+    top_cols = top.split_cols(top_weights, gap=[0.14, 0.10, 0.06, 0.12])
+    # Bottom row: wider gap before g (col 1) barh; between g/h (col 1/2)
+    # where retention xtick '200' collides with adjacent bar labels; and
+    # between i/j (col 3/4) for the per-type AUC yticks
     bot_weights = [1.50, 1.15, 1.08, 1.08, 1.35]
-    bottom_cols = bottom.split_cols(bot_weights, gap=[0.10, 0.06, 0.06, 0.10])
+    bottom_cols = bottom.split_cols(bot_weights, gap=[0.12, 0.14, 0.10, 0.14])
 
-    _lbl_x = -0.12  # consistent x-offset for all panel labels
+    _lbl_x = -0.10  # consistent x-offset for all panel labels
 
     ax_a = top_cols[0].add_axes(fig)
     _panel_a(ax_a, pseudobulk_summary, pseudobulk_per_type)

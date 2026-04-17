@@ -111,7 +111,7 @@ def _draw_ablation_heatmap(fig: plt.Figure, region, ablation_path: Path) -> None
         logger.warning("Ablation summaries not found: %s", ablation_path)
         ax = region.add_axes(fig)
         _draw_placeholder(ax, "Ablation data not available")
-        add_panel_label(ax, "a", x=-0.12, y=1.08)
+        add_panel_label(ax, "a", x=-0.08, y=1.08)
         return
 
     with open(ablation_path) as f:
@@ -121,7 +121,7 @@ def _draw_ablation_heatmap(fig: plt.Figure, region, ablation_path: Path) -> None
         logger.warning("No ablation entries found")
         ax = region.add_axes(fig)
         _draw_placeholder(ax, "No ablation entries")
-        add_panel_label(ax, "a", x=-0.12, y=1.08)
+        add_panel_label(ax, "a", x=-0.08, y=1.08)
         return
 
     # Sort by category then name
@@ -195,7 +195,7 @@ def _draw_ablation_heatmap(fig: plt.Figure, region, ablation_path: Path) -> None
     cbar.set_label("Normalized (higher = better)", fontsize=FONT_ANNOTATION)
 
     ax.set_title("CLOP Ablation Comparison", fontsize=FONT_TITLE, fontweight="normal", pad=8)
-    add_panel_label(ax, "a", x=-0.12, y=1.08)
+    add_panel_label(ax, "a", x=-0.08, y=1.08)
 
 
 # ---------------------------------------------------------------------------
@@ -208,7 +208,7 @@ def _draw_multi_seed(fig: plt.Figure, region, report_path: Path) -> None:
         logger.warning("Multi-seed report not found: %s", report_path)
         ax = region.add_axes(fig)
         _draw_placeholder(ax, "Multi-seed data not available")
-        add_panel_label(ax, "b", x=-0.12, y=1.08)
+        add_panel_label(ax, "b", x=-0.08, y=1.08)
         return
 
     with open(report_path) as f:
@@ -219,7 +219,7 @@ def _draw_multi_seed(fig: plt.Figure, region, report_path: Path) -> None:
         logger.warning("No recognized regimes in multi-seed report")
         ax = region.add_axes(fig)
         _draw_placeholder(ax, "No regime data")
-        add_panel_label(ax, "b", x=-0.12, y=1.08)
+        add_panel_label(ax, "b", x=-0.08, y=1.08)
         return
 
     ax = region.add_axes(fig)
@@ -271,7 +271,7 @@ def _draw_multi_seed(fig: plt.Figure, region, report_path: Path) -> None:
             fontsize=FONT_LEGEND_DENSE, color=COLORS["neutral"])
 
     ax.set_title("Multi-Seed Robustness", fontsize=FONT_TITLE, fontweight="normal", pad=8)
-    add_panel_label(ax, "b", x=-0.12, y=1.08)
+    add_panel_label(ax, "b", x=-0.08, y=1.08)
 
 
 # ---------------------------------------------------------------------------
@@ -284,7 +284,7 @@ def _draw_ood_showcase(fig: plt.Figure, region, ood_path: Path) -> None:
         logger.warning("OOD results not found: %s", ood_path)
         ax = region.add_axes(fig)
         _draw_placeholder(ax, "OOD data not available")
-        add_panel_label(ax, "c", x=-0.12, y=1.08)
+        add_panel_label(ax, "c", x=-0.08, y=1.08)
         return
 
     with open(ood_path) as f:
@@ -297,7 +297,7 @@ def _draw_ood_showcase(fig: plt.Figure, region, ood_path: Path) -> None:
         logger.warning("No OOD entries found")
         ax = region.add_axes(fig)
         _draw_placeholder(ax, "No OOD entries")
-        add_panel_label(ax, "c", x=-0.12, y=1.08)
+        add_panel_label(ax, "c", x=-0.08, y=1.08)
         return
 
     # Split region into left (novel types) and right (free-form). The right
@@ -386,7 +386,7 @@ def _draw_ood_showcase(fig: plt.Figure, region, ood_path: Path) -> None:
     ax_r.set_title("Free-form Prompt Styles", fontsize=FONT_TITLE, fontweight="normal", pad=10)
 
     # Overall panel label on left sub-panel
-    add_panel_label(ax_l, "c", x=-0.12, y=1.08)
+    add_panel_label(ax_l, "c", x=-0.08, y=1.08)
 
 
 # ===========================================================================

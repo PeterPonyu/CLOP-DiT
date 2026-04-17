@@ -104,12 +104,12 @@ def plot_supplementary_validation(
     ood_path = Path("results/ood_evaluation/ood_results.json")
     real_var, gen_var, aug_data, dec_metrics, dec_approaches = _load_expression_decoder_inputs()
 
-    fig = plt.figure(figsize=(14.0, 15.5))
-    layout = bind_figure_region(fig, (0.06, 0.02, 0.96, 0.98))
+    fig = plt.figure(figsize=(14.0, 16.0))
+    layout = bind_figure_region(fig, (0.11, 0.07, 0.97, 0.97))
 
     # 5 explicit rows — panel a gets extra height; last gap wider for xticklabels
     row_a, row_b, row_c, row_4, row_5 = layout.split_rows(
-        [1.45, 0.55, 0.82, 0.82, 0.82], gap=[0.04, 0.04, 0.04, 0.09],
+        [1.45, 0.55, 0.82, 0.82, 0.82], gap=[0.05, 0.05, 0.09, 0.11],
     )
 
     # Row 1: panel a (ablation heatmap — tall for many y-labels)
@@ -123,9 +123,9 @@ def plot_supplementary_validation(
 
     # Row 4: d, e, f, i, j — variable gaps: wider before e (heatmap yticklabels)
     #   and before f (barh yticklabels) to prevent masking neighbours
-    _lbl_x = -0.12
+    _lbl_x = -0.08
     d_r, e_r, f_r, i_r, j_r = row_4.split_cols(
-        [1.05, 1.00, 1.05, 1.00, 1.00], gap=[0.18, 0.08, 0.08, 0.05],
+        [1.05, 1.00, 1.05, 1.00, 1.00], gap=[0.22, 0.14, 0.14, 0.10],
     )
 
     _row4_lbl_y = 1.14  # row 4 labels higher to clear titles

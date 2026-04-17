@@ -77,7 +77,7 @@ C_WHITE = "#FFFFFF"
 # ---------------------------------------------------------------------------
 
 def draw_box(ax, xy, w, h, label, sublabel=None, facecolor=C_WHITE,
-             edgecolor=C_GREY, fontsize=10, sublabel_size=9.0,
+             edgecolor=C_GREY, fontsize=10.5, sublabel_size=10.5,
              textcolor="black", bold=False, linewidth=1.0, zorder=3,
              boxstyle="round,pad=0.08"):
     """Draw a rounded box with centred label text."""
@@ -149,7 +149,7 @@ def draw_stage_bg(ax, xy, w, h, label, color, alpha=0.10, label_color=None):
         x + w / 2, y + h + 0.02,
         label,
         ha="center", va="bottom",
-        fontsize=10, fontweight="normal",
+        fontsize=10.5, fontweight="normal",
         color=lc,
         zorder=1,
     )
@@ -325,7 +325,7 @@ def create_architecture_figure(output_dir=None):
 
     cx_dit = dit_bx + dit_bw / 2
     ax.text(cx_dit, dit_by + dit_bh - 0.14, "DiT1D",
-            ha="center", va="center", fontsize=10,
+            ha="center", va="center", fontsize=10.5,
             color="black", zorder=5)
     ax.text(cx_dit, dit_by + dit_bh - 0.32, "8 AdaLN-Zero",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL,

@@ -175,7 +175,7 @@ def main():
     from scipy import stats as scipy_stats
 
     fig = plt.figure(figsize=(14.0, 8.0), dpi=300)
-    layout = bind_figure_region(fig, (0.11, 0.08, 0.99, 0.96))
+    layout = bind_figure_region(fig, (0.11, 0.10, 0.99, 0.96))
     # Uses the repository's direct rectangle layout engine, not GridSpec or
     # matplotlib's automatic/constrained layout.
     # - split_rows(..., hspace=...) controls the vertical gap between rows.

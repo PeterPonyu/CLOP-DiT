@@ -42,9 +42,9 @@ logger = logging.getLogger(__name__)
 
 # Decoder ablation display config (mirrors fig31)
 APPROACH_LABELS = {
-    "baseline": "scGPT (frozen)",
-    "lora_light": "scGPT +LoRA",
-    "mlp": "MLP (trained)",
+    "baseline": "scGPT",
+    "lora_light": "+LoRA",
+    "mlp": "MLP",
 }
 
 APPROACH_COLORS = {
@@ -137,7 +137,7 @@ def _panel_b(ax: plt.Axes, real_var: np.ndarray, gen_var: np.ndarray) -> None:
 
     ax.set_xlabel(r"$\log_2$(var$_{\rm gen}$ / var$_{\rm real}$)", fontsize=FONT_LABEL)
     ax.set_ylabel("Gene count", fontsize=FONT_LABEL)
-    ax.set_title("Variance Ratio Distribution", fontsize=FONT_TITLE, fontweight="normal")
+    ax.set_title("Variance Ratio", fontsize=FONT_TITLE, fontweight="normal")
     ax.tick_params(labelsize=FONT_TICK)
     ax.legend(fontsize=FONT_LEGEND, frameon=False, loc="upper center",
               bbox_to_anchor=(0.5, -0.15))
@@ -206,7 +206,7 @@ def _panel_d(ax: plt.Axes, metrics: dict, approaches: list[str]) -> None:
     for a in approaches:
         legend_handles.append(
             Patch(facecolor=APPROACH_COLORS.get(a, "#999"),
-                  label=f"Gen: {APPROACH_LABELS.get(a, a)}")
+                  label=APPROACH_LABELS.get(a, a))
         )
     ax.legend(handles=legend_handles, fontsize=FONT_LEGEND, frameon=False,
               loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=2)
