@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as path_effects
 import numpy as np
 
 from .direct_layout import bind_figure_region
@@ -116,13 +117,21 @@ def _plot_classifier_metric_heatmap(
         display_mode = "worst+best"
 
     im = ax.imshow(display_matrix, cmap="inferno", aspect="auto", vmin=0, vmax=1)
-    # Add numeric annotations on heatmap cells
+    # Cell text with contrasting outline so a reviewer can read the numeric
+    # value against every part of the inferno ramp — including the near-black
+    # zero cells where plain white/black text can wash out.
     for _ri in range(display_matrix.shape[0]):
         for _ci in range(display_matrix.shape[1]):
             _val = display_matrix[_ri, _ci]
-            _color = "white" if _val < 0.5 else "black"
-            ax.text(_ci, _ri, f"{_val:.2f}", ha="center", va="center",
-                    fontsize=max(FONT_HEATMAP_CELL - 1, 6), color=_color, fontweight="normal")
+            _text_color = "white" if _val < 0.55 else "black"
+            _outline_color = "black" if _text_color == "white" else "white"
+            _t = ax.text(_ci, _ri, f"{_val:.2f}", ha="center", va="center",
+                         fontsize=max(FONT_HEATMAP_CELL - 1, 7),
+                         color=_text_color, fontweight="bold")
+            _t.set_path_effects([
+                path_effects.Stroke(linewidth=1.2, foreground=_outline_color),
+                path_effects.Normal(),
+            ])
     ax.set_xticks(range(3))
     ax.set_xticklabels(["Prec.", "Rec.", "F1"], fontsize=8)
     ax.set_yticks(range(len(display_names)))
