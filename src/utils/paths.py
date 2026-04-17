@@ -90,7 +90,7 @@ SCGPT_DIR = _resolve_path(
 ARTICLE_DIR = _resolve_path(
     _pipeline.get("article_dir", "articles")
 ) if _pipeline else (PROJECT_ROOT / "articles")
-ARTICLE_TEX = _pipeline.get("article_tex", "clop_dit_genes.tex") if _pipeline else "clop_dit_genes.tex"
+ARTICLE_TEX = _pipeline.get("article_tex", "clop_dit_manuscript.tex") if _pipeline else "clop_dit_manuscript.tex"
 
 
 # ──────────────────────────────────────────────────────────────

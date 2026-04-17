@@ -166,7 +166,7 @@ def create_architecture_figure(output_dir=None):
     output_dir = Path(output_dir)
     fig = plt.figure(figsize=(10.0, 4.2))
     ax = bind_figure_region(fig, (0.01, 0.02, 0.99, 0.97)).add_axes(fig)
-    ax.set_xlim(-0.20, 7.65)
+    ax.set_xlim(-0.20, 7.92)
     ax.set_ylim(-0.18, 3.80)
     ax.axis("off")
     ax.set_xticks([])
@@ -258,7 +258,7 @@ def create_architecture_figure(output_dir=None):
     draw_arrow(ax, (cx1 + BW, cy + SBH / 2 - 0.02),
                (cx2, cy + SBH / 2 - 0.02), color=C_CELL_MID, linewidth=1.2)
 
-    shared_w = 0.62
+    shared_w = 0.56
     shared_h = 0.72
     shared_x = tx3 + BW + gap + 0.02
     shared_y = 1.22
@@ -304,8 +304,8 @@ def create_architecture_figure(output_dir=None):
             ha="center", va="bottom", fontsize=FONT_ARCH_SUBLABEL, color=C_MID_GREY,
             fontweight="normal", zorder=5)
 
-    # Stage 2: DiT
-    dit_x0 = 3.80
+    # Stage 2: DiT — anchor to shared box right edge with 0.20 clearance.
+    dit_x0 = shared_x + shared_w + 0.20
     dit_y_mid = 1.40
     z0_w = 0.50
     draw_box(ax, (dit_x0, dit_y_mid), z0_w, SBH,
@@ -420,8 +420,8 @@ def create_architecture_figure(output_dir=None):
             ha="center", va="center", fontsize=FONT_ARCH_LABEL,
             color="black", zorder=5)
 
-    # Stage 3: decoder
-    dec_x0 = 6.18
+    # Stage 3: decoder — anchor to ODE right edge with 0.12 clearance.
+    dec_x0 = ode_x + ode_w + 0.12
     dec_y_mid = 1.40
     z1_w = 0.40
     draw_box(ax, (dec_x0, dec_y_mid), z1_w, SBH,

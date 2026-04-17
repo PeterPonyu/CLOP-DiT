@@ -13,7 +13,7 @@ class TestArticleFigureManifest:
 
     @staticmethod
     def _article_tex_basenames() -> set[str]:
-        tex_path = Path(__file__).parent.parent / "articles" / "clop_dit_genes.tex"
+        tex_path = Path(__file__).parent.parent / "articles" / "clop_dit_manuscript.tex"
         tex = tex_path.read_text()
         matches = re.findall(r"\\includegraphics\[[^\]]*\]\{figures/([^}]+)\.pdf\}", tex)
         return set(matches)

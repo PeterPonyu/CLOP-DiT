@@ -386,42 +386,38 @@ def main():
              transform=ax4.transAxes, ha="left", va="bottom",
              fontsize=FONT_ANNOTATION, color=COLORS["neutral"])
 
-    # Label top 3 residual outliers with fixed slots to prevent crossed leader lines.
+    # Label top 3 residual outliers with short adjacent callouts (xytext offset
+    # in display points) so leader lines stay under ~15% of panel width rather
+    # than spanning to a fixed right-margin slot.
     top3 = np.argsort(swd_arr)[-3:]
-    slots = [(0.83, 0.86, "left"), (0.83, 0.76, "left"), (0.83, 0.66, "left")]
-    for idx, (slot_x, slot_y, ha) in zip(top3[np.argsort(swd_arr[top3])[::-1]], slots):
+    for rank, idx in enumerate(top3[np.argsort(swd_arr[top3])[::-1]]):
         lbl = abbreviate_cell_type(results[idx]["name"], max_len=18)
-        ax4.text(
-            slot_x,
-            slot_y,
+        # Stagger offsets so three adjacent labels do not stack on top of
+        # each other: +18/+10/+4 pt horizontally, +22/+10/-4 pt vertically.
+        dx_pt = (24, 18, 14)[rank]
+        dy_pt = (24, 10, -6)[rank]
+        ax4.annotate(
             lbl,
-            transform=ax4.transAxes,
+            xy=(n_reals[idx], swd_arr[idx]),
+            xytext=(dx_pt, dy_pt),
+            textcoords="offset points",
             fontsize=7.8,
-            ha=ha,
+            ha="left",
             va="center",
             color=COLORS["annotation_dark"],
             bbox=dict(boxstyle="round,pad=0.08", fc="white", ec="none", alpha=0.86),
+            arrowprops=dict(
+                arrowstyle="-",
+                lw=0.5,
+                color="#888",
+                alpha=0.7,
+                shrinkA=1,
+                shrinkB=1,
+                connectionstyle="arc3,rad=0.05",
+            ),
             zorder=6,
-            clip_on=False,
+            annotation_clip=False,
         )
-        connector = ConnectionPatch(
-            xyA=(n_reals[idx], swd_arr[idx]),
-            coordsA=ax4.transData,
-            xyB=(slot_x - 0.015, slot_y),
-            coordsB=ax4.transAxes,
-            axesA=ax4,
-            axesB=ax4,
-            arrowstyle="-",
-            lw=0.5,
-            color="#888",
-            alpha=0.7,
-            shrinkA=0,
-            shrinkB=0,
-            connectionstyle="arc3,rad=0.10",
-        )
-        connector.set_clip_on(False)
-        connector.set_zorder(2)
-        ax4.add_artist(connector)
 
     ax4.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="upper right")
     style_axes(ax4, "scatter",
