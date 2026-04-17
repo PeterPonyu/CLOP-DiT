@@ -117,9 +117,7 @@ def _plot_classifier_metric_heatmap(
         display_mode = "worst+best"
 
     im = ax.imshow(display_matrix, cmap="inferno", aspect="auto", vmin=0, vmax=1)
-    # Cell text with contrasting outline so a reviewer can read the numeric
-    # value against every part of the inferno ramp — including the near-black
-    # zero cells where plain white/black text can wash out.
+    # Stroke outline keeps cell labels legible even on the near-black zero cells.
     for _ri in range(display_matrix.shape[0]):
         for _ci in range(display_matrix.shape[1]):
             _val = display_matrix[_ri, _ci]
