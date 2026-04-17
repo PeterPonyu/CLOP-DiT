@@ -190,13 +190,12 @@ def create_architecture_figure(output_dir=None):
                   "Stage 3: Decoding",
                   C_DECODE_DARK, alpha=0.20, label_color="black")
 
-    # Panel labels (data coordinates — track stage backgrounds regardless of bind_figure_region)
-    ax.text(-0.05, 3.10, "(a)", ha="left", va="bottom", fontsize=14, fontweight="bold", color="black",
-            clip_on=False, zorder=10)
-    ax.text(3.60, 3.10, "(b)", ha="left", va="bottom", fontsize=14, fontweight="bold", color="black",
-            clip_on=False, zorder=10)
-    ax.text(6.18, 3.10, "(c)", ha="left", va="bottom", fontsize=14, fontweight="bold", color="black",
-            clip_on=False, zorder=10)
+    # Panel labels (data coordinates — track stage backgrounds regardless of
+    # bind_figure_region). Rendered as bold UPPERCASE A/B/C at 18pt to match
+    # the article-wide panel-label scheme set by src/visualization/style.py.
+    for _x, _ltr in ((-0.05, "A"), (3.60, "B"), (6.18, "C")):
+        ax.text(_x, 3.10, _ltr, ha="left", va="bottom", fontsize=18,
+                fontweight="bold", color="black", clip_on=False, zorder=10)
 
     ax.text(1.68, 2.80, "train: align text and cell latents",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=2)

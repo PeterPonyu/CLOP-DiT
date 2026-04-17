@@ -19,7 +19,7 @@ import numpy as np
 REPO = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO))
 
-from src.visualization.style import apply_style, COLORS, save_with_vcd  # noqa: E402
+from src.visualization.style import apply_style, COLORS, add_panel_label, save_with_vcd  # noqa: E402
 
 
 def main() -> None:
@@ -77,7 +77,7 @@ def main() -> None:
     )
     fig.set_dpi(300)
 
-    panel_letters = ["a", "b", "c"]
+    panel_letters = ["A", "B", "C"]
     for ax_idx, (ax, tid) in enumerate(zip(axes, tissue_ids)):
         rows = rows_by_tissue[tid]
         labels = [abbrev.get(label, label) for label, _, _ in rows]
@@ -135,15 +135,7 @@ def main() -> None:
         )
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
-        ax.text(
-            -0.02, 1.18,
-            f"({panel_letters[ax_idx]})",
-            transform=ax.transAxes,
-            fontsize=12,
-            fontweight="bold",
-            va="top",
-            ha="right",
-        )
+        add_panel_label(ax, panel_letters[ax_idx], x=-0.18, y=1.02)
 
     axes[-1].set_xlabel("Nearest-centroid accuracy (generated -> real OOD type)", fontsize=10.5)
     plt.subplots_adjust(left=0.24, right=0.98, top=0.92, bottom=0.10, hspace=0.55)

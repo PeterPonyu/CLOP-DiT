@@ -58,11 +58,11 @@ def make_figure():
     ax.set_xticks([])
     ax.set_yticks([])
 
-    # Panel label (d) — this figure is merged with the architecture figure (a–c) in the article.
-    # fig01b (14.4" wide) is scaled to 0.95\textwidth while fig01a (10.0") is scaled to
-    # \textwidth, so (d) needs a larger fontsize (~21pt) to match (a)–(c) at 14pt after
-    # LaTeX scaling.
-    ax.text(-0.05, 6.96, "(d)", fontsize=15, fontweight="bold", color="black",
+    # Panel label D — this figure is merged with the architecture figure
+    # (A–C) in the article. fig01b (14.4" wide) scales to 0.95\textwidth and
+    # fig01a (10.0") to \textwidth, so D renders at 22pt to visually match
+    # A–C at 18pt after LaTeX scaling.
+    ax.text(-0.05, 6.96, "D", fontsize=22, fontweight="bold", color="black",
             ha="left", va="center", zorder=10)
 
     # Title

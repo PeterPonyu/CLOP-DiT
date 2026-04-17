@@ -189,7 +189,7 @@ We do not claim that the model has human-like biological understanding. The scie
 
 \begin{reviewercomment}
 \itshape
-The quality of Figures~1 and~2 needs improvement, as the text, arrows, and rectangles appear very cluttered and have low readability. The font color and size in the experimental results also need to be modified to ensure the clarity and consistency of the font, and not to obscure the data (Figure~11(c)).
+The quality of Figures~1 and~2 needs improvement, as the text, arrows, and rectangles appear very cluttered and have low readability. The font color and size in the experimental results also need to be modified to ensure the clarity and consistency of the font, and not to obscure the data (Figure~11C).
 \end{reviewercomment}
 
 \noindent\textbf{Response.}
@@ -199,7 +199,7 @@ We agree. In the revision, we have:
   \item Increased stage-background contrast (alpha $0.15 \to 0.20$) for print legibility.
   \item Fixed an overcompensated panel label in the evaluation pipeline figure ($21\,\text{pt} \to 15\,\text{pt}$).
   \item Harmonized figure fonts and legend positions across the manuscript.
-  \item The Visual Conflict Detection (VCD) pass on the regenerated PDFs records zero residual text-on-text overlaps across Figures~1, 2, and~11, down from 11 flagged overlaps in the original submission. Figure~11(c) specifically was re-laid out so the legend sits outside the data panel, and its axis-label font was raised from $9\,\text{pt}$ to $11\,\text{pt}$ for print legibility. \msref{Figure~11(c)}
+  \item The Visual Conflict Detection (VCD) pass on the regenerated PDFs records zero residual text-on-text overlaps across Figures~1, 2, and~11, down from 11 flagged overlaps in the original submission. Figure~11C specifically was re-laid out so the legend sits outside the data panel, and its axis-label font was raised from $9\,\text{pt}$ to $11\,\text{pt}$ for print legibility. \msref{Figure~11C}
 \end{itemize}
 
 \medskip
@@ -275,7 +275,7 @@ Across 68 matched cell types, per-type Frechet distance is only weakly related t
 
 \begin{reviewercomment}
 \itshape
-Section~3.7, Figure~9(d) clearly shows the ``residual distribution of each gene'' and ``percentage within the tolerance band'', while Figure~10(d) displays the ``highly variable genes sorted by standard deviation ratio''. These graphs involve variance and residuals, but there is no explanation or analysis of the results of these graphs in the main text.
+Section~3.7, Figure~9D clearly shows the ``residual distribution of each gene'' and ``percentage within the tolerance band'', while Figure~10D displays the ``highly variable genes sorted by standard deviation ratio''. These graphs involve variance and residuals, but there is no explanation or analysis of the results of these graphs in the main text.
 \end{reviewercomment}
 
 \noindent\textbf{Response.}
@@ -451,7 +451,7 @@ To make the strict-OOD result reviewer-visible inside the rebuttal itself, we no
 \centering
 \includegraphics[width=0.92\textwidth,keepaspectratio]{../manuscripts/v2_revision/figures/figS_lane_c_zero_shot.pdf}
 \par\vspace{4pt}
-\small Figure preview used in the revised manuscript. Panel~(a) Kidney (Tabula Sapiens, 1~novel type). Panel~(b) Cerebellum (brain atlas, 11~novel types; dashed line = random chance~$1/11 = 0.09$). Panel~(c) Fetal gonadal (2~novel types; dashed line = random chance~$0.50$). Bar-end numerals report zero-shot nearest-centroid accuracy.
+\small Figure preview used in the revised manuscript. Panel~A Kidney (Tabula Sapiens, 1~novel type). Panel~B Cerebellum (brain atlas, 11~novel types; dashed line = random chance~$1/11 = 0.09$). Panel~C Fetal gonadal (2~novel types; dashed line = random chance~$0.50$). Bar-end numerals report zero-shot nearest-centroid accuracy.
 \end{center}
 
 The production CLOP-DiT \emph{partially} generalises to strict-OOD tissues with strong program-dependent variance. Structural-program transfer works: nearest-real-centroid accuracy is $3$--$6\times$ random for novel cell types whose expression program overlaps training tissues (adrenal cortex type~I $= 0.875$, kidney epithelial $= 0.460$). Structurally-distinct programs do not transfer: cerebellar neurons (Purkinje $0.00$, granule cell $0.00$, granule precursor $0.035$, inhibitory interneurons $0.025$) are at or below random chance because the training corpus has no neural analog. Leydig-prompted outputs collapse toward the adrenal cortex centroid, showing that the model fails to resolve sibling steroidogenic types when one dominates the prompt space.
