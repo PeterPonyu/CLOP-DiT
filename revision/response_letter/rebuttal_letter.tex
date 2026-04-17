@@ -240,7 +240,7 @@ Using a 10-family taxonomy, 49.2\% of all KNN mis-typings stay within the same b
 
 \noindent\textbf{Manuscript changes:}
 \begin{itemize}
-  \item Added a KNN error-taxonomy subsection with the family-level analysis and a new 10-family confusion heatmap (Figure~\ref{fig:knn-family-heatmap} in Appendix~\ref{app:suppl-figs}). \msref{Section~3.4, Appendix~A.1}
+  \item Added a KNN error-taxonomy subsection with the family-level analysis and a new 10-family confusion heatmap (Figure~13 in Appendix~A.1). \msref{Section~3.4, Appendix~A.1}
 \end{itemize}
 
 \medskip
@@ -453,7 +453,7 @@ To make the strict-OOD result reviewer-visible inside the rebuttal itself, we no
 \small Figure preview used in the revised manuscript. Panel~(a) Kidney (Tabula Sapiens, 1~novel type). Panel~(b) Cerebellum (brain atlas, 11~novel types; dashed line = random chance~$1/11 = 0.09$). Panel~(c) Fetal gonadal (2~novel types; dashed line = random chance~$0.50$). Bar-end numerals report zero-shot nearest-centroid accuracy.
 \end{center}
 
-The production CLOP-DiT \emph{partially} generalises to strict-OOD tissues with strong program-dependent variance. Structural-program transfer works: nearest-real-centroid accuracy is $3$--$6\times$ random for novel cell types whose expression program overlaps training tissues (adrenal cortex type~I $= 0.875$, kidney epithelial $= 0.460$). Structurally-distinct programs do not transfer: cerebellar neurons (Purkinje $0.00$, granule $0.045$, inhibitory interneurons $0.00$) are at or below random chance because the training corpus has no neural analog. Leydig-prompted outputs collapse toward the adrenal cortex centroid, showing that the model fails to resolve sibling steroidogenic types when one dominates the prompt space.
+The production CLOP-DiT \emph{partially} generalises to strict-OOD tissues with strong program-dependent variance. Structural-program transfer works: nearest-real-centroid accuracy is $3$--$6\times$ random for novel cell types whose expression program overlaps training tissues (adrenal cortex type~I $= 0.875$, kidney epithelial $= 0.460$). Structurally-distinct programs do not transfer: cerebellar neurons (Purkinje $0.00$, granule cell $0.00$, granule precursor $0.035$, inhibitory interneurons $0.025$) are at or below random chance because the training corpus has no neural analog. Leydig-prompted outputs collapse toward the adrenal cortex centroid, showing that the model fails to resolve sibling steroidogenic types when one dominates the prompt space.
 
 This is a \emph{mechanistic ceiling result}, not a binary pass/fail. It complements A5 (upstream latent compression), A3 (heterogeneity-dominant failure axis), and B4 (partial-reversal Stage-1 ablation proxy): the learned cross-type manifold extrapolates along familiar structural axes (epithelial, steroidogenic) but not along unfamiliar ones (GABAergic cerebellar neurons). Expanded training coverage to neural and gonadal tissues is the targeted next step.
 \end{revisionupdate}
@@ -485,7 +485,7 @@ Across the 18 human-only and 8 mouse-only cell types, the two organism groups ar
 
 \noindent\textbf{Manuscript changes:}
 \begin{itemize}
-  \item Added organism-stratified evaluation paragraph with per-organism metrics and a new 6-panel boxplot (Figure~\ref{fig:organism-stratified} in Appendix~\ref{app:suppl-figs}) visualising all five Mann--Whitney tests. \msref{Section~3.4, Appendix~A.1}
+  \item Added organism-stratified evaluation paragraph with per-organism metrics and a new 6-panel boxplot (Figure~14 in Appendix~A.1) visualising all five Mann--Whitney tests. \msref{Section~3.4, Appendix~A.1}
 \end{itemize}
 
 \medskip
@@ -526,7 +526,7 @@ Hybrid $10\times$ & 0.907 & 0.928 & 0.772 & 0.835 \\
 \noindent\textbf{Manuscript changes:}
 \begin{itemize}
   \item Replaced broad ``augmentation is ineffective'' with evidence-backed narrower claim. \msref{Section~3.11}
-  \item Added augmentation strategy sweep and forced-scarcity results (table reproduced above); F1 trajectories across both scarcity regimes are now plotted in Figure~\ref{fig:forced-scarcity} (Appendix~\ref{app:suppl-figs}). \msref{Section~3.11, Appendix~A.1}
+  \item Added augmentation strategy sweep and forced-scarcity results (table reproduced above); F1 trajectories across both scarcity regimes are now plotted in Figure~15 (Appendix~A.1). \msref{Section~3.11, Appendix~A.1}
   \item Multi-scale augmentation validation curves (MLP / scGPT-frozen / scGPT+LoRA) are shown in Figure~S1 of the revised supplement. \msref{Section~3.11}
 \end{itemize}
 
@@ -550,16 +550,16 @@ Three CLOP training runs (100 epochs, seed~42, PrototypeSigLIP, identical archit
 \medskip
 \begin{tabular}{@{}lccccc@{}}
 \toprule
-\textbf{Condition} & \textbf{Quality} & \textbf{proto\_acc} & \textbf{cos\_sim} & \textbf{Best ep.} \\
+\textbf{Condition} & \textbf{Quality} & \textbf{Proto Acc (\%)} & \textbf{cos\_sim} & \textbf{Best ep.} \\
 \midrule
-ZCA (production) & \textbf{0.966} & 0.999 & \textbf{0.851} & 98 \\
-Center + L2 & 0.960 & 1.000 & 0.815 & 96 \\
-No preprocessing & 0.956 & 0.998 & 0.809 & 99 \\
+ZCA (production) & \textbf{0.966} & 76.17 & \textbf{0.851} & 98 \\
+Center + L2 & 0.960 & 76.03 & 0.815 & 96 \\
+No preprocessing & 0.956 & 75.42 & 0.809 & 99 \\
 \bottomrule
 \end{tabular}
 
 \medskip
-Quality drop from ZCA to no preprocessing is only 1.0\%. ZCA's measurable contribution is a 5\% improvement in positive-pair cosine similarity, reflecting decorrelation of the 512-d scGPT dimensions. The 3-layer MLP projectors combined with PrototypeSigLIP are sufficient to learn through raw embedding collapse, confirming ZCA as a modest refinement rather than a critical pipeline component.
+Composite quality drops by only $1.0\%$ across the full ablation ($0.966 \to 0.956$). ZCA's measurable contribution is a $+4.2$\,pp absolute ($\sim$5.2\% relative) improvement in positive-pair cosine similarity ($0.851$ vs.\ $0.809$), reflecting decorrelation of the 512-d scGPT dimensions. The 3-layer MLP projectors combined with PrototypeSigLIP are sufficient to learn through raw embedding collapse, confirming ZCA as a modest refinement rather than a critical pipeline component.
 \end{revisionupdate}
 
 \noindent\textbf{Manuscript changes:}
