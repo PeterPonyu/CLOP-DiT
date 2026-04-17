@@ -77,7 +77,8 @@ def main() -> None:
     )
     fig.set_dpi(300)
 
-    for ax, tid in zip(axes, tissue_ids):
+    panel_letters = ["a", "b", "c"]
+    for ax_idx, (ax, tid) in enumerate(zip(axes, tissue_ids)):
         rows = rows_by_tissue[tid]
         labels = [abbrev.get(label, label) for label, _, _ in rows]
         values = [value for _, value, _ in rows]
@@ -134,9 +135,18 @@ def main() -> None:
         )
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
+        ax.text(
+            -0.02, 1.18,
+            f"({panel_letters[ax_idx]})",
+            transform=ax.transAxes,
+            fontsize=12,
+            fontweight="bold",
+            va="top",
+            ha="right",
+        )
 
     axes[-1].set_xlabel("Nearest-centroid accuracy (generated -> real OOD type)", fontsize=10.5)
-    plt.subplots_adjust(left=0.42, right=0.98, top=0.93, bottom=0.16, hspace=0.38)
+    plt.subplots_adjust(left=0.24, right=0.98, top=0.92, bottom=0.10, hspace=0.55)
 
     out_png = REPO / "results/figures/figS_lane_c_zero_shot.png"
     save_with_vcd(fig, out_png, dpi=300)

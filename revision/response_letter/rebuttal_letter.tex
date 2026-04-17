@@ -1,11 +1,14 @@
 \documentclass[11pt,letterpaper]{article}
 
-\usepackage[margin=1in]{geometry}
+\usepackage[margin=0.9in]{geometry}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{lmodern}
 \usepackage{microtype}
 \usepackage{parskip}
+\setlength{\parskip}{3pt plus 1pt minus 0.5pt}
+\setlength{\textfloatsep}{4pt plus 1pt minus 1pt}
+\setlength{\intextsep}{4pt plus 1pt minus 1pt}
 \usepackage{hyperref}
 \usepackage{enumitem}
 \usepackage{xcolor}
@@ -37,28 +40,30 @@
   colback=reviewbg,
   colframe=reviewblue,
   fonttitle=\bfseries,
-  left=8pt,
-  right=8pt,
-  top=6pt,
-  bottom=6pt,
+  left=7pt,
+  right=7pt,
+  top=3pt,
+  bottom=3pt,
   boxrule=1.2pt,
   arc=2pt,
-  before skip=8pt,
-  after skip=4pt,
+  before skip=4pt,
+  after skip=2pt,
+  breakable,
 }
 
 \newtcolorbox{revisionupdate}{
   colback=updatebg,
   colframe=statusgreen!70!black,
   fonttitle=\bfseries,
-  left=8pt,
-  right=8pt,
-  top=5pt,
-  bottom=5pt,
+  left=7pt,
+  right=7pt,
+  top=3pt,
+  bottom=3pt,
   boxrule=0.8pt,
   arc=2pt,
-  before skip=6pt,
-  after skip=8pt,
+  before skip=4pt,
+  after skip=4pt,
+  breakable,
 }
 
 % --- Status badges ---
@@ -136,7 +141,7 @@ We agree. The original abstract stated the task and framework but did not foregr
   \item Explicitly stated that the main challenge is balancing conditional controllability with preservation of within-type heterogeneity. \msref{Abstract}
 \end{itemize}
 
-\bigskip
+\medskip
 
 % --- R2.2 ---
 \subsection*{Comment 2.2 \hfill \statustext}
@@ -157,7 +162,7 @@ We do have conditioning-field ablation evidence showing that the fields contribu
   \item Expanded the Discussion to note that future work could formalize field-wise prompt optimization. \msref{Discussion}
 \end{itemize}
 
-\bigskip
+\medskip
 
 % --- R2.3 ---
 \subsection*{Comment 2.3 \hfill \statustext}
@@ -176,7 +181,7 @@ We do not claim that the model has human-like biological understanding. The scie
   \item Emphasized the independent-marker substitution and swap-label evidence more clearly. \msref{Section~3.12}
 \end{itemize}
 
-\bigskip
+\medskip
 
 % --- R2.4 ---
 \subsection*{Comment 2.4 \hfill \statustext}
@@ -195,7 +200,7 @@ We agree. In the revision, we have:
   \item Harmonized figure fonts and legend positions across the manuscript.
 \end{itemize}
 
-\bigskip
+\medskip
 
 % --- R2.5 ---
 \subsection*{Comment 2.5 \hfill \statustext}
@@ -214,7 +219,7 @@ The CLOP validation accuracy is a stage-specific retrieval-style proxy measured 
   \item Explained why generation quality should be judged by KNN, steering, and DivR, not CLOP accuracy alone. \msref{Section~3.10}
 \end{itemize}
 
-\bigskip
+\medskip
 
 % --- R2.6 ---
 \subsection*{Comment 2.6 \hfill \statuscompleted}
@@ -237,7 +242,7 @@ Using a 10-family taxonomy, 49.2\% of all KNN mis-typings stay within the same b
   \item Added a KNN error-taxonomy subsection with the family-level analysis. \msref{Section~3.4}
 \end{itemize}
 
-\bigskip
+\medskip
 
 % --- R2.7 ---
 \subsection*{Comment 2.7 \hfill \statuscompleted}
@@ -261,7 +266,7 @@ Across 68 matched cell types, per-type Frechet distance is only weakly related t
   \item Added abundance--fidelity correlation statistics to the main text. \msref{Section~3.4}
 \end{itemize}
 
-\bigskip
+\medskip
 
 % --- R2.8 ---
 \subsection*{Comment 2.8 \hfill \statuscompleted}
@@ -285,7 +290,7 @@ Across the 1,790 genes scored in the in-distribution evaluation, 85\% fall insid
   \item Connected HVG standard-deviation ratios to the first-order vs.\ second-order fidelity narrative (see Figure~9a). \msref{Section~3.5}
 \end{itemize}
 
-\bigskip
+\medskip
 
 % --- R2.9 ---
 \subsection*{Comment 2.9 \hfill \statuscompleted}
@@ -320,7 +325,7 @@ Pooled Gaussian (floor) & $+0.014$ & 1.20 & 60.9\% \\
   \item Figures~9a (variance matching) and~9b (gene-gene correlation) in the revised manuscript visualise the variance-recovery narrative supporting this reply. \msref{Section~3.5}
 \end{itemize}
 
-\bigskip
+\medskip
 
 % --- R2.10 ---
 \subsection*{Comment 2.10 \hfill \statuscompleted}
@@ -356,7 +361,7 @@ no\_cell\_noise & 0.862 & \textbf{0.145} & 0.121 & 0.923 \\
   \item Added caveat that ablation rankings are not reliable proxies for end-to-end quality; the bridge-experiment table (reproduced above) is embedded in this response. \msref{Section~3.10}
 \end{itemize}
 
-\bigskip
+\medskip
 
 % --- R2.11 ---
 \subsection*{Comment 2.11 \hfill \statuscompleted}
@@ -380,7 +385,7 @@ Across the 18 lowest-abundance cell types, the generator produces latents whose 
   \item Supporting diagnostics for rare-cell variance behaviour appear in Figure~S2 (expression diagnostics) of the revised supplement. \msref{Section~3.11}
 \end{itemize}
 
-\bigskip
+\medskip
 
 % --- Gaussian benchmark ---
 \subsection*{Additional Concern: Gaussian benchmark \hfill \statustext}
@@ -441,9 +446,10 @@ Testis (fetal gonadal) & 2 & $0.562$ & $0.500$ & $1.57$ \\
 To make the strict-OOD result reviewer-visible inside the rebuttal itself, we now also embed the revised per-cell-type summary figure below. It matches the manuscript figure delivered in Section~3.13 and the tracked-changes manuscript.
 
 \begin{center}
-\includegraphics[width=0.86\textwidth]{../manuscripts/v2_revision/figures/figS_lane_c_zero_shot.pdf}
-
-\small Figure preview used in the revised manuscript: strict-OOD nearest-centroid accuracy by tissue and novel cell type.
+\centering
+\includegraphics[width=0.92\textwidth,keepaspectratio]{../manuscripts/v2_revision/figures/figS_lane_c_zero_shot.pdf}
+\par\vspace{4pt}
+\small Figure preview used in the revised manuscript. Panel~(a) Kidney (Tabula Sapiens, 1~novel type). Panel~(b) Cerebellum (brain atlas, 11~novel types; dashed line = random chance~$1/11 = 0.09$). Panel~(c) Fetal gonadal (2~novel types; dashed line = random chance~$0.50$). Bar-end numerals report zero-shot nearest-centroid accuracy.
 \end{center}
 
 The production CLOP-DiT \emph{partially} generalises to strict-OOD tissues with strong program-dependent variance. Structural-program transfer works: nearest-real-centroid accuracy is $3$--$6\times$ random for novel cell types whose expression program overlaps training tissues (adrenal cortex type~I $= 0.875$, kidney epithelial $= 0.460$). Structurally-distinct programs do not transfer: cerebellar neurons (Purkinje $0.00$, granule $0.045$, inhibitory interneurons $0.00$) are at or below random chance because the training corpus has no neural analog. Leydig-prompted outputs collapse toward the adrenal cortex centroid, showing that the model fails to resolve sibling steroidogenic types when one dominates the prompt space.
@@ -458,7 +464,7 @@ This is a \emph{mechanistic ceiling result}, not a binary pass/fail. It compleme
   \item Reframed existing OOD prompt tests as exploratory and preliminary. \msref{Section~3.13 and Appendix~A.1}
 \end{itemize}
 
-\bigskip
+\medskip
 
 % --- R3.2 ---
 \subsection*{Comment 3.2 \hfill \statuscompleted}
@@ -481,7 +487,7 @@ Across the 18 human-only and 8 mouse-only cell types, the two organism groups ar
   \item Added organism-stratified evaluation paragraph with per-organism metrics. \msref{Section~3.4}
 \end{itemize}
 
-\bigskip
+\medskip
 
 % --- R3.3 ---
 \subsection*{Comment 3.3 \hfill \statuscompleted}
@@ -523,7 +529,7 @@ Hybrid $10\times$ & 0.907 & 0.928 & 0.772 & 0.835 \\
   \item Multi-scale augmentation validation curves (MLP / scGPT-frozen / scGPT+LoRA) are shown in Figure~S1 of the revised supplement. \msref{Section~3.11}
 \end{itemize}
 
-\bigskip
+\medskip
 
 % --- R3.4 ---
 \subsection*{Comment 3.4 \hfill \statuscompleted}
