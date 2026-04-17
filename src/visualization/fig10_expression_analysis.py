@@ -79,9 +79,12 @@ def plot_expression_analysis(
 
     overall = metrics.get("overall", {})
 
-    fig = plt.figure(figsize=(12.0, 5.8))
-    layout = bind_figure_region(fig, (0.08, 0.10, 0.985, 0.94))
-    top_row, bottom_row = layout.split_rows([0.90, 1.00], hspace=0.42)
+    fig = plt.figure(figsize=(12.0, 6.2))
+    layout = bind_figure_region(fig, (0.08, 0.09, 0.985, 0.94))
+    # Expanded hspace (0.55) gives panel (a)'s top-right legend and gene-name
+    # callouts enough clearance from panel (c)'s title band below; panels (a)
+    # and (c) previously read as nearly touching in the rendered PDF.
+    top_row, bottom_row = layout.split_rows([0.92, 1.00], hspace=0.55)
     top_left, top_right = top_row.split_cols([1.00, 1.02], gap=0.050)
     bottom_left, bottom_right = bottom_row.split_cols([1.02, 0.98], gap=0.060)
     # Note: Figure-level title removed per revision requirements; stats moved to caption
@@ -116,53 +119,55 @@ def plot_expression_analysis(
     cbar1.set_label("|\u0394CV|", fontsize=9)
     cbar1.ax.tick_params(labelsize=8, length=2, pad=1)
 
-    # Annotate the most divergent genes with the same compact callout style used in Fig 9.
+    # Annotate the most divergent genes. Labels are placed with short
+    # display-point offsets (dx, dy) relative to the data point itself rather
+    # than at fixed-column margin slots -- this keeps each gene name adjacent
+    # to its dot and eliminates the long diagonal leader lines that previously
+    # crossed the plot area. Direction is chosen per-point so that labels push
+    # toward the interior of the axes (top-half points get labels pulled down,
+    # right-edge points get labels pulled left).
     top_cv_idx = np.argsort(cv_diff)[-6:]
     top_cv_idx = top_cv_idx[np.argsort(cv_diff[top_cv_idx])[::-1]]
-    sorted_by_y = sorted(top_cv_idx, key=lambda idx: gen_cv[idx], reverse=True)
-    left_slots = [(0.12, 0.88, "left"), (0.12, 0.66, "left"), (0.12, 0.44, "left")]
-    right_slots = [(0.88, 0.84, "right"), (0.88, 0.62, "right"), (0.88, 0.40, "right")]
-    label_plan = []
-    for idx, slot in zip(sorted_by_y[::2], left_slots):
-        label_plan.append((idx, *slot))
-    for idx, slot in zip(sorted_by_y[1::2], right_slots):
-        label_plan.append((idx, *slot))
-
-    for i, slot_x, slot_y, ha in label_plan:
+    x_lo, x_hi = 0.0, max(real_cv.max(), gen_cv.max()) * 1.05
+    y_lo, y_hi = x_lo, x_hi
+    used_xy: list[tuple[float, float]] = []
+    for i in top_cv_idx:
         if i >= len(gene_names):
             continue
-        ax1.text(
-            slot_x,
-            slot_y,
+        xv, yv = real_cv[i], gen_cv[i]
+        x_frac = (xv - x_lo) / (x_hi - x_lo + 1e-12)
+        y_frac = (yv - y_lo) / (y_hi - y_lo + 1e-12)
+        dx_pt = -14 if x_frac >= 0.75 else 12
+        dy_pt = -14 if y_frac >= 0.65 else 12
+        ha = "right" if dx_pt < 0 else "left"
+        # Mild jitter if we land near a previously-placed label
+        for used_x, used_y in used_xy:
+            if abs(xv - used_x) < 0.02 and abs(yv - used_y) < 0.02:
+                dy_pt += 10 if dy_pt > 0 else -10
+                break
+        used_xy.append((xv, yv))
+        ax1.annotate(
             gene_names[i],
-            transform=ax1.transAxes,
+            xy=(xv, yv),
+            xytext=(dx_pt, dy_pt),
+            textcoords="offset points",
             fontsize=8.0,
             ha=ha,
             va="center",
             color="#333",
-            bbox=dict(boxstyle="round,pad=0.10", fc="white", ec="none", alpha=0.86),
+            bbox=dict(boxstyle="round,pad=0.10", fc="white", ec="none", alpha=0.88),
+            arrowprops=dict(
+                arrowstyle="-",
+                lw=0.5,
+                color="#777",
+                alpha=0.7,
+                shrinkA=0,
+                shrinkB=2,
+                connectionstyle="arc3,rad=0.0",
+            ),
             zorder=6,
-            clip_on=False,
+            annotation_clip=True,
         )
-        connector_x = slot_x + (0.02 if ha == "left" else -0.02)
-        connector = ConnectionPatch(
-            xyA=(real_cv[i], gen_cv[i]),
-            coordsA=ax1.transData,
-            xyB=(connector_x, slot_y),
-            coordsB=ax1.transAxes,
-            axesA=ax1,
-            axesB=ax1,
-            arrowstyle="-",
-            lw=0.55,
-            color="#666",
-            alpha=0.65,
-            shrinkA=0,
-            shrinkB=0,
-            connectionstyle=f"arc3,rad={0.12 if ha == 'left' else -0.12}",
-        )
-        connector.set_zorder(2)
-        connector.set_clip_on(False)
-        ax1.add_artist(connector)
 
     cv_corr = np.corrcoef(real_cv, gen_cv)[0, 1]
     ax1.legend(fontsize=10, frameon=False)

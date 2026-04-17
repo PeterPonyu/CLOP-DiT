@@ -385,47 +385,48 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
         stat_text = (f"Spearman \u03c1 = {spearman_r:.3f}\n"
                  f"Pearson r = {pearson_r:.3f}")
 
-        # Label top 3 outliers by residual with short adjacent callouts
-        # (xytext offset in display points) so leader lines stay under ~15%
-        # of panel width rather than spanning fixed right-margin slots that
-        # would cross through other data points.
+        # Label top 3 residual outliers. Labels pinned to interior axes-fraction
+        # slots so they always stay inside the panel rectangle (the previous
+        # offset_points approach placed the bottom two labels below the
+        # y-axis, overlapping the tick labels).
         residuals = np.abs(type_mantel - (slope * type_het + intercept))
-        top3 = np.argsort(residuals)[-3:]
-        y_lo, y_hi = ax4.get_ylim()
-        x_lo, x_hi = ax4.get_xlim()
-        for rank, idx in enumerate(top3[np.argsort(residuals[top3])[::-1]]):
+        top3_idx = np.argsort(residuals)[-3:][::-1]
+        slots = [(0.05, 0.18), (0.05, 0.30), (0.05, 0.42)]
+        for (slot_x, slot_y), idx in zip(slots, top3_idx):
             t_id = type_labels_d[idx]
             lbl = abbreviate_cell_type(_type_names.get(t_id, f"Type {t_id}"), max_len=18)
-            # Decide label direction by where the point sits relative to the axes:
-            # top-half points → push label DOWN; bottom-half → push UP. This keeps
-            # every annotation inside the plot rectangle even on short-height panels.
-            y_frac = (type_mantel[idx] - y_lo) / (y_hi - y_lo) if y_hi > y_lo else 0.5
-            x_frac = (type_het[idx] - x_lo) / (x_hi - x_lo) if x_hi > x_lo else 0.5
-            dy_pt = -20 if y_frac >= 0.55 else 18
-            dx_pt = -18 if x_frac >= 0.75 else 16
-            ha = "right" if dx_pt < 0 else "left"
-            ax4.annotate(
+            ax4.text(
+                slot_x,
+                slot_y,
                 lbl,
-                xy=(type_het[idx], type_mantel[idx]),
-                xytext=(dx_pt, dy_pt),
-                textcoords="offset points",
+                transform=ax4.transAxes,
                 fontsize=8.5,
-                ha=ha,
+                ha="left",
                 va="center",
                 color=COLORS["annotation_dark"],
-                bbox=dict(boxstyle="round,pad=0.10", fc="white", ec="none", alpha=0.86),
-                arrowprops=dict(
-                    arrowstyle="-",
-                    lw=0.55,
-                    color="#888",
-                    alpha=0.7,
-                    shrinkA=1,
-                    shrinkB=1,
-                    connectionstyle="arc3,rad=0.04",
-                ),
+                bbox=dict(boxstyle="round,pad=0.10", fc="white", ec="none", alpha=0.88),
                 zorder=6,
-                annotation_clip=True,
+                clip_on=False,
             )
+            from matplotlib.patches import ConnectionPatch as _CP
+            conn = _CP(
+                xyA=(type_het[idx], type_mantel[idx]),
+                coordsA=ax4.transData,
+                xyB=(slot_x + 0.02, slot_y),
+                coordsB=ax4.transAxes,
+                axesA=ax4,
+                axesB=ax4,
+                arrowstyle="-",
+                lw=0.55,
+                color="#888",
+                alpha=0.7,
+                shrinkA=0,
+                shrinkB=0,
+                connectionstyle="arc3,rad=0.06",
+            )
+            conn.set_clip_on(False)
+            conn.set_zorder(2)
+            ax4.add_artist(conn)
     else:
         stat_text = "Insufficient variance for correlation"
 

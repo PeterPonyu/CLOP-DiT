@@ -176,8 +176,12 @@ def make_figure(df: pd.DataFrame) -> plt.Figure:
         ax.set_axisbelow(True)
 
         # ---- panel label (bold uppercase, above the title) ----
+        # Push the label higher (y=1.22) and slightly further left (x=-0.22)
+        # so the bold "A"/"B"/... does not visually collide with either the
+        # subplot title (y ~= 1.05) or the p-value annotation pinned at the
+        # top-right of the axes.
         from src.visualization.style import add_panel_label
-        add_panel_label(ax, panel["panel"], x=-0.18, y=1.10)
+        add_panel_label(ax, panel["panel"], x=-0.22, y=1.22)
 
     # ---- figure-level legend ----
     legend_patches = [

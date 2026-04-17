@@ -134,7 +134,7 @@ def main() -> None:
     y_pos = np.arange(n)
     bar_colors = ["#2d7bb6" if acc >= 0.95 else "#f4a261" for acc in per_family_acc]
     ax_bar.barh(y_pos, per_family_acc, color=bar_colors, edgecolor="#333333",
-                linewidth=0.4, height=0.72)
+                linewidth=0.4, height=0.72, align="center")
     ax_bar.axvline(0.95, color="#666666", linestyle="--", linewidth=0.9)
     ax_bar.set_xlim(0.85, 1.02)
     ax_bar.set_xticks([0.90, 1.00])
@@ -142,8 +142,12 @@ def main() -> None:
     ax_bar.set_yticks(y_pos)
     ax_bar.set_yticklabels([""] * n)
     # Pin the bar axis y-limits to exactly match the heatmap so each bar
-    # sits on the same pixel row as its heatmap row.
-    ax_bar.set_ylim(ax_heat.get_ylim())
+    # sits on the same pixel row as its heatmap row.  imshow uses integer
+    # centres with a ±0.5 half-cell pad, so we must replicate the same
+    # (n-0.5, -0.5) inverted extents here.  (We deliberately avoid sharey,
+    # which would propagate the heatmap's ytick *labels* back onto ax_bar
+    # and clutter the right panel.)
+    ax_bar.set_ylim(n - 0.5, -0.5)
     ax_bar.set_xlabel("Within-family\naccuracy", fontsize=8, labelpad=4)
     ax_bar.spines["top"].set_visible(False)
     ax_bar.spines["right"].set_visible(False)

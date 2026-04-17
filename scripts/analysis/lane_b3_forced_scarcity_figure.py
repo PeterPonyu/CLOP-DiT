@@ -63,8 +63,13 @@ def make_figure(
     natural_data: dict,
     forced_data: dict,
 ) -> plt.Figure:
+    # wspace reduced (0.12) so the two panels sit close together rather than
+    # leaving a broad empty band in the middle of the figure; the y-axes are
+    # intentionally not shared because natural- and forced-scarcity regimes
+    # operate in visually distinct F1 ranges.
     fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.4), sharey=False,
-                             dpi=300)
+                             dpi=300,
+                             gridspec_kw={"wspace": 0.12})
 
     for ax_idx, gid in enumerate(GID_ORDER):
         ax = axes[ax_idx]
@@ -107,18 +112,22 @@ def make_figure(
         ax.tick_params(axis="y", labelsize=7)
         ax.set_title(CELL_TYPE_TITLES[gid], fontsize=8, pad=4)
 
-        # --- baseline text annotations ---
-        ax.text(len(RATIOS) - 0.5, nat_baseline + 0.018,
+        # --- baseline text annotations (pulled left by 0.2 x-units so the
+        # label box does not extend past the right spine of the 7.2in-wide,
+        # two-panel layout) ---
+        ax.text(len(RATIOS) - 0.7, nat_baseline + 0.018,
                 "natural-scarcity ceiling", fontsize=7.5,
                 color="#0072B2", ha="right", va="bottom")
-        ax.text(len(RATIOS) - 0.5, frc_baseline + 0.018,
+        ax.text(len(RATIOS) - 0.7, frc_baseline + 0.018,
                 "forced-scarcity baseline", fontsize=7.5,
                 color="#D55E00", ha="right", va="bottom")
 
-        # panel label (bold uppercase)
+        # panel label (bold uppercase). Pulled closer to the axes top (y=1.02)
+        # so the 18pt bold "A"/"B" does not extend beyond the figure border on
+        # the 3.4 in-tall layout.
         from src.visualization.style import add_panel_label
         _letter = str(PANEL_LABELS[ax_idx]).strip("()").lower()
-        add_panel_label(ax, _letter, x=-0.12, y=1.08)
+        add_panel_label(ax, _letter, x=-0.12, y=1.02)
 
         ax.set_ylim(0.45, 0.97)
         ax.set_yticks([0.5, 0.6, 0.7, 0.8, 0.9])
@@ -145,7 +154,7 @@ def make_figure(
                    columnspacing=0.8)
 
     fig.tight_layout()
-    fig.subplots_adjust(bottom=0.22, left=0.10, right=0.97, top=0.92)
+    fig.subplots_adjust(bottom=0.22, left=0.10, right=0.97, top=0.92, wspace=0.12)
     return fig
 
 
