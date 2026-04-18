@@ -229,6 +229,8 @@ def _draw_multi_seed(fig: plt.Figure, region, report_path: Path) -> None:
     bar_width = 0.35
     x = np.arange(n_metrics)
 
+    _Y_CAP = 1.05
+    original_means_by_container: list[list[float]] = []
     for idx, regime in enumerate(regimes):
         agg = report[regime].get("aggregated", {})
         means = []
@@ -238,10 +240,17 @@ def _draw_multi_seed(fig: plt.Figure, region, report_path: Path) -> None:
             means.append(m.get("mean", 0))
             stds.append(m.get("std", 0))
 
+        # Cap bar heights AND error bars at the axis ceiling so Rectangle /
+        # Line2D artists do not extend past set_ylim(0, 1.05) — avoids VCD
+        # axes_overflow while annotation below surfaces the true value.
+        draw_means = [min(mv, _Y_CAP) for mv in means]
+        draw_stds = [min(sv, max(0.0, _Y_CAP - mv)) for sv, mv in zip(stds, draw_means)]
+        original_means_by_container.append(list(means))
+
         offset = (idx - (n_regimes - 1) / 2) * bar_width
         color = _REGIME_COLORS.get(regime, COLORS["neutral"])
         label = _REGIME_LABELS.get(regime, regime)
-        ax.bar(x + offset, means, bar_width, yerr=stds, label=label,
+        ax.bar(x + offset, draw_means, bar_width, yerr=draw_stds, label=label,
                color=color, alpha=0.85, capsize=3, edgecolor="white", linewidth=0.5)
 
     ax.set_xticks(x)
@@ -252,16 +261,16 @@ def _draw_multi_seed(fig: plt.Figure, region, report_path: Path) -> None:
     ax.legend(fontsize=FONT_LEGEND_DENSE, loc="upper right", frameon=False)
     style_axes(ax)
 
-    # Annotate bars that exceed the y-axis limit (e.g. Frechet Distance)
-    for bar_group in ax.containers:
-        for bar in bar_group:
-            if bar is None or not hasattr(bar, 'get_height'):
+    # Annotate bars whose original value was capped at the axis ceiling
+    # (e.g. Frechet Distance) — surface the true value via text.
+    for container, orig_means in zip(ax.containers, original_means_by_container):
+        for bar, orig in zip(container, orig_means):
+            if bar is None or not hasattr(bar, 'get_height') or orig <= _Y_CAP:
                 continue
-            if bar.get_height() > 1.05:
-                ax.text(bar.get_x() + bar.get_width() / 2, 1.02,
-                        f"{bar.get_height():.1f}",
-                        ha="center", va="top", fontsize=FONT_ANNOTATION,
-                        color="white", fontweight="bold")
+            ax.text(bar.get_x() + bar.get_width() / 2, 1.02,
+                    f"{orig:.1f}",
+                    ha="center", va="top", fontsize=FONT_ANNOTATION,
+                    color="white", fontweight="bold")
 
     # Annotate seed count
     first_regime = regimes[0]
@@ -317,7 +326,7 @@ def _draw_ood_showcase(fig: plt.Figure, region, ood_path: Path) -> None:
     ax_l = left.add_axes(fig)
     ax_l.set_xlim(0, 11.5)
     n_novel = max(len(novel_items), 1)
-    ax_l.set_ylim(-1.4, (n_novel - 1) * _ROW_STEP + 0.4)
+    ax_l.set_ylim(-1.8, (n_novel - 1) * _ROW_STEP + 0.8)
     ax_l.invert_yaxis()
     ax_l.axis("off")
 
@@ -344,7 +353,7 @@ def _draw_ood_showcase(fig: plt.Figure, region, ood_path: Path) -> None:
     ax_r = right.add_axes(fig)
     ax_r.set_xlim(0, 12.8)
     n_ff = max(len(ff_items), 1)
-    ax_r.set_ylim(-1.4, (n_ff - 1) * _ROW_STEP + 0.4)
+    ax_r.set_ylim(-1.8, (n_ff - 1) * _ROW_STEP + 0.8)
     ax_r.invert_yaxis()
     ax_r.axis("off")
 
