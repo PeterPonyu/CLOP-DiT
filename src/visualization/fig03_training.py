@@ -140,7 +140,7 @@ def plot_clop_training(
     ax_a2.set_xlabel("Epoch", fontsize=FONT_LABEL)
     ax_a2.set_xlim(0, max(epochs) * 1.05)
     ax_a2.xaxis.set_major_locator(MaxNLocator(nbins=4, prune='upper'))
-    add_panel_label(ax_a2, 'b', x=-0.10, y=1.12)
+    add_panel_label(ax_a2, 'b', x=0.00, y=1.12)
 
     # ── A3: Prototype accuracy ──
     ax_a3 = bottom_left.add_axes(fig)
@@ -170,7 +170,7 @@ def plot_clop_training(
     ax_a3.set_xlim(0, max(epochs) * 1.05)
     ax_a3.xaxis.set_major_locator(MaxNLocator(nbins=4, prune='upper'))
     ax_a3.yaxis.set_major_locator(MaxNLocator(nbins=4))
-    add_panel_label(ax_a3, 'c', x=-0.10, y=1.12)
+    add_panel_label(ax_a3, 'c', x=0.00, y=1.12)
 
     # ── A4: Embedding quality metrics ──
     ax_a4 = bottom_right.add_axes(fig)
@@ -190,7 +190,7 @@ def plot_clop_training(
     ax_a4.set_xlim(0, max(epochs) * 1.05)
     ax_a4.xaxis.set_major_locator(MaxNLocator(nbins=4, prune='upper'))
     ax_a4.yaxis.set_major_locator(MaxNLocator(nbins=4))
-    add_panel_label(ax_a4, 'd', x=-0.10, y=1.12)
+    add_panel_label(ax_a4, 'd', x=0.00, y=1.12)
 
     # ── Save ──
     if save:
@@ -303,7 +303,7 @@ def plot_dit_training(
     set_scientific_tickformat(ax_c3, axis="y", scilimits=(-4, -4))
     ax_c3.set_xlim(0, max(epochs) * 1.05)
     ax_c3.xaxis.set_major_locator(MaxNLocator(nbins=2, integer=True, prune="both"))
-    add_panel_label(ax_c3, 'g', x=-0.10, y=1.08)
+    add_panel_label(ax_c3, 'g', x=0.00, y=1.08)
 
     # ── C4: Convergence rate (train vs val) ──
     ax_c4 = bottom_right.add_axes(fig)
@@ -423,7 +423,7 @@ def plot_training_dynamics_combined(
         ax_a2.set_xlabel("Epoch", fontsize=FONT_LABEL)
         ax_a2.set_xlim(0, max(epochs) * 1.05)
         ax_a2.xaxis.set_major_locator(MaxNLocator(nbins=3, prune='upper'))
-        add_panel_label(ax_a2, 'b', x=-0.12, y=1.14)
+        add_panel_label(ax_a2, 'b', x=0.00, y=1.14)
 
         # A3: Accuracy
         ax_a3 = top_cols[2].add_axes(fig)
@@ -445,7 +445,7 @@ def plot_training_dynamics_combined(
         ax_a3.set_xlim(0, max(epochs) * 1.05)
         ax_a3.xaxis.set_major_locator(MaxNLocator(nbins=3, prune='upper'))
         ax_a3.yaxis.set_major_locator(MaxNLocator(nbins=4))
-        add_panel_label(ax_a3, 'c', x=-0.12, y=1.14)
+        add_panel_label(ax_a3, 'c', x=0.00, y=1.14)
 
         # A4: Embedding quality
         ax_a4 = top_cols[3].add_axes(fig)
@@ -465,7 +465,7 @@ def plot_training_dynamics_combined(
         ax_a4.set_xlim(0, max(epochs) * 1.05)
         ax_a4.xaxis.set_major_locator(MaxNLocator(nbins=3, prune='upper'))
         ax_a4.yaxis.set_major_locator(MaxNLocator(nbins=4))
-        add_panel_label(ax_a4, 'd', x=-0.12, y=1.14)
+        add_panel_label(ax_a4, 'd', x=0.00, y=1.14)
 
     # ════════════════════════════════════════════════════════════
     # Bottom row: DiT (3 plots + 1 summary, columns 0-3)
@@ -520,7 +520,7 @@ def plot_training_dynamics_combined(
         set_scientific_tickformat(ax_c3, axis="y", scilimits=(-4, -4))
         ax_c3.set_xlim(0, max(epochs) * 1.05)
         ax_c3.xaxis.set_major_locator(MaxNLocator(nbins=4, integer=True, prune="both"))
-        add_panel_label(ax_c3, 'g', x=-0.12, y=1.08)
+        add_panel_label(ax_c3, 'g', x=0.00, y=1.08)
 
         # C4: Normalized convergence comparison (CLOP + DiT)
         ax_c4 = bottom_cols[3].add_axes(fig)

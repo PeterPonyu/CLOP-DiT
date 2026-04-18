@@ -15,7 +15,7 @@ from scipy import stats as scipy_stats
 from .direct_layout import bind_figure_region
 from .explicit_positioning import add_axes_next_to
 from .style import (
-    COLORS, save_panel, set_figure_suptitle, style_axes,
+    COLORS, save_panel, style_axes,
     add_panel_label, abbreviate_cell_type,
     FONT_TITLE, FONT_LABEL, FONT_TICK, FONT_TICK_DENSE, FONT_ANNOTATION,
     FONT_HEATMAP_CELL,
@@ -57,7 +57,7 @@ def plot_de_concordance_panel(
     contrasts = list(de_data.keys())
     n_contrasts = len(contrasts)
 
-    fig = plt.figure(figsize=(15.8, 6.8))
+    fig = plt.figure(figsize=(15.8, 7.2))
     panel_a, panel_b, panel_c = bind_figure_region(fig, (0.06, 0.10, 0.98, 0.94)).split_cols(
         [1.26, 0.92, 0.98],
         gap=[0.060, 0.055],
@@ -222,7 +222,7 @@ def plot_de_concordance_panel(
         cd = de_data[cname]
         for j, mk in enumerate(metric_keys):
             heatmap_data[i, j] = cd.get(mk, 0)
-        contrast_labels.append(_abbrev_contrast(cname, max_len=16))
+        contrast_labels.append(_abbrev_contrast(cname, max_len=12))
 
     im = ax2.imshow(heatmap_data, cmap="PiYG", aspect="auto", vmin=0, vmax=1)
     ax2.set_xticks(range(len(metric_names)))
@@ -231,13 +231,8 @@ def plot_de_concordance_panel(
     ax2.set_yticks(range(n_contrasts))
     ax2.set_yticklabels(contrast_labels, fontsize=FONT_TICK_DENSE)
 
-    # Annotate every cell (dark text on light cells, white on dark)
-    for i in range(n_contrasts):
-        for j in range(len(metric_names)):
-            val   = heatmap_data[i, j]
-            color = "white" if val < 0.35 or val > 0.72 else "black"
-            ax2.text(j, i, f"{val:.2f}", ha="center", va="center",
-                     fontsize=FONT_HEATMAP_CELL, fontweight="bold", color=color)
+    # The heatmap is easier to read on-page without a second layer of numeric
+    # text in every cell; the colorbar and caption carry the quantitative scale.
 
     cax2 = add_axes_next_to(
         fig,

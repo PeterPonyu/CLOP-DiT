@@ -30,7 +30,6 @@ sys.path.insert(0, str(REPO))
 sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(REPO / "scripts"))
 sys.path.insert(0, str(REPO / "scripts" / "vcd"))
-sys.path.insert(0, str(REPO / "scripts"))
 
 import matplotlib.pyplot as plt
 from src.utils.paths import FIG_DIR, RESULTS_DIR, ARTICLE_FIGURES_DIR
@@ -56,7 +55,7 @@ def _env_flag(name: str, default: bool = True) -> bool:
 def run_results_visualizer():
     """Generate all figures A–S via the ResultsVisualizer."""
     log.info("── Initialising ResultsVisualizer ──")
-    from visualization.results_visualizer import ResultsVisualizer
+    from src.visualization.results_visualizer import ResultsVisualizer
 
     clop_hist_path = str(CLOP_HIST) if CLOP_HIST.exists() else None
     dit_hist_path  = str(DIT_HIST) if DIT_HIST and DIT_HIST.exists() else None
@@ -177,7 +176,7 @@ def run_conditioning_figures():
         try:
             with open(l_data_path) as f:
                 l_data = json.load(f)
-            from visualization.fig13_noise_tradeoff import plot_panel_l
+            from src.visualization.fig13_noise_tradeoff import plot_panel_l
             p = plot_panel_l(
                 noise_scales=l_data["noise_scales"],
                 fds=l_data["fds"],
@@ -214,7 +213,7 @@ def run_conditioning_figures():
             full_dim_source = np.load(m_full_source_path) if m_full_source_path.exists() else None
 
             type_names = {int(k): v for k, v in m_meta["type_names"].items()}
-            from visualization.fig11_conditioning import plot_panel_m
+            from src.visualization.fig11_conditioning import plot_panel_m
             p = plot_panel_m(
                 coords=coords,
                 combined_labels=combined_labels,
@@ -275,7 +274,7 @@ def run_diversity_figures():
         else:
             log.warning("Noise tradeoff data not found (%s); Fig 12 panel (e) will be omitted", l_data_path)
 
-        from visualization.fig12_diversity import plot_diagnostics
+        from src.visualization.fig12_diversity import plot_diagnostics
         saved = plot_diagnostics(
             all_results,
             output_dir=str(FIG_DIR),

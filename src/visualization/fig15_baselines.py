@@ -104,7 +104,7 @@ def plot_baseline_comparison(
     # Direction: lower-is-better for FD, higher-is-better for others
     directions = ["lower", "higher", "higher", "higher"]
 
-    fig = plt.figure(figsize=(15.2, 6.2))
+    fig = plt.figure(figsize=(15.2, 6.8))
     ax_rect_1, ax_rect_2, ax_rect_3 = bind_figure_region(fig, (0.04, 0.13, 0.98, 0.91)).split_cols(
         [1.20, 0.86, 1.20],
         gap=[0.060, 0.060],
@@ -150,7 +150,7 @@ def plot_baseline_comparison(
     y_pos = np.arange(len(sorted_methods))
     for j, mk in enumerate(metric_keys):
         vals = [normalized[mk][method_names.index(m)] for m in sorted_methods]
-        ax2.scatter(vals, y_pos, s=80, marker="oDsv"[j],
+        ax2.scatter(vals, y_pos, s=96, marker="oDsv"[j],
                     color=f"C{j}", alpha=0.85, zorder=3,
                     label=metric_labels[j])
     # Connect dots with lines for each method
@@ -161,10 +161,10 @@ def plot_baseline_comparison(
         # Annotate aggregate score
         score_x = min(1.08, max(vals) + 0.04)
         ax2.text(score_x, i, f"{agg_scores[mname]:.2f}", va="center",
-                 ha="left", fontsize=FONT_SMALL, color=COLORS["neutral"])
+                 ha="left", fontsize=FONT_SMALL + 1, color=COLORS["neutral"])
 
     ax2.set_yticks(y_pos)
-    ax2.set_yticklabels(sorted_methods, fontsize=9)
+    ax2.set_yticklabels(sorted_methods, fontsize=10)
     ax2.set_xlim(-0.05, 1.15)
     ax2.invert_yaxis()
     handles_b, labels_b = ax2.get_legend_handles_labels()
@@ -219,11 +219,11 @@ def plot_baseline_comparison(
         ax3.axhline(y=sep_y, color="#DDD", linewidth=1, linestyle="--")
 
     legend_ax_a = add_shared_legend_axes(fig, (ax.get_position().x0, 0.03, ax.get_position().width, 0.06))
-    legend_ax_a.legend(handles_a, labels_a, fontsize=9, loc="center",
+    legend_ax_a.legend(handles_a, labels_a, fontsize=10, loc="center",
                        ncol=min(n_methods, 3), frameon=False)
 
     legend_ax_b = add_shared_legend_axes(fig, (ax2.get_position().x0, 0.005, ax2.get_position().width, 0.06))
-    legend_ax_b.legend(handles_b, labels_b, fontsize=8, loc="center",
+    legend_ax_b.legend(handles_b, labels_b, fontsize=9, loc="center",
                        frameon=False, ncol=4, handletextpad=0.3, columnspacing=0.6)
 
     style_axes(ax3, "bar", title="CLOP-DiT Advantage (\u0394 metric)",

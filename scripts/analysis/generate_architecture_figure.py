@@ -23,6 +23,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 import matplotlib
 matplotlib.use("Agg")
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
@@ -32,7 +33,6 @@ from src.visualization.style import (
     FONT_ARCH_LABEL,
     FONT_ARCH_SUBLABEL,
     apply_style,
-    add_panel_label,
     save_panel,
 )
 
@@ -190,12 +190,27 @@ def create_architecture_figure(output_dir=None):
                   "Stage 3: Decoding",
                   C_DECODE_DARK, alpha=0.20, label_color="black")
 
-    # Panel labels (data coordinates — track stage backgrounds regardless of
-    # bind_figure_region). Rendered as bold UPPERCASE A/B/C at 18pt to match
-    # the article-wide panel-label scheme set by src/visualization/style.py.
+    # Panel labels stay in data coordinates so they track the stage backgrounds.
+    # They mirror the shared panel-label treatment: bold uppercase, slightly
+    # larger than before, and tagged for VCD recognition.
     for _x, _ltr in ((-0.05, "A"), (3.60, "B"), (6.18, "C")):
-        ax.text(_x, 3.10, _ltr, ha="left", va="bottom", fontsize=18,
-                fontweight="bold", color="black", clip_on=False, zorder=10)
+        ax.text(
+            _x,
+            3.16,
+            _ltr,
+            ha="left",
+            va="bottom",
+            fontsize=20,
+            fontweight="bold",
+            color="black",
+            clip_on=False,
+            zorder=10,
+            gid=f"panel_label:{_ltr}",
+            path_effects=[
+                pe.withStroke(linewidth=3.0, foreground="white"),
+                pe.Normal(),
+            ],
+        )
 
     ax.text(1.68, 2.80, "train: align text and cell latents",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=2)

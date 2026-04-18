@@ -15,6 +15,7 @@ from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
@@ -58,12 +59,24 @@ def make_figure():
     ax.set_xticks([])
     ax.set_yticks([])
 
-    # Panel label D — this figure is merged with the architecture figure
-    # (A–C) in the article. fig01b (14.4" wide) scales to 0.95\textwidth and
-    # fig01a (10.0") to \textwidth, so D renders at 22pt to visually match
-    # A–C at 18pt after LaTeX scaling.
-    ax.text(-0.05, 6.96, "D", fontsize=22, fontweight="bold", color="black",
-            ha="left", va="center", zorder=10)
+    # Panel label D remains the approved schematic exception at 22pt because
+    # this wider figure is scaled differently in LaTeX than fig01a.
+    ax.text(
+        -0.05,
+        6.96,
+        "D",
+        fontsize=22,
+        fontweight="bold",
+        color="black",
+        ha="left",
+        va="center",
+        zorder=10,
+        gid="panel_label:D",
+        path_effects=[
+            pe.withStroke(linewidth=3.0, foreground="white"),
+            pe.Normal(),
+        ],
+    )
 
     # Title
     ax.text(5.0, 6.96, "Evaluation Pipeline Schematic", fontsize=17,

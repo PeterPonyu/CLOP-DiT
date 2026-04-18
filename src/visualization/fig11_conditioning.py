@@ -64,10 +64,10 @@ def plot_panel_m(
     _fw = 15.0  # Fixed width for reproducible layout
     has_row3 = full_dim_data is not None and len(full_dim_data) > 0
     if has_row3:
-        fig = plt.figure(figsize=(_fw, 9.0))
+        fig = plt.figure(figsize=(_fw, 9.8))
         row_regions = bind_figure_region(fig, (0.05, 0.12, 0.97, 0.95)).split_rows(
-            [1.34, 1.02, 0.70],
-            gap=[0.108, 0.074],
+            [1.22, 1.06, 0.92],
+            gap=[0.096, 0.062],
         )
     else:
         fig = plt.figure(figsize=(_fw, 6.7))
@@ -135,9 +135,9 @@ def plot_panel_m(
     # ── Row 2: Quantitative summaries ──
     bottom_regions = row_regions[1].split_cols([1.08, 1.02, 0.92], wspace=0.28)
     ax_b1 = bottom_regions[0].add_axes(fig)
-    add_panel_label(ax_b1, chr(ord('a') + label_offset + 1), x=-0.18, y=_panel_label_y)
+    add_panel_label(ax_b1, chr(ord('a') + label_offset + 1), x=0.02, y=1.08)
     ax_b2 = bottom_regions[1].add_axes(fig)
-    add_panel_label(ax_b2, chr(ord('a') + label_offset + 2), x=-0.18, y=_panel_label_y)
+    add_panel_label(ax_b2, chr(ord('a') + label_offset + 2), x=0.05, y=1.10)
     ax_b3 = bottom_regions[2].add_axes(fig)
     add_panel_label(ax_b3, chr(ord('a') + label_offset + 3), x=-0.18, y=_panel_label_y)
     _adjust_axes_rect(ax_b1, width_scale=0.90)
@@ -228,13 +228,13 @@ def plot_panel_m(
         from sklearn.decomposition import PCA as _PCA
         from sklearn.neighbors import KNeighborsClassifier
 
-        row3_regions = row_regions[2].split_cols([0.98, 1.00, 0.94], wspace=0.34)
+        row3_regions = row_regions[2].split_cols([0.96, 1.18, 0.98], wspace=0.28)
         ax_c1 = row3_regions[0].add_axes(fig)
         add_panel_label(ax_c1, chr(ord('a') + label_offset + 4), x=-0.18, y=_panel_label_y)
         ax_c2 = row3_regions[1].add_axes(fig)
         add_panel_label(ax_c2, chr(ord('a') + label_offset + 5), x=-0.18, y=_panel_label_y)
         ax_c3 = row3_regions[2].add_axes(fig)
-        add_panel_label(ax_c3, chr(ord('a') + label_offset + 6), x=-0.04, y=_panel_label_y)
+        add_panel_label(ax_c3, chr(ord('a') + label_offset + 6), x=0.02, y=_panel_label_y)
         _adjust_axes_rect(ax_c1, width_scale=0.90)
         _adjust_axes_rect(ax_c3, dx=ax_c3.get_position().width * 0.08, width_scale=0.92)
 
@@ -315,14 +315,8 @@ def plot_panel_m(
         ax_c2.set_yticks(np.arange(n_types_sel))
         ax_c2.set_yticklabels(type_short_names, fontsize=FONT_TICK_DENSE)
         ax_c2.set_title("Per-Type Diversity (1\u2212cos)", fontsize=FONT_TITLE)
-        # Annotate cells
-        for i in range(n_types_sel):
-            for j in range(len(all_mode_names)):
-                val = div_matrix[i, j]
-                if not np.isnan(val):
-                    ax_c2.text(j, i, f"{val:.2f}", ha="center", va="center",
-                               fontsize=FONT_HEATMAP_CELL,
-                               color="white" if val > np.nanmedian(div_matrix) else "black")
+        # The colorbar carries the quantitative scale; omitting per-cell numbers
+        # keeps the composed page readable at manuscript size.
         cax = add_axes_next_to(
             fig,
             ax_c2,

@@ -35,8 +35,8 @@ logger = logging.getLogger(__name__)
 
 
 _TITLE_SIZE = max(FONT_TITLE - 1, 12)
-_LABEL_SIZE = 15
-_LABEL_Y = 1.04
+_LABEL_SIZE = 18
+_LABEL_Y = 1.08
 _TIER_COLORS = {"pass": "#1B5E20", "warn": "#F9A825", "fail": "#D84315"}
 _VARIANT_DISPLAY = {
     "full": "Full prompt",
@@ -457,7 +457,7 @@ def plot_expression_diagnostics(output_dir: str | Path = "results/figures", dpi:
 
     ax_b = top_cols[1].add_axes(fig)
     _panel_b(ax_b, pseudobulk_summary, pseudobulk_per_type)
-    add_panel_label(ax_b, "b", x=_lbl_x, y=_LABEL_Y, fontsize=_LABEL_SIZE)
+    add_panel_label(ax_b, "b", x=0.02, y=_LABEL_Y, fontsize=_LABEL_SIZE)
 
     ax_c = top_cols[2].add_axes(fig)
     _panel_c(ax_c, failure_analysis, failure_tiers)

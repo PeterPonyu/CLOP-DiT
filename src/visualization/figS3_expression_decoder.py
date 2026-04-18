@@ -173,7 +173,7 @@ def _panel_c(ax: plt.Axes, data: dict) -> None:
     ax.set_xticklabels(ratios, fontsize=FONT_TICK)
     ax.set_xlabel("Augmentation ratio", fontsize=FONT_LABEL)
     ax.set_ylabel(r"$\Delta$ F1", fontsize=FONT_LABEL)
-    ax.set_title("Embedding Augmentation", fontsize=FONT_TITLE, fontweight="normal")
+    ax.set_title("Embedding Augmentation", fontsize=FONT_TITLE, fontweight="normal", loc="right")
 
     style_axes(ax)
 
@@ -199,7 +199,7 @@ def _panel_d(ax: plt.Axes, metrics: dict, approaches: list[str]) -> None:
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=FONT_TICK, rotation=25, ha="right")
     ax.set_ylabel("Per-gene std", fontsize=FONT_LABEL)
-    ax.set_title("Decoder Comparison", fontsize=FONT_TITLE, fontweight="normal")
+    ax.set_title("Decoder Comparison", fontsize=FONT_TITLE, fontweight="normal", loc="right")
 
     # Build legend with real + per-approach generated entries
     legend_handles = [Patch(facecolor="#90CAF9", label="Real")]
@@ -279,7 +279,7 @@ def plot_expression_decoder(
     # ── Build figure ──
     # figsize=(8,5.5) chosen so that at 0.48\textwidth composition the text
     # scale (~0.40x) matches figS01a at 0.96\textwidth with figsize=16.
-    _S3_LABEL_SIZE = 14  # standard size — matches figS01a at same effective scale
+    _S3_LABEL_SIZE = 18  # keep non-article supplement labels inside the refreshed 18–22pt band
 
     fig = plt.figure(figsize=(6.0, 5.5))
     # Wider left margin for log-scale y-axis labels
@@ -289,7 +289,12 @@ def plot_expression_decoder(
     col_a, col_b = row_top.split_cols([1, 1], wspace=0.44)
     col_c, col_d = row_bot.split_cols([1, 1], wspace=0.44)
 
-    _LBL_Y = 1.05
+    _label_pos = {
+        "i": (0.02, 1.02),   # move inside to avoid the log-scale ytick column
+        "j": (-0.08, 1.10),
+        "k": (-0.08, 0.98),
+        "l": (-0.08, 0.98),
+    }
 
     # ── Panel a: Variance scatter ──
     ax_a = col_a.add_axes(fig)
@@ -297,7 +302,7 @@ def plot_expression_decoder(
         _panel_a(ax_a, real_var, gen_var)
     else:
         _placeholder(ax_a, "Variance Scatter", "i", label_fontsize=_S3_LABEL_SIZE)
-    add_panel_label(ax_a, "i", x=-0.16, y=_LBL_Y, fontsize=_S3_LABEL_SIZE)
+    add_panel_label(ax_a, "i", x=_label_pos["i"][0], y=_label_pos["i"][1], fontsize=_S3_LABEL_SIZE)
 
     # ── Panel b: Variance ratio histogram ──
     ax_b = col_b.add_axes(fig)
@@ -305,7 +310,7 @@ def plot_expression_decoder(
         _panel_b(ax_b, real_var, gen_var)
     else:
         _placeholder(ax_b, "Variance Ratio", "j", label_fontsize=_S3_LABEL_SIZE)
-    add_panel_label(ax_b, "j", x=-0.16, y=_LBL_Y, fontsize=_S3_LABEL_SIZE)
+    add_panel_label(ax_b, "j", x=_label_pos["j"][0], y=_label_pos["j"][1], fontsize=_S3_LABEL_SIZE)
 
     # ── Panel c: Augmentation F1 ──
     ax_c = col_c.add_axes(fig)
@@ -313,7 +318,7 @@ def plot_expression_decoder(
         _panel_c(ax_c, aug_data)
     else:
         _placeholder(ax_c, "Augmentation F1", "k", label_fontsize=_S3_LABEL_SIZE)
-    add_panel_label(ax_c, "k", x=-0.16, y=_LBL_Y, fontsize=_S3_LABEL_SIZE)
+    add_panel_label(ax_c, "k", x=_label_pos["k"][0], y=_label_pos["k"][1], fontsize=_S3_LABEL_SIZE)
 
     # ── Panel d: Decoder ablation ──
     ax_d = col_d.add_axes(fig)
@@ -321,7 +326,7 @@ def plot_expression_decoder(
         _panel_d(ax_d, dec_metrics, dec_approaches)
     else:
         _placeholder(ax_d, "Decoder Comparison", "l", label_fontsize=_S3_LABEL_SIZE)
-    add_panel_label(ax_d, "l", x=-0.16, y=_LBL_Y, fontsize=_S3_LABEL_SIZE)
+    add_panel_label(ax_d, "l", x=_label_pos["l"][0], y=_label_pos["l"][1], fontsize=_S3_LABEL_SIZE)
 
     # ── Save ──
     if save:

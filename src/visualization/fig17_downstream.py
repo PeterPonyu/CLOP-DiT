@@ -19,7 +19,6 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import matplotlib.pyplot as plt
-import matplotlib.patheffects as path_effects
 import numpy as np
 
 from .direct_layout import bind_figure_region
@@ -37,7 +36,6 @@ from .style import (
     quality_color,
     save_panel,
     set_dense_tick_labels,
-    set_figure_suptitle,
     style_axes,
 )
 from ._plot_helpers import plot_umap_overlay, plot_confusion_matrix, plot_roc_curve
@@ -117,19 +115,8 @@ def _plot_classifier_metric_heatmap(
         display_mode = "worst+best"
 
     im = ax.imshow(display_matrix, cmap="inferno", aspect="auto", vmin=0, vmax=1)
-    # Stroke outline keeps cell labels legible even on the near-black zero cells.
-    for _ri in range(display_matrix.shape[0]):
-        for _ci in range(display_matrix.shape[1]):
-            _val = display_matrix[_ri, _ci]
-            _text_color = "white" if _val < 0.55 else "black"
-            _outline_color = "black" if _text_color == "white" else "white"
-            _t = ax.text(_ci, _ri, f"{_val:.2f}", ha="center", va="center",
-                         fontsize=max(FONT_HEATMAP_CELL - 1, 7),
-                         color=_text_color, fontweight="bold")
-            _t.set_path_effects([
-                path_effects.Stroke(linewidth=1.2, foreground=_outline_color),
-                path_effects.Normal(),
-            ])
+    # The color ramp already carries the main signal; omitting per-cell numbers
+    # keeps the composed page readable at manuscript scale.
     ax.set_xticks(range(3))
     ax.set_xticklabels(["Prec.", "Rec.", "F1"], fontsize=8)
     ax.set_yticks(range(len(display_names)))
@@ -429,9 +416,9 @@ def plot_clustering_and_classifier_merged(
     """Merged figure: clustering + classifier alignment (former P + Q)."""
     apply_style()
 
-    fig = plt.figure(figsize=(16.0, 9.0))
+    fig = plt.figure(figsize=(16.0, 9.6))
     layout = bind_figure_region(fig, (0.03, 0.10, 0.98, 0.96))
-    top_row, bottom_row = layout.split_rows([0.98, 1.10], hspace=0.32)
+    top_row, bottom_row = layout.split_rows([0.94, 1.20], hspace=0.28)
     top_rects = top_row.split_cols([1.10, 1.34, 0.82], gap=[0.060, 0.050])
     bottom_rects = bottom_row.split_cols([1.10, 1.34, 0.82], gap=[0.060, 0.050])
     # Title moved to LaTeX caption
@@ -547,7 +534,7 @@ def plot_clustering_and_classifier_merged(
             ax_q2,
             np.array(cm),
             class_names or [f"C{i}" for i in range(np.array(cm).shape[0])],
-            max_rows=18,
+            max_rows=14,
         )
         note_ax = add_shared_legend_axes(fig, (ax_q2.get_position().x0, ax_q2.get_position().y0 - 0.07, ax_q2.get_position().width, 0.05))
         note_ax.text(

@@ -482,7 +482,7 @@ def plot_downstream_validation(
     col_lefts = [0.10, 0.42, 0.73]
     col_widths = [0.27, 0.27, 0.24]
 
-    _S2_LABEL_SIZE = 14  # standard size — matches figS01a at same effective scale
+    _S2_LABEL_SIZE = 18  # keep non-article supplement labels inside the refreshed 18–22pt band
     _LBL_Y = 1.14
 
     # Panel a: cross-dataset (row 0, col 0)
