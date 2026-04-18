@@ -417,7 +417,7 @@ def plot_clustering_and_classifier_merged(
     apply_style()
 
     fig = plt.figure(figsize=(16.0, 9.6))
-    layout = bind_figure_region(fig, (0.03, 0.10, 0.98, 0.96))
+    layout = bind_figure_region(fig, (0.03, 0.10, 0.98, 0.94))
     top_row, bottom_row = layout.split_rows([0.94, 1.20], hspace=0.28)
     top_rects = top_row.split_cols([1.10, 1.34, 0.82], gap=[0.060, 0.050])
     bottom_rects = bottom_row.split_cols([1.10, 1.34, 0.82], gap=[0.060, 0.050])
