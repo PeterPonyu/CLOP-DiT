@@ -195,7 +195,7 @@ def plot_clustering_panel(
                       legend_loc="upper left", legend_fontsize=9)
 
     ax2 = ax_rect_2.add_axes(fig)
-    add_panel_label(ax2, 'b', x=-0.12, y=1.08)
+    add_panel_label(ax2, 'b', x=-0.12, y=1.05)
     mixing = clustering_data.get("per_type_mixing", {})
     if mixing:
         sorted_types = sorted(mixing.keys(), key=lambda k: mixing[k])
@@ -221,7 +221,7 @@ def plot_clustering_panel(
         ax2.set_title("kNN Mixing Score")
 
     ax3 = ax_rect_3.add_axes(fig)
-    add_panel_label(ax3, 'c', x=-0.12, y=1.08)
+    add_panel_label(ax3, 'c', x=-0.12, y=1.05)
     ax3.axis("off")
 
     gauge_items = [
@@ -333,7 +333,7 @@ def plot_classifier_panel(
                xlabel="Predicted", ylabel="True Type")
 
     ax2 = ax_rect_2.add_axes(fig)
-    add_panel_label(ax2, 'b', x=-0.12, y=1.08)
+    add_panel_label(ax2, 'b', x=-0.12, y=1.05)
     if per_type_acc:
         summary = _plot_classifier_metric_heatmap(fig, ax2, cm, class_names)
         f1 = summary["f1"]
@@ -355,7 +355,7 @@ def plot_classifier_panel(
         ax2.set_title("Per-Type Summary")
 
     ax3 = ax_rect_3.add_axes(fig)
-    add_panel_label(ax3, 'c', x=-0.12, y=1.08)
+    add_panel_label(ax3, 'c', x=-0.12, y=1.05)
     disc_proba = classifier_data.get("_disc_proba")
     disc_y = classifier_data.get("_disc_y")
 
@@ -441,7 +441,7 @@ def plot_clustering_and_classifier_merged(
                    transform=ax_p1.transAxes)
 
     ax_p2 = top_rects[1].inset(left=0.090, right=0.040).add_axes(fig)
-    add_panel_label(ax_p2, 'b', x=-0.12, y=1.05)
+    add_panel_label(ax_p2, 'b', x=-0.12, y=1.00)
     mixing = clustering_data.get("per_type_mixing", {})
     if mixing:
         sorted_types = sorted(mixing.keys(), key=lambda k: mixing[k])
@@ -466,7 +466,7 @@ def plot_clustering_and_classifier_merged(
                    transform=ax_p2.transAxes)
 
     ax_ps = top_rects[2].add_axes(fig)
-    add_panel_label(ax_ps, 'c', x=-0.12, y=1.05)
+    add_panel_label(ax_ps, 'c', x=-0.12, y=1.00)
     summary_items = [
         ("ARI", clustering_data.get("ari_gt_vs_leiden", 0), (0.7, 0.4)),
         ("NMI", clustering_data.get("nmi_gt_vs_leiden", 0), (0.7, 0.4)),
