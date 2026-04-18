@@ -111,7 +111,7 @@ def _draw_ablation_heatmap(fig: plt.Figure, region, ablation_path: Path) -> None
         logger.warning("Ablation summaries not found: %s", ablation_path)
         ax = region.add_axes(fig)
         _draw_placeholder(ax, "Ablation data not available")
-        add_panel_label(ax, "a", x=-0.08, y=1.08)
+        add_panel_label(ax, "a", x=-0.08, y=1.05)
         return
 
     with open(ablation_path) as f:
@@ -121,7 +121,7 @@ def _draw_ablation_heatmap(fig: plt.Figure, region, ablation_path: Path) -> None
         logger.warning("No ablation entries found")
         ax = region.add_axes(fig)
         _draw_placeholder(ax, "No ablation entries")
-        add_panel_label(ax, "a", x=-0.08, y=1.08)
+        add_panel_label(ax, "a", x=-0.08, y=1.05)
         return
 
     # Sort by category then name
@@ -195,7 +195,7 @@ def _draw_ablation_heatmap(fig: plt.Figure, region, ablation_path: Path) -> None
     cbar.set_label("Normalized (higher = better)", fontsize=FONT_ANNOTATION)
 
     ax.set_title("CLOP Ablation Comparison", fontsize=FONT_TITLE, fontweight="normal", pad=8)
-    add_panel_label(ax, "a", x=-0.08, y=1.08)
+    add_panel_label(ax, "a", x=-0.08, y=1.05)
 
 
 # ---------------------------------------------------------------------------
