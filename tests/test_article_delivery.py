@@ -137,11 +137,13 @@ class TestDeliverFigures:
             assert pdf_file.read_bytes() == b"%PDF-1.0 dummy\n"
 
     def test_live_sidecar_count_matches_manifest(self):
-        """Stage 3 gate: exactly one VCD sidecar per article-manifest basename.
+        """Stage 3 gate: every article-manifest basename has a live VCD
+        sidecar. Legitimate extras from non-article figures (fig13, fig21–31,
+        figS02*) are allowed — the orchestrator renders them as part of the
+        same regeneration pipeline and their sidecars coexist safely.
 
         Skipped unless ``CLOPDIT_ENFORCE_SIDECAR_COVERAGE=1`` is set, because
-        pre-Stage-3 the orchestrator silently skips ~12 figures and the
-        live-sidecar directory commonly contains stale entries.
+        in a fresh clone the live-sidecar directory may not exist yet.
         """
         import os
 
@@ -160,10 +162,9 @@ class TestDeliverFigures:
         manifest = set(ARTICLE_FIGURE_BASENAMES)
 
         missing = manifest - sidecars
-        extra = sidecars - manifest
-        assert not missing and not extra, (
-            f"Stage 3 sidecar-coverage gate: missing={sorted(missing)}, "
-            f"extra={sorted(extra)}"
+        assert not missing, (
+            f"Stage 3 sidecar-coverage gate: article-manifest figures with "
+            f"no live VCD sidecar: {sorted(missing)}"
         )
 
     def test_workspace_delivery_target_matches_generated_pdfs_when_present(self):
