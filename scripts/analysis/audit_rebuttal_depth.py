@@ -70,10 +70,31 @@ def _normalize(text: str) -> str:
     return re.sub(r"\s+", " ", out)
 
 REPLY_HEADER_RE = re.compile(
-    r"^###\s+(?P<id>R\d+\.\d+|Gaussian\s+addendum|[A-Z][A-Za-z0-9 \-]+?)"
+    r"^(?:###\s+|\\subsection\*\{)"
+    r"(?P<id>"
+    r"Comment\s+\d+\.\d+"
+    r"|Comment\s+\w+"
+    r"|Additional\s+Concern[^}\n]*"
+    r"|R\d+\.\d+"
+    r"|Gaussian\s+addendum"
+    r"|[A-Z][A-Za-z0-9 \-]+?"
+    r")"
+    r"(?:\s*\\hfill[^}\n]*)?"
     r"(?:\s*\(.*?\))?"
-    r"\s*(?:—.*)?$",
+    r"\s*(?:\}|—.*)?$",
     flags=re.MULTILINE,
+)
+
+RESPONSE_START_RE = re.compile(
+    r"\\noindent\\textbf\{Response\.\}|\\noindent\s+\\textbf\{Response\.\}",
+    flags=re.IGNORECASE,
+)
+
+RESPONSE_END_RE = re.compile(
+    r"\\noindent\\textbf\{Manuscript changes:\}|"
+    r"\\medskip\s*%?\s*---|"
+    r"\\subsection\*\{",
+    flags=re.IGNORECASE,
 )
 
 
@@ -106,9 +127,28 @@ def split_replies(source: str) -> list[tuple[str, str]]:
     out: list[tuple[str, str]] = []
     for idx, match in enumerate(headers):
         reply_id = match.group("id").strip()
-        start = match.end()
-        end = headers[idx + 1].start() if idx + 1 < len(headers) else len(source)
-        body = source[start:end].strip()
+        section_start = match.end()
+        section_end = (
+            headers[idx + 1].start() if idx + 1 < len(headers) else len(source)
+        )
+        section = source[section_start:section_end]
+
+        # Isolate the Response paragraph(s): everything between
+        # \noindent\textbf{Response.} and either \noindent\textbf{Manuscript
+        # changes:} or the next subsection.
+        response_match = RESPONSE_START_RE.search(section)
+        if response_match:
+            body_start = response_match.end()
+            body_end = section_end - section_start
+            tail = section[body_start:]
+            end_match = RESPONSE_END_RE.search(tail)
+            if end_match:
+                body_end = body_start + end_match.start()
+            body = section[body_start:body_end]
+        else:
+            body = section
+
+        body = body.strip()
         if body:
             out.append((reply_id, body))
     return out
