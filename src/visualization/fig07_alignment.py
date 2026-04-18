@@ -167,10 +167,10 @@ def plot_text_cell_heatmap(
     x_labels_sorted = [x_labels[i] for i in sort_order]
     y_labels_sorted = [y_labels[i] for i in sort_order]
 
-    fig = plt.figure(figsize=(15.2, 6.8))
+    fig = plt.figure(figsize=(15.2, 7.4))
     # Title moved to LaTeX caption
     layout = bind_figure_region(fig, (0.12, 0.14, 0.985, 0.92))
-    ax1_slot, ax2_slot, ax3_slot = layout.split_cols([1.42, 1.02, 0.60], gap=[0.060, 0.028])
+    ax1_slot, ax2_slot, ax3_slot = layout.split_cols([1.56, 0.92, 0.68], gap=[0.048, 0.028])
     ax1_rect = ax1_slot.inset(right=0.004)
     ax2_rect = ax2_slot.inset(left=0.110, right=0.010)
     ax3_rect = ax3_slot.inset(left=0.012)
@@ -191,14 +191,14 @@ def plot_text_cell_heatmap(
         aspect="auto", interpolation="nearest",
     )
     im.set_rasterized(True)
-    step_x = max(8, int(np.ceil(n_types / 8)))
-    step_y = max(4, int(np.ceil(n_types / 14)))
+    step_x = max(10, int(np.ceil(n_types / 6)))
+    step_y = max(5, int(np.ceil(n_types / 12)))
     _xtl = [x_labels_sorted[i] if i % step_x == 0 else "" for i in range(n_types)]
     _ytl = [y_labels_sorted[i] if i % step_y == 0 else "" for i in range(n_types)]
     ax1.set_xticks(range(n_types))
     ax1.set_yticks(range(n_types))
-    ax1.set_xticklabels(_xtl, rotation=55, fontsize=7.5, ha="right")
-    ax1.set_yticklabels(_ytl, fontsize=10, ha="right")
+    ax1.set_xticklabels(_xtl, rotation=55, fontsize=8, ha="right")
+    ax1.set_yticklabels(_ytl, fontsize=10.5, ha="right")
     ax1.set_ylabel("Cell Type (text prototypes)", fontsize=11)
     ax1.set_title("Cosine Similarity (sorted by diagonal)", fontsize=12)
 
@@ -247,7 +247,7 @@ def plot_text_cell_heatmap(
 
     # ── F2: Per-type alignment bars with threshold bands ──
     ax2 = ax2_rect.add_axes(fig)
-    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.14, y=1.06)
+    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.18, y=1.08)
     sorted_idx_asc = np.argsort(diag)
     d_asc = diag[sorted_idx_asc]
     labels_asc = [y_labels[i] for i in sorted_idx_asc]
@@ -284,11 +284,7 @@ def plot_text_cell_heatmap(
     ax2.axvline(x=0.7, color=COLORS["warn"], linestyle=":", alpha=0.5, linewidth=1.0)
 
     # Title with quality-tier counts
-    ax2.set_title(
-        f"Per-Type Alignment\n"
-        f"[{n_excellent} excellent / {n_good} good / {n_poor} poor]",
-        fontsize=FONT_TITLE,
-    )
+    ax2.set_title("Per-Type Alignment", fontsize=FONT_TITLE, pad=8, x=0.60)
     ax2.set_xlim(0, 1.08)
 
     # Add median marker (offset from mean label to avoid overlap)
@@ -301,6 +297,18 @@ def plot_text_cell_heatmap(
         f"\u03bc={mean_diag:.3f} | med={median_diag:.3f}",
         transform=ax2.transAxes,
         ha="right",
+        va="bottom",
+        fontsize=FONT_SMALL - 1,
+        color=COLORS["annotation_dark"],
+        bbox=dict(boxstyle="round,pad=0.24", facecolor="white", edgecolor="none", alpha=0.85),
+        zorder=10,
+    )
+    ax2.text(
+        0.02,
+        0.02,
+        f"{n_excellent} excellent | {n_good} good | {n_poor} poor",
+        transform=ax2.transAxes,
+        ha="left",
         va="bottom",
         fontsize=FONT_SMALL - 1,
         color=COLORS["annotation_dark"],

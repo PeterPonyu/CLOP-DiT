@@ -60,7 +60,7 @@ def plot_expression_diversity_panel(
     left_rect, right_rect = bind_figure_region(fig, (0.06, 0.14, 0.96, 0.90)).split_cols(2, wspace=0.38)
     axes = [left_rect.add_axes(fig), right_rect.add_axes(fig)]
     add_panel_label(axes[0], chr(ord('a') + label_offset), x=-0.08, y=1.05)
-    add_panel_label(axes[1], chr(ord('a') + label_offset + 1), x=-0.08, y=1.05)
+    add_panel_label(axes[1], chr(ord('a') + label_offset + 1), x=0.00, y=1.08)
 
     ax = axes[0]
     labels = ["Cell Std\n(across genes)", "Gene Std\n(across cells)"]

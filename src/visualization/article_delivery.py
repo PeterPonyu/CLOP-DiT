@@ -251,9 +251,25 @@ def deliver_figures(
 def _default_dirs():
     """Default source/target dirs without importing src.utils (avoids pulling in torch)."""
     import os
+    import yaml
     root = Path(__file__).resolve().parent.parent.parent
     source = Path(os.environ.get("CLOPDIT_FIG_DIR", str(root / "results" / "figures")))
-    target = Path(os.environ.get("CLOPDIT_ARTICLE_FIGURES_DIR", str(root / "articles" / "figures")))
+    target_env = os.environ.get("CLOPDIT_ARTICLE_FIGURES_DIR")
+    if target_env:
+        target = Path(target_env)
+    else:
+        cfg_path = root / "configs" / "pipeline.yaml"
+        cfg = {}
+        if cfg_path.is_file():
+            try:
+                with open(cfg_path) as f:
+                    cfg = yaml.safe_load(f) or {}
+            except Exception:
+                cfg = {}
+        target_cfg = cfg.get("article_figures_dir")
+        if not target_cfg and cfg.get("article_dir"):
+            target_cfg = str(Path(cfg["article_dir"]) / "figures")
+        target = Path(target_cfg or (root / "articles" / "figures"))
     return source, target
 
 

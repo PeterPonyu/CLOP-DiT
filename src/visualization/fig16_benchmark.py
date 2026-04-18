@@ -23,7 +23,7 @@ from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
 from .style import (
     COLORS, FONT_SMALL, FONT_ANNOTATION, METHOD_COLORS, abbreviate_cell_type,
     add_panel_label, save_panel, save_with_vcd,
-    set_figure_suptitle, style_axes
+    style_axes
 )
 from src.utils.paths import RESULTS_DIR, FIG_DIR
 
@@ -101,9 +101,9 @@ def plot_benchmark_panel(
         ("gene_spearman_rho",    "\u03c1 \u2191",     "higher"),
     ]
 
-    fig = plt.figure(figsize=(16.2, 8.0))
+    fig = plt.figure(figsize=(16.2, 8.8))
     layout = bind_figure_region(fig, (0.05, 0.12, 0.96, 0.95))
-    top_row, bottom_row = layout.split_rows([1.05, 1.12], hspace=0.32)
+    top_row, bottom_row = layout.split_rows([1.00, 1.28], hspace=0.26)
     top_left, top_right = top_row.split_cols(2, wspace=0.44)
     bottom_left, bottom_right = bottom_row.split_cols([1.04, 0.96], wspace=0.28)
 
@@ -253,13 +253,14 @@ def plot_benchmark_panel(
 
     group_positions = []
     group_labels = []
+    ytick_labels = []
     all_y = 0
 
     for mi, (metric_key, ci_key, label) in enumerate(ci_metrics):
         # Add metric group title
         if mi > 0:
             ax4.axhline(y=all_y - 0.8, color="#DDD", linewidth=1, linestyle="--")
-            all_y += 0.6
+            all_y += 1.0
 
         for mname in method_names:
             val = methods_data[mname].get(metric_key, 0)
@@ -279,14 +280,27 @@ def plot_benchmark_panel(
                          label=mname[:18] if mi == 0 else None)
             group_positions.append(all_y)
             group_labels.append(f"{mname[:14]}")
+            ytick_labels.append(abbreviate_cell_type(mname, 12) if mi == 0 else "")
             all_y += 1.6
 
     ax4.set_yticks(group_positions)
-    ax4.set_yticklabels([
-        label if i % 2 == 0 else ""
-        for i, label in enumerate(group_labels)
-    ], fontsize=7)
+    ax4.set_yticklabels(ytick_labels, fontsize=7)
     ax4.invert_yaxis()
+    group_span = len(method_names)
+    for gi, (_, _, label) in enumerate(ci_metrics):
+        center = gi * (group_span * 1.6 + 1.0) + ((group_span - 1) * 1.6) / 2.0
+        ax4.text(
+            -0.18,
+            center,
+            label.replace("Distance", "Dist.").replace("Cosine", "Cos."),
+            transform=ax4.get_yaxis_transform(),
+            ha="right",
+            va="center",
+            fontsize=FONT_SMALL,
+            fontweight="bold",
+            color=COLORS["neutral"],
+            clip_on=False,
+        )
 
     ax4.legend(fontsize=FONT_SMALL, loc="lower right", ncol=1, frameon=False)
     style_axes(ax4, "default", title="95% Bootstrap CI Comparison",

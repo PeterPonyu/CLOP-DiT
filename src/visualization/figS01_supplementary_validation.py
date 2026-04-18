@@ -43,8 +43,8 @@ from .style import add_panel_label, apply_style, save_with_vcd
 logger = logging.getLogger(__name__)
 
 
-_LABEL_SIZE = 15
-_LABEL_Y = 1.08
+_LABEL_SIZE = 18
+_LABEL_Y = 1.10
 _BOTTOM_TITLE_SIZE = 14
 
 
@@ -128,7 +128,7 @@ def plot_supplementary_validation(
         [1.05, 1.00, 1.05, 1.00, 1.00], gap=[0.22, 0.14, 0.14, 0.10],
     )
 
-    _row4_lbl_y = 1.14  # row 4 labels higher to clear titles
+    _row4_lbl_y = 1.16  # row 4 labels higher to clear titles at 18pt
 
     ax_d = d_r.add_axes(fig)
     _downstream_panel_d(ax_d, results_dir)
@@ -163,7 +163,7 @@ def plot_supplementary_validation(
 
     ax_g = g_r.add_axes(fig)
     _downstream_panel_g(ax_g, results_dir)
-    add_panel_label(ax_g, "g", x=_lbl_x, y=_LABEL_Y, fontsize=_LABEL_SIZE)
+    add_panel_label(ax_g, "g", x=0.00, y=1.12, fontsize=_LABEL_SIZE)
 
     # Use full region — no inset shrink — so radar fills the space
     ax_h = _downstream_panel_h(fig, list(h_r.as_tuple()), results_dir)
@@ -172,14 +172,14 @@ def plot_supplementary_validation(
     ax_k = k_r.add_axes(fig)
     if aug_data is not None:
         _expr_panel_k(ax_k, aug_data)
-        add_panel_label(ax_k, "k", x=_lbl_x, y=_LABEL_Y, fontsize=_LABEL_SIZE)
+        add_panel_label(ax_k, "k", x=0.05, y=1.16, fontsize=_LABEL_SIZE)
     else:
         _expr_placeholder(ax_k, "Embedding Augmentation", "k", label_fontsize=_LABEL_SIZE)
 
     ax_l = l_r.add_axes(fig)
     if len(dec_approaches) >= 2:
         _expr_panel_l(ax_l, dec_metrics, dec_approaches)
-        add_panel_label(ax_l, "l", x=_lbl_x, y=_LABEL_Y, fontsize=_LABEL_SIZE)
+        add_panel_label(ax_l, "l", x=0.05, y=1.16, fontsize=_LABEL_SIZE)
     else:
         _expr_placeholder(ax_l, "Decoder Comparison", "l", label_fontsize=_LABEL_SIZE)
 
@@ -187,6 +187,9 @@ def plot_supplementary_validation(
     for ax in [ax_d, ax_e, ax_f, ax_g, ax_i, ax_j, ax_k, ax_l]:
         if ax.get_title():
             ax.set_title(ax.get_title(), fontsize=_BOTTOM_TITLE_SIZE, fontweight="normal", pad=4)
+    for ax in [ax_k, ax_l]:
+        if ax.get_title():
+            ax.set_title(ax.get_title(), fontsize=_BOTTOM_TITLE_SIZE, fontweight="normal", pad=8, loc="right")
     if ax_h.get_title():
         ax_h.set_title(ax_h.get_title(), fontsize=_BOTTOM_TITLE_SIZE, fontweight="normal", pad=6)
 

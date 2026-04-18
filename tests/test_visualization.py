@@ -4,6 +4,10 @@ import pytest
 import sys
 from pathlib import Path
 
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
@@ -82,3 +86,27 @@ class TestStyleConstants:
     def test_suptitle_y(self):
         from src.visualization.style import SUPTITLE_Y
         assert SUPTITLE_Y == 0.96
+
+    def test_panel_label_defaults_are_publication_scale(self):
+        from src.visualization.style import PANEL_LABEL_FONT_SIZE
+        assert PANEL_LABEL_FONT_SIZE == 20
+
+
+class TestPanelLabelHelper:
+    """Verify the shared panel-label helper contract."""
+
+    def test_add_panel_label_renders_uppercase_gid_and_defaults(self):
+        from src.visualization.style import PANEL_LABEL_FONT_SIZE, add_panel_label
+
+        fig, ax = plt.subplots()
+        add_panel_label(ax, "a")
+        fig.canvas.draw()
+
+        assert len(ax.texts) == 1
+        label = ax.texts[0]
+        assert label.get_text() == "A"
+        assert label.get_gid() == "panel_label:A"
+        assert label.get_fontsize() == PANEL_LABEL_FONT_SIZE
+        assert label.get_position() == (-0.12, 1.08)
+        assert label.get_clip_on() is False
+        plt.close(fig)

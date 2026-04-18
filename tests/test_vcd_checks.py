@@ -368,3 +368,59 @@ def test_duplicate_tick_labels_detected():
     issues = check_duplicate_tick_labels(fig)
     plt.close(fig)
     assert any(i["type"] == "duplicate_tick_labels" for i in issues)
+
+
+# ---------------------------------------------------------------------------
+# Panel-label detection (refresh hardening)
+# ---------------------------------------------------------------------------
+
+def test_panel_label_overlap_detects_helper_gid_labels():
+    from src.visualization.style import add_panel_label
+    from vcd.vcd_core import _collect_artists
+    from vcd.vcd_checks_text import _check_panel_label_overlap
+
+    fig, ax = plt.subplots(figsize=(5, 4))
+    ax.set_title("Title", loc="left")
+    add_panel_label(ax, "a", x=0.0, y=1.0)
+    ax.text(0.0, 1.0, "Overlap", transform=ax.transAxes, ha="left", va="bottom")
+
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    issues = _check_panel_label_overlap(fig, renderer, _collect_artists(fig, renderer))
+    plt.close(fig)
+
+    assert any(i["type"] == "panel_label_text_overlap" for i in issues)
+
+
+def test_panel_label_overlap_detects_manual_top_band_labels():
+    from vcd.vcd_core import _collect_artists
+    from vcd.vcd_checks_text import _check_panel_label_overlap
+
+    fig, ax = plt.subplots(figsize=(5, 4))
+    ax.text(0.35, 1.02, "B", transform=ax.transAxes, fontsize=18,
+            fontweight="bold", ha="left", va="bottom")
+    ax.text(0.35, 1.02, "Overlap", transform=ax.transAxes, ha="left", va="bottom")
+
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    issues = _check_panel_label_overlap(fig, renderer, _collect_artists(fig, renderer))
+    plt.close(fig)
+
+    assert any(i["type"] == "panel_label_text_overlap" for i in issues)
+
+
+def test_panel_label_overlap_ignores_center_annotation_negative_control():
+    from vcd.vcd_core import _collect_artists
+    from vcd.vcd_checks_text import _check_panel_label_overlap
+
+    fig, ax = plt.subplots(figsize=(5, 4))
+    ax.text(0.50, 0.50, "A", transform=ax.transAxes, fontsize=18,
+            fontweight="bold", ha="center", va="center")
+    ax.text(0.50, 0.50, "Overlap", transform=ax.transAxes, ha="center", va="center")
+
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    issues = _check_panel_label_overlap(fig, renderer, _collect_artists(fig, renderer))
+    plt.close(fig)
+
+    assert not any(i["type"].startswith("panel_label_") for i in issues)
