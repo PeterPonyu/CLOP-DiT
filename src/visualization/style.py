@@ -807,5 +807,106 @@ def abbreviate_cell_type(name: str, max_len: int = 20) -> str:
             break
         result = result.replace(full, short)
     if len(result) > max_len:
-        result = result[:max_len - 1] + "\u2026"
+        # Stage 2 label-handling policy: never emit U+2026.
+        # Truncate at the last word boundary when available, otherwise hard cut.
+        cut = result.rfind(" ", 0, max_len)
+        if cut < max(4, max_len // 2):
+            cut = max_len
+        result = result[:cut].rstrip(" -_,.;:")
     return result
+
+
+def safe_tick_labels(
+    labels,
+    max_chars: int = 20,
+    strategy: str = "index_on_overflow",
+):
+    """Return (display_labels, legend_lines) that never contain U+2026.
+
+    This is the Stage 2 Producer-side Label Helper. Use it in place of
+    per-figure ellipsis truncation to guarantee that the rendered PDF
+    does not contain the HORIZONTAL ELLIPSIS codepoint, which the
+    Stage 2 VCD gate asserts against.
+
+    Parameters
+    ----------
+    labels
+        Full (unshortened) tick labels. May contain existing U+2026
+        characters; those are stripped before processing.
+    max_chars
+        Soft budget used by the biology-aware abbreviator and for the
+        overflow check. Labels longer than this after abbreviation
+        trigger the overflow strategy.
+    strategy
+        ``"index_on_overflow"`` (default): if any abbreviated label
+        still exceeds ``max_chars``, swap the entire set for 1-based
+        numeric indices and return the originals as ``"N: <label>"``
+        legend lines.  Pass these lines to ``ax.legend(handles, lines)``
+        or render them in a side-panel slot.
+
+        ``"abbreviate"``: biology-aware abbreviation only. No swap, no
+        ellipsis — if still long, accept the overflow.
+
+    Returns
+    -------
+    (display_labels, legend_lines)
+        ``display_labels`` are what to hand to ``ax.set_xticklabels`` /
+        ``set_yticklabels``. ``legend_lines`` is empty unless a swap
+        happened.
+    """
+    cleaned = [str(label).replace("\u2026", "").rstrip() for label in labels]
+    abbreviated = [abbreviate_cell_type(s, max_chars) for s in cleaned]
+    # "Overflow" means the original label would have required truncation
+    # after biology-aware abbreviation. Comparing original lengths to the
+    # budget is more reliable than comparing abbreviated lengths, because
+    # abbreviate_cell_type now clean-cuts on its own fallback.
+    overflow = any(len(orig) > max_chars for orig in cleaned)
+    if strategy == "index_on_overflow" and overflow:
+        display = [str(i + 1) for i in range(len(cleaned))]
+        legend = [f"{i + 1}: {s}" for i, s in enumerate(cleaned)]
+        return display, legend
+    if strategy not in {"index_on_overflow", "abbreviate"}:
+        raise ValueError(f"unknown strategy: {strategy!r}")
+    return abbreviated, []
+
+
+def reserve_annotation_slot(
+    ax,
+    k: int = 3,
+    side: str = "right",
+    margin: float = 0.08,
+):
+    """Return ``k`` anchor points in axes-fraction coords for external
+    leader-line annotations.
+
+    Use to place outlier callouts outside the axis body so leader lines
+    do not cross one another or mask data (fig09b-style use case).
+    The caller must place text at the returned coordinates with
+    ``transform=ax.transAxes`` and set ``clip_on=False``.
+
+    Parameters
+    ----------
+    ax
+        Target matplotlib Axes.
+    k
+        Number of slots to reserve. Must be >= 1.
+    side
+        ``"right" | "left" | "top" | "bottom"``.
+    margin
+        Distance outside the axis body in axes-fraction units.
+    """
+    if k < 1:
+        raise ValueError("k must be >= 1")
+    if side == "right":
+        x = 1.0 + margin
+        return [(x, 1.0 - (i + 0.5) / k) for i in range(k)]
+    if side == "left":
+        x = -margin
+        return [(x, 1.0 - (i + 0.5) / k) for i in range(k)]
+    if side == "top":
+        y = 1.0 + margin
+        return [((i + 0.5) / k, y) for i in range(k)]
+    if side == "bottom":
+        y = -margin
+        return [((i + 0.5) / k, y) for i in range(k)]
+    raise ValueError(f"unknown side: {side!r}")

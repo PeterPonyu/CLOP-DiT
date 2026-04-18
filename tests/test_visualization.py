@@ -112,6 +112,86 @@ class TestPanelLabelHelper:
         plt.close(fig)
 
 
+class TestSafeTickLabelsHelper:
+    """Contract for the Stage 2 producer-side label helper."""
+
+    def test_abbreviate_cell_type_never_emits_horizontal_ellipsis(self):
+        from src.visualization.style import abbreviate_cell_type
+        over_budget = "CD8+ cytotoxic T lymphocytes memory resident"
+        out = abbreviate_cell_type(over_budget, max_len=18)
+        assert "\u2026" not in out, out
+
+    def test_safe_tick_labels_passes_short_labels_through(self):
+        from src.visualization.style import safe_tick_labels
+        display, legend = safe_tick_labels(
+            ["Alveolar", "Cycling", "Hepatocyte"], max_chars=20
+        )
+        assert display == ["Alveolar", "Cycling", "Hepatocyte"]
+        assert legend == []
+
+    def test_safe_tick_labels_swaps_to_numeric_index_on_overflow(self):
+        from src.visualization.style import safe_tick_labels
+        labels = ["A" * 40, "B" * 40, "Short"]
+        display, legend = safe_tick_labels(labels, max_chars=18)
+        assert display == ["1", "2", "3"]
+        assert legend == [f"1: {labels[0]}", f"2: {labels[1]}", f"3: {labels[2]}"]
+        for line in display + legend:
+            assert "\u2026" not in line
+
+    def test_safe_tick_labels_strips_preexisting_ellipsis_from_input(self):
+        from src.visualization.style import safe_tick_labels
+        dirty = "CD8+ cytotoxic T lymp\u2026"
+        display, _ = safe_tick_labels([dirty, "Short"], max_chars=30)
+        for label in display:
+            assert "\u2026" not in label
+
+    def test_safe_tick_labels_abbreviate_strategy_does_not_swap(self):
+        from src.visualization.style import safe_tick_labels
+        labels = ["CD8+ cytotoxic T lymphocytes", "Short"]
+        display, legend = safe_tick_labels(
+            labels, max_chars=14, strategy="abbreviate"
+        )
+        assert legend == []
+        assert len(display) == 2
+        for label in display:
+            assert "\u2026" not in label
+
+    def test_safe_tick_labels_rejects_unknown_strategy(self):
+        from src.visualization.style import safe_tick_labels
+        with pytest.raises(ValueError):
+            safe_tick_labels(["Short"], strategy="bogus")
+
+
+class TestReserveAnnotationSlot:
+    """Contract for the Stage 2 annotation-slot helper."""
+
+    def test_reserve_annotation_slot_returns_k_right_side_points(self):
+        from src.visualization.style import reserve_annotation_slot
+        fig, ax = plt.subplots()
+        slots = reserve_annotation_slot(ax, k=3, side="right", margin=0.1)
+        plt.close(fig)
+        assert len(slots) == 3
+        xs = [s[0] for s in slots]
+        assert all(x > 1.0 for x in xs)
+        ys = [s[1] for s in slots]
+        assert ys == sorted(ys, reverse=True)
+
+    def test_reserve_annotation_slot_accepts_all_four_sides(self):
+        from src.visualization.style import reserve_annotation_slot
+        fig, ax = plt.subplots()
+        for side in ("right", "left", "top", "bottom"):
+            slots = reserve_annotation_slot(ax, k=2, side=side)
+            assert len(slots) == 2
+        plt.close(fig)
+
+    def test_reserve_annotation_slot_rejects_k_below_one(self):
+        from src.visualization.style import reserve_annotation_slot
+        fig, ax = plt.subplots()
+        with pytest.raises(ValueError):
+            reserve_annotation_slot(ax, k=0)
+        plt.close(fig)
+
+
 class TestMigratedFigureLabels:
     """Stage 2 gate: figures that migrated to ``safe_tick_labels`` must not
     emit the U+2026 HORIZONTAL ELLIPSIS codepoint anywhere in rendered text.
