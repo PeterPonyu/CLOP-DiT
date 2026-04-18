@@ -35,16 +35,30 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     continue
   fi
   if [ "${remote_sha:-$zero}" = "$zero" ]; then
-    range="$local_sha"
+    # New branch push — enumerate files touched in commits that exist on
+    # $local_sha but not yet on the published history. Try known remote
+    # refs in priority order; fall back to all reachable commits.
+    base=""
+    for ref in origin/revision/major origin/main origin/master; do
+      if git rev-parse --verify "$ref" >/dev/null 2>&1; then
+        base=$(git merge-base "$local_sha" "$ref" 2>/dev/null || true)
+        [ -n "$base" ] && break
+      fi
+    done
+    if [ -n "$base" ]; then
+      files=$(git diff --name-only "${base}..${local_sha}")
+    else
+      files=$(git log --pretty=format: --name-only "$local_sha" | sort -u)
+    fi
   else
-    range="${remote_sha}..${local_sha}"
+    files=$(git diff --name-only "${remote_sha}..${local_sha}")
   fi
 
-  leaked=$(git diff --name-only "$range" | grep -E "$BLOCK_RE" || true)
+  leaked=$(printf '%s\n' "$files" | grep -E "$BLOCK_RE" || true)
   if [ -n "$leaked" ]; then
     fail=1
     printf 'LEAK-GATE: refusing to push %s → %s\n' "$local_ref" "$remote_ref"
-    printf 'blocked paths in range %s:\n' "$range"
+    printf 'blocked paths:\n'
     printf '%s\n' "$leaked" | sed 's/^/  /'
   fi
 done
