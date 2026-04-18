@@ -427,11 +427,11 @@ def test_panel_label_overlap_ignores_center_annotation_negative_control():
 
 
 def test_panel_label_overlap_skips_spine_patch():
-    """Stage 7 fix: Spine patches report their window_extent as the full
-    axes rectangle for common spine configurations, so any panel label
-    placed above the axis top-left corner (the standard location) would
-    always trigger panel_label_overlap against the spine. The VCD rule
-    now skips spine-vs-label overlap checks; this test locks that in.
+    """Stage 7 fix: Spine patches are frame decorations, not content.
+    A panel label touching its own axes border is not a visibility
+    defect, so panel_label_overlap skips Spine artists (matching the
+    Spine-skip policy already applied across the other VCD checks).
+    This test locks the skip in.
     """
     from src.visualization.style import add_panel_label
     from vcd.vcd_core import _collect_artists
