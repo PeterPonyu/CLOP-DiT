@@ -136,6 +136,36 @@ class TestDeliverFigures:
             assert not pdf_file.is_symlink(), f"Expected copy, got symlink: {pdf_file}"
             assert pdf_file.read_bytes() == b"%PDF-1.0 dummy\n"
 
+    def test_live_sidecar_count_matches_manifest(self):
+        """Stage 3 gate: exactly one VCD sidecar per article-manifest basename.
+
+        Skipped unless ``CLOPDIT_ENFORCE_SIDECAR_COVERAGE=1`` is set, because
+        pre-Stage-3 the orchestrator silently skips ~12 figures and the
+        live-sidecar directory commonly contains stale entries.
+        """
+        import os
+
+        if os.environ.get("CLOPDIT_ENFORCE_SIDECAR_COVERAGE") != "1":
+            pytest.skip(
+                "set CLOPDIT_ENFORCE_SIDECAR_COVERAGE=1 to enforce the Stage 3 gate"
+            )
+
+        from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
+        from src.utils.paths import FIG_DIR
+
+        sidecar_dir = FIG_DIR / "_live_vcd"
+        assert sidecar_dir.exists(), f"live-sidecar dir missing: {sidecar_dir}"
+
+        sidecars = {p.stem for p in sidecar_dir.glob("*.json")}
+        manifest = set(ARTICLE_FIGURE_BASENAMES)
+
+        missing = manifest - sidecars
+        extra = sidecars - manifest
+        assert not missing and not extra, (
+            f"Stage 3 sidecar-coverage gate: missing={sorted(missing)}, "
+            f"extra={sorted(extra)}"
+        )
+
     def test_workspace_delivery_target_matches_generated_pdfs_when_present(self):
         from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
         from src.utils.paths import FIG_DIR, ARTICLE_FIGURES_DIR

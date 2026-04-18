@@ -110,3 +110,47 @@ class TestPanelLabelHelper:
         assert label.get_position() == (-0.12, 1.08)
         assert label.get_clip_on() is False
         plt.close(fig)
+
+
+class TestMigratedFigureLabels:
+    """Stage 2 gate: figures that migrated to ``safe_tick_labels`` must not
+    emit the U+2026 HORIZONTAL ELLIPSIS codepoint anywhere in rendered text.
+
+    Enabled via ``CLOPDIT_ENFORCE_ELLIPSIS_BAN=<space-separated basenames>``.
+    Without the env var the test is skipped so Stage 0 can land before any
+    figure is migrated. Requires ``pdfplumber``; skipped when absent.
+    """
+
+    def test_no_ellipsis_in_migrated_figure_labels(self):
+        import os
+
+        migrated = os.environ.get("CLOPDIT_ENFORCE_ELLIPSIS_BAN", "").split()
+        if not migrated:
+            pytest.skip(
+                "set CLOPDIT_ENFORCE_ELLIPSIS_BAN to a space-separated list of "
+                "figure basenames (without .pdf) to enforce the Stage 2 gate"
+            )
+
+        try:
+            import pdfplumber
+        except ImportError:
+            pytest.skip("pdfplumber not installed")
+
+        from src.utils.paths import FIG_DIR
+
+        offenders: list[tuple[str, str]] = []
+        for base in migrated:
+            pdf_path = FIG_DIR / f"{base}.pdf"
+            if not pdf_path.exists():
+                offenders.append((base, "missing PDF"))
+                continue
+            with pdfplumber.open(pdf_path) as pdf:
+                for page in pdf.pages:
+                    text = page.extract_text() or ""
+                    if "\u2026" in text:
+                        offenders.append((base, "contains U+2026"))
+                        break
+        assert not offenders, (
+            "Migrated figures must not contain ellipsis characters in labels: "
+            + "; ".join(f"{b}: {why}" for b, why in offenders)
+        )
