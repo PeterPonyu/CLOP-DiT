@@ -305,7 +305,7 @@ def main():
 
     # ── Panel (c): Per-Dimension Variance Correlation — ECDF + box ──
     ax3 = bottom_left.inset(right=0.02).add_axes(fig)
-    add_panel_label(ax3, 'c', x=-0.10, y=1.05)
+    add_panel_label(ax3, 'c', x=-0.10, y=1.02)
 
     vc_arr = np.array(var_corrs)
     vc_sorted = np.sort(vc_arr)
@@ -339,7 +339,7 @@ def main():
 
     # ── Panel (d): SWD vs. Training Cell Count ──
     ax4 = bottom_right.inset(left=0.05, right=0.02).add_axes(fig)
-    add_panel_label(ax4, 'd', x=-0.10, y=1.05)
+    add_panel_label(ax4, 'd', x=-0.10, y=1.02)
 
     n_reals = np.array([r["n_real"] for r in results])
     swd_arr = np.array(swd_values)

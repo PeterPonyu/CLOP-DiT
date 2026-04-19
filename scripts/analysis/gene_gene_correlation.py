@@ -170,7 +170,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
 
     # ── Panel (a): Distribution with null baseline ──
     ax = top_left.add_axes(fig)
-    add_panel_label(ax, chr(ord('a') + label_offset), x=-0.12, y=1.06)
+    add_panel_label(ax, chr(ord('a') + label_offset), x=-0.12, y=1.02)
 
     # Compute null baseline: permuted gene labels within each type
     rng = np.random.default_rng(42)
@@ -263,7 +263,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     R_gen = _corr_matrix(gen_sub[g_mask][:, :50])
 
     ax2 = top_right.add_axes(fig)
-    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.12, y=1.06)
+    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.12, y=1.02)
     diff = R_gen - R_real
     im = ax2.imshow(
         diff,
@@ -312,7 +312,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     R_gen_w = _corr_matrix(gen_sub[g_mask][:, :50])
 
     ax3 = bottom_left.add_axes(fig)
-    add_panel_label(ax3, chr(ord('a') + label_offset + 2), x=-0.12, y=1.06)
+    add_panel_label(ax3, chr(ord('a') + label_offset + 2), x=-0.12, y=1.02)
     diff_w = R_gen_w - R_real_w
     im2 = ax3.imshow(
         diff_w,
@@ -352,7 +352,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     # ── Panel (d): Replace non-informative cell-count panel ──
     # Use Mantel r vs per-type mean expression variance (biological heterogeneity)
     ax4 = bottom_right.add_axes(fig)
-    add_panel_label(ax4, chr(ord('a') + label_offset + 3), x=-0.12, y=1.06)
+    add_panel_label(ax4, chr(ord('a') + label_offset + 3), x=-0.12, y=1.02)
 
     # Compute mean expression variance per type as a proxy for heterogeneity
     type_het = []
@@ -386,13 +386,14 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
         stat_text = (f"Spearman \u03c1 = {spearman_r:.3f}\n"
                  f"Pearson r = {pearson_r:.3f}")
 
-        # Label top 3 residual outliers. Labels pinned to interior axes-fraction
-        # slots so they always stay inside the panel rectangle (the previous
-        # offset_points approach placed the bottom two labels below the
-        # y-axis, overlapping the tick labels).
+        # Label top 3 residual outliers. Labels pinned to EXTERNAL axes-fraction
+        # slots on the right margin (clip_on=False below) so leader lines cross
+        # mostly empty right-edge space rather than sweeping across the scatter
+        # cluster. Previous left-interior slots forced leader lines to cross
+        # most data points.
         residuals = np.abs(type_mantel - (slope * type_het + intercept))
         top3_idx = np.argsort(residuals)[-3:][::-1]
-        slots = [(0.05, 0.18), (0.05, 0.30), (0.05, 0.42)]
+        slots = [(1.04, 0.82), (1.04, 0.60), (1.04, 0.38)]
         for (slot_x, slot_y), idx in zip(slots, top3_idx):
             t_id = type_labels_d[idx]
             lbl = abbreviate_cell_type(_type_names.get(t_id, f"Type {t_id}"), max_len=18)

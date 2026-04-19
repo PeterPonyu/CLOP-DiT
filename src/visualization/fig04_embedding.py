@@ -268,7 +268,7 @@ def plot_embedding_space_merged(
 
             ax_e0 = e_slots[0].inset(right=0.012).add_axes(fig)
             ax = ax_e0
-            add_panel_label(ax, chr(ord('a') + label_offset + 3), x=-0.12, y=1.08)
+            add_panel_label(ax, chr(ord('a') + label_offset + 3), x=-0.12, y=1.04)
             for t in np.unique(r_gids):
                 m = r_gids == t
                 ax.scatter(rc[m, 0], rc[m, 1],
@@ -282,7 +282,7 @@ def plot_embedding_space_merged(
 
             ax_e1 = e_slots[1].inset(left=0.008, right=0.012).add_axes(fig)
             ax = ax_e1
-            add_panel_label(ax, chr(ord('a') + label_offset + 4), x=-0.12, y=1.08)
+            add_panel_label(ax, chr(ord('a') + label_offset + 4), x=-0.12, y=1.04)
             if g_gids is not None:
                 for t in np.unique(g_gids):
                     m = g_gids == t
@@ -300,7 +300,7 @@ def plot_embedding_space_merged(
 
             ax_e2 = e_slots[2].inset(left=0.006, right=0.028).add_axes(fig)
             ax = ax_e2
-            add_panel_label(ax, chr(ord('a') + label_offset + 5), x=-0.12, y=1.08)
+            add_panel_label(ax, chr(ord('a') + label_offset + 5), x=-0.12, y=1.04)
             all_types = np.unique(np.concatenate([r_gids, g_gids])) if g_gids is not None else np.unique(r_gids)
             for t in all_types:
                 color = TYPE_PALETTE[int(t) % len(TYPE_PALETTE)]

@@ -137,13 +137,15 @@ def plot_expression_analysis(
         xv, yv = real_cv[i], gen_cv[i]
         x_frac = (xv - x_lo) / (x_hi - x_lo + 1e-12)
         y_frac = (yv - y_lo) / (y_hi - y_lo + 1e-12)
-        dx_pt = -14 if x_frac >= 0.75 else 12
-        dy_pt = -14 if y_frac >= 0.65 else 12
+        # Push labels farther from scatter (was ±14) so the bbox does not
+        # land on top of neighbouring points in the dense CV cluster.
+        dx_pt = -26 if x_frac >= 0.75 else 22
+        dy_pt = -24 if y_frac >= 0.65 else 20
         ha = "right" if dx_pt < 0 else "left"
-        # Mild jitter if we land near a previously-placed label
+        # Stronger jitter step (was 10) to separate stacked labels.
         for used_x, used_y in used_xy:
-            if abs(xv - used_x) < 0.02 and abs(yv - used_y) < 0.02:
-                dy_pt += 10 if dy_pt > 0 else -10
+            if abs(xv - used_x) < 0.03 and abs(yv - used_y) < 0.03:
+                dy_pt += 14 if dy_pt > 0 else -14
                 break
         used_xy.append((xv, yv))
         ax1.annotate(
@@ -178,7 +180,7 @@ def plot_expression_analysis(
     ax1.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
     ax1.yaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
     set_scientific_tickformat(ax1, axis="both", scilimits=(-2, 2))
-    add_panel_label(ax1, 'a', x=-0.12, y=1.08)
+    add_panel_label(ax1, 'a', x=-0.12, y=1.04)
 
     # -- I2: Expression range with percentile bands --
     ax2 = top_right.inset(left=0.10, right=0.02).add_axes(fig)
@@ -209,7 +211,7 @@ def plot_expression_analysis(
     ax2.set_title("Expression Range", fontsize=12)
     ax2.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, 0.98), ncol=2, frameon=False)
     ax2.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="upper"))
-    add_panel_label(ax2, 'b', x=-0.16, y=1.08)
+    add_panel_label(ax2, 'b', x=-0.16, y=1.04)
 
     # -- I3: Per-cell std as overlaid smooth histograms --
     ax3 = bottom_left.add_axes(fig)
@@ -236,7 +238,7 @@ def plot_expression_analysis(
     ax3.set_title("Per-Cell Variability", fontsize=12)
     legend_handles_c, legend_labels_c = ax3.get_legend_handles_labels()
     ax3.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
-    add_panel_label(ax3, 'c', x=-0.12, y=1.08)
+    add_panel_label(ax3, 'c', x=-0.12, y=1.04)
 
     std_ratio = gen_cell_std.mean() / (real_cell_std.mean() + 1e-8)
     ax3.text(0.02, 0.15,
@@ -272,7 +274,7 @@ def plot_expression_analysis(
     ax4.set_yticklabels(names_show, fontsize=10, ha="right")
     ax4.set_xlabel("Std Ratio (Gen / Real, clipped at 5\u00d7)", fontsize=11)
     ax4.set_title("Most Divergent Genes\n(over- & under-dispersed)", fontsize=11, pad=4)
-    add_panel_label(ax4, 'd', x=-0.12, y=1.08)
+    add_panel_label(ax4, 'd', x=-0.12, y=1.04)
     placed_annotations: list = []
     for i, r in enumerate(ratios_show):
         # Skip annotations within 0.05 of an already-placed one to avoid overlap

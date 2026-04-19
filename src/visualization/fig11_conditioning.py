@@ -81,7 +81,7 @@ def plot_panel_m(
     axes = [region.add_axes(fig) for region in row_regions[0].split_cols(top_widths, wspace=0.36)]
 
     # Panel labels: placed with enough clearance for single-line titles
-    _panel_label_y = 1.09
+    _panel_label_y = 1.04
     add_panel_label(axes[0], chr(ord('a') + label_offset), x=-0.22, y=_panel_label_y)
 
     type_to_color = {tid: TYPE_PALETTE[i % len(TYPE_PALETTE)] for i, tid in enumerate(selected_types)}
@@ -135,9 +135,9 @@ def plot_panel_m(
     # ── Row 2: Quantitative summaries ──
     bottom_regions = row_regions[1].split_cols([1.08, 1.02, 0.92], wspace=0.28)
     ax_b1 = bottom_regions[0].add_axes(fig)
-    add_panel_label(ax_b1, chr(ord('a') + label_offset + 1), x=-0.18, y=1.08)
+    add_panel_label(ax_b1, chr(ord('a') + label_offset + 1), x=-0.18, y=1.04)
     ax_b2 = bottom_regions[1].add_axes(fig)
-    add_panel_label(ax_b2, chr(ord('a') + label_offset + 2), x=0.05, y=1.10)
+    add_panel_label(ax_b2, chr(ord('a') + label_offset + 2), x=0.05, y=1.04)
     ax_b3 = bottom_regions[2].add_axes(fig)
     add_panel_label(ax_b3, chr(ord('a') + label_offset + 3), x=-0.18, y=_panel_label_y)
     _adjust_axes_rect(ax_b1, width_scale=0.90)

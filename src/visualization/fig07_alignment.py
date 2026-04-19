@@ -247,7 +247,7 @@ def plot_text_cell_heatmap(
 
     # ── F2: Per-type alignment bars with threshold bands ──
     ax2 = ax2_rect.add_axes(fig)
-    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.18, y=1.08)
+    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.18, y=1.04)
     sorted_idx_asc = np.argsort(diag)
     d_asc = diag[sorted_idx_asc]
     labels_asc = [y_labels[i] for i in sorted_idx_asc]

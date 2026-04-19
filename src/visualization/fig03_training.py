@@ -279,7 +279,7 @@ def plot_dit_training(
     _decade_ticks = [10**e for e in range(_lo_exp, _hi_exp + 1)]
     if _decade_ticks:
         ax_c1.yaxis.set_major_locator(FixedLocator(_decade_ticks))
-    add_panel_label(ax_c1, 'e', x=-0.10, y=1.08)
+    add_panel_label(ax_c1, 'e', x=-0.10, y=1.04)
 
     # ── C2: Cosine similarity ──
     ax_c2 = top_right.add_axes(fig)
@@ -292,7 +292,7 @@ def plot_dit_training(
     ax_c2.set_xlim(0, max(epochs) * 1.05)
     ax_c2.xaxis.set_major_locator(MaxNLocator(nbins=2, integer=True, prune="both"))
     ax_c2.locator_params(axis='y', nbins=4)
-    add_panel_label(ax_c2, 'f', x=-0.10, y=1.08)
+    add_panel_label(ax_c2, 'f', x=-0.10, y=1.04)
 
     # ── C3: Learning rate ──
     ax_c3 = bottom_left.add_axes(fig)
@@ -303,7 +303,7 @@ def plot_dit_training(
     set_scientific_tickformat(ax_c3, axis="y", scilimits=(-4, -4))
     ax_c3.set_xlim(0, max(epochs) * 1.05)
     ax_c3.xaxis.set_major_locator(MaxNLocator(nbins=2, integer=True, prune="both"))
-    add_panel_label(ax_c3, 'g', x=0.00, y=1.08)
+    add_panel_label(ax_c3, 'g', x=0.00, y=1.04)
 
     # ── C4: Convergence rate (train vs val) ──
     ax_c4 = bottom_right.add_axes(fig)
@@ -328,7 +328,7 @@ def plot_dit_training(
     ax_c4.legend(fontsize=FONT_LEGEND_DENSE, loc="upper right", frameon=False)
     ax_c4.locator_params(axis='x', nbins=4)
     ax_c4.locator_params(axis='y', nbins=4)
-    add_panel_label(ax_c4, 'h', x=-0.10, y=1.08)
+    add_panel_label(ax_c4, 'h', x=-0.10, y=1.04)
 
     # ── Save ──
     if save:
@@ -496,7 +496,7 @@ def plot_training_dynamics_combined(
         if _decade_ticks:
             ax_c1.yaxis.set_major_locator(FixedLocator(_decade_ticks))
         _add_training_phase_bands(ax_c1, int(max(epochs)))
-        add_panel_label(ax_c1, 'e', x=-0.12, y=1.08)
+        add_panel_label(ax_c1, 'e', x=-0.12, y=1.04)
 
         # C2: Cosine similarity
         ax_c2 = bottom_cols[1].add_axes(fig)
@@ -509,7 +509,7 @@ def plot_training_dynamics_combined(
         ax_c2.set_xlim(0, max(epochs) * 1.05)
         ax_c2.xaxis.set_major_locator(MaxNLocator(nbins=4, integer=True, prune="both"))
         ax_c2.locator_params(axis='y', nbins=4)
-        add_panel_label(ax_c2, 'f', x=-0.12, y=1.08)
+        add_panel_label(ax_c2, 'f', x=-0.12, y=1.04)
 
         # C3: Learning rate
         ax_c3 = bottom_cols[2].add_axes(fig)
@@ -520,7 +520,7 @@ def plot_training_dynamics_combined(
         set_scientific_tickformat(ax_c3, axis="y", scilimits=(-4, -4))
         ax_c3.set_xlim(0, max(epochs) * 1.05)
         ax_c3.xaxis.set_major_locator(MaxNLocator(nbins=4, integer=True, prune="both"))
-        add_panel_label(ax_c3, 'g', x=0.00, y=1.08)
+        add_panel_label(ax_c3, 'g', x=0.00, y=1.04)
 
         # C4: Normalized convergence comparison (CLOP + DiT)
         ax_c4 = bottom_cols[3].add_axes(fig)
@@ -557,7 +557,7 @@ def plot_training_dynamics_combined(
         ax_c4.legend(fontsize=FONT_LEGEND_DENSE, loc="upper right", frameon=False)
         ax_c4.locator_params(axis='x', nbins=4)
         ax_c4.locator_params(axis='y', nbins=4)
-        add_panel_label(ax_c4, 'h', x=-0.12, y=1.08)
+        add_panel_label(ax_c4, 'h', x=-0.12, y=1.04)
 
     if save:
         if save_panel_fn:
