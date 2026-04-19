@@ -78,7 +78,7 @@ def plot_panel_m(
     top_widths = [1.0] * n_modes
     if n_modes > 1:
         top_widths[-1] = 1.04
-    axes = [region.add_axes(fig) for region in row_regions[0].split_cols(top_widths, wspace=0.36)]
+    axes = [region.add_axes(fig) for region in row_regions[0].split_cols(top_widths, wspace=0.22)]
 
     # Panel labels: placed with enough clearance for single-line titles
     _panel_label_y = 1.04
@@ -133,7 +133,7 @@ def plot_panel_m(
         )
 
     # ── Row 2: Quantitative summaries ──
-    bottom_regions = row_regions[1].split_cols([1.08, 1.02, 0.92], wspace=0.28)
+    bottom_regions = row_regions[1].split_cols([1.08, 1.02, 0.92], wspace=0.18)
     ax_b1 = bottom_regions[0].add_axes(fig)
     add_panel_label(ax_b1, chr(ord('a') + label_offset + 1), x=-0.18, y=1.04)
     ax_b2 = bottom_regions[1].add_axes(fig)
@@ -228,7 +228,7 @@ def plot_panel_m(
         from sklearn.decomposition import PCA as _PCA
         from sklearn.neighbors import KNeighborsClassifier
 
-        row3_regions = row_regions[2].split_cols([0.96, 1.18, 0.98], wspace=0.28)
+        row3_regions = row_regions[2].split_cols([0.96, 1.18, 0.98], wspace=0.18)
         ax_c1 = row3_regions[0].add_axes(fig)
         add_panel_label(ax_c1, chr(ord('a') + label_offset + 4), x=-0.18, y=_panel_label_y)
         ax_c2 = row3_regions[1].add_axes(fig)
