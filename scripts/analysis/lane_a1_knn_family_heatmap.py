@@ -120,8 +120,9 @@ def main() -> None:
     ax_heat.set_xlabel("Predicted family", fontsize=9.5, labelpad=4)
     ax_heat.set_ylabel("True family", fontsize=9.5, labelpad=4)
 
-    # Colorbar below heatmap
-    cbar = fig.colorbar(im, ax=ax_heat, orientation="horizontal",
+    # Colorbar below BOTH axes so the heatmap and the right bar shrink
+    # by the same fraction and keep their bottom pixel rows aligned.
+    cbar = fig.colorbar(im, ax=[ax_heat, ax_bar], orientation="horizontal",
                         fraction=0.046, pad=0.22, shrink=0.7)
     cbar.set_label("Fraction of queries", fontsize=8)
     cbar.ax.tick_params(labelsize=7.5)
