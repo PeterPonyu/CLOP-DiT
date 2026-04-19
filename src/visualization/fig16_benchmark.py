@@ -109,7 +109,7 @@ def plot_benchmark_panel(
 
     # ── S1: Heatmap (methods x metrics) ──
     ax1 = top_left.inset(left=0.04).add_axes(fig)
-    add_panel_label(ax1, chr(ord('a') + label_offset), x=-0.12, y=1.08)
+    add_panel_label(ax1, chr(ord('a') + label_offset), x=-0.08, y=1.02)
     metric_labels = [m[1] for m in heatmap_metrics]
     metric_keys = [m[0] for m in heatmap_metrics]
     directions = [m[2] for m in heatmap_metrics]
@@ -172,7 +172,7 @@ def plot_benchmark_panel(
 
     # ── S2: Composite score bars ──
     ax2 = top_right.inset(left=0.05, right=0.01).add_axes(fig)
-    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.12, y=1.08)
+    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.08, y=1.02)
     composite_common = report.get("composite_score_common_metrics_only", composite)
     sorted_methods = sorted(composite_common.keys(), key=lambda k: composite_common.get(k, 0.0), reverse=True)
     scores = [composite[m] for m in sorted_methods]
@@ -216,7 +216,7 @@ def plot_benchmark_panel(
     ax3 = bottom_left.add_axes(fig)
     target_label_x = ax1.get_position().x0 - 0.12 * ax1.get_position().width
     ax3_label_x = (target_label_x - ax3.get_position().x0) / ax3.get_position().width
-    add_panel_label(ax3, chr(ord('a') + label_offset + 2), x=ax3_label_x, y=1.08)
+    add_panel_label(ax3, chr(ord('a') + label_offset + 2), x=ax3_label_x, y=1.02)
     key_metrics = [
         ("frechet_distance",     "FD \u2193"),
         ("mean_centroid_cosine", "Cent Cos \u2191"),
@@ -244,7 +244,7 @@ def plot_benchmark_panel(
 
     # ── S4: CI comparison — error-bar plot ──
     ax4 = bottom_right.add_axes(fig)
-    add_panel_label(ax4, chr(ord('a') + label_offset + 3), x=-0.12, y=1.08)
+    add_panel_label(ax4, chr(ord('a') + label_offset + 3), x=-0.08, y=1.02)
     ci_metrics = [
         ("frechet_distance",     "fd_ci",              "Fr\u00e9chet Distance"),
         ("mean_centroid_cosine", "centroid_cosine_ci",  "Centroid Cosine"),

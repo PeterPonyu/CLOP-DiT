@@ -175,7 +175,7 @@ def plot_per_type_generation(
 
     # G3: Cosine vs abundance with FD bubble size and diversity color
     ax = g3_rect.add_axes(fig)
-    add_panel_label(ax, chr(ord('a') + label_offset + 2), x=0.00, y=1.08)
+    add_panel_label(ax, chr(ord('a') + label_offset + 2), x=0.00, y=1.04)
     fd_for_size = np.where(fd_valid, fd_array, np.nanmedian(fd_array[fd_valid]) if fd_valid.any() else 1.0)
     fd_min = float(np.nanmin(fd_for_size)) if np.isfinite(fd_for_size).any() else 0.0
     fd_ptp = float(np.nanmax(fd_for_size) - fd_min) if np.isfinite(fd_for_size).any() else 1.0

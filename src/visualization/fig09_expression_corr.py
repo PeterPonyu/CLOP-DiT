@@ -136,14 +136,16 @@ def plot_expression_correlation(
     cbar.ax.tick_params(labelsize=7, length=2, pad=1)
     cbar.ax.yaxis.get_offset_text().set_fontsize(7)
     cbar.ax.yaxis.get_offset_text().set_visible(True)
-    add_panel_label(ax1, 'e', x=-0.12, y=1.08)
+    add_panel_label(ax1, 'e', x=-0.12, y=1.04)
 
     # Annotate outlier genes with staggered offsets
     outlier_idx = np.argsort(abs_res)[-5:]
     outlier_idx = outlier_idx[np.argsort(abs_res[outlier_idx])[::-1]]
     sorted_by_y = sorted(outlier_idx, key=lambda idx: gen_means[idx], reverse=True)
-    left_slots = [(0.20, 0.82, "left"), (0.20, 0.60, "left"), (0.20, 0.42, "left")]
-    right_slots = [(0.80, 0.76, "right"), (0.80, 0.54, "right")]
+    # Slots sit just outside the axis area (clip_on=False below) so gene-name
+    # callouts cannot land on top of scatter points in dense residual regions.
+    left_slots = [(-0.02, 0.92, "right"), (-0.02, 0.68, "right"), (-0.02, 0.44, "right")]
+    right_slots = [(1.02, 0.92, "left"), (1.02, 0.68, "left")]
     label_plan = []
     for idx, slot in zip(sorted_by_y[::2], left_slots):
         label_plan.append((idx, *slot))
@@ -223,7 +225,7 @@ def plot_expression_correlation(
         ax2.text(0.5, 0.5, "No per-type data", ha="center", va="center",
                  transform=ax2.transAxes)
     ax2.set_title("Per-Type Expression Fidelity", fontsize=12)
-    add_panel_label(ax2, 'f', x=-0.12, y=1.08)
+    add_panel_label(ax2, 'f', x=-0.12, y=1.04)
 
     # -- H3: Marker gene expression with error bars --
     ax3 = bottom_left.add_axes(fig)
@@ -285,7 +287,7 @@ def plot_expression_correlation(
     # Note: do NOT set xaxis MaxNLocator here -- it would override the explicit
     # gene-name tick labels set above (set_xticks / set_xticklabels).
     ax3.yaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
-    add_panel_label(ax3, 'g', x=-0.12, y=1.08)
+    add_panel_label(ax3, 'g', x=-0.12, y=1.04)
 
     # -- H4: Residual distribution --
     ax4 = bottom_right.inset(left=0.07, right=0.02).add_axes(fig)
@@ -301,7 +303,7 @@ def plot_expression_correlation(
     ax4.legend(fontsize=10, frameon=False)
     ax4.xaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
     ax4.yaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
-    add_panel_label(ax4, 'h', x=-0.12, y=1.08)
+    add_panel_label(ax4, 'h', x=-0.12, y=1.04)
 
     pct_within_01 = (np.abs(residuals) < 0.1).mean() * 100
     pct_within_001 = (np.abs(residuals) < 0.01).mean() * 100

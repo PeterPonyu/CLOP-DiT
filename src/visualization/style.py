@@ -69,7 +69,7 @@ VIS_STYLE: dict = {
     "lines.linewidth": 1.5,
     "savefig.dpi": 300,
     "savefig.bbox": None,
-    "savefig.pad_inches": 0.10,
+    "savefig.pad_inches": 0.04,
     "figure.constrained_layout.use": False,
     "figure.facecolor": "white",
 }

@@ -65,7 +65,7 @@ def make_figure():
         -0.05,
         6.96,
         "D",
-        fontsize=22,
+        fontsize=20,
         fontweight="bold",
         color="black",
         ha="left",

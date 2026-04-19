@@ -333,7 +333,7 @@ def plot_marker_gene_comparison(
             )
     else:
         ax_fallback = top_right.add_axes(fig)
-        add_panel_label(ax_fallback, "b", x=-0.12, y=1.08)
+        add_panel_label(ax_fallback, "b", x=-0.12, y=1.04)
         ax_fallback.text(0.5, 0.5, "Per-type labels not available", ha="center", va="center", transform=ax_fallback.transAxes)
 
     if save:

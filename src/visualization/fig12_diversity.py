@@ -89,10 +89,10 @@ def plot_diagnostics(
         [top_left.add_axes(fig), top_right.add_axes(fig)],
         [bottom_left.add_axes(fig), bottom_right.add_axes(fig)],
     ], dtype=object)
-    add_panel_label(axes[0, 0], 'a', x=-0.14, y=1.08)
-    add_panel_label(axes[0, 1], 'b', x=-0.14, y=1.08)
-    add_panel_label(axes[1, 0], 'c', x=-0.14, y=1.08)
-    add_panel_label(axes[1, 1], 'd', x=-0.14, y=1.08)
+    add_panel_label(axes[0, 0], 'a', x=-0.08, y=1.02)
+    add_panel_label(axes[0, 1], 'b', x=-0.08, y=1.02)
+    add_panel_label(axes[1, 0], 'c', x=-0.08, y=1.02)
+    add_panel_label(axes[1, 1], 'd', x=-0.08, y=1.02)
 
     ax = axes[0, 0]
     t1 = all_results.get("test1_intratype_diversity", {}).get("per_type", {})

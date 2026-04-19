@@ -467,7 +467,7 @@ def plot_metrics_summary(
                  ha="center", va="center", transform=ax1.transAxes,
                  fontsize=10, color=COLORS["neutral"])
         ax1.set_title("Training Convergence", fontsize=12)
-    add_panel_label(ax1, 'a', x=-0.10, y=1.05)
+    add_panel_label(ax1, 'a', x=-0.10, y=1.02)
 
     # ── D2: Generation quality bar chart (replaces radar for clarity) ──
     ax2 = top_right.add_axes(fig)
@@ -538,12 +538,12 @@ def plot_metrics_summary(
             if gauss_bl:
                 ax2.legend(fontsize=FONT_LEGEND_DENSE, frameon=False, loc="upper left", ncol=2)
         ax2.set_title("Quality Profile", fontsize=FONT_TITLE)
-        add_panel_label(ax2, 'b', x=-0.10, y=1.05)
+        add_panel_label(ax2, 'b', x=-0.10, y=1.02)
     else:
         ax2.text(0.5, 0.5, "No generation data", ha="center",
                  va="center", transform=ax2.transAxes)
         ax2.set_title("Generation Quality Profile")
-        add_panel_label(ax2, 'b', x=-0.10, y=1.05)
+        add_panel_label(ax2, 'b', x=-0.10, y=1.02)
 
     # ── D3: Diversity gauges ──
     ax3 = bottom_left.add_axes(fig)
@@ -613,7 +613,7 @@ def plot_metrics_summary(
         ax3.text(0.5, 0.5, "No diversity data", ha="center", va="center",
                  transform=ax3.transAxes)
         ax3.set_title("Diversity Health")
-    add_panel_label(ax3, 'c', x=-0.10, y=1.05)
+    add_panel_label(ax3, 'c', x=-0.10, y=1.02)
 
     # ── D4: Expression fidelity + config ──
     ax4 = bottom_right.add_axes(fig)
@@ -648,7 +648,7 @@ def plot_metrics_summary(
         ax4.text(0.5, 0.5, "No expression data", ha="center", va="center",
                  transform=ax4.transAxes)
         ax4.set_title("Expression Fidelity")
-    add_panel_label(ax4, 'd', x=-0.10, y=1.05)
+    add_panel_label(ax4, 'd', x=-0.10, y=1.02)
 
     if save:
         path = Path(output_dir) / "fig03a_metrics_summary.png"

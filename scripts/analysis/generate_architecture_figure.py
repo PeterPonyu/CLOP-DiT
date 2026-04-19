@@ -478,7 +478,7 @@ def create_architecture_figure(output_dir=None):
     ax.add_patch(decoder_box)
     ax.text(
         dec_bx + dec_w / 2,
-        decoder_y + dec_h * 0.66,
+        decoder_y + dec_h * 0.56,
         "scGPT\nDecoder",
         ha="center",
         va="center",
