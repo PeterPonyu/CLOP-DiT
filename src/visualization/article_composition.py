@@ -64,7 +64,37 @@ def composite_basename(n: int) -> str:
 # Composite VCD registry (populated per-migration)
 # --------------------------------------------------------------------------
 
-COMPOSITE_VCD_REGISTRY: Dict[str, List[str]] = {}
+COMPOSITE_VCD_REGISTRY: Dict[str, List[str]] = {
+    # Step 1 pilot (plan §3 Step 1): Fig 8 composite replaces
+    # fig08a_downstream_validation.pdf + fig08b_de_concordance.pdf. Produced
+    # by src/visualization/fig08_composed.py alongside the legacy slices
+    # (dual-publish during the revision window).
+    "fig08_composed.pdf": [
+        "fig08a_downstream_validation.pdf",
+        "fig08b_de_concordance.pdf",
+    ],
+    # Step 2 (plan §3 Step 2): Fig 3 composite replaces
+    # fig03a_metrics_summary.pdf + fig03b_per_type_fidelity.pdf +
+    # fig03c_text_cell_alignment.pdf. Produced by
+    # src/visualization/fig03_composed.py alongside the legacy slices
+    # (dual-publish during the revision window).
+    "fig03_composed.pdf": [
+        "fig03a_metrics_summary.pdf",
+        "fig03b_per_type_fidelity.pdf",
+        "fig03c_text_cell_alignment.pdf",
+    ],
+    # Step 3 (plan §3 Step 3): Fig 4 composite replaces
+    # fig04a_marker_genes.pdf + fig04b_expression_correlation.pdf. Produced
+    # by src/visualization/fig04_composed.py alongside the legacy slices
+    # (dual-publish during the revision window). Note the source-file naming:
+    # fig08_markers.py is the article-Fig-4-A source and fig09_expression_corr.py
+    # is the article-Fig-4-B source (source numbering diverged pre-revision;
+    # documented in plan §3 Step 3).
+    "fig04_composed.pdf": [
+        "fig04a_marker_genes.pdf",
+        "fig04b_expression_correlation.pdf",
+    ],
+}
 """Maps composite PDF basename -> list of legacy slice PDF basenames.
 
 Populated incrementally:

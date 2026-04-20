@@ -46,9 +46,17 @@ _SOURCE_BASENAMES: List[str] = [
     "fig03a_metrics_summary",
     "fig03b_per_type_fidelity",
     "fig03c_text_cell_alignment",
+    # Main body display Figure 3 composite (Step 2 of single-producer
+    # migration plan, .omc/plans/single-producer-architecture-2026-04-20.md).
+    # Registered-but-not-yet-LaTeX-referenced during the revision window.
+    "fig03_composed",
     # Main body display Figure 4
     "fig04a_marker_genes",
     "fig04b_expression_correlation",
+    # Main body display Figure 4 composite (Step 3 of single-producer
+    # migration plan, .omc/plans/single-producer-architecture-2026-04-20.md).
+    # Registered-but-not-yet-LaTeX-referenced during the revision window.
+    "fig04_composed",
     # Main body display Figure 5
     "fig05a_expression_analysis",
     "fig05b_conditioning_landscape",
@@ -61,6 +69,10 @@ _SOURCE_BASENAMES: List[str] = [
     # Main body display Figure 8
     "fig08a_downstream_validation",
     "fig08b_de_concordance",
+    # Main body display Figure 8 composite (Step 1 pilot of single-producer
+    # migration plan, .omc/plans/single-producer-architecture-2026-04-20.md).
+    # Registered-but-not-yet-LaTeX-referenced during the revision window.
+    "fig08_composed",
     # Main body display Figure 9
     "fig09a_variance_matching",
     "fig09b_gene_gene_correlation",
@@ -91,8 +103,10 @@ ARTICLE_FIGURE_PRODUCERS: List[Tuple[str, str]] = [
     ("fig03a_metrics_summary", "src/visualization/fig05_metrics.py"),
     ("fig03b_per_type_fidelity", "src/visualization/fig06_fidelity.py"),
     ("fig03c_text_cell_alignment", "src/visualization/fig07_alignment.py"),
+    ("fig03_composed", "src/visualization/fig03_composed.py"),
     ("fig04a_marker_genes", "src/visualization/fig08_markers.py"),
     ("fig04b_expression_correlation", "src/visualization/fig09_expression_corr.py"),
+    ("fig04_composed", "src/visualization/fig04_composed.py"),
     ("fig05a_expression_analysis", "src/visualization/fig10_expression_analysis.py"),
     ("fig05b_conditioning_landscape", "src/visualization/fig11_conditioning.py"),
     ("fig06_diversity_diagnostics", "src/visualization/fig12_diversity.py"),
@@ -101,6 +115,7 @@ ARTICLE_FIGURE_PRODUCERS: List[Tuple[str, str]] = [
     ("fig07c_benchmark", "src/visualization/fig16_benchmark.py"),
     ("fig08a_downstream_validation", "src/visualization/fig17_downstream.py"),
     ("fig08b_de_concordance", "src/visualization/fig18_de_concordance.py"),
+    ("fig08_composed", "src/visualization/fig08_composed.py"),
     ("fig09a_variance_matching", "scripts/analysis/variance_matching_pilot.py"),
     ("fig09b_gene_gene_correlation", "scripts/analysis/gene_gene_correlation.py"),
     ("figS_lane_c_zero_shot", "scripts/analysis/lane_c_zero_shot_figure.py"),

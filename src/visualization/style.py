@@ -194,6 +194,7 @@ PANEL_OFFSET_STD      = (-0.12, 1.04)  # default — most panels with ylabel at 
 PANEL_OFFSET_LEFT     = (-0.18, 1.04)  # panels with long y-tick strings or left-shifted axes
 PANEL_OFFSET_FARLEFT  = (-0.22, 1.04)  # panels with wide numeric ticks (e.g. "2.25", "120", "1.2")
 PANEL_OFFSET_WIDE     = (-0.14, 1.06)  # heatmaps / wider panels that need extra headroom
+PANEL_OFFSET_FARLEFT_WIDE = (-0.24, 1.06)  # wide yticks AND extra headroom (e.g. fig03 panel b)
 PANEL_OFFSET_TIGHT    = (-0.08, 1.02)  # constrained layouts where STD collides with ticks
 
 _FONTS_REGISTERED = False
