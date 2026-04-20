@@ -19,19 +19,19 @@ import numpy as np
 from src.utils.paths import RESULTS_DIR
 
 from .direct_layout import bind_figure_region
-from .figS1_robustness_ablation import (
+from .supplementary.figS1_robustness_ablation import (
     _draw_ablation_heatmap,
     _draw_multi_seed,
     _draw_ood_showcase,
 )
-from .figS2_downstream_validation import (
+from .supplementary.figS2_downstream_validation import (
     _panel_a as _downstream_panel_d,
     _panel_b as _downstream_panel_e,
     _panel_c as _downstream_panel_f,
     _panel_d as _downstream_panel_g,
     _panel_e as _downstream_panel_h,
 )
-from .figS3_expression_decoder import (
+from .supplementary.figS3_expression_decoder import (
     _panel_a as _expr_panel_i,
     _panel_b as _expr_panel_j,
     _panel_c as _expr_panel_k,

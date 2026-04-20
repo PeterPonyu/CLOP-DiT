@@ -21,8 +21,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .direct_layout import bind_figure_region
-from .style import (
+from ..direct_layout import bind_figure_region
+from ..style import (
     COLORS,
     FONT_ANNOTATION,
     FONT_HEATMAP_CELL,
