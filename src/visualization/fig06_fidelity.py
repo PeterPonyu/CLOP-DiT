@@ -22,6 +22,7 @@ import numpy as np
 from .direct_layout import bind_figure_region
 from .style import (
     COLORS, FONT_HEATMAP_CELL, FONT_LEGEND, FONT_SMALL,
+    PANEL_OFFSET_STD, PANEL_OFFSET_WIDE,
     abbreviate_cell_type, add_panel_label,
     quality_color, save_with_vcd, set_adaptive_ytick_labels, style_axes,
 )
@@ -118,7 +119,7 @@ def plot_per_type_generation(
     # G1: Centroid cosine (sorted)
     from matplotlib.ticker import MaxNLocator
     ax = g1_rect.add_axes(fig)
-    add_panel_label(ax, chr(ord('a') + label_offset), x=-0.14, y=1.06)
+    add_panel_label(ax, chr(ord('a') + label_offset), x=PANEL_OFFSET_WIDE[0], y=PANEL_OFFSET_WIDE[1])
     sorted_idx = np.argsort(cosines)
     sorted_cos = [cosines[i] for i in sorted_idx]
     sorted_names_cos = [short_names[i] for i in sorted_idx]
@@ -146,7 +147,7 @@ def plot_per_type_generation(
 
     # G2: Frechet outlier profile
     ax = g2_rect.add_axes(fig)
-    add_panel_label(ax, chr(ord('a') + label_offset + 1), x=-0.14, y=1.06)
+    add_panel_label(ax, chr(ord('a') + label_offset + 1), x=PANEL_OFFSET_WIDE[0], y=PANEL_OFFSET_WIDE[1])
     if fd_valid.any():
         fd_idx = np.where(fd_valid)[0][np.argsort(fd_array[fd_valid])]
         fd_vals = fd_array[fd_idx]
@@ -175,7 +176,7 @@ def plot_per_type_generation(
 
     # G3: Cosine vs abundance with FD bubble size and diversity color
     ax = g3_rect.add_axes(fig)
-    add_panel_label(ax, chr(ord('a') + label_offset + 2), x=0.00, y=1.04)
+    add_panel_label(ax, chr(ord('a') + label_offset + 2), x=0.00, y=PANEL_OFFSET_STD[1])
     fd_for_size = np.where(fd_valid, fd_array, np.nanmedian(fd_array[fd_valid]) if fd_valid.any() else 1.0)
     fd_min = float(np.nanmin(fd_for_size)) if np.isfinite(fd_for_size).any() else 0.0
     fd_ptp = float(np.nanmax(fd_for_size) - fd_min) if np.isfinite(fd_for_size).any() else 1.0

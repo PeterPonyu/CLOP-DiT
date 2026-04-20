@@ -19,11 +19,10 @@ from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.patches import ConnectionPatch
 
 from .direct_layout import bind_figure_region
 from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
-from .style import COLORS, add_colorbar_safe, add_panel_label, quality_color, save_with_vcd, set_scientific_tickformat
+from .style import COLORS, add_panel_label, quality_color, reserve_annotation_slot, save_with_vcd, set_scientific_tickformat
 from src.utils.paths import load_thresholds
 
 logger = logging.getLogger(__name__)
@@ -95,8 +94,8 @@ def plot_expression_analysis(
     gen_cv = gen.std(axis=0) / (np.abs(gen.mean(axis=0)) + 1e-8)
     cv_diff = np.abs(gen_cv - real_cv)
 
-    sc = ax1.scatter(real_cv, gen_cv, c=cv_diff, cmap="YlOrRd", s=10,
-                     alpha=0.7, edgecolors="none",
+    sc = ax1.scatter(real_cv, gen_cv, c=cv_diff, cmap="YlOrRd", s=6,
+                     alpha=0.55, edgecolors="none",
                      vmin=0, vmax=np.percentile(cv_diff, 95))
     lo = 0
     hi = max(real_cv.max(), gen_cv.max()) * 1.05
@@ -119,45 +118,28 @@ def plot_expression_analysis(
     cbar1.set_label("|\u0394CV|", fontsize=9)
     cbar1.ax.tick_params(labelsize=8, length=2, pad=1)
 
-    # Annotate the most divergent genes. Labels are placed with short
-    # display-point offsets (dx, dy) relative to the data point itself rather
-    # than at fixed-column margin slots -- this keeps each gene name adjacent
-    # to its dot and eliminates the long diagonal leader lines that previously
-    # crossed the plot area. Direction is chosen per-point so that labels push
-    # toward the interior of the axes (top-half points get labels pulled down,
-    # right-edge points get labels pulled left).
-    top_cv_idx = np.argsort(cv_diff)[-6:]
+    # Annotate the most divergent genes. Labels are placed at reserved slots
+    # outside the right margin (reserve_annotation_slot) so leader lines do not
+    # cross the scatter cloud or pile up on the diagonal. B4-soft fallback:
+    # dropped from 5 to 3 callouts because right-margin slots at k=5 collided
+    # with the colorbar tick labels; the top-3 highest-|delta-CV| genes remain.
+    top_cv_idx = np.argsort(cv_diff)[-3:]
     top_cv_idx = top_cv_idx[np.argsort(cv_diff[top_cv_idx])[::-1]]
-    x_lo, x_hi = 0.0, max(real_cv.max(), gen_cv.max()) * 1.05
-    y_lo, y_hi = x_lo, x_hi
-    used_xy: list[tuple[float, float]] = []
-    for i in top_cv_idx:
-        if i >= len(gene_names):
-            continue
+    valid_idx = [i for i in top_cv_idx if i < len(gene_names)]
+    slots = reserve_annotation_slot(ax1, k=len(valid_idx), side="right", margin=0.08)
+    for slot, i in zip(slots, valid_idx):
         xv, yv = real_cv[i], gen_cv[i]
-        x_frac = (xv - x_lo) / (x_hi - x_lo + 1e-12)
-        y_frac = (yv - y_lo) / (y_hi - y_lo + 1e-12)
-        # Push labels farther from scatter (was ±14) so the bbox does not
-        # land on top of neighbouring points in the dense CV cluster.
-        dx_pt = -26 if x_frac >= 0.75 else 22
-        dy_pt = -24 if y_frac >= 0.65 else 20
-        ha = "right" if dx_pt < 0 else "left"
-        # Stronger jitter step (was 10) to separate stacked labels.
-        for used_x, used_y in used_xy:
-            if abs(xv - used_x) < 0.03 and abs(yv - used_y) < 0.03:
-                dy_pt += 14 if dy_pt > 0 else -14
-                break
-        used_xy.append((xv, yv))
         ax1.annotate(
             gene_names[i],
             xy=(xv, yv),
-            xytext=(dx_pt, dy_pt),
-            textcoords="offset points",
-            fontsize=8.0,
-            ha=ha,
+            xycoords="data",
+            xytext=slot,
+            textcoords="axes fraction",
+            fontsize=8.3,
+            ha="left",
             va="center",
             color="#333",
-            bbox=dict(boxstyle="round,pad=0.10", fc="white", ec="none", alpha=0.88),
+            bbox=dict(boxstyle="round,pad=0.10", fc="white", ec="none", alpha=0.90),
             arrowprops=dict(
                 arrowstyle="-",
                 lw=0.5,
@@ -168,7 +150,7 @@ def plot_expression_analysis(
                 connectionstyle="arc3,rad=0.0",
             ),
             zorder=6,
-            annotation_clip=True,
+            annotation_clip=False,
         )
 
     cv_corr = np.corrcoef(real_cv, gen_cv)[0, 1]

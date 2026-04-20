@@ -14,7 +14,6 @@ Usage:
 from __future__ import annotations
 
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -22,12 +21,11 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.patches import ConnectionPatch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from src.visualization.direct_layout import bind_figure_region
 from src.visualization.explicit_positioning import add_axes_next_to
-from src.visualization.style import apply_style, COLORS, FONT_TITLE, FONT_LABEL, add_panel_label, save_with_vcd
+from src.visualization.style import apply_style, COLORS, FONT_TITLE, FONT_LABEL, add_panel_label, save_with_vcd, reserve_annotation_slot
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "results"
@@ -157,7 +155,11 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
         with open(captions_path) as f:
             _cap = json.load(f)
         for k, v in _cap.items():
-            short = v.split(",")[0][:50] if isinstance(v, str) else str(v)[:50]
+            if isinstance(v, str):
+                short = v.split(" are ")[0]
+                short = short.split(",")[0][:50]
+            else:
+                short = str(v)[:50]
             _type_names[int(k)] = short
 
     mantel_vals = [v["mantel_r"] for v in per_type_results.values()]
@@ -253,7 +255,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     heatmap_abs_scale = max(heatmap_abs_scale, 0.08)
 
     # ── Panel (b): Best-preserved cell type ──
-    best_name = abbreviate_cell_type(_type_names.get(best_type, f"Type {best_type}"), max_len=35)
+    best_name = abbreviate_cell_type(_type_names.get(best_type, f"Type {best_type}"), max_len=28)
     best_r = per_type_results[best_type]["mantel_r"]
     best_rmse = per_type_results[best_type]["rmse"]
 
@@ -276,7 +278,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     )
     ax2.set_ylim(49.5, -0.5)
     ax2.set_yticks([0, 10, 20, 30, 40, 49])
-    ax2.set_title(f"Best: {best_name}", fontsize=FONT_TITLE)
+    ax2.set_title(f"Best-preserved Type\n{best_name}", fontsize=FONT_TITLE - 1)
     ax2.set_xlabel("Gene index (top 50 HVG)", fontsize=FONT_LABEL)
     ax2.set_ylabel("Gene index", fontsize=FONT_LABEL)
 
@@ -302,7 +304,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     cb2.ax.tick_params(labelsize=FONT_HEATMAP_CELL - 1)
 
     # ── Panel (c): Worst-preserved cell type ──
-    worst_name = abbreviate_cell_type(_type_names.get(worst_type, f"Type {worst_type}"), max_len=35)
+    worst_name = abbreviate_cell_type(_type_names.get(worst_type, f"Type {worst_type}"), max_len=28)
     worst_r = per_type_results[worst_type]["mantel_r"]
     worst_rmse = per_type_results[worst_type]["rmse"]
 
@@ -325,7 +327,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     )
     ax3.set_ylim(49.5, -0.5)
     ax3.set_yticks([0, 10, 20, 30, 40, 49])
-    ax3.set_title(f"Worst: {worst_name}", fontsize=FONT_TITLE)
+    ax3.set_title(f"Weakest-preserved Type\n{worst_name}", fontsize=FONT_TITLE - 1)
     ax3.set_xlabel("Gene index (top 50 HVG)", fontsize=FONT_LABEL)
     ax3.set_ylabel("Gene index", fontsize=FONT_LABEL)
 
@@ -386,23 +388,26 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
         stat_text = (f"Spearman \u03c1 = {spearman_r:.3f}\n"
                  f"Pearson r = {pearson_r:.3f}")
 
-        # Label top 3 residual outliers. Labels pinned to EXTERNAL axes-fraction
-        # slots on the right margin (clip_on=False below) so leader lines cross
-        # mostly empty right-edge space rather than sweeping across the scatter
-        # cluster. Previous left-interior slots forced leader lines to cross
-        # most data points.
+        # Pin outlier labels to fixed axes-fraction slots with leader lines so
+        # they never overlap the scatter body regardless of data-point position.
         residuals = np.abs(type_mantel - (slope * type_het + intercept))
         top3_idx = np.argsort(residuals)[-3:][::-1]
-        slots = [(1.04, 0.82), (1.04, 0.60), (1.04, 0.38)]
+        # Reserve 3 evenly-spaced slots along the right margin.
+        slots = reserve_annotation_slot(ax4, k=3, side="right", margin=0.08)
+        from matplotlib.patches import ConnectionPatch as _CP
         for (slot_x, slot_y), idx in zip(slots, top3_idx):
             t_id = type_labels_d[idx]
-            lbl = abbreviate_cell_type(_type_names.get(t_id, f"Type {t_id}"), max_len=18)
+            # max_len=10 (was 14): right-margin slots with longer labels extended
+            # past the figure border (42px overshoot for "Alveolar type").
+            lbl = abbreviate_cell_type(_type_names.get(t_id, f"Type {t_id}"), max_len=10)
+            xv = type_het[idx]
+            yv = type_mantel[idx]
             ax4.text(
                 slot_x,
                 slot_y,
                 lbl,
                 transform=ax4.transAxes,
-                fontsize=9,
+                fontsize=8.5,
                 ha="left",
                 va="center",
                 color=COLORS["annotation_dark"],
@@ -410,20 +415,20 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
                 zorder=6,
                 clip_on=False,
             )
-            conn = ConnectionPatch(
-                xyA=(type_het[idx], type_mantel[idx]),
+            conn = _CP(
+                xyA=(xv, yv),
                 coordsA=ax4.transData,
-                xyB=(slot_x + 0.02, slot_y),
+                xyB=(slot_x - 0.01, slot_y),
                 coordsB=ax4.transAxes,
                 axesA=ax4,
                 axesB=ax4,
                 arrowstyle="-",
-                lw=0.55,
+                lw=0.5,
                 color="#888",
-                alpha=0.7,
+                alpha=0.70,
                 shrinkA=0,
-                shrinkB=0,
-                connectionstyle="arc3,rad=0.06",
+                shrinkB=2,
+                connectionstyle="arc3,rad=0.08",
             )
             conn.set_clip_on(False)
             conn.set_zorder(2)

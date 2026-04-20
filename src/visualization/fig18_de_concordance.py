@@ -48,6 +48,15 @@ def plot_de_concordance_panel(
     R2 (b): concordance heatmap across all contrasts
     R3 (c): summary bars per contrast
     """
+    # C3 font override — Fig 8 panels render at two-column print size; global
+    # FONT_TICK=11 is correct for most figures but *too small* here due to the 2×3
+    # dense grid. Locals below intentionally diverge by +0 to +2 pt. Do NOT
+    # "normalize" back to FONT_TICK without re-running run_regeneration.py and
+    # diffing vcd_report.json at print scale (7.2" wide @ 300dpi).
+    _F_TICK   = 12
+    _F_LABEL  = 13
+    _F_ANNOT  = 11
+
     if not de_data:
         logger.info("No DE data — skipping Fig 18")
         return None
@@ -267,7 +276,7 @@ def plot_de_concordance_panel(
     # Build short x-labels from contrast names (biology-aware)
     xs_labels = [_abbrev_contrast(c, max_len=8) for c in contrasts]
     ax3.set_xticks(x)
-    ax3.set_xticklabels(xs_labels, fontsize=6,
+    ax3.set_xticklabels(xs_labels, fontsize=_F_ANNOT,
                          rotation=0, ha="center", multialignment="center")
     ax3.set_ylim(0, 1.12)
     ax3.legend(fontsize=FONT_ANNOTATION, ncol=2,

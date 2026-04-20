@@ -59,13 +59,13 @@ def make_figure():
     ax.set_xticks([])
     ax.set_yticks([])
 
-    # Panel label D remains the approved schematic exception at 22pt because
-    # this wider figure is scaled differently in LaTeX than fig01a.
+    # Panel label D stays slightly larger than the raw fig01a label so the
+    # on-page size matches A/B/C after the separate LaTeX scaling of fig01b.
     ax.text(
         -0.05,
         6.96,
         "D",
-        fontsize=20,
+        fontsize=22,
         fontweight="bold",
         color="black",
         ha="left",

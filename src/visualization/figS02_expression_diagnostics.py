@@ -434,20 +434,20 @@ def plot_expression_diagnostics(output_dir: str | Path = "results/figures", dpi:
     field_ablation = val_dir / "field_ablation_results.json"
     discriminator = val_dir / "discriminator_analysis.json"
 
-    fig = plt.figure(figsize=(14.0, 10.5))
-    layout = bind_figure_region(fig, (0.11, 0.09, 0.955, 0.945))
-    top, bottom = layout.split_rows([1.0, 1.0], gap=0.18)
+    fig = plt.figure(figsize=(14.8, 10.5))
+    layout = bind_figure_region(fig, (0.06, 0.09, 0.99, 0.945))
+    top, bottom = layout.split_rows([1.0, 1.0], gap=0.15)
 
     # Top row: wider gap before b (col 1) to separate high-precision xticks
     # (1.0 vs 0.99990) and before c (col 2) barh yticklabels; extra right
     # gap before e (col 4) so panel e xticks don't run off the page edge
-    top_weights = [1.55, 1.05, 1.10, 1.08, 1.55]
-    top_cols = top.split_cols(top_weights, gap=[0.14, 0.10, 0.06, 0.12])
+    top_weights = [1.72, 1.16, 1.18, 1.14, 1.68]
+    top_cols = top.split_cols(top_weights, gap=[0.08, 0.06, 0.05, 0.08])
     # Bottom row: wider gap before g (col 1) barh; between g/h (col 1/2)
     # where retention xtick '200' collides with adjacent bar labels; and
     # between i/j (col 3/4) for the per-type AUC yticks
-    bot_weights = [1.50, 1.15, 1.08, 1.08, 1.35]
-    bottom_cols = bottom.split_cols(bot_weights, gap=[0.12, 0.14, 0.10, 0.14])
+    bot_weights = [1.56, 1.18, 1.10, 1.12, 1.44]
+    bottom_cols = bottom.split_cols(bot_weights, gap=[0.08, 0.08, 0.07, 0.08])
 
     _lbl_x = -0.10  # consistent x-offset for all panel labels
 
@@ -457,7 +457,7 @@ def plot_expression_diagnostics(output_dir: str | Path = "results/figures", dpi:
 
     ax_b = top_cols[1].add_axes(fig)
     _panel_b(ax_b, pseudobulk_summary, pseudobulk_per_type)
-    add_panel_label(ax_b, "b", x=0.02, y=_LABEL_Y, fontsize=_LABEL_SIZE)
+    add_panel_label(ax_b, "b", x=-0.04, y=_LABEL_Y, fontsize=_LABEL_SIZE)
 
     ax_c = top_cols[2].add_axes(fig)
     _panel_c(ax_c, failure_analysis, failure_tiers)

@@ -94,17 +94,26 @@ def main() -> None:
             height=0.72,
         )
         ax.axvline(random_chance, color="#333333", linestyle="--", linewidth=1.1)
-        random_label_x = random_chance - 0.015 if random_chance >= 0.95 else max(min(random_chance + 0.015, 0.90), 0.03)
+        if random_chance >= 0.95:
+            random_label_x = random_chance - 0.015
+        else:
+            random_label_x = max(min(random_chance + 0.015, 0.90), 0.03)
         random_label_ha = "right" if random_chance >= 0.95 else "left"
+        # Keep the chance label off the colored bars and away from the tissue
+        # title.  Multi-row panels have a clean gap between the first two bars;
+        # single-row panels place the label just above the lone bar.
+        random_label_y = 0.5 if len(labels) > 1 and random_chance < 0.95 else -0.42
+        random_label_va = "center" if random_label_y >= 0 else "bottom"
         ax.text(
             random_label_x,
-            0.98,
+            random_label_y,
             f"random = {random_chance:.2f}",
-            transform=ax.get_xaxis_transform(),
             ha=random_label_ha,
-            va="top",
+            va=random_label_va,
             fontsize=9,
             color="#333333",
+            bbox=dict(boxstyle="round,pad=0.16", facecolor="white", edgecolor="none", alpha=0.86),
+            clip_on=False,
         )
 
         for idx, value in enumerate(values):
