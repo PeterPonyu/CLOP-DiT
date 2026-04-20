@@ -58,7 +58,7 @@ from .style import (
     save_with_vcd,
     style_axes,
 )
-from src.utils.paths import CACHE_DIR, FIG_DIR, RESULTS_DIR
+from src.utils.paths import FIG_DIR, RESULTS_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +86,6 @@ def _load_fig07_inputs(
     gen_metrics_path: Path,
     div_metrics_path: Path,
     baseline_metrics_path: Path,
-    cache_dir: Path,
 ) -> Dict:
     """Load every JSON artefact needed by the two rows.
 
@@ -383,7 +382,6 @@ def plot_fig07_composed(
     gen_metrics_path: Optional[str] = None,
     div_metrics_path: Optional[str] = None,
     baseline_metrics_path: Optional[str] = None,
-    cache_dir: Optional[str] = None,
     output_dir: Optional[str] = None,
     dpi: int = 300,
     save: bool = True,
@@ -396,7 +394,6 @@ def plot_fig07_composed(
     gen_metrics_path       : path to generation_metrics.json.
     div_metrics_path       : path to diversity_diagnostics.json.
     baseline_metrics_path  : path to baseline_metrics.json.
-    cache_dir              : directory with text_captions_deduplicated.json etc.
     output_dir             : directory to save the composite PDF.
     dpi                    : rasterised preview DPI (PDF is vector).
     save                   : if False, return None without writing.
@@ -410,7 +407,6 @@ def plot_fig07_composed(
     gen_path = Path(gen_metrics_path) if gen_metrics_path else RESULTS_DIR / "generation_metrics.json"
     div_path = Path(div_metrics_path) if div_metrics_path else RESULTS_DIR / "diversity_diagnostics.json"
     bl_path = Path(baseline_metrics_path) if baseline_metrics_path else RESULTS_DIR / "baseline_metrics.json"
-    cache = Path(cache_dir) if cache_dir else CACHE_DIR
     out_dir = Path(output_dir) if output_dir else FIG_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -418,7 +414,6 @@ def plot_fig07_composed(
         gen_metrics_path=gen_path,
         div_metrics_path=div_path,
         baseline_metrics_path=bl_path,
-        cache_dir=cache,
     )
 
     if not data.get("t6_data") and not data.get("methods"):
