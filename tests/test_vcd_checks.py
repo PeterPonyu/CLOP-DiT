@@ -566,3 +566,96 @@ def test_vcd_warn_count_regression():
         "VCD regressions vs baseline — warning counts increased for:\n  "
         + "\n  ".join(regressions)
     )
+
+
+# ---------------------------------------------------------------------------
+# Cross-slice VCD coverage gate (plan §5.6 bullet 7)
+# ---------------------------------------------------------------------------
+#
+# When a single-producer composite PDF replaces several legacy per-slice PDFs,
+# the composite can hide cross-gridspec overlaps that the individual slices
+# never saw. The per-slice VCD regression gate above only sees the old
+# per-slice keys; a new composite with cross-cell overlap would pass that
+# gate silently.
+#
+# This test iterates the ``COMPOSITE_VCD_REGISTRY`` maintained in
+# ``src/visualization/article_composition.py`` and enforces
+#
+#     len(current[composite]["warnings"]) <= sum(len(current[slice]["warnings"])
+#                                                for slice in slices)
+#
+# for every registered (composite, slices) pair.
+#
+# **Limitation** (plan iter2 §5.6 bullet 7 note): this is a NECESSARY but
+# NOT SUFFICIENT gate. If a slice tightens (e.g. 2 → 1 warning) while the
+# composite gains a new cross-cell overlap (0 → 1), the sum check still
+# passes (``1 <= 1 + N``). The slice-tightening case is caught by the
+# manual visual-spot-check sign-off (plan §5.6 bullet 6), not by this test.
+
+
+def test_composite_vcd_coverage():
+    """For every composite registered in ``COMPOSITE_VCD_REGISTRY``, the
+    composite's VCD warn count must not exceed the sum of warn counts on
+    its constituent legacy slice PDFs. Vacuously green while the registry
+    is empty (Step 0 state of the single-producer migration plan).
+    """
+    from src.visualization.article_composition import COMPOSITE_VCD_REGISTRY
+
+    if not COMPOSITE_VCD_REGISTRY:
+        # Step 0 state: no composites registered yet. The gate is live but
+        # vacuously green until Step 1 (Fig 8 pilot) populates the first
+        # entry.
+        pytest.skip("COMPOSITE_VCD_REGISTRY empty — no composites to check yet")
+
+    if not _CURRENT_PATH.exists():
+        pytest.skip(
+            "VCD report missing — run scripts/pipeline/run_regeneration.py first"
+        )
+
+    current = _json.loads(_CURRENT_PATH.read_text())
+
+    failures = []
+    for composite_key, slice_keys in COMPOSITE_VCD_REGISTRY.items():
+        # Composite may not be in the report yet if the producer hasn't run.
+        composite_entry = current.get(composite_key)
+        if composite_entry is None:
+            failures.append(
+                f"{composite_key}: absent from current VCD report — "
+                f"run_regeneration.py may not have produced the composite PDF"
+            )
+            continue
+
+        composite_warns_raw = composite_entry.get("warnings")
+        composite_warns = (
+            len(composite_warns_raw)
+            if isinstance(composite_warns_raw, list)
+            else 0
+        )
+
+        # Sum the slice warn counts. Missing slices are treated as zero
+        # (not a failure here — the per-slice regression gate above is the
+        # authority on slice-level changes).
+        slice_sum = 0
+        for slice_key in slice_keys:
+            slice_entry = current.get(slice_key)
+            if slice_entry is None:
+                continue
+            slice_warns_raw = slice_entry.get("warnings")
+            if isinstance(slice_warns_raw, list):
+                slice_sum += len(slice_warns_raw)
+
+        if composite_warns > slice_sum:
+            failures.append(
+                f"{composite_key}: composite warns={composite_warns} "
+                f"exceeds sum(slices)={slice_sum} over {slice_keys}"
+            )
+
+    assert not failures, (
+        "Composite VCD coverage gate tripped (cross-slice overlap suspected):\n  "
+        + "\n  ".join(failures)
+        + "\n\nNote: the <=-sum gate is necessary-but-not-sufficient — it "
+          "does not catch the case where a slice's warn count tightens "
+          "while the composite gains an orthogonal cross-cell overlap of "
+          "comparable size. Visual spot-check (plan §5.6 bullet 6) is "
+          "required alongside this gate."
+    )
