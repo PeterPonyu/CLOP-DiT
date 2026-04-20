@@ -264,6 +264,39 @@ def run_fig04_composed():
         return None
 
 
+def run_fig07_composed():
+    """Step 4 of single-producer migration: produce fig07_composed.pdf
+    (.omc/plans/single-producer-architecture-2026-04-20.md).
+
+    Dual-published alongside the legacy fig07a/fig07b slices: fig14_expr_diversity
+    and fig15_baselines still emit their per-slice PDFs unchanged; this composite
+    adds a single 2-row gridspec PDF with aligned panel labels and shared fonts
+    for article Figure 7 panels a-e.
+
+    NOTE: fig07c_benchmark.pdf (from fig16_benchmark.py) is INTENTIONALLY
+    EXCLUDED from this composite per plan §4 — the Option I-a labels-x3
+    structural design is not compatible with the shared composite scale
+    budget, so the benchmark panel continues to publish standalone.
+    """
+    log.info("── Generating fig07_composed.pdf ──")
+    try:
+        from src.visualization.fig07_composed import plot_fig07_composed
+        result = plot_fig07_composed(
+            output_dir=str(FIG_DIR),
+            dpi=300,
+            save=True,
+        )
+        plt.close("all")
+        if result is None:
+            log.warning("fig07_composed skipped (no inputs)")
+            return None
+        log.info("fig07_composed: %s (%s)", result, "exists" if result.exists() else "MISSING")
+        return result if result.exists() else None
+    except Exception as e:
+        log.error("fig07_composed failed: %s", e, exc_info=True)
+        return None
+
+
 def run_conditioning_figures():
     """Regenerate Figs 11 + 13 from cached conditioning data (no model inference).
 
@@ -834,6 +867,14 @@ def main():
     fig04c = run_fig04_composed()
     if fig04c:
         saved.append(fig04c)
+
+    # 7f. Step 4 — single-producer Fig 7 composite (dual-published with legacy
+    # fig07a/fig07b slices from fig14_expr_diversity/fig15_baselines).
+    # fig07c_benchmark.pdf (from fig16_benchmark.py) stays standalone per
+    # plan §4 (Option I-a labels-x3 structural exemption).
+    fig07c = run_fig07_composed()
+    if fig07c:
+        saved.append(fig07c)
 
     # 8. Python-composed supplementary appendix figures (replace LaTeX stitching)
     _supp_figs = [

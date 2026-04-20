@@ -66,6 +66,12 @@ _SOURCE_BASENAMES: List[str] = [
     "fig07a_expression_diversity",
     "fig07b_baseline_comparison",
     "fig07c_benchmark",
+    # Main body display Figure 7 composite (Step 4 of single-producer
+    # migration plan, .omc/plans/single-producer-architecture-2026-04-20.md).
+    # Combines fig07a + fig07b ONLY; fig07c_benchmark.pdf is intentionally
+    # excluded per plan §4 (Option I-a labels-x3 structural exemption).
+    # Registered-but-not-yet-LaTeX-referenced during the revision window.
+    "fig07_composed",
     # Main body display Figure 8
     "fig08a_downstream_validation",
     "fig08b_de_concordance",
@@ -113,6 +119,7 @@ ARTICLE_FIGURE_PRODUCERS: List[Tuple[str, str]] = [
     ("fig07a_expression_diversity", "src/visualization/fig14_expr_diversity.py"),
     ("fig07b_baseline_comparison", "src/visualization/fig15_baselines.py"),
     ("fig07c_benchmark", "src/visualization/fig16_benchmark.py"),
+    ("fig07_composed", "src/visualization/fig07_composed.py"),
     ("fig08a_downstream_validation", "src/visualization/fig17_downstream.py"),
     ("fig08b_de_concordance", "src/visualization/fig18_de_concordance.py"),
     ("fig08_composed", "src/visualization/fig08_composed.py"),

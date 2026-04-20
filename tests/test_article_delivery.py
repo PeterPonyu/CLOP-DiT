@@ -26,9 +26,10 @@ class TestArticleFigureManifest:
         from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
         # Growing as the single-producer migration adds composite basenames
         # (plan §7 ADR Consequences: manifest 25 -> ~29 during migration window).
-        # Step 1 (Fig 8 pilot) + Step 2 (Fig 3) + Step 3 (Fig 4) add three
-        # fig0X_composed entries.
-        assert len(ARTICLE_FIGURE_BASENAMES) == 28
+        # Step 1 (Fig 8 pilot) + Step 2 (Fig 3) + Step 3 (Fig 4) + Step 4
+        # (Fig 7, fig07a+b only — fig07c exempt) add four fig0X_composed
+        # entries.
+        assert len(ARTICLE_FIGURE_BASENAMES) == 29
 
     def test_manifest_contains_expected_basenames(self):
         from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES

@@ -59,6 +59,13 @@ _STRICT_SCAN_FILES = [
     # _draw_marker_panels / _draw_correlation_panels in
     # src/visualization/fig04_composed.py).
     _REPO_ROOT / "src/visualization/fig04_composed.py",
+    # Step 4 of single-producer migration plan: the new composed producer
+    # for article Fig 7 (fig14_expr_diversity + fig15_baselines merged).
+    # fig16_benchmark.py remains OUT of scope per plan §4 (Option I-a
+    # labels-x3 structural exemption). Uses canonical PANEL_OFFSET_*
+    # subscripts throughout (see _draw_diversity_row / _draw_baseline_row
+    # in src/visualization/fig07_composed.py).
+    _REPO_ROOT / "src/visualization/fig07_composed.py",
 ]
 
 # ---------------------------------------------------------------------------
@@ -204,7 +211,7 @@ class TestPanelLabelOffsets:
         four files (fig03_training, fig05_metrics, fig06_fidelity,
         fig07_alignment) are joined by each new composed producer as the
         migration rolls out. Step 2 adds fig03_composed.py; Step 3 adds
-        fig04_composed.py.
+        fig04_composed.py; Step 4 adds fig07_composed.py.
         """
         expected_names = {
             "fig03_training.py",
@@ -213,6 +220,7 @@ class TestPanelLabelOffsets:
             "fig07_alignment.py",
             "fig03_composed.py",
             "fig04_composed.py",
+            "fig07_composed.py",
         }
         actual_names = {p.name for p in _STRICT_SCAN_FILES}
         assert actual_names == expected_names, (

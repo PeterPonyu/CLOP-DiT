@@ -94,6 +94,19 @@ COMPOSITE_VCD_REGISTRY: Dict[str, List[str]] = {
         "fig04a_marker_genes.pdf",
         "fig04b_expression_correlation.pdf",
     ],
+    # Step 4 (plan §3 Step 4): Fig 7 composite replaces
+    # fig07a_expression_diversity.pdf + fig07b_baseline_comparison.pdf.
+    # Produced by src/visualization/fig07_composed.py alongside the legacy
+    # slices (dual-publish during the revision window). Note:
+    # fig07c_benchmark.pdf is INTENTIONALLY EXCLUDED from this composite
+    # per plan §4 exemption — the Option I-a labels-x3 structural design
+    # of fig16_benchmark.py is not compatible with the shared composite
+    # font/scale budget, so the benchmark panel continues to publish as a
+    # separate standalone figure.
+    "fig07_composed.pdf": [
+        "fig07a_expression_diversity.pdf",
+        "fig07b_baseline_comparison.pdf",
+    ],
 }
 """Maps composite PDF basename -> list of legacy slice PDF basenames.
 
