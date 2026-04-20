@@ -405,20 +405,22 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
             yv = type_mantel[idx]
             x_frac = (xv - x_lo) / x_span
             y_frac = (yv - y_lo) / y_span
-            dx_pt = -22 if x_frac > 0.62 else 16
-            dy_pt = -14 if y_frac > 0.62 else 12
+            # Canonical adjacent-offset callout pattern shared across Figs 4E /
+            # 5A / 10D / 10H. 14 pt + slightly larger offsets and padding.
+            dx_pt = -24 if x_frac > 0.62 else 18
+            dy_pt = -16 if y_frac > 0.62 else 14
             ax4.annotate(
                 lbl,
                 xy=(xv, yv),
                 xycoords="data",
                 xytext=(dx_pt, dy_pt),
                 textcoords="offset points",
-                fontsize=8.5,
+                fontsize=14,
                 ha="right" if dx_pt < 0 else "left",
                 va="center",
                 color="#333",
-                bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="#BBB", lw=0.3, alpha=0.93),
-                arrowprops=dict(arrowstyle="-", lw=0.45, color="#888", alpha=0.6, shrinkA=1, shrinkB=1),
+                bbox=dict(boxstyle="round,pad=0.18", fc="white", ec="#BBB", lw=0.4, alpha=0.95),
+                arrowprops=dict(arrowstyle="-", lw=0.5, color="#888", alpha=0.65, shrinkA=1, shrinkB=1),
                 zorder=6,
                 annotation_clip=True,
             )
