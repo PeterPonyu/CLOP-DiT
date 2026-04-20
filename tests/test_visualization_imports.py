@@ -12,42 +12,23 @@ import pkgutil
 import pytest
 
 
-def _iter_package_modules(package):
-    return [
-        f"{package.__name__}.{mod_name}"
-        for _, mod_name, _ in pkgutil.iter_modules(package.__path__)
-    ]
+@pytest.mark.parametrize("subpackage_name", ["experimental", "supplementary"])
+def test_subpackage_modules_importable(subpackage_name: str) -> None:
+    """Every module under `src/visualization/<subpackage_name>/` must import cleanly.
 
-
-class TestExperimentalImports:
-    """Every module in src/visualization/experimental/ must import cleanly."""
-
-    def test_all_experimental_modules_importable(self):
-        import src.visualization.experimental as exp_pkg
-        failures = []
-        for mod_name in _iter_package_modules(exp_pkg):
-            try:
-                importlib.import_module(mod_name)
-            except Exception as exc:
-                failures.append(f"{mod_name}: {type(exc).__name__}: {exc}")
-        assert not failures, (
-            "Experimental subdir modules must import without error. "
-            f"{len(failures)} failure(s):\n  " + "\n  ".join(failures)
-        )
-
-
-class TestSupplementaryImports:
-    """Every module in src/visualization/supplementary/ must import cleanly."""
-
-    def test_all_supplementary_modules_importable(self):
-        import src.visualization.supplementary as sup_pkg
-        failures = []
-        for mod_name in _iter_package_modules(sup_pkg):
-            try:
-                importlib.import_module(mod_name)
-            except Exception as exc:
-                failures.append(f"{mod_name}: {type(exc).__name__}: {exc}")
-        assert not failures, (
-            "Supplementary subdir modules must import without error. "
-            f"{len(failures)} failure(s):\n  " + "\n  ".join(failures)
-        )
+    Parameterized over the two subdirs created by Track A of the viz-cleanup
+    plan. Any future subdir relocation should add its name to the parametrize
+    list so the same guard applies.
+    """
+    pkg = importlib.import_module(f"src.visualization.{subpackage_name}")
+    failures = []
+    for _, mod_name, _ in pkgutil.iter_modules(pkg.__path__):
+        qual = f"{pkg.__name__}.{mod_name}"
+        try:
+            importlib.import_module(qual)
+        except Exception as exc:  # pragma: no cover — exercised on regression
+            failures.append(f"{qual}: {type(exc).__name__}: {exc}")
+    assert not failures, (
+        f"{subpackage_name}/ modules must import without error. "
+        f"{len(failures)} failure(s):\n  " + "\n  ".join(failures)
+    )
