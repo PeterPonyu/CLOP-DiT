@@ -226,12 +226,22 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
             fontsize=FONT_SMALL, color=COLORS["neutral"],
             bbox=dict(boxstyle="round,pad=0.25", facecolor="white", alpha=0.85, edgecolor="none"))
 
-    # Legend in upper-right corner (where Observed distribution's right tail
-    # has low density). Cannot go below x-axis — would overlap the next
-    # panel's (Weakest-preserved Type) title.
-    ax.legend(fontsize=FONT_ANNOTATION - 1, frameon=False,
-              loc="upper right", bbox_to_anchor=(0.99, 0.99), ncol=1,
-              handlelength=1.3, borderaxespad=0.2)
+    # Legend in the upper-centre "valley" between the null-distribution peak
+    # (centred near 0) and the Observed peak (centred near 0.65). Upper-right
+    # placement was crossing the red-dashed Median line (x≈0.64) when the
+    # handlelength × label-text width reached axes fraction ≲0.65. Shorter
+    # labels + ncol=2 + tight padding keep the legend out of both peak-density
+    # regions and the Median/Mean vertical guides.
+    handles, labels = ax.get_legend_handles_labels()
+    short_map = {
+        f"Permuted null (n={len(null_mantels)})": f"Null (n={len(null_mantels)})",
+    }
+    short_labels = [short_map.get(lbl, lbl) for lbl in labels]
+    ax.legend(handles, short_labels,
+              fontsize=FONT_ANNOTATION - 2, frameon=False,
+              loc="upper center", bbox_to_anchor=(0.45, 0.99), ncol=2,
+              handlelength=1.0, handletextpad=0.3, columnspacing=0.8,
+              borderaxespad=0.2)
     style_axes(ax, "default",
                xlabel="Upper-triangle Pearson r (real vs. gen corr. matrix)",
                ylabel="Density",
