@@ -379,11 +379,17 @@ def main():
     log_x_hi = np.log10(max(x_hi, 1e-12))
     x_span = (log_x_hi - log_x_lo) + 1e-12
     y_span = (y_hi - y_lo) + 1e-12
+    placed_positions = []
     for idx in top3_idx:
         lbl = abbreviate_cell_type(results[idx]["name"], max_len=18)
         xv = float(n_reals[idx])
         yv = float(swd_arr[idx])
-        x_frac = (np.log10(max(xv, 1e-12)) - log_x_lo) / x_span
+        # Skip if too close (in log-x fraction) to an already-placed label
+        xv_log_frac = (np.log10(max(xv, 1e-12)) - log_x_lo) / x_span
+        if any(abs(xv_log_frac - px) < 0.15 for px in placed_positions):
+            continue
+        placed_positions.append(xv_log_frac)
+        x_frac = xv_log_frac
         y_frac = (yv - y_lo) / y_span
         dx_pt = -24 if x_frac > 0.62 else 18
         dy_pt = -16 if y_frac > 0.62 else 14

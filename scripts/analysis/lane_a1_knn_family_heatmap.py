@@ -35,8 +35,8 @@ FAMILY_LABELS = {
     "mesenchymal": "Mesenchymal",
     "myeloid": "Myeloid",
     "neural_and_glial": "Neural/Glial",
-    "parenchymal_secretory": "Parenchymal\nSecretory",
-    "proliferation_stress_pluripotent": "Prolif./Stress\nPluripotent",
+    "parenchymal_secretory": "Parenchymal Sec.",
+    "proliferation_stress_pluripotent": "Prolif./Stress Pluri.",
 }
 
 
@@ -123,7 +123,7 @@ def main() -> None:
     # Colorbar below BOTH axes so the heatmap and the right bar shrink
     # by the same fraction and keep their bottom pixel rows aligned.
     cbar = fig.colorbar(im, ax=[ax_heat, ax_bar], orientation="horizontal",
-                        fraction=0.040, pad=0.34, shrink=0.62)
+                        fraction=0.040, pad=0.15, shrink=0.62)
     cbar.set_label("Fraction of queries", fontsize=8)
     cbar.ax.tick_params(labelsize=7.5)
 

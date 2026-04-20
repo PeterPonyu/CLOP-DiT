@@ -239,8 +239,8 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     short_labels = [short_map.get(lbl, lbl) for lbl in labels]
     ax.legend(handles, short_labels,
               fontsize=FONT_ANNOTATION - 2, frameon=False,
-              loc="upper center", bbox_to_anchor=(0.45, 0.99), ncol=2,
-              handlelength=1.0, handletextpad=0.3, columnspacing=0.8,
+              loc="lower right", bbox_to_anchor=(0.99, 0.02), ncol=1,
+              handlelength=1.0, handletextpad=0.3,
               borderaxespad=0.2)
     style_axes(ax, "default",
                xlabel="Upper-triangle Pearson r (real vs. gen corr. matrix)",
@@ -267,7 +267,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     heatmap_abs_scale = max(heatmap_abs_scale, 0.08)
 
     # ── Panel (b): Best-preserved cell type ──
-    best_name = abbreviate_cell_type(_type_names.get(best_type, f"Type {best_type}"), max_len=28)
+    best_name = abbreviate_cell_type(_type_names.get(best_type, f"Type {best_type}"), max_len=20)
     best_r = per_type_results[best_type]["mantel_r"]
     best_rmse = per_type_results[best_type]["rmse"]
 
@@ -296,9 +296,9 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
 
     # Summary annotation
     mad = np.nanmean(np.abs(diff))
-    ax2.text(0.97, 0.03,
+    ax2.text(0.03, 0.97,
              f"r = {best_r:.3f}\nMAD = {mad:.3f}\nRMSE = {best_rmse:.3f}",
-             transform=ax2.transAxes, ha="right", va="bottom",
+             transform=ax2.transAxes, ha="left", va="top",
              fontsize=FONT_ANNOTATION, color="black")
     cax2 = add_axes_next_to(
         fig,
@@ -316,7 +316,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     cb2.ax.tick_params(labelsize=FONT_HEATMAP_CELL - 1)
 
     # ── Panel (c): Worst-preserved cell type ──
-    worst_name = abbreviate_cell_type(_type_names.get(worst_type, f"Type {worst_type}"), max_len=28)
+    worst_name = abbreviate_cell_type(_type_names.get(worst_type, f"Type {worst_type}"), max_len=20)
     worst_r = per_type_results[worst_type]["mantel_r"]
     worst_rmse = per_type_results[worst_type]["rmse"]
 
@@ -344,9 +344,9 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     ax3.set_ylabel("Gene index", fontsize=FONT_LABEL)
 
     mad_w = np.nanmean(np.abs(diff_w))
-    ax3.text(0.97, 0.03,
+    ax3.text(0.03, 0.97,
              f"r = {worst_r:.3f}\nMAD = {mad_w:.3f}\nRMSE = {worst_rmse:.3f}",
-             transform=ax3.transAxes, ha="right", va="bottom",
+             transform=ax3.transAxes, ha="left", va="top",
              fontsize=FONT_ANNOTATION, color="black")
     cax3 = add_axes_next_to(
         fig,
@@ -408,11 +408,14 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
         y_lo, y_hi = ax4.get_ylim()
         x_span = x_hi - x_lo + 1e-12
         y_span = y_hi - y_lo + 1e-12
+        placed_points = []
         for idx in top3_idx:
             t_id = type_labels_d[idx]
             lbl = abbreviate_cell_type(_type_names.get(t_id, f"Type {t_id}"), max_len=14)
             xv = type_het[idx]
             yv = type_mantel[idx]
+            if any(abs(xv - px) < 0.0008 and abs(yv - py) < 0.04 for px, py in placed_points):
+                continue
             x_frac = (xv - x_lo) / x_span
             y_frac = (yv - y_lo) / y_span
             # Canonical adjacent-offset callout pattern shared across Figs 4E /
@@ -429,11 +432,12 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
                 ha="right" if dx_pt < 0 else "left",
                 va="center",
                 color="#333",
-                bbox=dict(boxstyle="round,pad=0.18", fc="white", ec="#BBB", lw=0.4, alpha=0.95),
+                bbox=dict(boxstyle="round,pad=0.18", fc="none", ec="none"),
                 arrowprops=dict(arrowstyle="-", lw=0.5, color="#888", alpha=0.65, shrinkA=1, shrinkB=1),
                 zorder=6,
                 annotation_clip=True,
             )
+            placed_points.append((xv, yv))
     else:
         stat_text = "Insufficient variance for correlation"
 

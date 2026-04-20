@@ -351,14 +351,14 @@ def _draw_ood_showcase(fig: plt.Figure, region, ood_path: Path) -> None:
 
     # ── Right: Free-form prompts ──
     ax_r = right.add_axes(fig)
-    ax_r.set_xlim(0, 12.8)
+    ax_r.set_xlim(0, 14.6)
     n_ff = max(len(ff_items), 1)
     ax_r.set_ylim(-1.8, (n_ff - 1) * _ROW_STEP + 0.8)
     ax_r.invert_yaxis()
     ax_r.axis("off")
 
     ax_r.text(0.0, -1.1, "Target cell type", fontsize=FONT_LABEL + 1, fontweight="medium", va="center")
-    ax_r.text(4.6, -1.1, "Prompt style", fontsize=FONT_LABEL + 1, fontweight="medium",
+    ax_r.text(5.0, -1.1, "Prompt style", fontsize=FONT_LABEL + 1, fontweight="medium",
               va="center")
 
     # Sanitized, publication-quality display labels for free-form prompt IDs.
@@ -386,7 +386,7 @@ def _draw_ood_showcase(fig: plt.Figure, region, ood_path: Path) -> None:
             label = label[:14] + "\u2026"
         ax_r.text(0.0, y_pos, label, fontsize=FONT_TICK, va="center",
                   color=COLORS["generated"], fontweight="medium")
-        ax_r.text(4.6, y_pos, style_tag, fontsize=FONT_TICK, va="center",
+        ax_r.text(5.0, y_pos, style_tag, fontsize=FONT_TICK, va="center",
                   color=COLORS["annotation_dark"], style="italic")
         if i < len(ff_items) - 1:
             ax_r.axhline(y=y_pos + _ROW_STEP * 0.5, color=COLORS["border_light"],

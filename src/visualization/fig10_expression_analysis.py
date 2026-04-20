@@ -128,8 +128,12 @@ def plot_expression_analysis(
     y_lo, y_hi = ax1.get_ylim()
     x_span = x_hi - x_lo + 1e-12
     y_span = y_hi - y_lo + 1e-12
+    placed_points = []
     for i in valid_idx:
         xv, yv = real_cv[i], gen_cv[i]
+        # Skip if too close (in x) to an already-placed callout — threshold = 15% of x_span
+        if any(abs(xv - px) < 0.15 * x_span for px, _py in placed_points):
+            continue
         x_frac = (xv - x_lo) / x_span
         y_frac = (yv - y_lo) / y_span
         # Canonical adjacent-offset callout pattern shared across Figs 4E / 5A /
@@ -146,7 +150,7 @@ def plot_expression_analysis(
             ha="right" if dx_pt < 0 else "left",
             va="center",
             color="#333",
-            bbox=dict(boxstyle="round,pad=0.18", fc="white", ec="#BBB",
+            bbox=dict(boxstyle="round,pad=0.18", fc="none", ec="none",
                       lw=0.4, alpha=0.95),
             arrowprops=dict(
                 arrowstyle="-",
@@ -159,6 +163,7 @@ def plot_expression_analysis(
             zorder=6,
             annotation_clip=True,
         )
+        placed_points.append((xv, yv))
 
     cv_corr = np.corrcoef(real_cv, gen_cv)[0, 1]
     ax1.legend(fontsize=10, frameon=False)

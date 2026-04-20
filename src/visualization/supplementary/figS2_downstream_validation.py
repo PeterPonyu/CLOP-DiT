@@ -98,7 +98,7 @@ def _panel_a(ax: plt.Axes, results_dir: Path) -> None:
     ax.set_ylabel("Correlation", fontsize=FONT_LABEL)
     ax.set_title("Cross-Dataset", fontsize=FONT_TITLE, fontweight="normal")
     ax.set_ylim(0, max(max(pearson_vals, default=0), max(spearman_vals, default=0)) * 1.2)
-    ax.legend(fontsize=FONT_LEGEND_DENSE, loc="upper center",
+    ax.legend(fontsize=FONT_LEGEND, loc="upper center",
               bbox_to_anchor=(0.5, -0.28), frameon=False, ncol=2)
     style_axes(ax)
 
@@ -133,7 +133,7 @@ def _panel_b(fig: plt.Figure, ax: plt.Axes, results_dir: Path) -> None:
 
     metrics = ["logfc_pearson_r", "logfc_spearman_rho", "top_k_jaccard", "top_k_sign_agreement"]
     metric_labels = ["Pearson r", "Spearman \u03c1", "Jacc@100", "Sign Agr."]
-    contrast_labels = [_abbrev_contrast(c, max_len=5) for c in contrasts]
+    contrast_labels = [_abbrev_contrast(c, max_len=12) for c in contrasts]
 
     n_contrasts = len(contrasts)
     heatmap_data = np.full((n_contrasts, len(metrics)), np.nan)
@@ -145,7 +145,7 @@ def _panel_b(fig: plt.Figure, ax: plt.Axes, results_dir: Path) -> None:
     ax.set_xticks(range(len(metrics)))
     ax.set_xticklabels(metric_labels, fontsize=FONT_TICK_DENSE, rotation=40, ha="right")
     ax.set_yticks(range(n_contrasts))
-    ax.set_yticklabels(contrast_labels, fontsize=FONT_HEATMAP_CELL)
+    ax.set_yticklabels(contrast_labels, fontsize=FONT_TICK_DENSE)
     ax.set_title("DE Concord.", fontsize=FONT_TITLE, fontweight="normal")
 
     # Cell annotations removed: at 0.48\textwidth render scale the small
@@ -215,7 +215,8 @@ def _panel_c(ax: plt.Axes, results_dir: Path) -> None:
 
     ax.set_yticks(y)
     ax.set_yticklabels(prompts, fontsize=FONT_TICK_DENSE)
-    ax.set_xlabel("Hit Rate", fontsize=FONT_LABEL)
+    ax.set_xlabel("Hit Rate", fontsize=FONT_LABEL, labelpad=4)
+    ax.xaxis.set_label_coords(0.5, -0.20)
     ax.set_title("OOD Marker Hit Rate", fontsize=FONT_TITLE, fontweight="normal")
     ax.set_xlim(0, 1.05)
     ax.invert_yaxis()
@@ -393,7 +394,11 @@ def _panel_e(fig: plt.Figure, rect: list[float], results_dir: Path) -> plt.Axes:
     n_axes = len(axis_defs)
     angles = [2 * math.pi * i / n_axes for i in range(n_axes)]
 
-    ax = fig.add_axes(rect, projection="polar")
+    # Shrink the radar slightly inside its region to give axis-label
+    # clearance after the panel-H width was enlarged in the polish pass.
+    x0, y0, w, h = rect
+    inset_rect = [x0 + 0.02, y0 + 0.02, w - 0.04, h - 0.04]
+    ax = fig.add_axes(inset_rect, projection="polar")
 
     # Grid rings
     for r in np.linspace(0.2, 1.0, 5):
@@ -422,15 +427,17 @@ def _panel_e(fig: plt.Figure, rect: list[float], results_dir: Path) -> plt.Axes:
     for v, angle in zip(radar_vals, angles):
         ax.scatter([angle], [v], color=COLORS["real"], s=30, zorder=5)
 
-    # Axis labels
+    # Axis labels — smaller font and pulled closer after panel-H widening,
+    # to avoid clipping against the enlarged region border.
     for i, ((label, _), angle) in enumerate(zip(axis_defs, angles)):
         ha = "center"
         if 0.1 < angle < math.pi - 0.1:
             ha = "left"
         elif angle > math.pi + 0.1:
             ha = "right"
-        ax.text(angle, 1.0 + 0.15, label, ha=ha, va="center",
-                fontsize=FONT_TICK_DENSE, color=COLORS["annotation_dark"])
+        ax.text(angle, 1.0 + 0.08, label, ha=ha, va="center",
+                fontsize=max(FONT_TICK_DENSE - 2, 7),
+                color=COLORS["annotation_dark"])
 
     ax.set_ylim(0, 1.15)
     ax.set_yticks([0.2, 0.4, 0.6, 0.8, 1.0])

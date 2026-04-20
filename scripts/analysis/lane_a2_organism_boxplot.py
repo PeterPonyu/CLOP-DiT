@@ -175,6 +175,13 @@ def make_figure(df: pd.DataFrame) -> plt.Figure:
         ax.grid(axis="y", linewidth=0.5, alpha=0.5)
         ax.set_axisbelow(True)
 
+        # ---- expr_pearson_r: suppress offset text and use explicit ticks ----
+        if col == "expr_pearson_r":
+            ax.ticklabel_format(useOffset=False, style='plain')
+            ax.yaxis.get_offset_text().set_visible(False)
+            ax.set_yticks([0.99990, 0.99995, 1.00000])
+            ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:.5f}"))
+
         # ---- panel label (bold uppercase, above the title) ----
         # Push the label higher (y=1.22) and slightly further left (x=-0.22)
         # so the bold "A"/"B"/... does not visually collide with either the
