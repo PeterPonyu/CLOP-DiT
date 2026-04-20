@@ -30,6 +30,7 @@ from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 from src.visualization.direct_layout import bind_figure_region
 from src.visualization.style import (
     COLORS,
+    FIG01_PANEL_LABEL_BASE,
     FONT_ARCH_LABEL,
     FONT_ARCH_SUBLABEL,
     apply_style,
@@ -200,7 +201,7 @@ def create_architecture_figure(output_dir=None):
             _ltr,
             ha="left",
             va="bottom",
-            fontsize=20,
+            fontsize=FIG01_PANEL_LABEL_BASE,
             fontweight="bold",
             color="black",
             clip_on=False,
