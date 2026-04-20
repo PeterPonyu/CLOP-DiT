@@ -218,45 +218,24 @@ def main():
     ax.axvline(swd_mean + swd_std, color=COLORS["accent"], linestyle=":", alpha=0.6,
                linewidth=1.0, label=f"+1\u03c3 = {swd_mean + swd_std:.4f}")
 
-    # Sample-size callouts: annotate only the highest outliers and stagger them
-    # so the small `n=` labels do not collide near the right margin.
-    outlier_indices = [i for i, s in enumerate(swds) if s > swd_mean + swd_std][:4]
-    slot_ys = [0.95, 0.89, 0.83, 0.77]
-    for slot_y, idx in zip(slot_ys, outlier_indices):
+    # Sample-size callouts: embed the n=... label inline at the bar tip for the
+    # top-2 outlier bars only. Inline text (right-aligned inside the bar) avoids
+    # leader lines that previously crossed into the bar area.
+    outlier_indices = [i for i, s in enumerate(swds) if s > swd_mean + swd_std][:2]
+    for idx in outlier_indices:
         row = sorted_results[idx]
-        anchor_x = min(row["swd"] + 0.0002, max(swds) + 0.00025)
-        label_x = 0.965
         ax.text(
-            label_x,
-            slot_y,
+            row["swd"] * 0.985,
+            idx,
             f"n={row['n_real']:,}",
-            transform=ax.transAxes,
-            fontsize=9,
-            ha="left",
+            transform=ax.transData,
+            fontsize=8.5,
+            ha="right",
             va="center",
-            color="#666",
-            bbox=dict(boxstyle="round,pad=0.08", fc="white", ec="none", alpha=0.85),
+            color="white",
             zorder=6,
-            clip_on=False,
+            clip_on=True,
         )
-        connector = ConnectionPatch(
-            xyA=(anchor_x, idx),
-            coordsA=ax.transData,
-            xyB=(label_x - 0.01, slot_y),
-            coordsB=ax.transAxes,
-            axesA=ax,
-            axesB=ax,
-            arrowstyle="-",
-            lw=0.5,
-            color="#888",
-            alpha=0.65,
-            shrinkA=0,
-            shrinkB=0,
-            connectionstyle="arc3,rad=0.12",
-        )
-        connector.set_clip_on(False)
-        connector.set_zorder(2)
-        ax.add_artist(connector)
 
     ax.legend(fontsize=FONT_ANNOTATION, frameon=False,
               loc="lower right")
@@ -295,7 +274,8 @@ def main():
              fontsize=FONT_ANNOTATION, color=COLORS["neutral"])
 
     ax2.set_yticks([])
-    ax2.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="lower left")
+    ax2.legend(fontsize=FONT_ANNOTATION, frameon=False,
+               loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=2)
     style_axes(ax2, "default",
                xlabel="Variance ratio (gen/real)",
                title="Per-Type Latent Variance Ratio")

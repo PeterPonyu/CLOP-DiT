@@ -113,7 +113,52 @@ def plot_supplementary_validation(
     )
 
     # Row 1: panel a (ablation heatmap — tall for many y-labels)
+    _axes_before = list(fig.axes)
     _draw_ablation_heatmap(fig, row_a, ablation_path)
+    # Post-process panel a y-tick labels: the ablation variant names produced by
+    # the upstream heatmap function are long and get heavily truncated at
+    # render time. Shorten them with a display-map + abbreviate_cell_type
+    # fallback so each row label fits within ~14 characters.
+    _ablation_display_map = {
+        "smaller prototype": "small proto",
+        "smaller prototypes": "small proto",
+        "low temperature calibration": "low temp cal",
+        "no blind smoothing": "no blind smth",
+        "high variant uncertainty": "high var unc",
+        "lighter output scaling": "light out scl",
+        "no regular color smoothing": "no reg col sm",
+        "no color smoothing": "no col smth",
+        "larger prototype": "large proto",
+        "larger prototypes": "large proto",
+        "high temperature calibration": "high temp cal",
+        "low variant uncertainty": "low var unc",
+        "heavier output scaling": "heavy out scl",
+        "blind smoothing": "blind smth",
+        "regular color smoothing": "reg col smth",
+    }
+    from .style import abbreviate_cell_type as _abbr
+    _new_axes = [a for a in fig.axes if a not in _axes_before]
+    if _new_axes:
+        # The heatmap ax is the first one added by _draw_ablation_heatmap;
+        # subsequent axes (colorbar) have no meaningful y-tick text to rewrite.
+        _heatmap_ax = _new_axes[0]
+        _tick_labels = _heatmap_ax.get_yticklabels()
+        if _tick_labels:
+            _new_labels = []
+            _changed = False
+            for _tl in _tick_labels:
+                _raw = _tl.get_text()
+                if not _raw:
+                    _new_labels.append(_raw)
+                    continue
+                _mapped = _ablation_display_map.get(_raw.strip().lower())
+                if _mapped is None:
+                    _mapped = _abbr(_raw, max_len=14)
+                _new_labels.append(_mapped)
+                if _mapped != _raw:
+                    _changed = True
+            if _changed:
+                _heatmap_ax.set_yticklabels(_new_labels)
 
     # Row 2: panel b (multi-seed bars)
     _draw_multi_seed(fig, row_b, seed_path)

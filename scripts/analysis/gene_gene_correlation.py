@@ -217,19 +217,21 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     ci_lo, ci_hi = np.percentile(boot_means, [2.5, 97.5])
 
     null_mean = np.mean(null_mantels) if null_mantels else 0
+    # Stats box in upper-left corner (where null distribution's right tail
+    # has low density). Keeps clear of the Observed distribution peak.
     ax.text(0.03, 0.97,
             f"Mean 95% CI: [{ci_lo:.3f}, {ci_hi:.3f}]\n"
-            f"Null mean: {null_mean:.3f}"
-            if all(m > null_mean for m in mantel_vals)
-            else f"Mean 95% CI: [{ci_lo:.3f}, {ci_hi:.3f}]\n"
-                 f"Null mean: {null_mean:.3f}",
+            f"Null mean: {null_mean:.3f}",
             transform=ax.transAxes, ha="left", va="top",
-              fontsize=FONT_SMALL, color=COLORS["neutral"],
+            fontsize=FONT_SMALL, color=COLORS["neutral"],
             bbox=dict(boxstyle="round,pad=0.25", facecolor="white", alpha=0.85, edgecolor="none"))
 
-    ax.legend(fontsize=FONT_ANNOTATION - 1, frameon=True,
-              framealpha=0.85, edgecolor="none",
-              loc="upper right", bbox_to_anchor=(0.99, 0.98))
+    # Legend in upper-right corner (where Observed distribution's right tail
+    # has low density). Cannot go below x-axis — would overlap the next
+    # panel's (Weakest-preserved Type) title.
+    ax.legend(fontsize=FONT_ANNOTATION - 1, frameon=False,
+              loc="upper right", bbox_to_anchor=(0.99, 0.99), ncol=1,
+              handlelength=1.3, borderaxespad=0.2)
     style_axes(ax, "default",
                xlabel="Upper-triangle Pearson r (real vs. gen corr. matrix)",
                ylabel="Density",
@@ -388,51 +390,38 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
         stat_text = (f"Spearman \u03c1 = {spearman_r:.3f}\n"
                  f"Pearson r = {pearson_r:.3f}")
 
-        # Pin outlier labels to fixed axes-fraction slots with leader lines so
-        # they never overlap the scatter body regardless of data-point position.
+        # Label outliers using the adjacent-offset pattern: place labels near
+        # their data points with a short offset, avoiding long diagonal leaders.
         residuals = np.abs(type_mantel - (slope * type_het + intercept))
         top3_idx = np.argsort(residuals)[-3:][::-1]
-        # Reserve 3 evenly-spaced slots along the right margin.
-        slots = reserve_annotation_slot(ax4, k=3, side="right", margin=0.08)
-        from matplotlib.patches import ConnectionPatch as _CP
-        for (slot_x, slot_y), idx in zip(slots, top3_idx):
+        x_lo, x_hi = ax4.get_xlim()
+        y_lo, y_hi = ax4.get_ylim()
+        x_span = x_hi - x_lo + 1e-12
+        y_span = y_hi - y_lo + 1e-12
+        for idx in top3_idx:
             t_id = type_labels_d[idx]
-            # max_len=10 (was 14): right-margin slots with longer labels extended
-            # past the figure border (42px overshoot for "Alveolar type").
-            lbl = abbreviate_cell_type(_type_names.get(t_id, f"Type {t_id}"), max_len=10)
+            lbl = abbreviate_cell_type(_type_names.get(t_id, f"Type {t_id}"), max_len=14)
             xv = type_het[idx]
             yv = type_mantel[idx]
-            ax4.text(
-                slot_x,
-                slot_y,
+            x_frac = (xv - x_lo) / x_span
+            y_frac = (yv - y_lo) / y_span
+            dx_pt = -22 if x_frac > 0.62 else 16
+            dy_pt = -14 if y_frac > 0.62 else 12
+            ax4.annotate(
                 lbl,
-                transform=ax4.transAxes,
+                xy=(xv, yv),
+                xycoords="data",
+                xytext=(dx_pt, dy_pt),
+                textcoords="offset points",
                 fontsize=8.5,
-                ha="left",
+                ha="right" if dx_pt < 0 else "left",
                 va="center",
-                color=COLORS["annotation_dark"],
-                bbox=dict(boxstyle="round,pad=0.10", fc="white", ec="none", alpha=0.88),
+                color="#333",
+                bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="#BBB", lw=0.3, alpha=0.93),
+                arrowprops=dict(arrowstyle="-", lw=0.45, color="#888", alpha=0.6, shrinkA=1, shrinkB=1),
                 zorder=6,
-                clip_on=False,
+                annotation_clip=True,
             )
-            conn = _CP(
-                xyA=(xv, yv),
-                coordsA=ax4.transData,
-                xyB=(slot_x - 0.01, slot_y),
-                coordsB=ax4.transAxes,
-                axesA=ax4,
-                axesB=ax4,
-                arrowstyle="-",
-                lw=0.5,
-                color="#888",
-                alpha=0.70,
-                shrinkA=0,
-                shrinkB=2,
-                connectionstyle="arc3,rad=0.08",
-            )
-            conn.set_clip_on(False)
-            conn.set_zorder(2)
-            ax4.add_artist(conn)
     else:
         stat_text = "Insufficient variance for correlation"
 
