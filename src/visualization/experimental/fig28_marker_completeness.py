@@ -16,9 +16,9 @@ from typing import Callable, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .direct_layout import bind_figure_region
-from .explicit_positioning import add_axes_next_to
-from .style import (
+from ..direct_layout import bind_figure_region
+from ..explicit_positioning import add_axes_next_to
+from ..style import (
     COLORS,
     FONT_ANNOTATION,
     FONT_HEATMAP_CELL,

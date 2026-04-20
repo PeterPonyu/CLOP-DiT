@@ -28,8 +28,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import FancyBboxPatch
 
-from .direct_layout import bind_figure_region
-from .style import (
+from ..direct_layout import bind_figure_region
+from ..style import (
     COLORS,
     FONT_ANNOTATION,
     FONT_LABEL,

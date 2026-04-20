@@ -15,8 +15,8 @@ from typing import Callable, Dict, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .direct_layout import bind_figure_region
-from .style import (
+from ..direct_layout import bind_figure_region
+from ..style import (
     COLORS,
     FONT_LABEL,
     FONT_LEGEND_DENSE,

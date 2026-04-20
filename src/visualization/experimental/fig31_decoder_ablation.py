@@ -16,7 +16,7 @@ from typing import Callable, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .style import (
+from ..style import (
     COLORS,
     FONT_LABEL,
     FONT_LEGEND,

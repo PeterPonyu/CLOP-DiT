@@ -18,8 +18,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .direct_layout import bind_figure_region
-from .style import (
+from ..direct_layout import bind_figure_region
+from ..style import (
     COLORS, add_panel_label, apply_style, save_with_vcd, style_axes,
     abbreviate_cell_type, FONT_LABEL, FONT_TITLE, FONT_ANNOTATION, FONT_SMALL,
 )

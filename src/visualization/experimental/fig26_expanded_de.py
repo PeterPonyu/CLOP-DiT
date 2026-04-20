@@ -17,8 +17,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats as scipy_stats
 
-from .direct_layout import bind_figure_region
-from .style import (
+from ..direct_layout import bind_figure_region
+from ..style import (
     COLORS,
     FONT_ANNOTATION,
     FONT_HEATMAP_CELL,
@@ -33,7 +33,7 @@ from .style import (
     save_panel,
     style_axes,
 )
-from .explicit_positioning import add_axes_next_to
+from ..explicit_positioning import add_axes_next_to
 from src.utils.paths import RESULTS_DIR, FIG_DIR
 
 logger = logging.getLogger(__name__)
