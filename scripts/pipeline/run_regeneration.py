@@ -160,6 +160,80 @@ def run_lane_c_zero_shot_figure():
     )
 
 
+def run_fig08_composed():
+    """Step 1 pilot of single-producer migration: produce fig08_composed.pdf
+    (.omc/plans/single-producer-architecture-2026-04-20.md).
+
+    Dual-published alongside the legacy fig08a/fig08b slices: fig17_downstream
+    and fig18_de_concordance still emit their per-slice PDFs unchanged; this
+    composite adds a single 3x3-gridspec PDF with aligned panel labels and
+    shared fonts for the article Figure 8.
+    """
+    log.info("── Generating fig08_composed.pdf ──")
+    try:
+        from src.visualization.fig08_composed import plot_fig08_composed
+        result = plot_fig08_composed(
+            downstream_dir=str(REPO / "results" / "downstream"),
+            output_dir=str(FIG_DIR),
+            dpi=300,
+            save=True,
+        )
+        plt.close("all")
+        if result is None:
+            log.warning("fig08_composed skipped (no downstream data)")
+            return None
+        log.info("fig08_composed: %s (%s)", result, "exists" if result.exists() else "MISSING")
+        return result if result.exists() else None
+    except Exception as e:
+        log.error("fig08_composed failed: %s", e, exc_info=True)
+        return None
+
+
+def run_fig03_composed():
+    """Step 2 of single-producer migration: produce fig03_composed.pdf
+    (.omc/plans/single-producer-architecture-2026-04-20.md).
+
+    Dual-published alongside the legacy fig03a/fig03b/fig03c slices: fig05_metrics,
+    fig06_fidelity, and fig07_alignment still emit their per-slice PDFs unchanged;
+    this composite adds a single 3-row-gridspec PDF with aligned panel labels and
+    shared fonts for the article Figure 3.
+    """
+    log.info("── Generating fig03_composed.pdf ──")
+    try:
+        from src.visualization.fig03_composed import plot_fig03_composed
+        clop_hist = None
+        dit_hist = None
+        if CLOP_HIST.exists():
+            try:
+                with open(CLOP_HIST) as f:
+                    clop_hist = json.load(f)
+            except Exception:
+                clop_hist = None
+        if DIT_HIST.exists():
+            try:
+                with open(DIT_HIST) as f:
+                    dit_hist = json.load(f)
+            except Exception:
+                dit_hist = None
+        result = plot_fig03_composed(
+            clop_hist=clop_hist,
+            dit_hist=dit_hist,
+            cache_dir=str(REPO / "data" / "cached_latents"),
+            output_dir=str(FIG_DIR),
+            dpi=300,
+            save=True,
+        )
+        plt.close("all")
+        if result is None:
+            log.warning("fig03_composed skipped (no inputs)")
+            return None
+        log.info("fig03_composed: %s (%s)", result, "exists" if result.exists() else "MISSING")
+        return result if result.exists() else None
+    except Exception as e:
+        log.error("fig03_composed failed: %s", e, exc_info=True)
+        return None
+
+
 def run_conditioning_figures():
     """Regenerate Figs 11 + 13 from cached conditioning data (no model inference).
 
@@ -711,6 +785,18 @@ def main():
     lc = run_lane_c_zero_shot_figure()
     if lc:
         saved.append(lc)
+
+    # 7c. Step 1 pilot — single-producer Fig 8 composite (dual-published with
+    # legacy fig08a/fig08b slices from fig17_downstream/fig18_de_concordance).
+    fig08c = run_fig08_composed()
+    if fig08c:
+        saved.append(fig08c)
+
+    # 7d. Step 2 — single-producer Fig 3 composite (dual-published with legacy
+    # fig03a/fig03b/fig03c slices from fig05_metrics/fig06_fidelity/fig07_alignment).
+    fig03c = run_fig03_composed()
+    if fig03c:
+        saved.append(fig03c)
 
     # 8. Python-composed supplementary appendix figures (replace LaTeX stitching)
     _supp_figs = [

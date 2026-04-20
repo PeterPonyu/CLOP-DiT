@@ -24,7 +24,10 @@ class TestArticleFigureManifest:
 
     def test_manifest_length(self):
         from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
-        assert len(ARTICLE_FIGURE_BASENAMES) == 25
+        # Growing as the single-producer migration adds composite basenames
+        # (plan §7 ADR Consequences: manifest 25 -> ~29 during migration window).
+        # Step 1 (Fig 8 pilot) + Step 2 (Fig 3) add two fig0X_composed entries.
+        assert len(ARTICLE_FIGURE_BASENAMES) == 27
 
     def test_manifest_contains_expected_basenames(self):
         from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
@@ -64,7 +67,14 @@ class TestArticleFigureManifest:
 
         manifest = set(ARTICLE_FIGURE_BASENAMES)
         tex_basenames = self._article_tex_basenames()
-        manifest_only = manifest - tex_basenames
+        # Composite basenames from the single-producer migration plan are
+        # registered-but-not-yet-LaTeX-referenced during the revision window
+        # (plan §1.5 "Alias" strategy, §7 ADR Consequences). Exclude them from
+        # the manifest-vs-tex consistency check.
+        composite_basenames = {
+            b for b in manifest if b.endswith("_composed")
+        }
+        manifest_only = (manifest - composite_basenames) - tex_basenames
         tex_only = tex_basenames - manifest
         assert not manifest_only and not tex_only, (
             "Manifest and TeX includegraphics basenames diverged. "

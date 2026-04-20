@@ -47,6 +47,12 @@ _STRICT_SCAN_FILES = [
     _REPO_ROOT / "src/visualization/fig05_metrics.py",
     _REPO_ROOT / "src/visualization/fig06_fidelity.py",
     _REPO_ROOT / "src/visualization/fig07_alignment.py",
+    # Step 2 of single-producer migration plan
+    # (.omc/plans/single-producer-architecture-2026-04-20.md): the new
+    # composed producer for article Fig 3. Uses canonical PANEL_OFFSET_*
+    # subscripts throughout (see _draw_metrics_row / _draw_fidelity_row /
+    # _draw_alignment_row in src/visualization/fig03_composed.py).
+    _REPO_ROOT / "src/visualization/fig03_composed.py",
 ]
 
 # ---------------------------------------------------------------------------
@@ -184,17 +190,24 @@ class TestPanelLabelOffsets:
             + "\n".join(violations)
         )
 
-    def test_strict_scan_list_covers_expected_four_files(self):
-        """Guard against accidental truncation of the strict-scan list."""
+    def test_strict_scan_list_covers_expected_files(self):
+        """Guard against accidental truncation of the strict-scan list.
+
+        Grows with each single-producer migration (plan §5.1): the original
+        four files (fig03_training, fig05_metrics, fig06_fidelity,
+        fig07_alignment) are joined by each new composed producer as the
+        migration rolls out. Step 2 adds fig03_composed.py.
+        """
         expected_names = {
             "fig03_training.py",
             "fig05_metrics.py",
             "fig06_fidelity.py",
             "fig07_alignment.py",
+            "fig03_composed.py",
         }
         actual_names = {p.name for p in _STRICT_SCAN_FILES}
         assert actual_names == expected_names, (
-            "The strict-scan list no longer matches the expected 4 files.\n"
+            "The strict-scan list no longer matches the expected files.\n"
             f"Expected: {sorted(expected_names)}\n"
             f"Got:      {sorted(actual_names)}"
         )
