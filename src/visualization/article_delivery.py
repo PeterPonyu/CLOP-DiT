@@ -61,6 +61,10 @@ _SOURCE_BASENAMES: List[str] = [
     # Main body display Figure 8
     "fig08a_downstream_validation",
     "fig08b_de_concordance",
+    # Main body display Figure 8 composite (Step 1 pilot of single-producer
+    # migration plan, .omc/plans/single-producer-architecture-2026-04-20.md).
+    # Registered-but-not-yet-LaTeX-referenced during the revision window.
+    "fig08_composed",
     # Main body display Figure 9
     "fig09a_variance_matching",
     "fig09b_gene_gene_correlation",
@@ -101,6 +105,7 @@ ARTICLE_FIGURE_PRODUCERS: List[Tuple[str, str]] = [
     ("fig07c_benchmark", "src/visualization/fig16_benchmark.py"),
     ("fig08a_downstream_validation", "src/visualization/fig17_downstream.py"),
     ("fig08b_de_concordance", "src/visualization/fig18_de_concordance.py"),
+    ("fig08_composed", "src/visualization/fig08_composed.py"),
     ("fig09a_variance_matching", "scripts/analysis/variance_matching_pilot.py"),
     ("fig09b_gene_gene_correlation", "scripts/analysis/gene_gene_correlation.py"),
     ("figS_lane_c_zero_shot", "scripts/analysis/lane_c_zero_shot_figure.py"),

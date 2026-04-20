@@ -160,6 +160,35 @@ def run_lane_c_zero_shot_figure():
     )
 
 
+def run_fig08_composed():
+    """Step 1 pilot of single-producer migration: produce fig08_composed.pdf
+    (.omc/plans/single-producer-architecture-2026-04-20.md).
+
+    Dual-published alongside the legacy fig08a/fig08b slices: fig17_downstream
+    and fig18_de_concordance still emit their per-slice PDFs unchanged; this
+    composite adds a single 3x3-gridspec PDF with aligned panel labels and
+    shared fonts for the article Figure 8.
+    """
+    log.info("── Generating fig08_composed.pdf ──")
+    try:
+        from src.visualization.fig08_composed import plot_fig08_composed
+        result = plot_fig08_composed(
+            downstream_dir=str(REPO / "results" / "downstream"),
+            output_dir=str(FIG_DIR),
+            dpi=300,
+            save=True,
+        )
+        plt.close("all")
+        if result is None:
+            log.warning("fig08_composed skipped (no downstream data)")
+            return None
+        log.info("fig08_composed: %s (%s)", result, "exists" if result.exists() else "MISSING")
+        return result if result.exists() else None
+    except Exception as e:
+        log.error("fig08_composed failed: %s", e, exc_info=True)
+        return None
+
+
 def run_conditioning_figures():
     """Regenerate Figs 11 + 13 from cached conditioning data (no model inference).
 
@@ -711,6 +740,12 @@ def main():
     lc = run_lane_c_zero_shot_figure()
     if lc:
         saved.append(lc)
+
+    # 7c. Step 1 pilot — single-producer Fig 8 composite (dual-published with
+    # legacy fig08a/fig08b slices from fig17_downstream/fig18_de_concordance).
+    fig08c = run_fig08_composed()
+    if fig08c:
+        saved.append(fig08c)
 
     # 8. Python-composed supplementary appendix figures (replace LaTeX stitching)
     _supp_figs = [

@@ -64,7 +64,16 @@ def composite_basename(n: int) -> str:
 # Composite VCD registry (populated per-migration)
 # --------------------------------------------------------------------------
 
-COMPOSITE_VCD_REGISTRY: Dict[str, List[str]] = {}
+COMPOSITE_VCD_REGISTRY: Dict[str, List[str]] = {
+    # Step 1 pilot (plan §3 Step 1): Fig 8 composite replaces
+    # fig08a_downstream_validation.pdf + fig08b_de_concordance.pdf. Produced
+    # by src/visualization/fig08_composed.py alongside the legacy slices
+    # (dual-publish during the revision window).
+    "fig08_composed.pdf": [
+        "fig08a_downstream_validation.pdf",
+        "fig08b_de_concordance.pdf",
+    ],
+}
 """Maps composite PDF basename -> list of legacy slice PDF basenames.
 
 Populated incrementally:
