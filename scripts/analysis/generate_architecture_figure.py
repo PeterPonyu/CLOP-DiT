@@ -212,7 +212,7 @@ def create_architecture_figure(output_dir=None):
             ],
         )
 
-    ax.text(1.68, 2.80, "train: align text and cell latents",
+    ax.text(1.68, 2.86, "train: align text and cell latents",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=2)
     ax.text(4.80, 2.82, "ODE latent sampling",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=2)
@@ -306,14 +306,14 @@ def create_architecture_figure(output_dir=None):
     draw_box(ax, (loss_x, loss_y), loss_w, SBH, "PrototypeSigLIP",
              facecolor="#FFF9C4", edgecolor="#F9A825", fontsize=FONT_ARCH_LABEL,
              textcolor="black", linewidth=0.8)
-    ax.text(loss_x + loss_w / 2, loss_y + SBH + 0.08, "training only",
+    ax.text(loss_x + loss_w / 2, loss_y + SBH + 0.03, "training only",
             ha="center", va="bottom", fontsize=FONT_ARCH_SUBLABEL,
             color="black", zorder=6)
     draw_arrow(ax, (loss_x + loss_w, loss_y + SBH / 2),
                (shared_x, shared_y + shared_h / 2),
                color="#F9A825", linewidth=0.8, style="<->")
 
-    ax.text(cx1 + BW / 2, cy + BH + 0.16,
+    ax.text(cx1 + BW / 2, cy + BH + 0.08,
             "scGPT latent =\nDiT training target",
             ha="center", va="bottom", fontsize=FONT_ARCH_SUBLABEL, color=C_MID_GREY,
             fontweight="normal", zorder=5)

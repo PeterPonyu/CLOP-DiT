@@ -83,7 +83,7 @@ def main() -> None:
         width_ratios=[5.5, 1.2],
         wspace=0.08,
         left=0.22, right=0.97,
-        top=0.86, bottom=0.28,
+        top=0.86, bottom=0.34,
     )
     ax_heat = fig.add_subplot(gs[0])
     ax_bar = fig.add_subplot(gs[1])
@@ -123,13 +123,9 @@ def main() -> None:
     # Colorbar below BOTH axes so the heatmap and the right bar shrink
     # by the same fraction and keep their bottom pixel rows aligned.
     cbar = fig.colorbar(im, ax=[ax_heat, ax_bar], orientation="horizontal",
-                        fraction=0.046, pad=0.22, shrink=0.7)
+                        fraction=0.040, pad=0.34, shrink=0.62)
     cbar.set_label("Fraction of queries", fontsize=8)
     cbar.ax.tick_params(labelsize=7.5)
-
-    # Panel label (bold uppercase "A")
-    from src.visualization.style import add_panel_label  # local import avoids startup cost
-    add_panel_label(ax_heat, "a", x=-0.10, y=1.06)
 
     # --- Right bar: within-family accuracy per family ---
     y_pos = np.arange(n)

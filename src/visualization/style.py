@@ -164,6 +164,17 @@ FONT_SMALL = 9
 # Minimum-size fonts for dense contexts (replaces illegal sub-7pt values)
 FONT_HEATMAP_CELL = 9      # Heatmap cell annotations
 FONT_DENSE_YTICK = 9       # Dense y-axis tick labels
+
+# Canonical panel-label offsets (x, y axes-fraction). Allowlist-scoped per
+# .omc/plans/revision-figure-polish-2026-04-19.md §A2-partial: Figures 2/3/4/5/7
+# sub-blocks consume these; the remaining ~145 ``add_panel_label`` call sites
+# keep their bespoke literals until a dedicated A2-full migration PR.
+PANEL_OFFSET_STD      = (-0.12, 1.04)  # default — most panels with ylabel at standard position
+PANEL_OFFSET_LEFT     = (-0.18, 1.04)  # panels with long y-tick strings or left-shifted axes
+PANEL_OFFSET_FARLEFT  = (-0.22, 1.04)  # panels with wide numeric ticks (e.g. "2.25", "120", "1.2")
+PANEL_OFFSET_WIDE     = (-0.14, 1.06)  # heatmaps / wider panels that need extra headroom
+PANEL_OFFSET_TIGHT    = (-0.08, 1.02)  # constrained layouts where STD collides with ticks
+
 _FONTS_REGISTERED = False
 
 

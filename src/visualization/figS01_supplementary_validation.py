@@ -104,8 +104,8 @@ def plot_supplementary_validation(
     ood_path = Path("results/ood_evaluation/ood_results.json")
     real_var, gen_var, aug_data, dec_metrics, dec_approaches = _load_expression_decoder_inputs()
 
-    fig = plt.figure(figsize=(14.0, 16.0))
-    layout = bind_figure_region(fig, (0.11, 0.07, 0.97, 0.97))
+    fig = plt.figure(figsize=(14.6, 16.0))
+    layout = bind_figure_region(fig, (0.06, 0.07, 0.99, 0.97))
 
     # 5 explicit rows — panel a gets extra height; last gap wider for xticklabels
     row_a, row_b, row_c, row_4, row_5 = layout.split_rows(
@@ -125,7 +125,7 @@ def plot_supplementary_validation(
     #   and before f (barh yticklabels) to prevent masking neighbours
     _lbl_x = -0.08
     d_r, e_r, f_r, i_r, j_r = row_4.split_cols(
-        [1.05, 1.00, 1.05, 1.00, 1.00], gap=[0.22, 0.14, 0.14, 0.10],
+        [1.08, 1.04, 1.06, 1.02, 1.02], gap=[0.10, 0.08, 0.08, 0.06],
     )
 
     _row4_lbl_y = 1.16  # row 4 labels higher to clear titles at 18pt
@@ -158,7 +158,7 @@ def plot_supplementary_validation(
 
     # Row 5: g, h, k, l — 4 panels across full width
     g_r, h_r, k_r, l_r = row_5.split_cols(
-        [1.00, 1.50, 1.00, 1.00], gap=0.08,
+        [1.04, 1.44, 1.02, 1.02], gap=0.06,
     )
 
     ax_g = g_r.add_axes(fig)

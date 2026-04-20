@@ -23,7 +23,6 @@ from .style import (
     COLORS, TYPE_PALETTE, apply_style, save_with_vcd,
     add_panel_label, abbreviate_cell_type,
     FONT_LABEL, FONT_TITLE, FONT_TICK, FONT_TICK_DENSE, FONT_ANNOTATION,
-    FONT_HEATMAP_CELL,
 )
 
 logger = logging.getLogger(__name__)
@@ -81,8 +80,8 @@ def plot_panel_m(
     axes = [region.add_axes(fig) for region in row_regions[0].split_cols(top_widths, wspace=0.22)]
 
     # Panel labels: placed with enough clearance for single-line titles
-    _panel_label_y = 1.04
-    add_panel_label(axes[0], chr(ord('a') + label_offset), x=-0.22, y=_panel_label_y)
+    _panel_label_y = 1.06
+    add_panel_label(axes[0], chr(ord('a') + label_offset), x=-0.18, y=_panel_label_y)
 
     type_to_color = {tid: TYPE_PALETTE[i % len(TYPE_PALETTE)] for i, tid in enumerate(selected_types)}
     type_to_name = {
@@ -135,11 +134,11 @@ def plot_panel_m(
     # ── Row 2: Quantitative summaries ──
     bottom_regions = row_regions[1].split_cols([1.08, 1.02, 0.92], wspace=0.18)
     ax_b1 = bottom_regions[0].add_axes(fig)
-    add_panel_label(ax_b1, chr(ord('a') + label_offset + 1), x=-0.18, y=1.04)
+    add_panel_label(ax_b1, chr(ord('a') + label_offset + 1), x=-0.14, y=_panel_label_y)
     ax_b2 = bottom_regions[1].add_axes(fig)
-    add_panel_label(ax_b2, chr(ord('a') + label_offset + 2), x=0.05, y=1.04)
+    add_panel_label(ax_b2, chr(ord('a') + label_offset + 2), x=-0.10, y=_panel_label_y)
     ax_b3 = bottom_regions[2].add_axes(fig)
-    add_panel_label(ax_b3, chr(ord('a') + label_offset + 3), x=-0.18, y=_panel_label_y)
+    add_panel_label(ax_b3, chr(ord('a') + label_offset + 3), x=-0.12, y=_panel_label_y)
     _adjust_axes_rect(ax_b1, width_scale=0.90)
     _adjust_axes_rect(ax_b3, dx=ax_b3.get_position().width * 0.08, width_scale=0.92)
 
@@ -228,13 +227,13 @@ def plot_panel_m(
         from sklearn.decomposition import PCA as _PCA
         from sklearn.neighbors import KNeighborsClassifier
 
-        row3_regions = row_regions[2].split_cols([0.96, 1.18, 0.98], wspace=0.18)
+        row3_regions = row_regions[2].split_cols([1.00, 0.96, 1.16], wspace=0.18)
         ax_c1 = row3_regions[0].add_axes(fig)
-        add_panel_label(ax_c1, chr(ord('a') + label_offset + 4), x=-0.18, y=_panel_label_y)
+        add_panel_label(ax_c1, chr(ord('a') + label_offset + 4), x=-0.14, y=_panel_label_y)
         ax_c2 = row3_regions[1].add_axes(fig)
-        add_panel_label(ax_c2, chr(ord('a') + label_offset + 5), x=-0.18, y=_panel_label_y)
+        add_panel_label(ax_c2, chr(ord('a') + label_offset + 5), x=-0.14, y=_panel_label_y)
         ax_c3 = row3_regions[2].add_axes(fig)
-        add_panel_label(ax_c3, chr(ord('a') + label_offset + 6), x=0.02, y=_panel_label_y)
+        add_panel_label(ax_c3, chr(ord('a') + label_offset + 6), x=-0.10, y=_panel_label_y)
         _adjust_axes_rect(ax_c1, width_scale=0.90)
         _adjust_axes_rect(ax_c3, dx=ax_c3.get_position().width * 0.08, width_scale=0.92)
 
@@ -302,7 +301,7 @@ def plot_panel_m(
         type_short_names = [
             abbreviate_cell_type(
                 type_names.get(int(tid), f"T{tid}") if type_names else f"T{tid}",
-                max_len=16,
+                max_len=12,
             )
             for tid in selected_types
         ]
@@ -361,7 +360,7 @@ def plot_panel_m(
             ax_c3.set_xticks(np.arange(1, len(violin_labels_list) + 1))
             ax_c3.set_xticklabels(violin_labels_list, rotation=0, ha="center",
                                    fontsize=FONT_TICK)
-        ax_c3.set_ylabel("Pairwise Cosine Similarity", fontsize=FONT_LABEL)
+        ax_c3.set_ylabel("Pairwise cosine", fontsize=FONT_LABEL - 1, labelpad=3)
         ax_c3.set_title("Cluster Tightness", fontsize=FONT_TITLE)
 
     # ── Legend: cell-type keys — place just below the top-row scatter plots ──

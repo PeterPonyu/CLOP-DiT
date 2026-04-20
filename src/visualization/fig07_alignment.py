@@ -27,6 +27,7 @@ import numpy as np
 from .direct_layout import bind_figure_region
 from .style import (
     COLORS, FONT_HEATMAP_CELL, FONT_SMALL, FONT_TITLE,
+    PANEL_OFFSET_LEFT, PANEL_OFFSET_WIDE,
     add_colorbar_safe,
     abbreviate_cell_type, add_panel_label,
     quality_color, save_with_vcd, set_adaptive_ytick_labels, style_axes,
@@ -177,7 +178,7 @@ def plot_text_cell_heatmap(
 
     # ── F1: Clustered heatmap with annotations ──
     ax1 = ax1_rect.add_axes(fig)
-    add_panel_label(ax1, chr(ord('a') + label_offset), x=-0.14, y=1.06)
+    add_panel_label(ax1, chr(ord('a') + label_offset), x=PANEL_OFFSET_WIDE[0], y=PANEL_OFFSET_WIDE[1])
     cmap = mcolors.LinearSegmentedColormap.from_list(
         "custom_heat",
         [
@@ -247,7 +248,7 @@ def plot_text_cell_heatmap(
 
     # ── F2: Per-type alignment bars with threshold bands ──
     ax2 = ax2_rect.add_axes(fig)
-    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.18, y=1.04)
+    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=PANEL_OFFSET_LEFT[0], y=PANEL_OFFSET_LEFT[1])
     sorted_idx_asc = np.argsort(diag)
     d_asc = diag[sorted_idx_asc]
     labels_asc = [y_labels[i] for i in sorted_idx_asc]
@@ -291,25 +292,15 @@ def plot_text_cell_heatmap(
     ax2.axvline(
         x=median_diag, color=COLORS["heatmap_purple"], linestyle="-.", alpha=0.6, linewidth=1.0,
     )
-    # Place median label below the bar area to avoid colliding with the mean label
+    # Keep the summary in the unused upper-right region.  Earlier bottom badges
+    # collided with the lowest-bar numeric callouts at manuscript scale.
     ax2.text(
-        0.98, 0.02,
-        f"\u03bc={mean_diag:.3f} | med={median_diag:.3f}",
-        transform=ax2.transAxes,
-        ha="right",
-        va="bottom",
-        fontsize=FONT_SMALL - 1,
-        color=COLORS["annotation_dark"],
-        bbox=dict(boxstyle="round,pad=0.24", facecolor="white", edgecolor="none", alpha=0.85),
-        zorder=10,
-    )
-    ax2.text(
-        0.02,
-        0.02,
+        0.98, 0.98,
+        f"\u03bc={mean_diag:.3f} | med={median_diag:.3f}\n"
         f"{n_excellent} excellent | {n_good} good | {n_poor} poor",
         transform=ax2.transAxes,
-        ha="left",
-        va="bottom",
+        ha="right",
+        va="top",
         fontsize=FONT_SMALL - 1,
         color=COLORS["annotation_dark"],
         bbox=dict(boxstyle="round,pad=0.24", facecolor="white", edgecolor="none", alpha=0.85),
@@ -320,7 +311,7 @@ def plot_text_cell_heatmap(
 
     # ── F3: Distribution comparison with statistics ──
     ax3 = ax3_rect.add_axes(fig)
-    add_panel_label(ax3, chr(ord('a') + label_offset + 2), x=-0.14, y=1.06)
+    add_panel_label(ax3, chr(ord('a') + label_offset + 2), x=PANEL_OFFSET_WIDE[0], y=PANEL_OFFSET_WIDE[1])
 
     # Histograms with concise legend entries
     ax3.hist(
