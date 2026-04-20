@@ -724,13 +724,13 @@ def main():
 
     # 9. Figs 25–31: extended analysis figures (not article-facing, kept for diagnostics until delivery cleanup)
     _ext_figs = [
-        ("src/visualization/fig25_cross_dataset.py",          "fig25_cross_dataset.pdf"),
-        ("src/visualization/fig26_expanded_de.py",            "fig26_expanded_de.pdf"),
-        ("src/visualization/fig27_ood_robustness.py",         "fig27_ood_robustness.pdf"),
-        ("src/visualization/fig28_marker_completeness.py",    "fig28_marker_completeness.pdf"),
-        ("src/visualization/fig29_embedding_augmentation.py", "fig29_embedding_augmentation.pdf"),
-        ("src/visualization/fig30_validation_summary.py",     "fig30_validation_summary.pdf"),
-        ("src/visualization/fig31_decoder_ablation.py",       "fig31_decoder_ablation.pdf"),
+        ("src/visualization/experimental/fig25_cross_dataset.py",          "fig25_cross_dataset.pdf"),
+        ("src/visualization/experimental/fig26_expanded_de.py",            "fig26_expanded_de.pdf"),
+        ("src/visualization/experimental/fig27_ood_robustness.py",         "fig27_ood_robustness.pdf"),
+        ("src/visualization/experimental/fig28_marker_completeness.py",    "fig28_marker_completeness.pdf"),
+        ("src/visualization/experimental/fig29_embedding_augmentation.py", "fig29_embedding_augmentation.pdf"),
+        ("src/visualization/experimental/fig30_validation_summary.py",     "fig30_validation_summary.pdf"),
+        ("src/visualization/experimental/fig31_decoder_ablation.py",       "fig31_decoder_ablation.pdf"),
     ]
     for _script_rel, _expected_pdf in _ext_figs:
         _fig = _run_external_script(_script_rel, _expected_pdf, _expected_pdf)

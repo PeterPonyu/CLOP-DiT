@@ -849,7 +849,7 @@ class ResultsVisualizer:
 
     def plot_ablation_heatmap(self, save: bool = True) -> Optional[plt.Figure]:
         """Fig 21: Ablation comparison heatmap."""
-        from .fig21_ablation_heatmap import plot_ablation_heatmap as _plot
+        from .experimental.fig21_ablation_heatmap import plot_ablation_heatmap as _plot
         return _plot(
             ablation_path=str(RESULTS_DIR / "ablations" / "all_summaries.json"),
             output_dir=self.output,
@@ -860,7 +860,7 @@ class ResultsVisualizer:
 
     def plot_multi_seed_robustness(self, save: bool = True) -> Optional[plt.Figure]:
         """Fig 22: Multi-seed robustness."""
-        from .fig22_multi_seed import plot_multi_seed_robustness as _plot
+        from .experimental.fig22_multi_seed import plot_multi_seed_robustness as _plot
         return _plot(
             report_path=str(RESULTS_DIR / "multi_seed" / "multi_seed_report.json"),
             output_dir=self.output,
@@ -871,7 +871,7 @@ class ResultsVisualizer:
 
     def plot_ood_showcase(self, save: bool = True) -> Optional[plt.Figure]:
         """Fig 23: OOD generation showcase."""
-        from .fig23_ood_showcase import plot_ood_showcase as _plot
+        from .experimental.fig23_ood_showcase import plot_ood_showcase as _plot
         return _plot(
             ood_path=str(RESULTS_DIR / "ood_evaluation" / "ood_results.json"),
             output_dir=self.output,
@@ -882,7 +882,7 @@ class ResultsVisualizer:
 
     def plot_variance_deepdive(self, save: bool = True) -> Optional[plt.Figure]:
         """Fig 24: Per-gene variance deep-dive."""
-        from .fig24_variance_deepdive import plot_variance_deepdive as _plot
+        from .experimental.fig24_variance_deepdive import plot_variance_deepdive as _plot
         return _plot(
             real_expr_path=str(RESULTS_DIR / "real_expression.npy"),
             gen_expr_path=str(RESULTS_DIR / "generated_expression.npy"),
@@ -899,7 +899,7 @@ class ResultsVisualizer:
 
     def plot_cross_dataset_validation(self, save: bool = True) -> Optional[plt.Figure]:
         """Fig 25: Cross-dataset biological validation."""
-        from .fig25_cross_dataset import plot_cross_dataset_validation as _plot
+        from .experimental.fig25_cross_dataset import plot_cross_dataset_validation as _plot
         return _plot(
             data_path=str(RESULTS_DIR / "downstream" / "cross_dataset_validation.json"),
             output_dir=self.output,
@@ -910,7 +910,7 @@ class ResultsVisualizer:
 
     def plot_expanded_de(self, save: bool = True) -> Optional[plt.Figure]:
         """Fig 26: Expanded DE concordance."""
-        from .fig26_expanded_de import plot_expanded_de as _plot
+        from .experimental.fig26_expanded_de import plot_expanded_de as _plot
         return _plot(
             de_path=str(RESULTS_DIR / "downstream" / "expanded_de_concordance.json"),
             output_dir=self.output,
@@ -921,7 +921,7 @@ class ResultsVisualizer:
 
     def plot_ood_robustness(self, save: bool = True) -> Optional[plt.Figure]:
         """Fig 27: OOD robustness evaluation."""
-        from .fig27_ood_robustness import plot_ood_robustness as _plot
+        from .experimental.fig27_ood_robustness import plot_ood_robustness as _plot
         return _plot(
             data_path=str(RESULTS_DIR / "downstream" / "ood_robustness_combined.json"),
             marker_path=str(RESULTS_DIR / "ood_evaluation" / "ood_marker_analysis.json"),
@@ -933,7 +933,7 @@ class ResultsVisualizer:
 
     def plot_marker_completeness(self, save: bool = True) -> Optional[plt.Figure]:
         """Fig 28: Marker gene program completeness."""
-        from .fig28_marker_completeness import plot_marker_completeness as _plot
+        from .experimental.fig28_marker_completeness import plot_marker_completeness as _plot
         return _plot(
             data_path=str(RESULTS_DIR / "downstream" / "marker_completeness.json"),
             output_dir=self.output,
@@ -949,7 +949,7 @@ class ResultsVisualizer:
     def plot_pseudobulk_validation(self, save: bool = True) -> Optional[plt.Figure]:
         """Fig 32: Pseudobulk validation (expression-level evidence)."""
         try:
-            from .fig19_pseudobulk import plot_pseudobulk_validation as _plot
+            from .experimental.fig19_pseudobulk import plot_pseudobulk_validation as _plot
             return _plot(output_dir=self.output, dpi=self.dpi)
         except Exception as exc:
             logger.warning(f"Pseudobulk validation figure failed: {exc}")
@@ -958,7 +958,7 @@ class ResultsVisualizer:
     def plot_failure_analysis(self, save: bool = True) -> Optional[plt.Figure]:
         """Fig 33: Per-cell-type failure analysis."""
         try:
-            from .fig20_failure_analysis import plot_failure_analysis as _plot
+            from .experimental.fig20_failure_analysis import plot_failure_analysis as _plot
             return _plot(output_dir=self.output, dpi=self.dpi)
         except Exception as exc:
             logger.warning(f"Failure analysis figure failed: {exc}")
@@ -967,7 +967,7 @@ class ResultsVisualizer:
     def plot_field_ablation(self, save: bool = True) -> Optional[plt.Figure]:
         """Fig 34: Prompt field disentanglement."""
         try:
-            from .fig21_field_ablation import plot_field_ablation as _plot
+            from .experimental.fig21_field_ablation import plot_field_ablation as _plot
             return _plot(output_dir=self.output, dpi=self.dpi)
         except Exception as exc:
             logger.warning(f"Field ablation figure failed: {exc}")
@@ -976,7 +976,7 @@ class ResultsVisualizer:
     def plot_discriminator_analysis(self, save: bool = True) -> Optional[plt.Figure]:
         """Fig 35: Discriminator feature importance."""
         try:
-            from .fig22_discriminator import plot_discriminator_analysis as _plot
+            from .experimental.fig22_discriminator import plot_discriminator_analysis as _plot
             return _plot(output_dir=self.output, dpi=self.dpi)
         except Exception as exc:
             logger.warning(f"Discriminator analysis figure failed: {exc}")
