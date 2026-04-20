@@ -59,13 +59,17 @@ def make_figure():
     ax.set_xticks([])
     ax.set_yticks([])
 
-    # Panel label D stays slightly larger than the raw fig01a label so the
-    # on-page size matches A/B/C after the separate LaTeX scaling of fig01b.
+    # Panel label D is bumped to 29pt so its on-page rendered size matches
+    # the A/B/C labels in fig01a. Derivation: fig01a source width is 10in
+    # with panel-label fontsize 20; fig01b source width is 14.4in. When both
+    # are scaled to the same LaTeX \includegraphics width, D's rendered-size
+    # ratio is 22/14.4 vs 20/10 = 1.528 vs 2.0 → D renders ~76% of A/B/C.
+    # 29 × (10/14.4) ≈ 20.1 → parity with A/B/C.
     ax.text(
         -0.05,
         6.96,
         "D",
-        fontsize=22,
+        fontsize=29,
         fontweight="bold",
         color="black",
         ha="left",
