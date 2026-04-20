@@ -212,8 +212,8 @@ def plot_per_type_generation(
         )
         cbar = fig.colorbar(sc, cax=cax)
         cbar.set_label("")
-        cbar.ax.set_title("Div.\nratio", fontsize=10, pad=4)
-        cbar.ax.tick_params(labelsize=10)
+        cbar.ax.set_title("Div.\nratio", fontsize=12, pad=4)
+        cbar.ax.tick_params(labelsize=12)
     else:
         ax.scatter(
             x_vals,
@@ -256,7 +256,7 @@ def plot_per_type_generation(
             ax.annotate(
                 abbreviate_cell_type(short_names[i], max_len=10),
                 (x_vals[i], cos_array[i]),
-                fontsize=FONT_SMALL,
+                fontsize=FONT_SMALL + 2,
                 xytext=(x_offset, y_offset),
                 textcoords="offset points",
                 arrowprops=dict(arrowstyle="-", color="gray", lw=0.5),
@@ -265,9 +265,12 @@ def plot_per_type_generation(
             )
             placed_data_coords.append((x_vals[i], cos_array[i]))
             annotated += 1
-    ax.set_xlabel("log10(Number of Real Cells)")
-    ax.set_ylabel("Centroid Cosine Similarity")
-    ax.set_title("Fidelity vs Abundance")
+    # Panel G (third sub-panel): user requested larger fonts (+2 pt) for
+    # improved legibility; keep panels E/F at their default sizes.
+    ax.set_xlabel("log10(Number of Real Cells)", fontsize=13)
+    ax.set_ylabel("Centroid Cosine Similarity", fontsize=13)
+    ax.set_title("Fidelity vs Abundance", fontsize=14)
+    ax.tick_params(axis="both", labelsize=12)
     ax.axhline(y=0.9, color=COLORS["good"], linestyle=":", alpha=0.4)
     ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
     ax.yaxis.set_major_locator(MaxNLocator(nbins=5))

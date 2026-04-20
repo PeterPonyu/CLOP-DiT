@@ -35,6 +35,26 @@ cd "$ARTICLE_DIR"
 # -g: force full recompile even if latexmk considers everything up-to-date.
 # This ensures regenerated figures (updated symlink targets) are always embedded.
 latexmk -g -pdf "$ARTICLE_TEX"
+# The manuscript uses natbib + an inline `\begin{thebibliography}` block
+# (no external .bib). latexmk has been observed to stop short of the
+# second pass in certain states, leaving thousands of `[?]` citations and
+# `??` \ref tokens in the rendered PDF. Run an explicit verification pass
+# after latexmk and fail loudly if any unresolved reference slipped
+# through — better a halted build than a silently broken submission PDF.
+unresolved=$(pdftotext -layout "${ARTICLE_TEX%.tex}.pdf" - 2>/dev/null | grep -cE '\[\?\]|\?\?' || true)
+unresolved=${unresolved:-0}
+if [[ "$unresolved" != "0" ]]; then
+    echo "  ✗ $unresolved unresolved [?]/?? refs in ${ARTICLE_TEX%.tex}.pdf — running extra pdflatex passes" >&2
+    for i in 1 2 3; do
+        pdflatex -interaction=nonstopmode "$ARTICLE_TEX" > /dev/null
+    done
+    unresolved=$(pdftotext -layout "${ARTICLE_TEX%.tex}.pdf" - 2>/dev/null | grep -cE '\[\?\]|\?\?' || true)
+unresolved=${unresolved:-0}
+    if [[ "$unresolved" != "0" ]]; then
+        echo "  ✗ Still $unresolved unresolved refs after recovery passes — aborting" >&2
+        exit 1
+    fi
+fi
 # Keep PDF outputs, but clean transient LaTeX build artifacts
 # (.aux, .log, .fdb_latexmk, .fls, etc.) to avoid noisy commits.
 latexmk -c "$ARTICLE_TEX"

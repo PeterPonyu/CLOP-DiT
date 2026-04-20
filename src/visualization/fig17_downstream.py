@@ -548,7 +548,9 @@ def plot_clustering_and_classifier_merged(
     gen_f1 = classifier_data.get("gen_f1", 0)
     disc_auc = classifier_data.get("discriminator_auc", 0)
 
-    ax_q1 = bottom_rects[0].inset(bottom=-0.006).add_axes(fig)
+    # Use the bottom row region as-is so panels D/E/F share the same top and
+    # bottom y-bounds and read as a horizontally-aligned triplet on page.
+    ax_q1 = bottom_rects[0].add_axes(fig)
     add_panel_label(ax_q1, 'd', x=-0.08, y=1.05)
     if cm is not None:
         cm = np.array(cm)

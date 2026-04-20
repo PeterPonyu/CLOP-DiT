@@ -227,7 +227,12 @@ def plot_panel_m(
         from sklearn.decomposition import PCA as _PCA
         from sklearn.neighbors import KNeighborsClassifier
 
-        row3_regions = row_regions[2].split_cols([1.00, 0.96, 1.16], wspace=0.18)
+        # Widen the gap between the diversity heatmap (panel J) and the
+        # pairwise-cosine violin (panel K) so K's y-tick labels do not crowd
+        # J's colorbar tick labels on the page. The first gap (c1→c2) stays
+        # close to the previous matplotlib-style wspace=0.18 geometry; the
+        # second gap (c2→c3) is widened to give K's ylabels clearance.
+        row3_regions = row_regions[2].split_cols([1.00, 0.96, 1.16], gap=[0.049, 0.082])
         ax_c1 = row3_regions[0].add_axes(fig)
         add_panel_label(ax_c1, chr(ord('a') + label_offset + 4), x=-0.14, y=_panel_label_y)
         ax_c2 = row3_regions[1].add_axes(fig)

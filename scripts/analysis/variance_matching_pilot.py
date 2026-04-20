@@ -366,48 +366,42 @@ def main():
              transform=ax4.transAxes, ha="left", va="bottom",
              fontsize=FONT_ANNOTATION, color=COLORS["neutral"])
 
-    # Label top 3 residual outliers. Labels are pinned to interior axes-fraction
-    # slots (never outside the axes rectangle), with a connector line back to
-    # each data point. This is the same pattern used in panel (a) and avoids the
-    # "label drifted outside the axes" failure mode that offset_points-in-data
-    # space exhibits near the plot edges.
+    # Canonical adjacent-offset callout pattern shared across Figs 4E / 5A /
+    # 10D / 10H: label top-3 outliers adjacent to their data points in
+    # display-space offsets so leader lines stay short and labels stay
+    # visually consistent with the other three scatter panels.
     top3_idx = np.argsort(swd_arr)[-3:][::-1]
-    # Interior anchor slots (axes-fraction) — bias toward the upper-left so the
-    # connector reaches the rightmost outliers without crossing other points.
-    slots = [(0.08, 0.94), (0.08, 0.82), (0.08, 0.70)]
-    for (slot_x, slot_y), idx in zip(slots, top3_idx):
+    x_lo, x_hi = ax4.get_xlim()
+    y_lo, y_hi = ax4.get_ylim()
+    # x-axis is log-scaled; place labels using log-space fraction to match
+    # the visual geometry users actually see.
+    log_x_lo = np.log10(max(x_lo, 1e-12))
+    log_x_hi = np.log10(max(x_hi, 1e-12))
+    x_span = (log_x_hi - log_x_lo) + 1e-12
+    y_span = (y_hi - y_lo) + 1e-12
+    for idx in top3_idx:
         lbl = abbreviate_cell_type(results[idx]["name"], max_len=18)
-        ax4.text(
-            slot_x,
-            slot_y,
+        xv = float(n_reals[idx])
+        yv = float(swd_arr[idx])
+        x_frac = (np.log10(max(xv, 1e-12)) - log_x_lo) / x_span
+        y_frac = (yv - y_lo) / y_span
+        dx_pt = -24 if x_frac > 0.62 else 18
+        dy_pt = -16 if y_frac > 0.62 else 14
+        ax4.annotate(
             lbl,
-            transform=ax4.transAxes,
-            fontsize=9,
-            ha="left",
+            xy=(xv, yv),
+            xycoords="data",
+            xytext=(dx_pt, dy_pt),
+            textcoords="offset points",
+            fontsize=14,
+            ha="right" if dx_pt < 0 else "left",
             va="center",
-            color=COLORS["annotation_dark"],
-            bbox=dict(boxstyle="round,pad=0.10", fc="white", ec="none", alpha=0.88),
+            color="#333",
+            bbox=dict(boxstyle="round,pad=0.18", fc="white", ec="#BBB", lw=0.4, alpha=0.95),
+            arrowprops=dict(arrowstyle="-", lw=0.5, color="#888", alpha=0.65, shrinkA=1, shrinkB=1),
             zorder=6,
-            clip_on=False,
+            annotation_clip=True,
         )
-        conn = ConnectionPatch(
-            xyA=(n_reals[idx], swd_arr[idx]),
-            coordsA=ax4.transData,
-            xyB=(slot_x + 0.02, slot_y),
-            coordsB=ax4.transAxes,
-            axesA=ax4,
-            axesB=ax4,
-            arrowstyle="-",
-            lw=0.5,
-            color="#888",
-            alpha=0.7,
-            shrinkA=0,
-            shrinkB=0,
-            connectionstyle="arc3,rad=0.08",
-        )
-        conn.set_clip_on(False)
-        conn.set_zorder(2)
-        ax4.add_artist(conn)
 
     ax4.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="upper right")
     style_axes(ax4, "scatter",
