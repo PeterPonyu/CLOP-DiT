@@ -275,7 +275,7 @@ def plot_text_cell_heatmap(
             continue
         _prev_y = idx_bar
         ax2.text(
-            val_bar + 0.01, idx_bar, f"{val_bar:.3f}",
+            val_bar + 0.025, idx_bar + 0.5, f"{val_bar:.3f}",
             va="center", ha="left", fontsize=10, color=COLORS["annotation_medium"],
         )
 
@@ -295,7 +295,7 @@ def plot_text_cell_heatmap(
     # Keep the summary in the unused upper-right region.  Earlier bottom badges
     # collided with the lowest-bar numeric callouts at manuscript scale.
     ax2.text(
-        0.98, 0.98,
+        0.97, 0.97,
         f"\u03bc={mean_diag:.3f} | med={median_diag:.3f}\n"
         f"{n_excellent} excellent | {n_good} good | {n_poor} poor",
         transform=ax2.transAxes,
@@ -303,7 +303,7 @@ def plot_text_cell_heatmap(
         va="top",
         fontsize=FONT_SMALL - 1,
         color=COLORS["annotation_dark"],
-        bbox=dict(boxstyle="round,pad=0.24", facecolor="white", edgecolor="none", alpha=0.85),
+        bbox=None,
         zorder=10,
     )
 

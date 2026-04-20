@@ -109,7 +109,7 @@ def plot_supplementary_validation(
 
     # 5 explicit rows — panel a gets extra height; last gap wider for xticklabels
     row_a, row_b, row_c, row_4, row_5 = layout.split_rows(
-        [1.45, 0.55, 0.82, 0.82, 0.82], gap=[0.05, 0.05, 0.09, 0.11],
+        [1.45, 0.55, 0.82, 0.82, 0.82], gap=[0.05, 0.05, 0.055, 0.070],
     )
 
     # Row 1: panel a (ablation heatmap — tall for many y-labels)
@@ -203,7 +203,7 @@ def plot_supplementary_validation(
 
     # Row 5: g, h, k, l — 4 panels across full width
     g_r, h_r, k_r, l_r = row_5.split_cols(
-        [1.04, 1.44, 1.02, 1.02], gap=0.06,
+        [1.00, 1.85, 0.92, 0.92], gap=0.06,
     )
 
     ax_g = g_r.add_axes(fig)

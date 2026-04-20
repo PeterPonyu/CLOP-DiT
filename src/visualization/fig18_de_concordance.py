@@ -171,15 +171,8 @@ def plot_de_concordance_panel(
             transform=ax.transAxes, ha="right", va="top",
             fontsize=FONT_ANNOTATION,
             color=COLORS["neutral"],
-            bbox=dict(boxstyle="round,pad=0.25", facecolor="white", alpha=0.85, edgecolor="none"),
+            bbox=None,
         )
-
-        # DE logFC scale limitation annotation — placed below the stats to avoid crowding
-        max_lfc = max(abs(real_logfc).max(), abs(gen_logfc).max())
-        ax.text(0.03, 0.20, f"Log FC (scGPT space)\nmax |logFC| \u2248 {max_lfc:.1e}",
-                transform=ax.transAxes, ha="left", va="bottom",
-                fontsize=FONT_ANNOTATION - 1, style="italic", color=COLORS["neutral"],
-                bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8, edgecolor="none"))
 
         # Horizontal colorbar below scatter
         cax = add_axes_next_to(

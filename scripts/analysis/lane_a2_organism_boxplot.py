@@ -199,9 +199,10 @@ def make_figure(df: pd.DataFrame) -> plt.Figure:
 
     fig.suptitle(
         "Organism-stratified generation quality (Lane A2)",
-        fontsize=10, y=1.01,
+        fontsize=10, y=0.995,
     )
-    fig.tight_layout(rect=[0, 0.06, 1, 1])
+    fig.tight_layout(rect=[0, 0.06, 1, 0.985])
+    fig.subplots_adjust(top=0.955, hspace=0.38)
 
     return fig
 

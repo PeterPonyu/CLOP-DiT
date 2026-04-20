@@ -397,7 +397,7 @@ def main():
             ha="right" if dx_pt < 0 else "left",
             va="center",
             color="#333",
-            bbox=dict(boxstyle="round,pad=0.18", fc="white", ec="#BBB", lw=0.4, alpha=0.95),
+            bbox=dict(boxstyle="round,pad=0.18", fc="none", ec="none"),
             arrowprops=dict(arrowstyle="-", lw=0.5, color="#888", alpha=0.65, shrinkA=1, shrinkB=1),
             zorder=6,
             annotation_clip=True,

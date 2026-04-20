@@ -378,7 +378,7 @@ def plot_metrics_summary(
         return None
 
     fig = plt.figure(figsize=(15.2, 8.4))
-    layout = bind_figure_region(fig, (0.07, 0.08, 0.94, 0.95))
+    layout = bind_figure_region(fig, (0.12, 0.08, 0.985, 0.95))
     top_row, bottom_row = layout.split_rows(2, hspace=0.34)
     top_left, top_right = top_row.split_cols([1.12, 1.0], wspace=0.50)
     bottom_left, bottom_right = bottom_row.split_cols([1.12, 1.0], wspace=0.44)

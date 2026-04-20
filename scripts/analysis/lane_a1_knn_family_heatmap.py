@@ -77,13 +77,13 @@ def main() -> None:
     n = len(short_labels)
 
     # Layout: main heatmap + right-side bar
-    fig = plt.figure(figsize=(7.2, 6.8), dpi=300)
+    fig = plt.figure(figsize=(7.2, 6.2), dpi=300)
     gs = gridspec.GridSpec(
         1, 2,
         width_ratios=[5.5, 1.2],
         wspace=0.08,
         left=0.22, right=0.97,
-        top=0.86, bottom=0.34,
+        top=0.955, bottom=0.15,
     )
     ax_heat = fig.add_subplot(gs[0])
     ax_bar = fig.add_subplot(gs[1])
@@ -123,7 +123,7 @@ def main() -> None:
     # Colorbar below BOTH axes so the heatmap and the right bar shrink
     # by the same fraction and keep their bottom pixel rows aligned.
     cbar = fig.colorbar(im, ax=[ax_heat, ax_bar], orientation="horizontal",
-                        fraction=0.040, pad=0.34, shrink=0.62)
+                        fraction=0.040, pad=0.27, shrink=0.62)
     cbar.set_label("Fraction of queries", fontsize=8)
     cbar.ax.tick_params(labelsize=7.5)
 
@@ -157,7 +157,7 @@ def main() -> None:
         f"KNN family confusion — {overall_graceful * 100:.1f}% of cell-type errors are within-family\n"
         f"(family-level accuracy {family_acc * 100:.1f}%, n = {data['overall']['n_samples']:,} generated cells)",
         fontsize=9.5,
-        y=0.96,
+        y=0.985,
     )
 
     out_png = REPO / "results/figures/figS_lane_a1_knn_family_heatmap.png"

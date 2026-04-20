@@ -108,11 +108,11 @@ def plot_per_type_generation(
     fd_mean = float(np.nanmean(fd_array)) if fd_valid.any() else float("nan")
 
     fig = plt.figure(figsize=(14.0, 5.8))
-    layout = bind_figure_region(fig, (0.16, 0.12, 0.965, 0.92))
+    layout = bind_figure_region(fig, (0.12, 0.12, 0.985, 0.92))
     g1_slot, g2_slot, g3_slot = layout.split_cols([1.00, 1.18, 0.76], gap=[0.024, 0.038])
-    g1_rect = g1_slot.inset(right=0.004)
-    g2_rect = g2_slot.inset(left=0.148, right=0.018)
-    g3_rect = g3_slot.inset(left=0.020, right=0.018)
+    g1_rect = g1_slot.inset(left=0.04, right=0.004)
+    g2_rect = g2_slot.inset(left=0.148, right=0.058)
+    g3_rect = g3_slot.inset(left=0.020, right=0.030)
     summary = data.get("summary", {})
     # Title moved to LaTeX caption
 

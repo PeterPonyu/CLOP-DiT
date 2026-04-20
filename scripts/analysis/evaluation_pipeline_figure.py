@@ -75,7 +75,7 @@ def make_figure():
     _D_LABEL_SIZE = compute_composed_panel_label_fontsize(source_width_in=FIG01B_WIDTH_IN)
     ax.text(
         -0.05,
-        6.96,
+        7.10,
         "D",
         fontsize=_D_LABEL_SIZE,
         fontweight="bold",
@@ -91,7 +91,7 @@ def make_figure():
     )
 
     # Title
-    ax.text(5.0, 6.96, "Evaluation Pipeline Schematic", fontsize=17,
+    ax.text(5.0, 7.10, "Evaluation Pipeline Schematic", fontsize=17,
             ha="center", va="center", weight="bold", color="#2C3E50")
 
     # ── Row 1: Data Sources ──

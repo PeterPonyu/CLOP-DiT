@@ -112,7 +112,7 @@ def main() -> None:
             va=random_label_va,
             fontsize=9,
             color="#333333",
-            bbox=dict(boxstyle="round,pad=0.16", facecolor="white", edgecolor="none", alpha=0.86),
+            bbox=None,
             clip_on=False,
         )
 
