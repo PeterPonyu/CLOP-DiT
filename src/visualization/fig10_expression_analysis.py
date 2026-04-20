@@ -118,39 +118,44 @@ def plot_expression_analysis(
     cbar1.set_label("|\u0394CV|", fontsize=9)
     cbar1.ax.tick_params(labelsize=8, length=2, pad=1)
 
-    # Annotate the most divergent genes. Labels are placed at reserved slots
-    # outside the right margin (reserve_annotation_slot) so leader lines do not
-    # cross the scatter cloud or pile up on the diagonal. B4-soft fallback:
-    # dropped from 5 to 3 callouts because right-margin slots at k=5 collided
-    # with the colorbar tick labels; the top-3 highest-|delta-CV| genes remain.
+    # Annotate the top-3 most divergent genes with adjacent-offset labels
+    # (display-space) so leader lines stay short and do not cross the scatter
+    # cloud or collide with the colorbar.
     top_cv_idx = np.argsort(cv_diff)[-3:]
     top_cv_idx = top_cv_idx[np.argsort(cv_diff[top_cv_idx])[::-1]]
     valid_idx = [i for i in top_cv_idx if i < len(gene_names)]
-    slots = reserve_annotation_slot(ax1, k=len(valid_idx), side="right", margin=0.08)
-    for slot, i in zip(slots, valid_idx):
+    x_lo, x_hi = ax1.get_xlim()
+    y_lo, y_hi = ax1.get_ylim()
+    x_span = x_hi - x_lo + 1e-12
+    y_span = y_hi - y_lo + 1e-12
+    for i in valid_idx:
         xv, yv = real_cv[i], gen_cv[i]
+        x_frac = (xv - x_lo) / x_span
+        y_frac = (yv - y_lo) / y_span
+        dx_pt = -22 if x_frac > 0.62 else 16
+        dy_pt = -14 if y_frac > 0.62 else 12
         ax1.annotate(
             gene_names[i],
             xy=(xv, yv),
             xycoords="data",
-            xytext=slot,
-            textcoords="axes fraction",
-            fontsize=8.3,
-            ha="left",
+            xytext=(dx_pt, dy_pt),
+            textcoords="offset points",
+            fontsize=13,
+            ha="right" if dx_pt < 0 else "left",
             va="center",
             color="#333",
-            bbox=dict(boxstyle="round,pad=0.10", fc="white", ec="none", alpha=0.90),
+            bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="#BBB",
+                      lw=0.3, alpha=0.93),
             arrowprops=dict(
                 arrowstyle="-",
-                lw=0.5,
-                color="#777",
-                alpha=0.7,
-                shrinkA=0,
-                shrinkB=2,
-                connectionstyle="arc3,rad=0.0",
+                lw=0.45,
+                color="#888",
+                alpha=0.6,
+                shrinkA=1,
+                shrinkB=1,
             ),
             zorder=6,
-            annotation_clip=False,
+            annotation_clip=True,
         )
 
     cv_corr = np.corrcoef(real_cv, gen_cv)[0, 1]

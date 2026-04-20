@@ -137,39 +137,46 @@ def plot_expression_correlation(
     cbar.ax.yaxis.get_offset_text().set_visible(True)
     add_panel_label(ax1, 'e', x=-0.12, y=1.04)
 
-    # Gene callouts for top-3 residual outliers (B4-soft fallback: right-margin
-    # slots collided with the colorbar ticks at k=5; k=3 gives adequate separation
-    # while preserving the highest-residual annotations). Placement via
-    # reserve_annotation_slot ensures leader lines do not cross or mask data.
+    # Gene callouts for top-3 residual outliers. Labels placed adjacent to
+    # their data points using display-space offsets (not axes-fraction slots)
+    # so leader lines stay short and labels do not collide with the colorbar.
     outlier_idx = np.argsort(abs_res)[-3:]
     outlier_idx = outlier_idx[np.argsort(abs_res[outlier_idx])[::-1]]
     valid_idx = [i for i in outlier_idx if i < len(gene_names)]
-    slots = reserve_annotation_slot(ax1, k=len(valid_idx), side="right", margin=0.08)
-    for i, slot_xy in zip(valid_idx, slots):
+    x_lo, x_hi = ax1.get_xlim()
+    y_lo, y_hi = ax1.get_ylim()
+    x_span = x_hi - x_lo + 1e-12
+    y_span = y_hi - y_lo + 1e-12
+    for i in valid_idx:
         xv, yv = real_means[i], gen_means[i]
+        x_frac = (xv - x_lo) / x_span
+        y_frac = (yv - y_lo) / y_span
+        # Pick adjacent quadrant: label goes on the side of the point that
+        # has more room inside the axes.
+        dx_pt = -22 if x_frac > 0.62 else 16
+        dy_pt = -14 if y_frac > 0.62 else 12
         ax1.annotate(
             gene_names[i],
             xy=(xv, yv),
             xycoords="data",
-            xytext=slot_xy,
-            textcoords="axes fraction",
-            fontsize=8.8,
-            ha="center",
+            xytext=(dx_pt, dy_pt),
+            textcoords="offset points",
+            fontsize=13,
+            ha="right" if dx_pt < 0 else "left",
             va="center",
             color="#333",
-            clip_on=False,
-            bbox=dict(boxstyle="round,pad=0.14", fc="white", ec="none", alpha=0.88),
+            bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="#BBB",
+                      lw=0.3, alpha=0.93),
             arrowprops=dict(
                 arrowstyle="-",
-                lw=0.5,
-                color="#777",
-                alpha=0.65,
-                shrinkA=0,
-                shrinkB=2,
-                connectionstyle="arc3,rad=0.0",
+                lw=0.45,
+                color="#888",
+                alpha=0.6,
+                shrinkA=1,
+                shrinkB=1,
             ),
             zorder=6,
-            annotation_clip=False,
+            annotation_clip=True,
         )
 
     # -- H2: Per-type deviation lollipop chart (1 - r, log scale) --
