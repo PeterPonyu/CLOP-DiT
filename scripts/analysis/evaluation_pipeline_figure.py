@@ -21,11 +21,19 @@ import matplotlib.patches as mpatches
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from src.visualization.direct_layout import bind_figure_region
-from src.visualization.style import apply_style
+from src.visualization.style import (
+    apply_style,
+    compute_composed_panel_label_fontsize,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 FIG_DIR = ROOT / "results" / "figures"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
+
+# Source width used everywhere in this module; threaded through
+# compute_composed_panel_label_fontsize() so panel-label D stays in
+# visual parity with A/B/C in fig01a after LaTeX scaling.
+FIG01B_WIDTH_IN = 14.4
 
 
 def _rounded_box(ax, xy, w, h, text, fc="#E8F4FD", ec="#2C3E50", fontsize=13,
@@ -51,7 +59,7 @@ def _arrow(ax, start, end, color="#555", lw=2.0, style="-|>"):
 
 def make_figure():
     apply_style()
-    fig = plt.figure(figsize=(14.4, 8.2))
+    fig = plt.figure(figsize=(FIG01B_WIDTH_IN, 8.2))
     ax = bind_figure_region(fig, (0.03, 0.04, 0.97, 0.97)).add_axes(fig)
     ax.set_xlim(-0.12, 10.36)
     ax.set_ylim(-0.22, 7.18)
@@ -59,17 +67,17 @@ def make_figure():
     ax.set_xticks([])
     ax.set_yticks([])
 
-    # Panel label D is bumped to 29pt so its on-page rendered size matches
-    # the A/B/C labels in fig01a. Derivation: fig01a source width is 10in
-    # with panel-label fontsize 20; fig01b source width is 14.4in. When both
-    # are scaled to the same LaTeX \includegraphics width, D's rendered-size
-    # ratio is 22/14.4 vs 20/10 = 1.528 vs 2.0 → D renders ~76% of A/B/C.
-    # 29 × (10/14.4) ≈ 20.1 → parity with A/B/C.
+    # Panel label D fontsize is computed from the shared Fig 1 base so it
+    # matches A/B/C on-page after LaTeX scales both sub-figures to the same
+    # \includegraphics width. Source of truth: src/visualization/style.py
+    # (compute_composed_panel_label_fontsize). Any change to A/B/C size
+    # propagates automatically to D.
+    _D_LABEL_SIZE = compute_composed_panel_label_fontsize(source_width_in=FIG01B_WIDTH_IN)
     ax.text(
         -0.05,
         6.96,
         "D",
-        fontsize=29,
+        fontsize=_D_LABEL_SIZE,
         fontweight="bold",
         color="black",
         ha="left",

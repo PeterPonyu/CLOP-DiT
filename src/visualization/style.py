@@ -157,6 +157,27 @@ FONT_SUPTITLE = 15
 FONT_TITLE = 14
 FONT_LABEL = 12
 PANEL_LABEL_FONT_SIZE = 20
+# Shared Fig 1 panel-label base — A/B/C (fig01a) and D (fig01b) are produced
+# by separate scripts but composed side-by-side in LaTeX at matching widths.
+# Keep both sub-figures consistent by computing D's label fontsize from the
+# same base so future edits in one place propagate to the composed figure.
+FIG01_REFERENCE_WIDTH_IN = 10.0     # fig01a source width
+FIG01_PANEL_LABEL_BASE   = 20        # A/B/C label fontsize at the reference width
+
+
+def compute_composed_panel_label_fontsize(source_width_in: float,
+                                           reference_width_in: float = FIG01_REFERENCE_WIDTH_IN,
+                                           base_fontsize: int = FIG01_PANEL_LABEL_BASE) -> int:
+    """Compute the source-side panel-label fontsize for a wider/narrower
+    sub-figure so its on-page rendered size matches a reference sub-figure
+    after LaTeX scales both to the same ``\\includegraphics`` width.
+
+    If reference sub-figure has width ``W_ref`` and panel-label ``F_ref`` at
+    source, and the other sub-figure has width ``W``, LaTeX scales both to
+    textwidth ``tw`` giving on-page fonts ``F_ref × tw/W_ref`` and
+    ``F × tw/W``. Setting these equal: ``F = F_ref × W / W_ref``.
+    """
+    return int(round(base_fontsize * (source_width_in / reference_width_in)))
 FONT_TICK = 11
 FONT_TICK_DENSE = 10
 FONT_ANNOTATION = 10
