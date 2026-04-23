@@ -49,6 +49,9 @@ class ScivcdConfig:
     border_right_min: float = 0.88
     border_top_min: float = 0.88
     border_bottom_max: float = 0.16
+    title_axes_gap_max: float = 0.08
+    row_alignment_tol: float = 0.025
+    legend_tick_clearance_px: float = 8.0
 
     # --- typography thresholds ---
     floor_pt: float = 9.0
@@ -66,6 +69,7 @@ class ScivcdConfig:
     # --- content thresholds ---
     text_density_max_per_sqin: float = 2.2
     min_overlap_px2: float = 150.0
+    annotation_min_pt: float = 10.0
 
     # --- behavior toggles ---
     disabled_checks: frozenset[str] = field(default_factory=frozenset)

@@ -33,6 +33,10 @@ def _has_category(report, cat: Category) -> bool:
     return any(f.category is cat for f in report.findings)
 
 
+def _has_check(report, check_id: str) -> bool:
+    return any(f.check_id == check_id for f in report.findings)
+
+
 # ---------------------------------------------------------------------------
 # axis_overflow — axis content clips outside the figure bounding box
 # ---------------------------------------------------------------------------
@@ -131,3 +135,81 @@ class TestLayoutColorbarTooWide:
         plt.close(fig)
         layout_findings = [f for f in report.findings if f.category is Category.LAYOUT]
         assert len(layout_findings) == 0
+
+
+class TestLayoutSuptitleGap:
+    def test_positive_suptitle_far_from_axes(self):
+        fig, ax = plt.subplots(figsize=(5, 4))
+        ax.plot([0, 1], [0, 1])
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.set_position([0.15, 0.10, 0.75, 0.55])
+        fig.suptitle("Floating title", y=0.98)
+        fig.canvas.draw()
+        report = check(fig)
+        plt.close(fig)
+        assert _has_check(report, "suptitle_too_far_from_axes")
+
+    def test_negative_suptitle_close_to_axes(self):
+        fig, ax = plt.subplots(figsize=(5, 4))
+        ax.plot([0, 1], [0, 1])
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.set_position([0.15, 0.10, 0.75, 0.78])
+        fig.suptitle("Close title", y=0.92)
+        fig.canvas.draw()
+        report = check(fig)
+        plt.close(fig)
+        assert not _has_check(report, "suptitle_too_far_from_axes")
+
+
+class TestLayoutPanelRowAlignment:
+    def test_positive_row_misalignment(self):
+        fig = plt.figure(figsize=(6, 3))
+        ax1 = fig.add_axes([0.10, 0.20, 0.35, 0.60])
+        ax2 = fig.add_axes([0.47, 0.28, 0.20, 0.50])
+        ax3 = fig.add_axes([0.70, 0.20, 0.20, 0.60])
+        ax1.plot([0, 1], [0, 1])
+        ax2.plot([0, 1], [1, 0])
+        ax3.plot([0, 1], [0.5, 0.5])
+        fig.canvas.draw()
+        report = check(fig)
+        plt.close(fig)
+        assert _has_check(report, "panel_row_misalignment")
+
+    def test_negative_row_aligned(self):
+        fig = plt.figure(figsize=(6, 3))
+        ax1 = fig.add_axes([0.10, 0.20, 0.25, 0.60])
+        ax2 = fig.add_axes([0.40, 0.20, 0.25, 0.60])
+        ax3 = fig.add_axes([0.70, 0.20, 0.20, 0.60])
+        ax1.plot([0, 1], [0, 1])
+        ax2.plot([0, 1], [1, 0])
+        ax3.plot([0, 1], [0.5, 0.5])
+        fig.canvas.draw()
+        report = check(fig)
+        plt.close(fig)
+        assert not _has_check(report, "panel_row_misalignment")
+
+
+class TestLayoutLegendTickClearance:
+    def test_positive_legend_too_close_to_xticks(self):
+        fig, ax = plt.subplots(figsize=(5, 4))
+        ax.plot([0, 1], [0, 1], label="A")
+        ax.plot([0, 1], [1, 0], label="B")
+        ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.02), frameon=False)
+        fig.subplots_adjust(bottom=0.20)
+        fig.canvas.draw()
+        report = check(fig)
+        plt.close(fig)
+        assert _has_check(report, "legend_tick_clearance")
+
+    def test_negative_legend_clear_of_ticks(self):
+        fig, ax = plt.subplots(figsize=(5, 4))
+        ax.plot([0, 1], [0, 1], label="A")
+        ax.plot([0, 1], [1, 0], label="B")
+        ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.25), frameon=False)
+        fig.subplots_adjust(bottom=0.32)
+        fig.canvas.draw()
+        report = check(fig)
+        plt.close(fig)
+        assert not _has_check(report, "legend_tick_clearance")

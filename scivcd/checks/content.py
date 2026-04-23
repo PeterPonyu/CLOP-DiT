@@ -297,8 +297,82 @@ register(CheckSpec(
 ))
 
 
+# ---------------------------------------------------------------------------
+# annotation_style_risk
+# ---------------------------------------------------------------------------
+
+def _fire_annotation_style_risk(
+    fig: Any, config: ScivcdConfig
+) -> list[Finding]:
+    """Flag visually fragile in-panel annotations.
+
+    Human QA repeatedly caught annotation labels that were small, italic,
+    colored, or backed by a white bbox. Those are not always wrong, but the
+    combination is a useful low-severity signal that the annotation may be
+    compensating for a crowded panel instead of improving readability.
+    """
+    out: list[Finding] = []
+    min_pt = float(config.annotation_min_pt)
+    for ax in _data_axes(fig):
+        for text in getattr(ax, "texts", []):
+            try:
+                if not text.get_visible():
+                    continue
+                content = (text.get_text() or "").strip()
+                if not content:
+                    continue
+                size = float(text.get_fontsize())
+                style = str(text.get_fontstyle()).lower()
+                color = str(text.get_color()).lower()
+                has_bbox = text.get_bbox_patch() is not None
+            except Exception:
+                continue
+
+            risk_reasons = []
+            if size < min_pt:
+                risk_reasons.append(f"small {size:.1f}pt text")
+            if style not in {"normal", "regular"}:
+                risk_reasons.append(f"{style} style")
+            if color not in {"black", "#000000", "#111111", "#222222", "#333333", "#444444"}:
+                risk_reasons.append(f"colored text ({color})")
+            if has_bbox:
+                risk_reasons.append("boxed annotation")
+            if len(risk_reasons) < 2:
+                continue
+
+            out.append(Finding(
+                check_id="annotation_style_risk",
+                severity=Severity.LOW,
+                category=Category.CONTENT,
+                stage=Stage.TIER2,
+                message=(
+                    f"annotation '{content[:36]}' has fragile styling: "
+                    + ", ".join(risk_reasons)
+                ),
+                call_site=None,
+                fix_suggestion=(
+                    "prefer >=10pt neutral regular text without a white bbox, "
+                    "or move the statistic into a title/caption/legend slot"
+                ),
+                artist=text,
+            ))
+    return out
+
+
+register(CheckSpec(
+    id="annotation_style_risk",
+    severity=Severity.LOW,
+    category=Category.CONTENT,
+    stage=Stage.TIER2,
+    fire=_fire_annotation_style_risk,
+    description="In-panel annotation uses fragile small/colored/italic/boxed styling",
+    config_keys=("annotation_min_pt",),
+))
+
+
 __all__ = [
     "_fire_content_clipped_at_render",
     "_fire_text_density_crowding",
     "_fire_annotation_data_overlap",
+    "_fire_annotation_style_risk",
 ]
