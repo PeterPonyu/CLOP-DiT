@@ -268,6 +268,77 @@ register(CheckSpec(
 
 
 # ---------------------------------------------------------------------------
+# effective_font_too_small
+# ---------------------------------------------------------------------------
+
+def _text_role(artist: Any) -> str:
+    gid = _gid(artist)
+    if _is_panel_label(artist):
+        return "panel_label"
+    if gid.startswith("tick"):
+        return "tick"
+    if gid.startswith("legend"):
+        return "legend"
+    try:
+        axes = getattr(artist, "axes", None)
+        if axes is not None and artist in (axes.title, axes.xaxis.label, axes.yaxis.label):
+            return "title" if artist is axes.title else "axis_label"
+    except Exception:
+        pass
+    return "annotation"
+
+
+def _fire_effective_font_too_small(fig: Any, config: ScivcdConfig) -> list[Finding]:
+    out: list[Finding] = []
+    composed_scale = float(getattr(config, "composed_scale", 1.0))
+    final_scale = float(getattr(config, "final_print_scale", 1.0))
+    floors = getattr(config, "effective_font_floors", {}) or {}
+    seen = set()
+    try:
+        artists = list(fig.findobj(Text))
+    except Exception:
+        return out
+    for artist in artists:
+        if id(artist) in seen:
+            continue
+        seen.add(id(artist))
+        try:
+            text = (artist.get_text() or "").strip()
+            source = float(artist.get_fontsize())
+        except Exception:
+            continue
+        if not text:
+            continue
+        role = _text_role(artist)
+        floor = float(floors.get(role, floors.get("annotation", 8.0)))
+        effective = source * composed_scale * final_scale
+        if effective >= floor:
+            continue
+        out.append(Finding(
+            check_id="effective_font_too_small",
+            severity=Severity.MEDIUM,
+            category=Category.TYPOGRAPHY,
+            stage=Stage.TIER2,
+            message=f"{role} '{text[:30]}' effective font {effective:.1f}pt below floor {floor:.1f}pt",
+            fix_suggestion="increase source fontsize or reduce composed/final downscaling for this text role",
+            evidence={"role": role, "source_font_pt": source, "component_to_composed_scale": composed_scale, "final_print_scale": final_scale, "effective_font_pt": round(effective, 3), "role_floor_pt": floor},
+            artist=artist,
+        ))
+    return out
+
+
+register(CheckSpec(
+    id="effective_font_too_small",
+    severity=Severity.MEDIUM,
+    category=Category.TYPOGRAPHY,
+    stage=Stage.TIER2,
+    fire=_fire_effective_font_too_small,
+    description="Text effective font size after composition/final scaling is too small",
+    config_keys=("composed_scale", "final_print_scale", "effective_font_floors"),
+))
+
+
+# ---------------------------------------------------------------------------
 # bold_subpanel_title
 # ---------------------------------------------------------------------------
 
@@ -320,5 +391,6 @@ __all__ = [
     "_fire_inconsistent_typography",
     "_fire_canvas_scale_font_too_small",
     "_fire_label_string_ellipsis",
+    "_fire_effective_font_too_small",
     "_fire_bold_subpanel_title",
 ]

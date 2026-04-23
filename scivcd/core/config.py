@@ -70,6 +70,10 @@ class ScivcdConfig:
     text_density_max_per_sqin: float = 2.2
     min_overlap_px2: float = 150.0
     annotation_min_pt: float = 10.0
+    colorblind_delta_e_min: float = 12.0
+    composed_scale: float = 1.0
+    final_print_scale: float = 1.0
+    effective_font_floors: dict[str, float] = field(default_factory=lambda: {"title": 11.0, "axis_label": 10.0, "tick": 7.0, "legend": 8.0, "annotation": 8.0, "panel_label": 10.0})
 
     # --- behavior toggles ---
     disabled_checks: frozenset[str] = field(default_factory=frozenset)

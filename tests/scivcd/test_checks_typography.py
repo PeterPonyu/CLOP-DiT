@@ -195,3 +195,26 @@ class TestTypographyBoldUsage:
         report = check(fig)
         plt.close(fig)
         assert len(_typography_findings(report)) == 0
+
+class TestTypographyEffectiveFont:
+    def test_positive_effective_font_scaled_too_small(self):
+        from scivcd import ScivcdConfig
+        fig, ax = plt.subplots(figsize=(5, 4))
+        ax.set_title('Scaled title', fontsize=10)
+        fig.canvas.draw()
+        cfg = ScivcdConfig(composed_scale=0.5, final_print_scale=0.8)
+        report = check(fig, config=cfg)
+        plt.close(fig)
+        findings = [f for f in report.findings if f.check_id == 'effective_font_too_small']
+        assert findings
+        assert findings[0].evidence['effective_font_pt'] == 4.0
+
+    def test_negative_effective_font_large_enough(self):
+        from scivcd import ScivcdConfig
+        fig, ax = plt.subplots(figsize=(5, 4))
+        ax.set_title('Readable title', fontsize=16)
+        fig.canvas.draw()
+        cfg = ScivcdConfig(composed_scale=1.0, final_print_scale=1.0)
+        report = check(fig, config=cfg)
+        plt.close(fig)
+        assert not [f for f in report.findings if f.check_id == 'effective_font_too_small']

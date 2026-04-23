@@ -8,7 +8,7 @@ Two entry points:
 * :func:`install` / :func:`uninstall` — activate the lifecycle hooks from
   ``scripts/vcd/lifecycle`` (provenance + tier1 + tier2 etc.) for
   automatic checking during normal plotting. Both mechanisms can coexist
-  with the legacy ``CLOPDIT_VCD_LIFECYCLE=1`` env gate.
+  with the legacy lifecycle environment gate.
 
 Plus :class:`Report` — the aggregate result dataclass returned by
 ``check()``. It supports filtering, summarisation, truthiness (any
@@ -37,7 +37,7 @@ if TYPE_CHECKING:  # pragma: no cover
     import matplotlib.figure  # noqa: F401
 
 
-__all__ = ["Report", "check", "install", "uninstall"]
+__all__ = ["Report", "check", "audit_export", "install", "uninstall"]
 
 
 # ---------------------------------------------------------------------------
@@ -60,11 +60,15 @@ class Report:
     timings:
         Dict of ``{check_id: seconds}`` so callers can see which checks
         dominate runtime.
+    metadata:
+        Optional report-level structured context such as source stage,
+        export target path, audit limitations, or adapter provenance.
     """
 
     findings: list[Finding] = field(default_factory=list)
     figure_label: str = ""
     timings: dict[str, float] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     # -- predicates ---------------------------------------------------------
 
@@ -129,6 +133,7 @@ class Report:
         """Return a JSON-serialisable dict."""
         return {
             "figure_label": self.figure_label,
+            "metadata": dict(self.metadata),
             "findings": [f.to_dict() for f in self.findings],
             "timings": dict(self.timings),
         }
@@ -148,6 +153,12 @@ class Report:
         lines.append("")
         lines.append(self.summary())
         lines.append("")
+        if self.metadata:
+            lines.append("## Metadata")
+            lines.append("")
+            for key in sorted(self.metadata):
+                lines.append(f"- **{key}**: {self.metadata[key]}")
+            lines.append("")
         if not self.findings:
             text = "\n".join(lines) + "\n"
         else:
@@ -243,6 +254,28 @@ def check(
                 findings.append(finding)
 
     return Report(findings=findings, figure_label=label, timings=timings)
+
+
+# ---------------------------------------------------------------------------
+# audit_export() — package-native post-export audit entry point
+# ---------------------------------------------------------------------------
+
+
+def audit_export(
+    path: str | Path,
+    *,
+    config: Optional[ScivcdConfig] = None,
+    **kwargs: Any,
+) -> Report:
+    """Audit an exported figure artifact and return a :class:`Report`.
+
+    This thin public wrapper keeps ``scivcd.audit_export`` available from the
+    main API module while avoiding an import cycle with
+    :mod:`scivcd.export_audit`.
+    """
+    from scivcd.export_audit import audit_export as _audit_export
+
+    return _audit_export(path, config=config, **kwargs)
 
 
 # ---------------------------------------------------------------------------
