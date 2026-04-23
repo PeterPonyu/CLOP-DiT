@@ -4,6 +4,7 @@ Subcommands
 -----------
 list-checks   List every registered check.
 check         Run VCD checks on a PDF or figure script.
+audit-export  Audit an already-exported PNG/JPEG/PDF artifact.
 lint          Walk a directory for figure scripts and aggregate findings.
 run           Execute a figure script under scivcd.install() and dump report.
 version       Print the scivcd version.
@@ -14,6 +15,7 @@ Usage examples::
     scivcd list-checks --category LAYOUT --stage TIER2 --format json
     scivcd check figures/fig01.pdf
     scivcd check src/visualization/fig07_alignment.py
+    scivcd audit-export figures/fig01.png --json
     scivcd lint src/visualization/
     scivcd run src/visualization/fig07_alignment.py
     scivcd version
@@ -22,6 +24,8 @@ Exit codes
 ----------
 0   No HIGH or higher severity findings.
 1   At least one HIGH / BLOCKER finding present (or script error).
+2   Tool/config/input error.
+3   Export audit unavailable while explicitly required.
 """
 
 from __future__ import annotations
@@ -86,6 +90,24 @@ def _report_to_findings_list(report) -> list:
         return list(report.findings)
     except AttributeError:
         return list(report) if isinstance(report, (list, tuple)) else []
+
+
+def _report_to_dict_with_metadata(report) -> dict:
+    """Convert a Report to a dict while preserving Phase 1 metadata."""
+    try:
+        from scivcd.export_audit import report_to_dict
+
+        return report_to_dict(report)
+    except Exception:
+        pass
+    try:
+        payload = report.to_dict()
+    except AttributeError:
+        payload = {"findings": []}
+    metadata = getattr(report, "metadata", None)
+    if metadata is not None and "metadata" not in payload:
+        payload["metadata"] = metadata
+    return payload
 
 
 def _run_script(script_path: Path) -> Path:
@@ -232,6 +254,49 @@ def _cmd_check(args: argparse.Namespace) -> int:
         if _report_has_high_findings(report):
             any_high = True
     return 1 if any_high else 0
+
+
+# ---------------------------------------------------------------------------
+# audit-export
+# ---------------------------------------------------------------------------
+
+def _cmd_audit_export(args: argparse.Namespace) -> int:
+    _ensure_checks_registered()
+    sc = _import_scivcd()
+
+    target = Path(args.target)
+    if not target.exists():
+        print(f"error: path does not exist: {target}", file=sys.stderr)
+        return 2
+    if not hasattr(sc, "audit_export"):
+        print("error: scivcd.audit_export is unavailable", file=sys.stderr)
+        return 2
+
+    report = sc.audit_export(target, require_backend=args.require_backend)
+    metadata = getattr(report, "metadata", {})
+
+    if args.markdown:
+        _print_audit_export_markdown(report)
+    else:
+        print(json.dumps(_report_to_dict_with_metadata(report), indent=2, default=str))
+
+    if args.require_backend and metadata.get("audit_unavailable"):
+        return 3
+    return 1 if _report_has_high_findings(report) else 0
+
+
+def _print_audit_export_markdown(report) -> None:
+    """Print a Markdown audit report including export metadata."""
+    metadata = getattr(report, "metadata", {}) or {}
+    text = report.to_markdown() if hasattr(report, "to_markdown") else ""
+    print(text.rstrip())
+    if metadata:
+        print("\n## Export metadata\n")
+        for key in sorted(metadata):
+            value = metadata[key]
+            if isinstance(value, (list, tuple)):
+                value = ", ".join(str(v) for v in value) if value else "[]"
+            print(f"- **{key}**: {value}")
 
 
 def _exec_script_and_check(sc, script_path: Path) -> list:
@@ -420,6 +485,20 @@ def _cmd_run(args: argparse.Namespace) -> int:
     return 0
 
 
+
+# ---------------------------------------------------------------------------
+# gate
+# ---------------------------------------------------------------------------
+def _cmd_gate(args: argparse.Namespace) -> int:
+    from scivcd.gating import GatePolicy, gate_report
+    policy = GatePolicy.from_pyproject(args.config) if args.config else GatePolicy()
+    current = Path(args.report)
+    baseline = Path(args.baseline) if args.baseline else None
+    result = gate_report(current, baseline, policy)
+    print(json.dumps(result, indent=2, default=str))
+    return int(result["exit_code"])
+
+
 # ---------------------------------------------------------------------------
 # version
 # ---------------------------------------------------------------------------
@@ -484,6 +563,24 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Path to a .pdf figure or a .py figure script.",
     )
 
+    # audit-export
+    p_audit = sub.add_parser(
+        "audit-export",
+        help="Audit an already-exported PNG/JPEG/PDF artifact.",
+    )
+    p_audit.add_argument(
+        "target",
+        help="Path to a PNG, JPEG, TIFF, WebP, or PDF figure export.",
+    )
+    output = p_audit.add_mutually_exclusive_group()
+    output.add_argument("--json", action="store_true", help="Emit JSON report.")
+    output.add_argument("--markdown", action="store_true", help="Emit Markdown report.")
+    p_audit.add_argument(
+        "--require-backend",
+        action="store_true",
+        help="Exit 3 if an optional PDF/raster audit backend is unavailable.",
+    )
+
     # lint
     p_lint = sub.add_parser(
         "lint",
@@ -504,6 +601,13 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Path to the figure .py script to execute.",
     )
 
+
+    # gate
+    p_gate = sub.add_parser("gate", help="Apply SciVCD CI gating to a report.")
+    p_gate.add_argument("report", help="Current SciVCD report JSON.")
+    p_gate.add_argument("--baseline", help="Optional baseline report JSON.")
+    p_gate.add_argument("--config", help="Optional pyproject.toml / config path.")
+
     # version
     sub.add_parser("version", help="Print the scivcd version.")
 
@@ -517,8 +621,10 @@ def main(argv: Optional[list[str]] = None) -> int:
     dispatch = {
         "list-checks": _cmd_list_checks,
         "check": _cmd_check,
+        "audit-export": _cmd_audit_export,
         "lint": _cmd_lint,
         "run": _cmd_run,
+        "gate": _cmd_gate,
         "version": _cmd_version,
     }
     handler = dispatch.get(args.command)

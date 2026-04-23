@@ -38,7 +38,7 @@ from scivcd.core import (
     unregister,
 )
 from scivcd.exemptions import exempt, ignore, is_exempt
-from scivcd.api import Report, check, install, uninstall
+from scivcd.api import Report, audit_export, check, install, uninstall
 from scivcd import checks as _checks  # noqa: F401  # side-effect import: register built-in checks
 
 __all__ = [
@@ -60,6 +60,7 @@ __all__ = [
     "is_exempt",
     # api
     "check",
+    "audit_export",
     "install",
     "uninstall",
     "Report",

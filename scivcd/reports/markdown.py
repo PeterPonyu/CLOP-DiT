@@ -39,10 +39,16 @@ def render(report, path: "Path | None" = None) -> str:
         The Markdown text.
     """
     findings = _extract_findings(report)
+    metadata = _extract_metadata(report)
     lines: list[str] = []
 
     # --- Title & summary ---
     lines.append("# SciVCD Report\n")
+    if metadata:
+        lines.append("## Metadata\n")
+        for key in sorted(metadata):
+            lines.append(f"- **{_md_escape(key)}**: {_md_escape(metadata[key])}")
+        lines.append("")
     if not findings:
         lines.append("**No findings.** All checks passed.\n")
         result = "\n".join(lines)
@@ -83,6 +89,22 @@ def render(report, path: "Path | None" = None) -> str:
     if path is not None:
         Path(path).write_text(result, encoding="utf-8")
     return result
+
+
+def _extract_metadata(report) -> dict:
+    """Extract report-level metadata when present."""
+    try:
+        metadata = getattr(report, "metadata")
+        if isinstance(metadata, dict):
+            return dict(metadata)
+    except AttributeError:
+        pass
+    try:
+        d = report.to_dict()
+        metadata = d.get("metadata", {})
+        return dict(metadata) if isinstance(metadata, dict) else {}
+    except AttributeError:
+        return {}
 
 
 def _extract_findings(report) -> list[dict]:
