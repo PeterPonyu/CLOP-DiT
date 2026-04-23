@@ -39,10 +39,19 @@ from scivcd.core import (
 )
 from scivcd.exemptions import exempt, ignore, is_exempt
 from scivcd.api import Report, audit_export, check, install, uninstall
+from scivcd.composed_lifecycle import (
+    SCHEMA_VERSION as COMPOSED_LIFECYCLE_SCHEMA_VERSION,
+    ComponentLink,
+    build_composed_lifecycle_sidecar,
+    make_composed_report,
+    project_component_findings,
+    write_composed_lifecycle_sidecar,
+)
 from scivcd import checks as _checks  # noqa: F401  # side-effect import: register built-in checks
 
 __all__ = [
     "__version__",
+    "COMPOSED_LIFECYCLE_SCHEMA_VERSION",
     # core enums + dataclasses
     "Severity",
     "Category",
@@ -50,6 +59,7 @@ __all__ = [
     "Finding",
     "CheckSpec",
     "ScivcdConfig",
+    "ComponentLink",
     # registry
     "register",
     "unregister",
@@ -64,4 +74,8 @@ __all__ = [
     "install",
     "uninstall",
     "Report",
+    "build_composed_lifecycle_sidecar",
+    "make_composed_report",
+    "project_component_findings",
+    "write_composed_lifecycle_sidecar",
 ]
