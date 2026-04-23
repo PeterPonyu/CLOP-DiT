@@ -76,6 +76,43 @@ class TestAnnotationDataOverlap:
         assert not _has_check(report, "annotation_data_overlap")
 
 
+class TestAnnotationStyleRisk:
+    def test_positive_small_colored_italic_boxed_annotation(self):
+        fig, ax = plt.subplots(figsize=(5, 4))
+        ax.plot([0, 1], [0, 1])
+        ax.text(
+            0.5,
+            0.5,
+            "fragile note",
+            transform=ax.transAxes,
+            fontsize=7,
+            color="tab:red",
+            style="italic",
+            bbox=dict(facecolor="white", edgecolor="none", alpha=0.8),
+        )
+        fig.canvas.draw()
+        report = check(fig)
+        plt.close(fig)
+        assert _has_check(report, "annotation_style_risk")
+
+    def test_negative_regular_neutral_annotation(self):
+        fig, ax = plt.subplots(figsize=(5, 4))
+        ax.plot([0, 1], [0, 1])
+        ax.text(
+            0.5,
+            0.5,
+            "regular note",
+            transform=ax.transAxes,
+            fontsize=11,
+            color="#222222",
+            style="normal",
+        )
+        fig.canvas.draw()
+        report = check(fig)
+        plt.close(fig)
+        assert not _has_check(report, "annotation_style_risk")
+
+
 # ---------------------------------------------------------------------------
 # content_clipped_at_render — content bounding-box extends outside axes
 # ---------------------------------------------------------------------------

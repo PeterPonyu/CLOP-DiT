@@ -40,6 +40,16 @@ def _data_axes(fig: Any) -> list:
     return out
 
 
+def _distance_between_bboxes(a: Any, b: Any) -> float:
+    """Minimum display-space distance between two bboxes, 0 if overlapping."""
+    try:
+        dx = max(float(a.x0) - float(b.x1), float(b.x0) - float(a.x1), 0.0)
+        dy = max(float(a.y0) - float(b.y1), float(b.y0) - float(a.y1), 0.0)
+    except Exception:
+        return float("inf")
+    return (dx * dx + dy * dy) ** 0.5
+
+
 # ---------------------------------------------------------------------------
 # excessive_border_whitespace
 # ---------------------------------------------------------------------------
@@ -498,6 +508,187 @@ register(CheckSpec(
 ))
 
 
+# ---------------------------------------------------------------------------
+# suptitle_too_far_from_axes
+# ---------------------------------------------------------------------------
+
+def _fire_suptitle_too_far_from_axes(
+    fig: Any, config: ScivcdConfig
+) -> list[Finding]:
+    """Flag figure titles that float far above the top row of panels."""
+    out: list[Finding] = []
+    st = getattr(fig, "_suptitle", None)
+    if st is None:
+        return out
+    try:
+        if not (st.get_text() or "").strip():
+            return out
+        axes = _data_axes(fig)
+        if not axes:
+            return out
+        top_axes = max(ax.get_position().y1 for ax in axes)
+        _x, title_y = st.get_position()
+        gap = float(title_y) - float(top_axes)
+    except Exception:
+        return out
+    if gap <= config.title_axes_gap_max:
+        return out
+    out.append(Finding(
+        check_id="suptitle_too_far_from_axes",
+        severity=Severity.MEDIUM,
+        category=Category.LAYOUT,
+        stage=Stage.TIER2,
+        message=(
+            f"figure title sits {gap:.3f} figure-fractions above the top axes "
+            f"(target <= {config.title_axes_gap_max:.3f})"
+        ),
+        call_site=None,
+        fix_suggestion=(
+            "lower the suptitle or reduce tight_layout/constrained-layout top "
+            "reservation so the title belongs visually to the panel grid"
+        ),
+        artist=st,
+    ))
+    return out
+
+
+register(CheckSpec(
+    id="suptitle_too_far_from_axes",
+    severity=Severity.MEDIUM,
+    category=Category.LAYOUT,
+    stage=Stage.TIER2,
+    fire=_fire_suptitle_too_far_from_axes,
+    description="Figure title is too far from the top panel row",
+    config_keys=("title_axes_gap_max",),
+))
+
+
+# ---------------------------------------------------------------------------
+# panel_row_misalignment
+# ---------------------------------------------------------------------------
+
+def _fire_panel_row_misalignment(
+    fig: Any, config: ScivcdConfig
+) -> list[Finding]:
+    """Flag rows whose axes are not horizontally aligned."""
+    out: list[Finding] = []
+    axes = _data_axes(fig)
+    if len(axes) < 3:
+        return out
+    rows: list[list[Any]] = []
+    for ax in sorted(axes, key=lambda a: -a.get_position().y0):
+        pos = ax.get_position()
+        ymid = 0.5 * (pos.y0 + pos.y1)
+        for row in rows:
+            rpos = row[0].get_position()
+            rmid = 0.5 * (rpos.y0 + rpos.y1)
+            if abs(ymid - rmid) <= 0.08:
+                row.append(ax)
+                break
+        else:
+            rows.append([ax])
+    for row in rows:
+        if len(row) < 2:
+            continue
+        tops = [a.get_position().y1 for a in row]
+        bottoms = [a.get_position().y0 for a in row]
+        spread = max(max(tops) - min(tops), max(bottoms) - min(bottoms))
+        if spread <= config.row_alignment_tol:
+            continue
+        out.append(Finding(
+            check_id="panel_row_misalignment",
+            severity=Severity.MEDIUM,
+            category=Category.LAYOUT,
+            stage=Stage.TIER2,
+            message=(
+                f"row with {len(row)} panels has vertical-edge spread {spread:.3f} "
+                f"(target <= {config.row_alignment_tol:.3f})"
+            ),
+            call_site=None,
+            fix_suggestion=(
+                "align axes in the row to a shared top/bottom rectangle or use a "
+                "common GridSpec row instead of independent manual positions"
+            ),
+            artist=row[0],
+        ))
+    return out
+
+
+register(CheckSpec(
+    id="panel_row_misalignment",
+    severity=Severity.MEDIUM,
+    category=Category.LAYOUT,
+    stage=Stage.TIER2,
+    fire=_fire_panel_row_misalignment,
+    description="Panels in the same row are not horizontally aligned",
+    config_keys=("row_alignment_tol",),
+))
+
+
+# ---------------------------------------------------------------------------
+# legend_tick_clearance
+# ---------------------------------------------------------------------------
+
+def _fire_legend_tick_clearance(
+    fig: Any, config: ScivcdConfig
+) -> list[Finding]:
+    """Flag legends placed too close to tick labels."""
+    out: list[Finding] = []
+    try:
+        renderer = fig.canvas.get_renderer()
+    except Exception:
+        return out
+    tick_labels = []
+    for ax in fig.get_axes():
+        for lbl in list(ax.get_xticklabels()) + list(ax.get_yticklabels()):
+            try:
+                if lbl.get_visible() and (lbl.get_text() or "").strip():
+                    tick_labels.append(lbl.get_window_extent(renderer))
+            except Exception:
+                continue
+    if not tick_labels:
+        return out
+    for ax in fig.get_axes():
+        leg = ax.get_legend()
+        if leg is None:
+            continue
+        try:
+            bb = leg.get_window_extent(renderer)
+        except Exception:
+            continue
+        nearest = min(_distance_between_bboxes(bb, tb) for tb in tick_labels)
+        if nearest >= config.legend_tick_clearance_px:
+            continue
+        out.append(Finding(
+            check_id="legend_tick_clearance",
+            severity=Severity.MEDIUM,
+            category=Category.LAYOUT,
+            stage=Stage.TIER2,
+            message=(
+                f"legend is {nearest:.1f}px from a tick label "
+                f"(target >= {config.legend_tick_clearance_px:.1f}px)"
+            ),
+            call_site=None,
+            fix_suggestion=(
+                "move the legend farther from tick labels, add bottom/top padding, "
+                "or use a dedicated legend axes"
+            ),
+            artist=leg,
+        ))
+    return out
+
+
+register(CheckSpec(
+    id="legend_tick_clearance",
+    severity=Severity.MEDIUM,
+    category=Category.LAYOUT,
+    stage=Stage.TIER2,
+    fire=_fire_legend_tick_clearance,
+    description="Legend is too close to tick labels",
+    config_keys=("legend_tick_clearance_px",),
+))
+
+
 __all__ = [
     "_fire_excessive_border_whitespace",
     "_fire_excessive_gutter_whitespace",
@@ -505,4 +696,7 @@ __all__ = [
     "_fire_panel_label_too_far_from_panel",
     "_fire_excessive_whitespace_vs_content",
     "_fire_sparse_row_coverage",
+    "_fire_suptitle_too_far_from_axes",
+    "_fire_panel_row_misalignment",
+    "_fire_legend_tick_clearance",
 ]
