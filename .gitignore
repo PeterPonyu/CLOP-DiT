@@ -100,19 +100,19 @@ Thumbs.db
 # === Environment ===
 .env
 
-# === Articles, journal templates & cover letters (not for remote) ===
+# === Manuscript sources, class files, cover letters (local-only) ===
 articles/
-articles_elsevier/
-articles_elsevier copy/
+articles_*/
+"articles_* copy/"
 articles.zip
-Elsevier_Array_Submission/
-LaTeX_Template_for_PeerJ_Journal_Submissions/
-cover_letter.md
-cover_letter.pdf
-cover_letter_peerj_cs.md
-cover_letter_peerj_cs.pdf
-SUBMISSION_AUDIT_PEERJ_CS.md
+*_Submission/
+LaTeX_Template*/
+cover_letter*.md
+cover_letter*.pdf
+cover_letter*.tex
+SUBMISSION_AUDIT*.md
 ZENODO_WORKFLOW.md
+revision/
 
 # === Intermediate project markdown files ===
 PIPELINE.md
@@ -139,3 +139,4 @@ scripts/analysis/audit_data.py
 
 # === VCD tooling (internal development tool) ===
 scripts/vcd/
+.omx/
