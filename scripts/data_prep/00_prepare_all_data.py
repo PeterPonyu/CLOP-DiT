@@ -395,6 +395,8 @@ def main():
     parser.add_argument("--n_top_genes", type=int, default=2000)
     parser.add_argument("--max_cells", type=int, default=3000,
                         help="Subsample to at most this many cells per dataset")
+    parser.add_argument("--subsample_seed", type=int, default=0,
+                        help="Random seed for sc.pp.subsample (reproducibility)")
     parser.add_argument("--skip_preprocess", action="store_true",
                         help="Skip preprocessing, just generate metadata")
     parser.add_argument("--data_dirs", nargs="+", default=None,
@@ -455,8 +457,10 @@ def main():
 
             # Subsample BEFORE preprocessing to save memory/time
             if args.max_cells and adata.shape[0] > args.max_cells:
-                sc.pp.subsample(adata, n_obs=args.max_cells)
-                print(f"  Subsampled to {adata.shape[0]} cells")
+                sc.pp.subsample(adata, n_obs=args.max_cells,
+                                random_state=args.subsample_seed)
+                print(f"  Subsampled to {adata.shape[0]} cells "
+                      f"(seed={args.subsample_seed})")
 
             if not args.skip_preprocess:
                 adata = preprocess_adata(
