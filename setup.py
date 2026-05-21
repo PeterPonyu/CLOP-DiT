@@ -13,9 +13,9 @@ _long_description = (
 setup(
     name="clop-dit",
     version="1.0.0",
-    author="Zeyu Fu, JianXu Zheng, Jiawei Fu",
+    author="Zeyu Fu",
     author_email="fuzeyu09@gmail.com",
-    maintainer="Zeyu Fu and Jiawei Fu",
+    maintainer="Zeyu Fu",
     maintainer_email="fuzeyu09@gmail.com",
     description=(
         "CLOP-DiT: Text-conditioned single-cell latent generation via "
