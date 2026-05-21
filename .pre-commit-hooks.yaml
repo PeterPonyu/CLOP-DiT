@@ -1,0 +1,9 @@
+- id: scivcd-lint
+  name: SciVCD lint
+  description: >
+    Run SciVCD visual conflict detection checks on figure scripts.
+    Exits non-zero when any HIGH or BLOCKER severity finding is detected.
+  entry: scivcd check
+  language: python
+  types: [python]
+  files: '(fig|figure).*\.py$'

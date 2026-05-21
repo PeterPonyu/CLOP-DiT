@@ -148,6 +148,8 @@ docs/
 scripts/pipeline/generate_folder_audit_reports.py
 scripts/analysis/audit_data.py
 
-# === VCD tooling (internal development tool) ===
+# === VCD tooling ===
+# scripts/vcd/ — internal-only consumer scripts (not for public repo)
+# scivcd/      — public sub-package (TRACKED; advertised via .pre-commit-hooks.yaml)
 scripts/vcd/
 .omx/
