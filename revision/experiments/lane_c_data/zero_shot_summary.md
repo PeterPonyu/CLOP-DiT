@@ -69,7 +69,10 @@ tissues along two clear axes:
 1. **Structural-program transfer works.** When a novel cell type
    shares an underlying expression program with training types
    (epithelial, steroidogenic), the model produces latents that land
-   near the correct real-cell centroid at 3–6× random.
+   near the correct real-cell centroid with program-specific margins
+   above random: kidney epithelial reaches 0.460 on the 7-type kidney
+   baseline (random = 0.143), while adrenal cortex type I reaches
+   0.875 on the 2-type fetal-gonadal baseline (random = 0.500).
 2. **Structurally-distinct programs do not transfer.** When the novel
    tissue has no analog in training (cerebellar neurons with
    specialised GABAergic / glutamatergic programs), the model's
@@ -98,10 +101,11 @@ response-letter paragraph becomes:
 > three tissues pass a strict leakage audit (zero mentions in training
 > metadata) and were ingested via the CellxGene Census API without
 > any training-side changes. The production CLOP-DiT partially
-> generalises: nearest-real-centroid accuracy is 3–6× random for
-> structurally-familiar novel types (adrenal cortex 0.875, kidney
-> epithelial 0.460) but at-or-below random for structurally-distinct
-> novel types (Purkinje cells 0.00, granule cells 0.04, cerebellar
+> generalises with program-specific margins above random for
+> structurally-familiar novel types (kidney epithelial 0.460 on a
+> 7-type baseline of 0.143; adrenal cortex type I 0.875 on a 2-type
+> baseline of 0.500) but at-or-below random for structurally-distinct
+> novel types (Purkinje cells 0.00, granule cells 0.00, cerebellar
 > interneurons 0.00). This characterises the model's zero-shot
 > generalisation ceiling directly: the learned cross-type manifold
 > extrapolates along familiar structural programs (epithelial,
