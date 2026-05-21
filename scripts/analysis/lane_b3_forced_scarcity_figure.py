@@ -122,12 +122,13 @@ def make_figure(
                 "forced-scarcity baseline", fontsize=7.5,
                 color="#D55E00", ha="right", va="bottom")
 
-        # panel label (bold uppercase). Pulled closer to the axes top (y=1.02)
+        # panel label (bold uppercase). Kept just inside the axes top so the
+        # 18pt label does not clip against the compact supplementary canvas.
         # so the 18pt bold "A"/"B" does not extend beyond the figure border on
         # the 3.4 in-tall layout.
         from src.visualization.style import add_panel_label
         _letter = str(PANEL_LABELS[ax_idx]).strip("()").lower()
-        add_panel_label(ax, _letter, x=-0.12, y=1.02)
+        add_panel_label(ax, _letter, x=-0.12, y=0.99)
 
         ax.set_ylim(0.45, 0.97)
         ax.set_yticks([0.5, 0.6, 0.7, 0.8, 0.9])

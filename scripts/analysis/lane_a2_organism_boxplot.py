@@ -20,6 +20,7 @@ import matplotlib.patches as mpatches
 import numpy as np
 import pandas as pd
 from scipy import stats
+from matplotlib.ticker import FixedLocator, FuncFormatter, MaxNLocator, NullLocator
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -35,18 +36,6 @@ CSV_PATH = DATA_DIR / "organism_per_type_table.csv"
 JSON_PATH = DATA_DIR / "organism_split.json"
 
 OUT_STEM = FIG_DIR / "figS_lane_a2_organism_stratified"
-
-# ---------------------------------------------------------------------------
-# Fallback p-values from rebuttal (human_only vs mouse_only, two-sided MW)
-# ---------------------------------------------------------------------------
-FALLBACK_P = {
-    "centroid_cosine":   0.14,
-    "frechet_distance":  0.85,
-    "diversity_ratio":   0.18,
-    "expr_pearson_r":    0.43,
-    "real_intra_cos":    0.87,
-    "n_real":            None,   # not stated; will compute from data
-}
 
 # Colorblind-safe palette
 COLORS = {
@@ -89,10 +78,42 @@ def _mannwhitney_p(a: np.ndarray, b: np.ndarray) -> float | None:
     return float(p)
 
 
-def make_figure(df: pd.DataFrame) -> plt.Figure:
-    apply_style()
+def _load_json_pairwise_pvalues() -> dict[str, float]:
+    """Load authoritative human-vs-mouse p-values from the Lane A2 JSON."""
+    if not JSON_PATH.exists():
+        return {}
+    try:
+        with open(JSON_PATH) as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return {}
 
-    fig, axes = plt.subplots(2, 3, figsize=(7.2, 4.8))
+    pvalues: dict[str, float] = {}
+    pairwise = data.get("pairwise_mannwhitney", {})
+    for metric, comparisons in pairwise.items():
+        if not isinstance(comparisons, dict):
+            continue
+        comparison = comparisons.get("human_only_vs_mouse_only", {})
+        if not isinstance(comparison, dict):
+            continue
+        p = comparison.get("mannwhitney_p_two_sided")
+        if p is None:
+            continue
+        try:
+            pvalues[metric] = float(p)
+        except (TypeError, ValueError):
+            continue
+    return pvalues
+
+
+def make_figure(df: pd.DataFrame, pairwise_pvalues: dict[str, float] | None = None) -> plt.Figure:
+    apply_style()
+    pairwise_pvalues = pairwise_pvalues or {}
+
+    # Canvas enlarged from (7.2, 4.8) → (8.6, 5.6) so each panel is ~2.4 in²
+    # (up from ~1.7 in²); tighter layout + better title/label fontsizes follow
+    # from the extra physical room.
+    fig, axes = plt.subplots(2, 3, figsize=(8.0, 5.8), dpi=300)
     axes_flat = axes.flatten()
 
     for ax, panel in zip(axes_flat, PANELS):
@@ -146,41 +167,38 @@ def make_figure(df: pd.DataFrame) -> plt.Figure:
         h_vals = groups["human_only"]
         m_vals = groups["mouse_only"]
         p_calc = _mannwhitney_p(h_vals, m_vals)
-        fallback = FALLBACK_P.get(col)
-        # Use calculated if available and close to rebuttal; else fallback
-        if p_calc is not None and fallback is not None:
-            p_use = p_calc
-            # Sanity: if they differ substantially, prefer rebuttal value
-            if abs(p_calc - fallback) > 0.05:
-                p_use = fallback
-        elif p_calc is not None:
-            p_use = p_calc
-        else:
-            p_use = fallback
+        p_use = pairwise_pvalues.get(col, p_calc)
 
-        ax.text(
-            0.97, 0.97, f"MW {_pval_str(p_use)}",
-            transform=ax.transAxes,
-            ha="right", va="top",
-            fontsize=7.5, color="#444444",
-        )
+        # Fold the MW p-value into the subplot title so it cannot overlap the
+        # title (title airspace) or the data points (plot interior) — these
+        # were the two collision regimes from earlier standalone-text attempts
+        # at (0.97, 0.97) and (0.97, 0.88).
+        _p_suffix = _pval_str(p_use)
 
         # ---- axes cosmetics ----
         ax.set_xticks(positions)
-        ax.set_xticklabels([GROUP_LABELS[g] for g in GROUP_ORDER], fontsize=8)
-        ax.set_ylabel(panel["ylabel"], fontsize=8)
-        ax.set_title(panel["title"], fontsize=9, pad=4)
-        ax.tick_params(axis="y", labelsize=8)
+        ax.set_xticklabels([GROUP_LABELS[g] for g in GROUP_ORDER], fontsize=9.5)
+        ax.set_ylabel(panel["ylabel"], fontsize=10)
+        ax.set_title(f"{panel['title']}\nMW {_p_suffix}", fontsize=10.4, pad=6)
+        ax.tick_params(axis="y", labelsize=9.5)
         ax.set_xlim(0.4, 3.6)
         ax.grid(axis="y", linewidth=0.5, alpha=0.5)
         ax.set_axisbelow(True)
 
         # ---- expr_pearson_r: suppress offset text and use explicit ticks ----
         if col == "expr_pearson_r":
-            ax.ticklabel_format(useOffset=False, style='plain')
             ax.yaxis.get_offset_text().set_visible(False)
             ax.set_yticks([0.99990, 0.99995, 1.00000])
             ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:.5f}"))
+
+        # ---- log-scale panels: force only decade ticks to avoid stray "10^x"
+        # superscript near the title at the top of the axes. ----
+        if log:
+            ax.yaxis.set_major_locator(FixedLocator([1e2, 1e3, 1e4]))
+            ax.yaxis.set_minor_locator(NullLocator())
+            ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:.0e}"))
+        else:
+            ax.yaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
 
         # ---- panel label (bold uppercase, above the title) ----
         # Push the label higher (y=1.22) and slightly further left (x=-0.22)
@@ -188,7 +206,7 @@ def make_figure(df: pd.DataFrame) -> plt.Figure:
         # subplot title (y ~= 1.05) or the p-value annotation pinned at the
         # top-right of the axes.
         from src.visualization.style import add_panel_label
-        add_panel_label(ax, panel["panel"], x=-0.22, y=1.22)
+        add_panel_label(ax, panel["panel"], x=-0.10, y=1.05, fontsize=15)
 
     # ---- figure-level legend ----
     legend_patches = [
@@ -201,14 +219,26 @@ def make_figure(df: pd.DataFrame) -> plt.Figure:
         ncol=3,
         fontsize=8,
         frameon=False,
-        bbox_to_anchor=(0.5, -0.02),
+        bbox_to_anchor=(0.5, 0.01),
     )
 
+    # Suptitle lives INSIDE the rect that tight_layout packs into, so there
+    # is no dead whitespace band between the title and Panel A/B/C. Earlier
+    # y=1.01 put the title outside the figure top and tight_layout then left
+    # a visible gap down to the first row.
+    # Suptitle sits just above row-1 panels with a tight gap (y=0.965 inside
+    # the rect.top=0.96 band) and uses the default regular weight — per
+    # reviewer feedback the previous bold + y=0.99 variant sat too far from
+    # the panel row with a heavy emphasis that looked over-styled.
     fig.suptitle(
-        "Organism-stratified generation quality (Lane A2)",
-        fontsize=10, y=1.01,
+        "Organism-stratified generation quality",
+        fontsize=11, y=0.965,
     )
-    fig.tight_layout(rect=[0, 0.06, 1, 1])
+    fig.subplots_adjust(
+        left=0.12, right=0.985,
+        bottom=0.14, top=0.86,
+        wspace=0.42, hspace=0.88,
+    )
 
     return fig
 
@@ -216,10 +246,11 @@ def make_figure(df: pd.DataFrame) -> plt.Figure:
 def main() -> None:
     # Load CSV
     df = pd.read_csv(CSV_PATH)
+    pairwise_pvalues = _load_json_pairwise_pvalues()
 
     # Save
     FIG_DIR.mkdir(parents=True, exist_ok=True)
-    fig = make_figure(df)
+    fig = make_figure(df, pairwise_pvalues)
     save_with_vcd(fig, OUT_STEM)
     plt.close(fig)
 

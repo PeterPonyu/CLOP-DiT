@@ -19,7 +19,7 @@ import numpy as np
 REPO = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO))
 
-from src.visualization.style import apply_style, COLORS, add_panel_label, save_with_vcd  # noqa: E402
+from src.visualization.style import apply_style, add_panel_label, save_with_vcd  # noqa: E402
 
 
 def main() -> None:
@@ -39,12 +39,20 @@ def main() -> None:
         "CENSUS_CEREBELLUM": "#D55E00",      # vermillion
         "CENSUS_TESTIS_FETAL": "#009E73",    # bluish-green
     }
+    # Random baselines follow the full real-tissue vocabularies used by
+    # nearest-centroid scoring, not just the prompted/evaluated rows shown
+    # in this compact figure. See revision/experiments/lane_c_data/
+    # zero_shot_summary.md for the 7/18/2 denominators.
+    random_denominators = {
+        "CENSUS_KIDNEY": 7,
+        "CENSUS_CEREBELLUM": 18,
+        "CENSUS_TESTIS_FETAL": 2,
+    }
 
     rows_by_tissue: dict[str, list[tuple[str, float, float]]] = {}
     for tid in tissue_ids:
         per_type = data["per_tissue"][tid]["per_type"]
-        n_types = len(per_type)
-        random_chance = 1.0 / max(n_types, 1)
+        random_chance = 1.0 / max(random_denominators.get(tid, len(per_type)), 1)
         rows = []
         for ct, m in per_type.items():
             rows.append((ct, m["nearest_centroid_acc"], random_chance))
@@ -92,28 +100,21 @@ def main() -> None:
             edgecolor="#333333",
             linewidth=0.4,
             height=0.72,
+            zorder=2,
         )
-        ax.axvline(random_chance, color="#333333", linestyle="--", linewidth=1.1)
-        if random_chance >= 0.95:
-            random_label_x = random_chance - 0.015
-        else:
-            random_label_x = max(min(random_chance + 0.015, 0.90), 0.03)
-        random_label_ha = "right" if random_chance >= 0.95 else "left"
-        # Keep the chance label off the colored bars and away from the tissue
-        # title.  Multi-row panels have a clean gap between the first two bars;
-        # single-row panels place the label just above the lone bar.
-        random_label_y = 0.5 if len(labels) > 1 and random_chance < 0.95 else -0.42
-        random_label_va = "center" if random_label_y >= 0 else "bottom"
+        ax.axvline(random_chance, color="#333333", linestyle="--", linewidth=1.1, zorder=1)
         ax.text(
-            random_label_x,
-            random_label_y,
+            0.91,
+            1.03,
             f"random = {random_chance:.2f}",
-            ha=random_label_ha,
-            va=random_label_va,
+            transform=ax.transAxes,
+            ha="right",
+            va="bottom",
             fontsize=9,
             color="#333333",
             bbox=dict(boxstyle="round,pad=0.16", facecolor="white", edgecolor="none", alpha=0.86),
             clip_on=False,
+            zorder=5,
         )
 
         for idx, value in enumerate(values):
@@ -125,6 +126,8 @@ def main() -> None:
                 ha="left",
                 fontsize=9.5,
                 color="#222222",
+                bbox=dict(boxstyle="round,pad=0.06", facecolor="white", edgecolor="none", alpha=0.78),
+                zorder=4,
             )
 
         ax.set_yticks(y)

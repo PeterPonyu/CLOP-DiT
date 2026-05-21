@@ -165,9 +165,11 @@ def create_architecture_figure(output_dir=None):
         from src.utils.paths import FIG_DIR
         output_dir = Path(FIG_DIR)
     output_dir = Path(output_dir)
-    fig = plt.figure(figsize=(10.0, 4.2))
+    fig = plt.figure(figsize=(10.2, 4.2))
     ax = bind_figure_region(fig, (0.01, 0.02, 0.99, 0.97)).add_axes(fig)
-    ax.set_xlim(-0.20, 7.92)
+    # xlim right extended from 7.92 → 8.15 so the Stage 3 Gene Expr. Profile
+    # box and the Decoding legend swatch no longer graze the right edge.
+    ax.set_xlim(-0.20, 8.15)
     ax.set_ylim(-0.18, 3.80)
     ax.axis("off")
     ax.set_xticks([])
@@ -328,7 +330,7 @@ def create_architecture_figure(output_dir=None):
              facecolor=C_GEN_BOX, edgecolor=C_GEN_DARK, fontsize=FONT_ARCH_SUBLABEL,
              textcolor="black")
     ax.text(dit_x0 + z0_w / 2, dit_y_mid - 0.08,
-            r"$\sim\mathcal{N}(0,I)$",
+            "~N(0,I)",
             ha="center", va="top", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=5)
 
     dit_bx = dit_x0 + z0_w + 0.12

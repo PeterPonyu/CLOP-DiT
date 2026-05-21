@@ -274,8 +274,14 @@ def main():
              fontsize=FONT_ANNOTATION, color=COLORS["neutral"])
 
     ax2.set_yticks([])
+    # Keep the legend INSIDE ax2 (upper-left empty region above the jittered
+    # scatter). Previously bbox_to_anchor=(0.5, -0.18) anchored the legend
+    # below ax2 by 18% of its height; with hspace=0.36 between rows that
+    # protruded into ax4 (Panel D) and collided with the "Inhibitory"
+    # outlier callout at the top of the SWD vs. Training Cells scatter.
     ax2.legend(fontsize=FONT_ANNOTATION, frameon=False,
-               loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=2)
+               loc="upper left", bbox_to_anchor=(0.02, 0.97), ncol=1,
+               handlelength=1.4, handletextpad=0.4, borderaxespad=0.2)
     style_axes(ax2, "default",
                xlabel="Variance ratio (gen/real)",
                title="Per-Type Latent Variance Ratio")

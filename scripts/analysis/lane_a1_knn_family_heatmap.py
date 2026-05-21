@@ -29,14 +29,14 @@ from src.visualization.style import apply_style, save_with_vcd  # noqa: E402
 FAMILY_LABELS = {
     "endothelial": "Endothelial",
     "epithelial": "Epithelial",
-    "erythroid_and_hspc": "Erythroid/HSPC",
+    "erythroid_and_hspc": "Ery/HSPC",
     "lymphoid": "Lymphoid",
     "mast_and_isg": "Mast/ISG",
-    "mesenchymal": "Mesenchymal",
+    "mesenchymal": "Mesench.",
     "myeloid": "Myeloid",
     "neural_and_glial": "Neural/Glial",
-    "parenchymal_secretory": "Parenchymal Sec.",
-    "proliferation_stress_pluripotent": "Prolif./Stress Pluri.",
+    "parenchymal_secretory": "Parench.",
+    "proliferation_stress_pluripotent": "Prolif./Stress",
 }
 
 
@@ -76,7 +76,10 @@ def main() -> None:
     short_labels = [FAMILY_LABELS.get(r, r) for r in row_labels_raw]
     n = len(short_labels)
 
-    # Layout: main heatmap + right-side bar
+    # Layout: main heatmap + right-side bar. Figure-internal margins clear
+    # the rotated xtick labels and the horizontal colorbar at these values;
+    # the compiled manuscript crops the residual bottom whitespace with
+    # \includegraphics[...,trim=0 60 0 0,clip] at the include site.
     fig = plt.figure(figsize=(7.2, 6.8), dpi=300)
     gs = gridspec.GridSpec(
         1, 2,
@@ -114,17 +117,24 @@ def main() -> None:
             )
 
     ax_heat.set_xticks(np.arange(n))
-    ax_heat.set_xticklabels(short_labels, rotation=55, ha="right", fontsize=7.0)
+    ax_heat.set_xticklabels(short_labels, rotation=70, ha="right", fontsize=6.8)
     ax_heat.set_yticks(np.arange(n))
     ax_heat.set_yticklabels(short_labels, fontsize=7.0)
-    ax_heat.set_xlabel("Predicted family", fontsize=9.5, labelpad=4)
+    # "Predicted family" xlabel omitted — the xtick labels are family names
+    # themselves, and an explicit xlabel would sit directly on top of the
+    # colorbar (which is placed below the xticks at pad=0.28).
     ax_heat.set_ylabel("True family", fontsize=9.5, labelpad=4)
 
-    # Colorbar below BOTH axes so the heatmap and the right bar shrink
-    # by the same fraction and keep their bottom pixel rows aligned.
-    cbar = fig.colorbar(im, ax=[ax_heat, ax_bar], orientation="horizontal",
-                        fraction=0.040, pad=0.15, shrink=0.62)
-    cbar.set_label("Fraction of queries", fontsize=8)
+    # Manually positioned colorbar — explicit fig.add_axes([...]) with
+    # absolute figure-fraction coords so neither ax_heat nor ax_bar gets
+    # auto-shrunk by fig.colorbar(ax=[...]), and so the colorbar sits at
+    # a known y well below the rotated-55° xtick labels (which extend
+    # ~0.07 figure-fraction below the gridspec axes bottom at y=0.34).
+    # Bottom of cbar axes at y=0.12 leaves ~0.15 figure-fraction clear air
+    # between the xtick labels and the top of the colorbar.
+    cax = fig.add_axes([0.30, 0.12, 0.45, 0.018])
+    cbar = fig.colorbar(im, cax=cax, orientation="horizontal")
+    cbar.set_label("Fraction of queries", fontsize=8, labelpad=2)
     cbar.ax.tick_params(labelsize=7.5)
 
     # --- Right bar: within-family accuracy per family ---

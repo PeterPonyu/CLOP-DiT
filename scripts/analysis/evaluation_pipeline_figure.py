@@ -36,7 +36,7 @@ FIG_DIR.mkdir(parents=True, exist_ok=True)
 FIG01B_WIDTH_IN = 14.4
 
 
-def _rounded_box(ax, xy, w, h, text, fc="#E8F4FD", ec="#2C3E50", fontsize=13,
+def _rounded_box(ax, xy, w, h, text, fc="#E8F4FD", ec="#2C3E50", fontsize=16,
                  lw=1.2, text_color="#2C3E50", bold=False):
     """Draw a rounded rectangle with centered text."""
     box = mpatches.FancyBboxPatch(
@@ -207,7 +207,7 @@ def make_figure():
 
     # ── Row 6: Bootstrap ──
     ax.text(9.5, y5 + 0.35, "Bootstrap\n95% CI\n(B=1000)",
-            ha="center", va="center", fontsize=12, style="italic",
+            ha="center", va="center", fontsize=14, style="normal",
             color="#7F8C8D",
             bbox=dict(boxstyle="round,pad=0.3", fc="#F9F9F9", ec="#BDC3C7", lw=0.8))
 
@@ -227,7 +227,7 @@ def make_figure():
                                      boxstyle="round,pad=0.03",
                                      facecolor=color, edgecolor="#666", lw=0.5)
         ax.add_patch(p)
-        ax.text(x + 0.38, -0.055, label, fontsize=12, va="center", color="#333")
+        ax.text(x + 0.38, -0.055, label, fontsize=14, va="center", color="#333")
 
     out_png = FIG_DIR / "fig01b_evaluation_pipeline.png"
     from src.visualization.style import save_with_vcd
