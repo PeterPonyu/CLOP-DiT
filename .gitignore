@@ -53,6 +53,8 @@ logs/
 figures/
 figures_v*/
 generated_*.h5ad
+# Root-level experiments workspace (anchored to root so revision/experiments/ stays tracked)
+/experiments/
 
 # === Archives (historical, not for public repo) ===
 configs/archive/
