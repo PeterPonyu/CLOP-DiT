@@ -150,7 +150,7 @@ def plot_expanded_de(
             max_lfc = max(abs(real_logfc).max(), abs(gen_logfc).max())
             ax.text(0.97, 0.03, f"max |logFC| \u2248 {max_lfc:.1e}\n(scGPT output space)",
                     transform=ax.transAxes, ha="right", va="bottom",
-                    fontsize=FONT_ANNOTATION - 1, style="italic", color=COLORS["neutral"],
+                    fontsize=FONT_ANNOTATION - 1, style="normal", color=COLORS["neutral"],
                     bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8, edgecolor="none"))
 
     # ── Panel (b): Concordance heatmap ──

@@ -19,61 +19,97 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-# Single source of truth: 22 article-facing component basenames (no suffix).
-# Order matches the revised manuscript sequence, including the strict-OOD figure
-# now promoted into the main revised article body.
+# Single source of truth: article display figures and their delivered component
+# PDFs (no suffix). Order matches the revised manuscript sequence, including the
+# strict-OOD figure promoted into the main revised article body and the
+# supplementary follow-up figures added in the 2026-04-17 evidence pass.
 #
-# The manuscript now uses article-index-aware component names:
-#   Fig 1  -> fig01a_*, fig01b_*
-#   Fig 2  -> fig02a_*, fig02b_*
+# The manuscript uses article-index-aware component names:
+#   fig01 -> fig01a_*, fig01b_*
+#   fig02 -> fig02a_*, fig02b_*
 #   ...
-#   Fig 9  -> fig09a_*, fig09b_*
-#   Fig S1 -> figS01_*
-#   Fig S2 -> figS02_*
+#   fig09 -> fig09a_*, fig09b_*
+#   figS01 -> figS01_*
+#   figS02 -> figS02_*
 #
 # Both the generated source assets in results/figures/ and the delivered
 # article-facing assets use the same basenames so there is no second naming
 # layer to drift out of sync.
 
+ARTICLE_DISPLAY_FIGURE_COMPONENTS: Dict[str, Tuple[str, ...]] = {
+    "fig01": ("fig01a_architecture", "fig01b_evaluation_pipeline"),
+    "fig02": ("fig02a_training_dynamics", "fig02b_embedding_space"),
+    "fig03": (
+        "fig03a_metrics_summary",
+        "fig03b_per_type_fidelity",
+        "fig03c_text_cell_alignment",
+    ),
+    "fig04": ("fig04a_marker_genes", "fig04b_expression_correlation"),
+    "fig05": ("fig05a_expression_analysis", "fig05b_conditioning_landscape"),
+    "fig06": ("fig06_diversity_diagnostics",),
+    "fig07": (
+        "fig07a_expression_diversity",
+        "fig07b_baseline_comparison",
+        "fig07c_benchmark",
+    ),
+    "fig08": ("fig08a_downstream_validation", "fig08b_de_concordance"),
+    "fig09": ("fig09a_variance_matching", "fig09b_gene_gene_correlation"),
+    "figS_lane_c": ("figS_lane_c_zero_shot",),
+    "figS01": ("figS01_supplementary_validation",),
+    "figS02": ("figS02_expression_diagnostics",),
+    "figS_lane_a1": ("figS_lane_a1_knn_family_heatmap",),
+    "figS_lane_a2": ("figS_lane_a2_organism_stratified",),
+    "figS_lane_b3": ("figS_lane_b3_forced_scarcity",),
+}
+
+MAIN_ARTICLE_DISPLAY_STEMS: Tuple[str, ...] = (
+    "fig01",
+    "fig02",
+    "fig03",
+    "fig04",
+    "fig05",
+    "fig06",
+    "fig07",
+    "fig08",
+    "fig09",
+    "figS_lane_c",
+)
+SUPPLEMENTARY_DISPLAY_STEMS: Tuple[str, ...] = (
+    "figS01",
+    "figS02",
+    "figS_lane_a1",
+    "figS_lane_a2",
+    "figS_lane_b3",
+)
+
+COMPOSED_MULTI_PANEL_STEMS: Tuple[str, ...] = (
+    "fig01",
+    "fig02",
+    "fig03",
+    "fig04",
+    "fig05",
+    "fig07",
+    "fig08",
+    "fig09",
+)
+UNIFIED_POLICY_STEMS: Tuple[str, ...] = (
+    "fig01",
+    "fig02",
+    "fig03",
+    "fig04",
+    "fig05",
+    "fig06",
+    "fig07",
+    "fig08",
+    "fig09",
+    *SUPPLEMENTARY_DISPLAY_STEMS,
+    "figS_lane_c",
+)
+
 _SOURCE_BASENAMES: List[str] = [
-    # Main body display Figure 1
-    "fig01a_architecture",
-    "fig01b_evaluation_pipeline",
-    # Main body display Figure 2
-    "fig02a_training_dynamics",
-    "fig02b_embedding_space",
-    # Main body display Figure 3
-    "fig03a_metrics_summary",
-    "fig03b_per_type_fidelity",
-    "fig03c_text_cell_alignment",
-    # Main body display Figure 4
-    "fig04a_marker_genes",
-    "fig04b_expression_correlation",
-    # Main body display Figure 5
-    "fig05a_expression_analysis",
-    "fig05b_conditioning_landscape",
-    # Main body display Figure 6
-    "fig06_diversity_diagnostics",
-    # Main body display Figure 7
-    "fig07a_expression_diversity",
-    "fig07b_baseline_comparison",
-    "fig07c_benchmark",
-    # Main body display Figure 8
-    "fig08a_downstream_validation",
-    "fig08b_de_concordance",
-    # Main body display Figure 9
-    "fig09a_variance_matching",
-    "fig09b_gene_gene_correlation",
-    # Main body strict-OOD figure
-    "figS_lane_c_zero_shot",
-    # Supplementary display Figure S1 (single Python-composed appendix figure)
-    "figS01_supplementary_validation",
-    # Supplementary display Figure S2 (single Python-composed appendix figure)
-    "figS02_expression_diagnostics",
-    # Supplementary figures added in the 2026-04-17 new-evidence pass
-    "figS_lane_a1_knn_family_heatmap",
-    "figS_lane_a2_organism_stratified",
-    "figS_lane_b3_forced_scarcity",
+    basename
+    for component_basenames in ARTICLE_DISPLAY_FIGURE_COMPONENTS.values()
+    for basename in component_basenames
 ]
 
 ARTICLE_FIGURE_BASENAMES: List[str] = list(_SOURCE_BASENAMES)
@@ -82,7 +118,8 @@ ARTICLE_FIGURE_BASENAMES: List[str] = list(_SOURCE_BASENAMES)
 # This is currently an identity map because source assets now follow article numbering.
 _SOURCE_MAP = {basename: basename for basename in ARTICLE_FIGURE_BASENAMES}
 
-# Basename -> producer file path (relative to repo root). Order matches Fig 1–20.
+# Basename -> producer file path (relative to repo root). Order matches the
+# display-figure sequence above.
 ARTICLE_FIGURE_PRODUCERS: List[Tuple[str, str]] = [
     ("fig01a_architecture", "scripts/analysis/generate_architecture_figure.py"),
     ("fig01b_evaluation_pipeline", "scripts/analysis/evaluation_pipeline_figure.py"),

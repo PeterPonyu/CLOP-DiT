@@ -95,7 +95,7 @@ def _draw_placeholder(ax: plt.Axes, message: str = "Data not available") -> None
         ha="center", va="center",
         fontsize=FONT_TITLE,
         color=COLORS["neutral"],
-        style="italic",
+        style="normal",
         transform=ax.transAxes,
     )
     ax.axis("off")
@@ -169,10 +169,11 @@ def _draw_ablation_heatmap(fig: plt.Figure, region, ablation_path: Path) -> None
     ax.set_yticks(range(n_variants))
     ax.set_yticklabels(names, fontsize=FONT_TICK)
 
-    # Category colour markers on left
+    # Category colour markers on left — pushed further left so marker does not
+    # overlap y-tick label text; square size reduced to 3 for tighter fit.
     for i, cat in enumerate(categories):
         color = _CATEGORY_COLORS.get(cat, COLORS["neutral"])
-        ax.plot(-0.7, i, "s", color=color, markersize=5, clip_on=False,
+        ax.plot(-2.0, i, "s", color=color, markersize=3, clip_on=False,
                 transform=ax.transData)
 
     # Category legend
@@ -342,7 +343,7 @@ def _draw_ood_showcase(fig: plt.Figure, region, ood_path: Path) -> None:
         ax_l.text(0.0, y_pos, short_name, fontsize=FONT_LABEL, va="center",
                   color=COLORS["real"], fontweight="medium")
         ax_l.text(5.1, y_pos, excerpt, fontsize=FONT_TICK, va="center",
-                  color=COLORS["annotation_dark"], style="italic")
+                  color=COLORS["annotation_dark"], style="normal")
         if i < len(novel_items) - 1:
             ax_l.axhline(y=y_pos + _ROW_STEP * 0.5, color=COLORS["border_light"],
                          linewidth=0.5, xmin=0, xmax=1)
@@ -387,7 +388,7 @@ def _draw_ood_showcase(fig: plt.Figure, region, ood_path: Path) -> None:
         ax_r.text(0.0, y_pos, label, fontsize=FONT_TICK, va="center",
                   color=COLORS["generated"], fontweight="medium")
         ax_r.text(5.0, y_pos, style_tag, fontsize=FONT_TICK, va="center",
-                  color=COLORS["annotation_dark"], style="italic")
+                  color=COLORS["annotation_dark"], style="normal")
         if i < len(ff_items) - 1:
             ax_r.axhline(y=y_pos + _ROW_STEP * 0.5, color=COLORS["border_light"],
                          linewidth=0.5, xmin=0, xmax=1)

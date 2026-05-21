@@ -131,8 +131,14 @@ def plot_expression_analysis(
     placed_points = []
     for i in valid_idx:
         xv, yv = real_cv[i], gen_cv[i]
-        # Skip if too close (in x) to an already-placed callout — threshold = 15% of x_span
-        if any(abs(xv - px) < 0.15 * x_span for px, _py in placed_points):
+        # Skip if too close to an already-placed callout in EITHER axis — labels
+        # are ~30-40 pt wide at 14 pt font, so a nearby-x-only check missed pairs
+        # that shared a similar y and collided horizontally.
+        if any(
+            (abs(xv - px) < 0.15 * x_span and abs(yv - py) < 0.08 * y_span)
+            or abs(xv - px) < 0.06 * x_span
+            for px, py in placed_points
+        ):
             continue
         x_frac = (xv - x_lo) / x_span
         y_frac = (yv - y_lo) / y_span

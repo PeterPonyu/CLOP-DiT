@@ -54,7 +54,7 @@ def _placeholder(ax: plt.Axes, title: str) -> None:
     ax.set_ylim(0, 1)
     ax.text(0.5, 0.5, "Data not available", transform=ax.transAxes,
             ha="center", va="center", fontsize=FONT_LABEL, color=COLORS["neutral"],
-            style="italic")
+            style="normal")
     ax.set_title(title, fontsize=FONT_TITLE, fontweight="normal")
     ax.set_xticks([])
     ax.set_yticks([])
@@ -210,13 +210,26 @@ def _panel_c(ax: plt.Axes, results_dir: Path) -> None:
 
     y = np.arange(len(prompts))
     bar_colors = [cat_colors.get(c, COLORS["neutral"]) for c in prompt_cats]
-    ax.barh(y, hit_rates, height=0.6, color=bar_colors, alpha=0.85,
-            edgecolor="white", linewidth=0.5)
+
+    # Draw bars; for zero-value entries draw an outline-only bar so the row is
+    # still visible — this surfaces genuine zeros rather than hiding them.
+    _ZERO_THRESH = 1e-6
+    for yi, (hr, col) in enumerate(zip(hit_rates, bar_colors)):
+        if hr > _ZERO_THRESH:
+            ax.barh(yi, hr, height=0.6, color=col, alpha=0.85,
+                    edgecolor="white", linewidth=0.5)
+        else:
+            # Outline bar for true zero — makes the row visible and annotated
+            ax.barh(yi, 0.02, height=0.6, color="none",
+                    edgecolor=col, linewidth=1.0, alpha=0.85)
+            ax.text(0.03, yi, "0.00", va="center", ha="left",
+                    fontsize=FONT_TICK_DENSE, color=col)
 
     ax.set_yticks(y)
     ax.set_yticklabels(prompts, fontsize=FONT_TICK_DENSE)
-    ax.set_xlabel("Hit Rate", fontsize=FONT_LABEL, labelpad=4)
-    ax.xaxis.set_label_coords(0.5, -0.20)
+    # Move xlabel higher (less negative pad) so it does not collide with legend
+    ax.set_xlabel("Hit Rate", fontsize=FONT_LABEL, labelpad=2)
+    ax.xaxis.set_label_coords(0.5, -0.14)
     ax.set_title("OOD Marker Hit Rate", fontsize=FONT_TITLE, fontweight="normal")
     ax.set_xlim(0, 1.05)
     ax.invert_yaxis()
@@ -224,8 +237,9 @@ def _panel_c(ax: plt.Axes, results_dir: Path) -> None:
 
     legend_patches = [Patch(facecolor=cat_colors[c], label=cat_labels[c], alpha=0.85)
                       for c in categories if any(cc == c for cc in prompt_cats)]
+    # Move legend further below xlabel so "Hit Rate" and "Novel" do not crowd
     ax.legend(handles=legend_patches, fontsize=FONT_LEGEND_DENSE, loc="upper center",
-              bbox_to_anchor=(0.5, -0.15), frameon=False, ncol=2)
+              bbox_to_anchor=(0.5, -0.22), frameon=False, ncol=2)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -284,30 +298,64 @@ def _panel_d(ax: plt.Axes, results_dir: Path) -> None:
 # Panel e: Validation synthesis radar
 # ─────────────────────────────────────────────────────────────
 
-def _load_radar_scores(results_dir: Path) -> dict[str, float]:
-    """Load validation metrics from downstream JSON files with hardcoded fallback."""
-    scores: dict[str, float] = {
-        "type_specificity": 0.369,
-        "text_steering": 0.810,
-        "de_concordance": 0.85,
-        "marker_recall": 0.30,
-        "ood_handling": 0.15,
-        "cross_dataset_corr": 0.40,
+def _load_radar_scores(results_dir: Path) -> dict[str, float | None]:
+    """Load validation metrics from downstream JSON files.
+
+    Missing inputs remain ``None`` so the radar can mark unavailable axes
+    explicitly rather than silently reusing stale default values.
+    """
+    scores: dict[str, float | None] = {
+        "type_specificity": None,
+        "text_steering": None,
+        "de_concordance": None,
+        "marker_recall": None,
+        "ood_handling": None,
+        "cross_dataset_corr": None,
     }
 
-    # Try to load dynamic values from result files
+    # Primary operating-point values: keep KNN and steering on the same
+    # high-fidelity regime instead of mixing the bootstrap reference config
+    # with high-fidelity defaults.
+    try:
+        multi_seed_path = results_dir / "multi_seed" / "multi_seed_report.json"
+        if multi_seed_path.exists():
+            with open(multi_seed_path) as f:
+                seed_data = json.load(f)
+            high_fidelity = seed_data.get("high_fidelity_regime", {})
+            per_seed = high_fidelity.get("per_seed", [])
+            seed_42 = next(
+                (row for row in per_seed if isinstance(row, dict) and row.get("seed") == 42),
+                None,
+            )
+            if seed_42 is None and per_seed:
+                seed_42 = per_seed[0]
+            aggregate = high_fidelity.get("aggregated", {})
+            if isinstance(seed_42, dict):
+                if "knn_top1" in seed_42:
+                    scores["type_specificity"] = round(float(seed_42["knn_top1"]), 3)
+                if "steering_accuracy" in seed_42:
+                    scores["text_steering"] = round(float(seed_42["steering_accuracy"]), 3)
+            if scores["type_specificity"] is None and isinstance(aggregate.get("knn_top1"), dict):
+                scores["type_specificity"] = round(float(aggregate["knn_top1"]["mean"]), 3)
+            if scores["text_steering"] is None and isinstance(aggregate.get("steering_accuracy"), dict):
+                scores["text_steering"] = round(float(aggregate["steering_accuracy"]["mean"]), 3)
+    except Exception:
+        pass
+
+    # Fallback reference configuration, used only if the primary operating
+    # point file is unavailable. Both values come from the same bootstrap run.
     try:
         ci_path = results_dir / "bootstrap_cis.json"
         if ci_path.exists():
             with open(ci_path) as f:
                 ci_data = json.load(f)
             metrics = ci_data.get("metrics", {})
-            if "knn_top1" in metrics:
+            if scores["type_specificity"] is None and "knn_top1" in metrics:
                 scores["type_specificity"] = round(
                     metrics["knn_top1"]["point_estimate"], 3)
-            if "steering_accuracy" in metrics:
+            if scores["text_steering"] is None and "steering" in metrics:
                 scores["text_steering"] = round(
-                    metrics["steering_accuracy"]["point_estimate"], 3)
+                    metrics["steering"]["point_estimate"], 3)
     except Exception:
         pass
 
@@ -384,20 +432,20 @@ def _panel_e(fig: plt.Figure, rect: list[float], results_dir: Path) -> plt.Axes:
     scores = _load_radar_scores(results_dir)
 
     axis_defs = [
-        ("Type\nSpecificity",     "type_specificity"),
-        ("Text\nSteering",        "text_steering"),
-        ("DE\nConcordance",       "de_concordance"),
-        ("Marker\nRecall",        "marker_recall"),
-        ("OOD\nHandling",         "ood_handling"),
-        ("Cross-dataset\nCorr.",  "cross_dataset_corr"),
+        ("Type\nSpec.",     "type_specificity"),
+        ("Text\nSteer.",    "text_steering"),
+        ("DE\nConcord.",    "de_concordance"),
+        ("Marker\nRecall",  "marker_recall"),
+        ("OOD\nHandle",     "ood_handling"),
+        ("X-dataset\nCorr.", "cross_dataset_corr"),
     ]
     n_axes = len(axis_defs)
     angles = [2 * math.pi * i / n_axes for i in range(n_axes)]
 
-    # Shrink the radar slightly inside its region to give axis-label
-    # clearance after the panel-H width was enlarged in the polish pass.
+    # Small inset to give axis-label clearance; with the manually-sized rect
+    # passed from figS01 we can keep the margin tight.
     x0, y0, w, h = rect
-    inset_rect = [x0 + 0.02, y0 + 0.02, w - 0.04, h - 0.04]
+    inset_rect = [x0 + 0.01, y0 + 0.01, w - 0.02, h - 0.02]
     ax = fig.add_axes(inset_rect, projection="polar")
 
     # Grid rings
@@ -410,7 +458,15 @@ def _panel_e(fig: plt.Figure, rect: list[float], results_dir: Path) -> plt.Axes:
         ax.plot([angle, angle], [0, 1.05], color="grey", lw=0.5, alpha=0.4)
 
     # CLOP-DiT polygon
-    radar_vals = [scores[key] for _, key in axis_defs]
+    missing_axes = [
+        label.replace("\n", " ")
+        for label, key in axis_defs
+        if scores[key] is None or not math.isfinite(float(scores[key]))
+    ]
+    radar_vals = [
+        float(scores[key]) if scores[key] is not None and math.isfinite(float(scores[key])) else 0.0
+        for _, key in axis_defs
+    ]
     vals_closed = radar_vals + [radar_vals[0]]
     angles_closed = angles + [angles[0]]
     ax.plot(angles_closed, vals_closed, color=COLORS["real"], lw=2.0, label="CLOP-DiT")
@@ -427,28 +483,44 @@ def _panel_e(fig: plt.Figure, rect: list[float], results_dir: Path) -> plt.Axes:
     for v, angle in zip(radar_vals, angles):
         ax.scatter([angle], [v], color=COLORS["real"], s=30, zorder=5)
 
-    # Axis labels — smaller font and pulled closer after panel-H widening,
-    # to avoid clipping against the enlarged region border.
+    if missing_axes:
+        ax.text(
+            0.5,
+            -0.34,
+            "Unavailable: " + ", ".join(missing_axes),
+            transform=ax.transAxes,
+            ha="center",
+            va="top",
+            fontsize=6,
+            color=COLORS["neutral"],
+        )
+
+    # Axis labels — small font, placed further from centre (1.0 + 0.14) so
+    # they clear the radar polygon without clipping at the region border.
     for i, ((label, _), angle) in enumerate(zip(axis_defs, angles)):
         ha = "center"
         if 0.1 < angle < math.pi - 0.1:
             ha = "left"
         elif angle > math.pi + 0.1:
             ha = "right"
-        ax.text(angle, 1.0 + 0.08, label, ha=ha, va="center",
-                fontsize=max(FONT_TICK_DENSE - 2, 7),
+        ax.text(angle, 1.0 + 0.14, label, ha=ha, va="center",
+                fontsize=max(FONT_TICK_DENSE - 3, 6),
                 color=COLORS["annotation_dark"])
 
-    ax.set_ylim(0, 1.15)
+    ax.set_ylim(0, 1.20)
     ax.set_yticks([0.2, 0.4, 0.6, 0.8, 1.0])
+    # Smaller radial tick labels and more padding so they don't overlap spokes
     ax.set_yticklabels(["0.2", "0.4", "0.6", "0.8", "1.0"],
-                        fontsize=max(FONT_SMALL, 10), color="grey")
+                        fontsize=max(FONT_SMALL - 1, 7), color="grey")
+    ax.tick_params(axis="y", pad=10)
     ax.set_xticks([])
     ax.spines["polar"].set_visible(False)
     ax.grid(False)
-    ax.set_title("Validation Radar", fontsize=FONT_TITLE, fontweight="normal", pad=16)
-    ax.legend(fontsize=FONT_LEGEND_DENSE, loc="lower left",
-              bbox_to_anchor=(-0.05, -0.28), frameon=False)
+    ax.set_title("Validation Radar", fontsize=FONT_TITLE, fontweight="normal", pad=20)
+    # Legend below the radar body, centred, small font so it doesn't crowd
+    ax.legend(fontsize=7, loc="upper center",
+              bbox_to_anchor=(0.5, -0.22), frameon=False, ncol=2,
+              columnspacing=0.8, handlelength=1.2)
 
     return ax
 

@@ -44,8 +44,23 @@ from .panel_geometry import (
 # With composed_scale=0.70, sizes must satisfy: size * 0.70 >= 7pt.
 # → min body text ~11pt, titles ~14pt, ticks ~11pt, legends ~11pt.
 VIS_STYLE: dict = {
-    "font.family": "sans-serif",
+    "font.family": "Arial",
     "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+    "mathtext.fontset": "custom",
+    "mathtext.rm": "Arial",
+    "mathtext.it": "Arial",
+    "mathtext.bf": "Arial:weight=bold",
+    "mathtext.bfit": "Arial:weight=bold",
+    "mathtext.sf": "Arial",
+    "mathtext.tt": "Arial",
+    "mathtext.cal": "Arial",
+    "mathtext.default": "regular",
+    "mathtext.fallback": "none",
+    "pdf.fonttype": 42,
+    "ps.fonttype": 42,
+    "svg.fonttype": "none",
+    "text.usetex": False,
+    "axes.unicode_minus": False,
     "font.size": 12,
     "axes.titlesize": 14,
     "axes.titleweight": "normal",
@@ -226,12 +241,30 @@ def register_project_fonts(font_dir: Optional[Path | str] = None) -> list[str]:
             root / "articles" / "fonts",
         ])
 
+    def _usable_font_file(fpath: Path) -> bool:
+        try:
+            from fontTools.ttLib import TTFont
+
+            font = TTFont(str(fpath), lazy=False)
+            if "glyf" in font:
+                _ = font["glyf"]
+            font.close()
+            return True
+        except Exception:
+            return False
+
     registered: list[str] = []
+    seen_names: set[str] = set()
     for base in candidates:
         if not base.exists() or not base.is_dir():
             continue
         for ext in ("*.ttf", "*.otf", "*.ttc"):
             for fpath in sorted(base.glob(ext)):
+                if fpath.name in seen_names:
+                    continue
+                seen_names.add(fpath.name)
+                if not _usable_font_file(fpath):
+                    continue
                 try:
                     fm.fontManager.addfont(str(fpath))
                     registered.append(str(fpath))

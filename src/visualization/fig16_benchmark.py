@@ -209,7 +209,7 @@ def plot_benchmark_panel(
                  color=COLORS["neutral"])
     for bar, score in zip(bars_common, scores_common):
         ax2.text(bar.get_width() + 0.01, bar.get_y() + bar.get_height() / 2,
-                 f"{score:.3f}", va="center", fontsize=FONT_SMALL, fontstyle="italic",
+                 f"{score:.3f}", va="center", fontsize=FONT_SMALL, fontstyle="normal",
                  color=COLORS["neutral"])
 
     ax2.set_xlim(0, max(scores) * 1.25)

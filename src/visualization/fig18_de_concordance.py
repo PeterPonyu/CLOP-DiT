@@ -152,7 +152,11 @@ def plot_de_concordance_panel(
                                     connectionstyle="arc3,rad=0.15"),
                     color=COLORS["annotation_dark"],
                     ha="center",
-                    bbox=dict(boxstyle="round,pad=0.15", fc="none", ec="none"),
+                    # White backing — the dense y≈0 scatter cluster made the
+                    # first gene label (e.g. ORM2) unreadable against the
+                    # orange/purple points at the zero line.
+                    bbox=dict(boxstyle="round,pad=0.18", fc="white", ec="none", alpha=0.92),
+                    zorder=7,
                 )
                 placed_points.append((x_pt, y_pt))
 
@@ -178,7 +182,7 @@ def plot_de_concordance_panel(
         max_lfc = max(abs(real_logfc).max(), abs(gen_logfc).max())
         ax.text(0.03, 0.20, f"Log FC (scGPT space)\nmax |logFC| \u2248 {max_lfc:.1e}",
                 transform=ax.transAxes, ha="left", va="bottom",
-                fontsize=FONT_ANNOTATION - 1, style="italic", color=COLORS["neutral"],
+                fontsize=FONT_ANNOTATION - 1, style="normal", color=COLORS["neutral"],
                 bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8, edgecolor="none"))
 
         # Horizontal colorbar below scatter

@@ -642,7 +642,7 @@ def plot_metrics_summary(
         ax4.grid(axis='both', alpha=0.15, linestyle='--')
         ax4.text(0.98, 0.02, "Lower = better (log scale)",
                  transform=ax4.transAxes, ha="right", va="bottom",
-                 fontsize=FONT_SMALL, color=COLORS["neutral"], style="italic")
+                 fontsize=FONT_SMALL, color=COLORS["neutral"], style="normal")
 
     else:
         ax4.text(0.5, 0.5, "No expression data", ha="center", va="center",

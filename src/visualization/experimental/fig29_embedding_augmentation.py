@@ -129,7 +129,7 @@ def plot_embedding_augmentation(
     ax_a.text(0.03, 0.05,
               f"n_rare={n_rare} types (<={rare_threshold} cells)",
               transform=ax_a.transAxes,
-              fontsize=FONT_SMALL, color=COLORS["neutral"], style="italic")
+              fontsize=FONT_SMALL, color=COLORS["neutral"], style="normal")
     style_axes(ax_a, kind="scatter")
 
     # ── Panel (b): Delta F1 bars ──
@@ -164,7 +164,7 @@ def plot_embedding_augmentation(
         ax_b.annotate("identical\n(saturated)",
                        xy=(mid_x, y_ann),
                        fontsize=FONT_ANNOTATION - 1, ha="center",
-                       style="italic", color=COLORS["neutral"])
+                       style="normal", color=COLORS["neutral"])
 
     # Add interpretation: deltas within CV noise band
     max_delta = max(abs(d) for d in delta_f1) if delta_f1 else 0
@@ -172,7 +172,7 @@ def plot_embedding_augmentation(
         ax_b.text(0.50, 0.02,
                   f"Gains < {max_delta:.1e} (within CV noise)",
                   transform=ax_b.transAxes, ha="center", va="bottom",
-                  fontsize=FONT_ANNOTATION - 1, style="italic",
+                  fontsize=FONT_ANNOTATION - 1, style="normal",
                   color=COLORS["neutral"])
 
     # ── Panel (c): Accuracy delta ──
@@ -208,7 +208,7 @@ def plot_embedding_augmentation(
         ax_c.annotate("identical\n(saturated)",
                        xy=(mid_x, y_ann),
                        fontsize=FONT_ANNOTATION - 1, ha="center",
-                       style="italic", color=COLORS["neutral"])
+                       style="normal", color=COLORS["neutral"])
 
     # Add interpretation: deltas within CV noise band
     max_da = max(abs(d) for d in delta_acc) if delta_acc else 0
@@ -216,7 +216,7 @@ def plot_embedding_augmentation(
         ax_c.text(0.50, 0.02,
                   f"Gains < {max_da:.1e} (within CV noise)",
                   transform=ax_c.transAxes, ha="center", va="bottom",
-                  fontsize=FONT_ANNOTATION - 1, style="italic",
+                  fontsize=FONT_ANNOTATION - 1, style="normal",
                   color=COLORS["neutral"])
 
     # Save

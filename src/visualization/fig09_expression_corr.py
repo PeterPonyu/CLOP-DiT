@@ -147,21 +147,29 @@ def plot_expression_correlation(
     y_lo, y_hi = ax1.get_ylim()
     x_span = x_hi - x_lo + 1e-12
     y_span = y_hi - y_lo + 1e-12
-    for i in valid_idx:
+    callout_offsets = [(-34, 30), (34, 4), (34, -26), (-34, -30)]
+    for rank, i in enumerate(valid_idx):
         xv, yv = real_means[i], gen_means[i]
         x_frac = (xv - x_lo) / x_span
         y_frac = (yv - y_lo) / y_span
         # Canonical adjacent-offset callout pattern shared across Figs 4E / 5A /
         # 10D / 10H. 14 pt + slightly larger offsets and padding per user spec.
-        dx_pt = -24 if x_frac > 0.62 else 18
-        dy_pt = -16 if y_frac > 0.62 else 14
+        dx_pt, dy_pt = callout_offsets[rank % len(callout_offsets)]
+        if x_frac > 0.82 and dx_pt > 0:
+            dx_pt = -abs(dx_pt)
+        if x_frac < 0.28 and dx_pt < 0:
+            dx_pt = abs(dx_pt)
+        if y_frac > 0.82 and dy_pt > 0:
+            dy_pt = -abs(dy_pt)
+        if y_frac < 0.18 and dy_pt < 0:
+            dy_pt = abs(dy_pt)
         ax1.annotate(
             gene_names[i],
             xy=(xv, yv),
             xycoords="data",
             xytext=(dx_pt, dy_pt),
             textcoords="offset points",
-            fontsize=14,
+            fontsize=12,
             ha="right" if dx_pt < 0 else "left",
             va="center",
             color="#333",
@@ -211,7 +219,7 @@ def plot_expression_correlation(
         # Annotation about expression space
         ax2.text(0.95, 0.05, "Expression in scGPT binned space",
                  transform=ax2.transAxes, ha="right", va="bottom",
-                 fontsize=9, style="italic", color=COLORS["neutral"])
+                 fontsize=9, style="normal", color=COLORS["neutral"])
     else:
         ax2.text(0.5, 0.5, "No per-type data", ha="center", va="center",
                  transform=ax2.transAxes)

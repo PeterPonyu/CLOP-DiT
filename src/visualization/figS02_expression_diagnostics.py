@@ -60,7 +60,7 @@ def _placeholder(ax: plt.Axes, title: str) -> None:
         transform=ax.transAxes,
         fontsize=FONT_LABEL,
         color=COLORS["neutral"],
-        style="italic",
+        style="normal",
     )
     ax.set_title(title, fontsize=_TITLE_SIZE, fontweight="normal")
     ax.set_xticks([])
@@ -316,7 +316,16 @@ def _panel_g(ax: plt.Axes, results_path: Path) -> None:
     order = ["full", "markers_only", "celltype_only", "no_markers", "no_celltype", "tissue_only", "organism_only", "disease_only"]
     present_variants = [v for v in order if v in results]
     ret_variants = [v for v in present_variants if v != "full"]
-    ret_labels = [_VARIANT_DISPLAY.get(v, v) for v in ret_variants]
+    compact_labels = {
+        "markers_only": "Markers",
+        "celltype_only": "Cell type",
+        "tissue_only": "Tissue",
+        "organism_only": "Organism",
+        "disease_only": "Disease",
+        "no_markers": "No markers",
+        "no_celltype": "No cell type",
+    }
+    ret_labels = [compact_labels.get(v, _VARIANT_DISPLAY.get(v, v)) for v in ret_variants]
     ret_vals = [results[v].get("knn_retention_pct", 0) for v in ret_variants]
     ret_y = np.arange(len(ret_labels))
     ret_colors = [COLORS["good"] if r >= 80 else (COLORS["warn"] if r >= 50 else COLORS["bad"]) for r in ret_vals]
@@ -357,8 +366,13 @@ def _panel_h(ax: plt.Axes, results_path: Path) -> None:
         ax.text(bar.get_x() + bar.get_width() / 2, val + 0.01, f"r={val:.3f}", ha="center", fontsize=FONT_ANNOTATION, color=COLORS["neutral"])
 
     driver = "Mean shift" if r_mean > r_var else "Variance shift"
-    ax.text(0.5, 0.95, f"Primary driver: {driver}", transform=ax.transAxes, ha="center", va="top", fontsize=max(FONT_SMALL + 1, 10), fontweight="bold", color=COLORS["annotation_dark"])
-    ax.set_ylim(0, max(vals) * 1.32 if max(vals) > 0 else 1.0)
+    ax.text(0.97, 0.95, f"Primary driver\n{driver}", transform=ax.transAxes,
+            ha="right", va="top",
+            fontsize=max(FONT_SMALL, 9), fontweight="bold",
+            color=COLORS["annotation_dark"],
+            bbox=dict(boxstyle="round,pad=0.22", facecolor="white",
+                      edgecolor="none", alpha=0.85))
+    ax.set_ylim(0, max(vals) * 1.42 if max(vals) > 0 else 1.0)
     style_axes(ax, "bar", ylabel="|Pearson r|", title="Separability Driver")
 
 
@@ -399,16 +413,16 @@ def _panel_j(ax: plt.Axes, results_path: Path) -> None:
         _placeholder(ax, "Per-Type Separability")
         return
 
-    type_names = [abbreviate_cell_type(n, max_len=14) for n, _ in sorted_types]
+    type_names = [abbreviate_cell_type(n, max_len=12) for n, _ in sorted_types]
     auc_vals = [v["auc"] for _, v in sorted_types]
     n_types = len(type_names)
-    step = max(1, n_types // 10)
+    step = max(1, int(np.ceil(n_types / 8)))
     thin = [type_names[i] if i % step == 0 or i == n_types - 1 else "" for i in range(n_types)]
     pt_colors = [COLORS["bad"] if a > 0.7 else (COLORS["warn"] if a > 0.6 else COLORS["good"]) for a in auc_vals]
 
     ax.barh(range(n_types), auc_vals, color=pt_colors, height=0.7, edgecolor="white", linewidth=0.3)
     ax.set_yticks(range(n_types))
-    ax.set_yticklabels(thin, fontsize=max(FONT_TICK - 1, 9))
+    ax.set_yticklabels(thin, fontsize=max(FONT_TICK - 2, 8))
     ax.invert_yaxis()
     ax.set_xticks([0.0, 0.5, 1.0])
     ax.axvline(0.5, color="#999", linestyle=":", linewidth=1.0, alpha=0.5, label="Chance (0.5)")
@@ -441,8 +455,11 @@ def plot_expression_diagnostics(output_dir: str | Path = "results/figures", dpi:
     # Top row: wider gap before b (col 1) to separate high-precision xticks
     # (1.0 vs 0.99990) and before c (col 2) barh yticklabels; extra right
     # gap before e (col 4) so panel e xticks don't run off the page edge
+    # Widened gap between B and C from 0.06 → 0.11: Panel B's x-axis
+    # 0.99990/0.99995/1.000 tick labels were extending right past the axis
+    # and touching Panel C's left edge (stacked-bar family labels).
     top_weights = [1.72, 1.16, 1.18, 1.14, 1.68]
-    top_cols = top.split_cols(top_weights, gap=[0.08, 0.06, 0.05, 0.08])
+    top_cols = top.split_cols(top_weights, gap=[0.08, 0.11, 0.07, 0.08])
     # Bottom row: wider gap before g (col 1) barh; between g/h (col 1/2)
     # where retention xtick '200' collides with adjacent bar labels; and
     # between i/j (col 3/4) for the per-type AUC yticks

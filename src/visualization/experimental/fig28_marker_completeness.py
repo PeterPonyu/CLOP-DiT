@@ -193,7 +193,7 @@ def plot_marker_completeness(
     ax_c.text(0.98, 0.02,
               "Effect sizes < 0.001 log2FC\n(scGPT decoder near-uniform)",
               transform=ax_c.transAxes, ha="right", va="bottom",
-              fontsize=FONT_ANNOTATION - 1, style="italic",
+              fontsize=FONT_ANNOTATION - 1, style="normal",
               color=COLORS["neutral"])
 
     # Save

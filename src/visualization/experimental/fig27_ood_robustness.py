@@ -153,7 +153,7 @@ def plot_ood_robustness(
     if n_ff_skipped > 0:
         ax_a.text(0.98, 0.95, f"Free-form prompts (n={n_ff_skipped}): no marker ground truth",
                   transform=ax_a.transAxes, ha="right", va="top",
-                  fontsize=FONT_ANNOTATION - 1, style="italic", color=COLORS["neutral"])
+                  fontsize=FONT_ANNOTATION - 1, style="normal", color=COLORS["neutral"])
 
     # Annotate bars with hit count / markers in vocab
     for i, (bar, n_v, hr) in enumerate(zip(bars, all_n_vocab, all_hit_rates)):
@@ -220,7 +220,7 @@ def plot_ood_robustness(
         if n == 0:
             ax_c.text(0.02, i, "N/A (no marker ground truth)",
                       ha="left", va="center", fontsize=FONT_ANNOTATION,
-                      style="italic", color=COLORS["neutral"])
+                      style="normal", color=COLORS["neutral"])
         else:
             ax_c.text(v + 0.02, i, f"{v:.2f} ({nh}/{n})",
                       ha="left", va="center", fontsize=FONT_ANNOTATION)

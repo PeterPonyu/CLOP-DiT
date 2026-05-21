@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import json
 import logging
-import textwrap
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -151,12 +150,13 @@ def _plot_classifier_metric_heatmap(
             )
     ax.set_xticks(range(3))
     ax.set_xticklabels(["Prec.", "Rec.", "F1"], fontsize=8)
+    # Use biology-aware abbreviation (e.g. "CD8+ cytotoxic T" → "CD8+ cyt. T")
+    # so two distinct types that both start with "Actively cycling …" don't
+    # collapse to the same "Actively cycling…" ellipsis.
+    from .style import abbreviate_cell_type as _abbr
     ax.set_yticks(range(len(display_names)))
     ax.set_yticklabels(
-        [
-            textwrap.shorten(str(name).replace("_", " "), width=18, placeholder="…")
-            for name in display_names
-        ],
+        [_abbr(str(name).replace("_", " "), max_len=22) for name in display_names],
         fontsize=7,
     )
     default_title = "Per-Type P/R/F1"
@@ -355,14 +355,10 @@ def plot_classifier_panel(
             color = "white" if val > 0.5 else "black"
             ax.text(i + 0.25, i, f"{val:.2f}", ha="left", va="center",
                     fontsize=8, color=color)
-    else:
-        diag_step = max(1, n_classes // 8)
-        safe_end = max(0, n_classes - diag_step)
-        for i in range(0, min(safe_end, cm_norm.shape[0]), diag_step):
-            val = cm_norm[i, i]
-            color = "white" if val > 0.5 else "black"
-            ax.text(i, i, f"{val:.1f}", ha="center", va="center",
-                    fontsize=FONT_HEATMAP_CELL, color=color)
+    # For n_classes > 30 (the 69-type panel) diagonal annotations were
+    # dropped: sampling every diag_step produced a handful of scattered
+    # "0.0 / 0.1 / 0.2" labels that looked like rendering debris against
+    # the heatmap. The colorbar already communicates the recall scale.
 
     add_colorbar_safe(im, ax=ax, shrink=0.5, pad=0.10, label="Recall",
                       orientation="horizontal", aspect=20)
@@ -562,8 +558,15 @@ def plot_clustering_and_classifier_merged(
             colorbar_pad=0.18,
         )
         if cm.shape[0] > 30:
-            tick_step = max(4, cm.shape[0] // 3)
-            tick_positions = list(range(0, cm.shape[0], tick_step))
+            tick_positions = sorted(
+                {
+                    0,
+                    cm.shape[0] // 4,
+                    cm.shape[0] // 2,
+                    (3 * cm.shape[0]) // 4,
+                    cm.shape[0] - 1,
+                }
+            )
             ax_q1.set_xticks(tick_positions)
             ax_q1.set_yticks(tick_positions)
             ax_q1.set_xticklabels([str(i) for i in tick_positions], fontsize=_F_ANNOT, rotation=45, ha="right")

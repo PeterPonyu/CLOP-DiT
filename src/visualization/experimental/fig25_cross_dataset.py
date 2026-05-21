@@ -117,7 +117,7 @@ def plot_cross_dataset_validation(
     ax_b.legend(fontsize=FONT_LEGEND, loc="upper right", frameon=False)
     ax_b.text(0.5, -0.22, "KS test: 0 genes similar across all tissues",
               transform=ax_b.transAxes, ha="center", fontsize=FONT_ANNOTATION,
-              style="italic", color=COLORS["neutral"])
+              style="normal", color=COLORS["neutral"])
     style_axes(ax_b)
 
     # ── Panel (c): Variance ratio + n_shared_genes ──
@@ -143,7 +143,7 @@ def plot_cross_dataset_validation(
     style_axes(ax_c)
     ax_c.text(0.5, -0.22, "Ratio << 1: scGPT decoder compresses variance",
               transform=ax_c.transAxes, ha="center", fontsize=FONT_ANNOTATION,
-              style="italic", color=COLORS["neutral"])
+              style="normal", color=COLORS["neutral"])
 
     # Note: per-bar value annotations omitted to avoid overlap with y-tick labels.
     # The log-scale x-axis and bar lengths directly encode the variance ratio magnitudes.

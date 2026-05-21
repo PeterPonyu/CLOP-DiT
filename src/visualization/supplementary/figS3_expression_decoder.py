@@ -103,11 +103,13 @@ def _panel_a(ax: plt.Axes, real_var: np.ndarray, gen_var: np.ndarray) -> None:
     ax.set_title("Variance Scatter", fontsize=FONT_TITLE, fontweight="normal")
     ax.tick_params(labelsize=FONT_TICK)
 
+    # Move annotation to bottom-right where scatter density is low and the
+    # identity line passes through the upper-left region.
     ax.text(
-        0.05, 0.68,
+        0.97, 0.06,
         f"r = {r:.3f}\nn = {valid.sum()} genes",
         transform=ax.transAxes, fontsize=FONT_LEGEND,
-        va="top", color=COLORS.get("annotation_dark", "#333"),
+        va="bottom", ha="right", color=COLORS.get("annotation_dark", "#333"),
     )
 
     style_axes(ax)
@@ -126,11 +128,12 @@ def _panel_b(ax: plt.Axes, real_var: np.ndarray, gen_var: np.ndarray) -> None:
             edgecolor="none", alpha=0.75)
     ax.axvline(0, color=COLORS.get("neutral", "#999"), ls="--", lw=1.2, label="Perfect match")
 
-    # Fraction of genes with >2-fold deficit (ratio < -1 in log2)
+    # Fraction of genes with >2-fold deficit (ratio < -1 in log2).
+    # Place annotation in lower-right where histogram density is low.
     frac_deficit = np.mean(log2_ratio < -1)
     ax.text(
-        0.97, 0.93,
-        f">2-fold deficit: {frac_deficit:.1%}\nof {valid.sum()} genes",
+        0.97, 0.38,
+        f">2-fold deficit:\n{frac_deficit:.1%} of {valid.sum()} genes",
         transform=ax.transAxes, fontsize=FONT_LEGEND,
         va="top", ha="right", color=COLORS.get("annotation_dark", "#333"),
     )
@@ -139,8 +142,10 @@ def _panel_b(ax: plt.Axes, real_var: np.ndarray, gen_var: np.ndarray) -> None:
     ax.set_ylabel("Gene count", fontsize=FONT_LABEL)
     ax.set_title("Variance Ratio", fontsize=FONT_TITLE, fontweight="normal")
     ax.tick_params(labelsize=FONT_TICK)
-    ax.legend(fontsize=FONT_LEGEND, frameon=False, loc="upper center",
-              bbox_to_anchor=(0.5, -0.15))
+    # Place "Perfect match" legend inside the panel at upper-left to avoid
+    # it crowding the x-axis below; frameon=False keeps it unobtrusive.
+    ax.legend(fontsize=FONT_LEGEND, frameon=False, loc="upper left",
+              bbox_to_anchor=(0.02, 0.98))
 
     style_axes(ax)
 
@@ -208,8 +213,11 @@ def _panel_d(ax: plt.Axes, metrics: dict, approaches: list[str]) -> None:
             Patch(facecolor=APPROACH_COLORS.get(a, "#999"),
                   label=APPROACH_LABELS.get(a, a))
         )
+    # Move legend further below (bbox y = -0.30) to clear the rightmost bars
+    # and the x-tick rotation labels, and switch to ncol=4 (all on one row)
+    # to minimise vertical extent.
     ax.legend(handles=legend_handles, fontsize=FONT_LEGEND, frameon=False,
-              loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=2)
+              loc="upper center", bbox_to_anchor=(0.5, -0.30), ncol=4)
 
     style_axes(ax)
 

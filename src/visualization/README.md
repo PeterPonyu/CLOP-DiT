@@ -1,6 +1,8 @@
 # src/visualization/
 
-Publication-quality figure generation for the CLOP-DiT manuscript. Produces 30 article figures (Figs 1–30), merged composite figures, and handles delivery to the LaTeX article directory.
+Publication-quality figure generation for the CLOP-DiT manuscript. Produces
+article-facing component PDFs, display-figure composition policy metadata, and
+delivery manifests for the paper-facing assets.
 
 ## Panel Modules
 
@@ -43,7 +45,11 @@ Each `panels_*.py` file renders one or more manuscript panels:
 
 ## Article Delivery
 
-`article_delivery.py` verifies that rendered PDFs exist in `results/figures/` and symlinks (or copies) them into `articles/figures/` for LaTeX inclusion. The 30 article figure basenames are defined as the canonical manifest inside this module.
+`article_delivery.py` verifies that rendered PDFs exist in `results/figures/`
+and symlinks (or copies) them into `articles/figures/` for LaTeX inclusion.
+It also defines the canonical display-figure grouping and article-component
+manifest that the SciVCD sandbox reuses as its default figure-asset fixture
+suite.
 
 ## Utilities
 

@@ -102,7 +102,7 @@ def plot_ood_showcase(
         ax_a.text(0.0, i, type_name, fontsize=FONT_LABEL - 1, va="center",
                   color=color, fontweight="medium")
         ax_a.text(4.5, i, excerpt, fontsize=FONT_LEGEND_DENSE, va="center",
-                  color=COLORS["annotation_dark"], style="italic")
+                  color=COLORS["annotation_dark"], style="normal")
         # Separator line
         if i < len(novel_types) - 1:
             ax_a.axhline(y=i + 0.5, color=COLORS["border_light"], linewidth=0.5,
@@ -134,7 +134,7 @@ def plot_ood_showcase(
         ax_b.text(0.0, i, display_id, fontsize=FONT_LABEL - 1, va="center",
                   color=COLORS["generated"], fontweight="medium")
         ax_b.text(3.5, i, excerpt, fontsize=FONT_LEGEND_DENSE, va="center",
-                  color=COLORS["annotation_dark"], style="italic")
+                  color=COLORS["annotation_dark"], style="normal")
         if i < len(free_form) - 1:
             ax_b.axhline(y=i + 0.5, color=COLORS["border_light"], linewidth=0.5,
                          xmin=0, xmax=1)

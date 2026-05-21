@@ -104,12 +104,19 @@ def plot_supplementary_validation(
     ood_path = Path("results/ood_evaluation/ood_results.json")
     real_var, gen_var, aug_data, dec_metrics, dec_approaches = _load_expression_decoder_inputs()
 
-    fig = plt.figure(figsize=(14.6, 16.6))
-    layout = bind_figure_region(fig, (0.06, 0.07, 0.99, 0.97))
+    # Canvas height increased from 16.6" → 20" to accommodate 6 rows rather
+    # than 5. Row 4 used to cram 5 panels (d, e, f, i, j) into one row at
+    # only ~2.4" width each; splitting into two 3-panel rows gives each
+    # panel ~4.2" and restores legibility of axis labels + titles.
+    fig = plt.figure(figsize=(14.6, 20.0))
+    layout = bind_figure_region(fig, (0.06, 0.055, 0.99, 0.97))
 
-    # 5 explicit rows — panel a gets extra height; last gap wider for xticklabels
-    row_a, row_b, row_c, row_4, row_5 = layout.split_rows(
-        [1.45, 0.78, 0.82, 0.82, 0.82], gap=[0.05, 0.05, 0.09, 0.11],
+    # Top gaps tightened (C→4 was 0.07 and too open) but gaps 4→5 and 5→6
+    # kept at 0.07 because Panel D's bottom legend ("Pearson r / Spearman ρ")
+    # and Panel G's bottom legend need clearance from the next row's titles.
+    row_a, row_b, row_c, row_4, row_5, row_6 = layout.split_rows(
+        [1.45, 0.78, 0.82, 1.00, 1.00, 1.35],
+        gap=[0.035, 0.035, 0.035, 0.075, 0.075],
     )
 
     # Row 1: panel a (ablation heatmap — tall for many y-labels)
@@ -135,6 +142,18 @@ def plot_supplementary_validation(
         "heavier output scaling": "heavy out scl",
         "blind smoothing": "blind smth",
         "regular color smoothing": "reg col smth",
+        # Temperature / regularization variants seen in VCD reports
+        "fixed temperature": "fixed temp",
+        "no regularization": "no reg.",
+        "no regularizat": "no reg.",
+        "fixed temperat": "fixed temp",
+        "low temperature": "low temp",
+        "low temperatur": "low temp",
+        "high temperature": "high temp",
+        "smaller projection": "small proj",
+        "larger projection": "large proj",
+        "wider projection": "wider proj",
+        "narrower projection": "narrow proj",
     }
     from .style import abbreviate_cell_type as _abbr
     _new_axes = [a for a in fig.axes if a not in _axes_before]
@@ -166,65 +185,70 @@ def plot_supplementary_validation(
     # Row 3: panel c (OOD table)
     _draw_ood_showcase(fig, row_c, ood_path)
 
-    # Row 4: d, e, f, i, j — variable gaps: wider before e (heatmap yticklabels)
-    #   and before f (barh yticklabels) to prevent masking neighbours
     _lbl_x = -0.08
-    d_r, e_r, f_r, i_r, j_r = row_4.split_cols(
-        [1.08, 1.04, 1.06, 1.02, 1.02], gap=[0.10, 0.08, 0.08, 0.06],
-    )
+    _row_lbl_y = 1.14
 
-    _row4_lbl_y = 1.16  # row 4 labels higher to clear titles at 18pt
+    # Row 4: d, e, f — 3 wider panels (~4.2" each instead of old ~2.4")
+    d_r, e_r, f_r = row_4.split_cols(
+        [1.05, 0.93, 1.02], gap=[0.105, 0.075],
+    )
 
     ax_d = d_r.add_axes(fig)
     _downstream_panel_d(ax_d, results_dir)
-    add_panel_label(ax_d, "d", x=_lbl_x, y=_row4_lbl_y, fontsize=_LABEL_SIZE)
+    add_panel_label(ax_d, "d", x=_lbl_x, y=_row_lbl_y, fontsize=_LABEL_SIZE)
 
-    ax_e = e_r.add_axes(fig)
+    ax_e = e_r.inset(left=0.040, right=0.010).add_axes(fig)
     _downstream_panel_e(fig, ax_e, results_dir)
-    add_panel_label(ax_e, "e", x=_lbl_x, y=_row4_lbl_y, fontsize=_LABEL_SIZE)
+    add_panel_label(ax_e, "e", x=_lbl_x, y=_row_lbl_y, fontsize=_LABEL_SIZE)
 
     ax_f = f_r.add_axes(fig)
     _downstream_panel_f(ax_f, results_dir)
-    add_panel_label(ax_f, "f", x=_lbl_x, y=_row4_lbl_y, fontsize=_LABEL_SIZE)
+    add_panel_label(ax_f, "f", x=_lbl_x, y=_row_lbl_y, fontsize=_LABEL_SIZE)
+
+    # Row 5: g, i, j — 3 panels with equal width
+    g_r, i_r, j_r = row_5.split_cols(
+        [1.0, 1.0, 1.0], gap=0.08,
+    )
+
+    ax_g = g_r.add_axes(fig)
+    _downstream_panel_g(ax_g, results_dir)
+    add_panel_label(ax_g, "g", x=_lbl_x, y=_row_lbl_y, fontsize=_LABEL_SIZE)
 
     ax_i = i_r.add_axes(fig)
     if real_var is not None and gen_var is not None:
         _expr_panel_i(ax_i, real_var, gen_var)
-        add_panel_label(ax_i, "i", x=_lbl_x, y=_row4_lbl_y, fontsize=_LABEL_SIZE)
+        add_panel_label(ax_i, "i", x=_lbl_x, y=_row_lbl_y, fontsize=_LABEL_SIZE)
     else:
         _expr_placeholder(ax_i, "Variance Scatter", "i", label_fontsize=_LABEL_SIZE)
 
     ax_j = j_r.add_axes(fig)
     if real_var is not None and gen_var is not None:
         _expr_panel_j(ax_j, real_var, gen_var)
-        add_panel_label(ax_j, "j", x=_lbl_x, y=_row4_lbl_y, fontsize=_LABEL_SIZE)
+        add_panel_label(ax_j, "j", x=_lbl_x, y=_row_lbl_y, fontsize=_LABEL_SIZE)
     else:
         _expr_placeholder(ax_j, "Variance Ratio", "j", label_fontsize=_LABEL_SIZE)
 
-    # Row 5: g, h, k, l — 4 panels across full width
-    g_r, h_r, k_r, l_r = row_5.split_cols(
-        [1.04, 1.44, 1.02, 1.02], gap=0.06,
+    # Row 6: h, k, l — radar (H) now properly square. Row 6 weight 1.35 gives
+    # row height ~3.1", matched with ~4.2" panel width → radar circle
+    # diameter ~3.1" with only modest horizontal whitespace.
+    h_r, k_r, l_r = row_6.split_cols(
+        [1.0, 1.0, 1.0], gap=0.08,
     )
 
-    ax_g = g_r.add_axes(fig)
-    _downstream_panel_g(ax_g, results_dir)
-    add_panel_label(ax_g, "g", x=0.00, y=1.12, fontsize=_LABEL_SIZE)
-
-    # Use full region — no inset shrink — so radar fills the space
     ax_h = _downstream_panel_h(fig, list(h_r.as_tuple()), results_dir)
     add_panel_label(ax_h, "h", x=_lbl_x, y=_LABEL_Y, fontsize=_LABEL_SIZE)
 
     ax_k = k_r.add_axes(fig)
     if aug_data is not None:
         _expr_panel_k(ax_k, aug_data)
-        add_panel_label(ax_k, "k", x=0.05, y=1.16, fontsize=_LABEL_SIZE)
+        add_panel_label(ax_k, "k", x=_lbl_x, y=_row_lbl_y, fontsize=_LABEL_SIZE)
     else:
         _expr_placeholder(ax_k, "Embedding Augmentation", "k", label_fontsize=_LABEL_SIZE)
 
     ax_l = l_r.add_axes(fig)
     if len(dec_approaches) >= 2:
         _expr_panel_l(ax_l, dec_metrics, dec_approaches)
-        add_panel_label(ax_l, "l", x=0.05, y=1.16, fontsize=_LABEL_SIZE)
+        add_panel_label(ax_l, "l", x=_lbl_x, y=_row_lbl_y, fontsize=_LABEL_SIZE)
     else:
         _expr_placeholder(ax_l, "Decoder Comparison", "l", label_fontsize=_LABEL_SIZE)
 
