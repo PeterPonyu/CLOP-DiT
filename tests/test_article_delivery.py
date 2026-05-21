@@ -195,6 +195,51 @@ class TestDeliverFigures:
         )
 
 
+class TestFigureOrganizationPolicy:
+    """Docs and figure policy helpers must stay in sync."""
+
+    def test_display_group_constants_cover_all_article_components(self):
+        from src.visualization.article_delivery import (
+            ARTICLE_DISPLAY_FIGURE_COMPONENTS,
+            ARTICLE_FIGURE_BASENAMES,
+            COMPOSED_MULTI_PANEL_STEMS,
+            MAIN_ARTICLE_DISPLAY_STEMS,
+            SUPPLEMENTARY_DISPLAY_STEMS,
+            UNIFIED_POLICY_STEMS,
+        )
+
+        flattened = [
+            basename
+            for basenames in ARTICLE_DISPLAY_FIGURE_COMPONENTS.values()
+            for basename in basenames
+        ]
+        assert flattened == ARTICLE_FIGURE_BASENAMES
+        assert set(MAIN_ARTICLE_DISPLAY_STEMS).isdisjoint(SUPPLEMENTARY_DISPLAY_STEMS)
+        assert set(MAIN_ARTICLE_DISPLAY_STEMS) | set(SUPPLEMENTARY_DISPLAY_STEMS) == set(
+            ARTICLE_DISPLAY_FIGURE_COMPONENTS
+        )
+        assert set(COMPOSED_MULTI_PANEL_STEMS).issubset(ARTICLE_DISPLAY_FIGURE_COMPONENTS)
+        assert set(UNIFIED_POLICY_STEMS).issubset(ARTICLE_DISPLAY_FIGURE_COMPONENTS)
+
+    def test_figure_organization_doc_mentions_current_manifest(self):
+        from src.visualization.article_delivery import (
+            ARTICLE_DISPLAY_FIGURE_COMPONENTS,
+            ARTICLE_FIGURE_BASENAMES,
+        )
+
+        doc_path = Path(__file__).parent.parent / "docs" / "figure_organization.md"
+        assert doc_path.exists(), f"Missing figure organization doc: {doc_path}"
+        doc = doc_path.read_text()
+
+        assert "**25 article-facing component PDFs**" in doc
+        for stem, components in ARTICLE_DISPLAY_FIGURE_COMPONENTS.items():
+            assert f"`{stem}`" in doc, f"Display group missing from doc: {stem}"
+            for basename in components:
+                assert f"`{basename}`" in doc, f"Component missing from doc: {basename}"
+        for basename in ARTICLE_FIGURE_BASENAMES:
+            assert basename.startswith("fig")
+
+
 class TestArticlePresentationPolicy:
     """Presentation policy: article-facing panels must not put statistics in legend titles."""
 
