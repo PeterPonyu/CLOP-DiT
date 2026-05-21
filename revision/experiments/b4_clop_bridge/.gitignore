@@ -1,8 +1,0 @@
-# Symlinked cache dirs (contain symlinks to data/cached_latents/)
-cache_abl_baseline/
-cache_no_cohesion/
-cache_no_cell_noise/
-
-# Large binary embeddings (reproducible from checkpoints)
-results_*/generated_embeddings.npy
-results_*/generated_labels.npy

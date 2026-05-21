@@ -1,8 +1,0 @@
-B1 — decoder-level (expression-scale) variance baselines
-=========================================================
-
-generator                                              r_mean   r_var  med_var_ratio   w_mean_r_var  w_med_ratio  w_types+
-----------------------------------------------------------------------------------------------------------------------------------
-CLOP-DiT                                               +1.000  +0.988          1.759         +0.827        1.134    100.0%
-Gaussian-per-type (diagonal, expression-scale oracle   +1.000  +0.999          1.001         +0.957        0.941    100.0%
-Pooled Gaussian (CFG = 0 stand-in, expression-scale)   +1.000  +0.999          0.999         +0.797        1.790    100.0%

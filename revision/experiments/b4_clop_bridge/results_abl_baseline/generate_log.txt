@@ -1,9 +1,0 @@
-2026-04-15 23:19:20,507 [INFO] __main__: Resolved cond_dim=512 from checkpoint
-2026-04-15 23:19:20,640 [INFO] __main__: Loaded EMA weights
-2026-04-15 23:19:20,657 [INFO] __main__: DiT checkpoint epoch=295, metrics={'val_loss': 0.022587842928866547, 'val_cosine_sim': 0.9899797787268957}
-2026-04-15 23:19:20,658 [INFO] __main__: Generating 100 cells × 69 types = 6900 total  [mode=condition_noise, cfg=1.5, steps=20
-2026-04-15 23:19:20,658 [INFO] __main__:   noise_scale=0.03
-2026-04-15 23:19:48,343 [INFO] __main__: Generated: shape=(6900, 512), norm_mean=1.0000, norm_std=0.000000
-2026-04-15 23:19:48,347 [INFO] __main__: Saved generated embeddings → revision/experiments/b4_clop_bridge/results_abl_baseline/generated_embeddings.npy
-2026-04-15 23:19:48,347 [INFO] __main__: Saved generation metadata → revision/experiments/b4_clop_bridge/results_abl_baseline/generation_metadata.json
-2026-04-15 23:19:50,325 [INFO] __main__: Overall metrics: FD=0.1750, Coverage=0.1440, MMD=0.000014
