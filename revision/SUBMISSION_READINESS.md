@@ -80,3 +80,26 @@ Holding another round to close R3.1 would require securing ≤18 engineer-days o
 - Re-run `sha256sum -c revision/prerevision_baseline/artifact_hashes.txt | grep -v ': OK$' | head` — must return empty.
 - Re-run `bash revision/response_letter/build.sh` on a clean checkout to confirm PDFs regenerate deterministically.
 - Confirm the manuscript `.tex` used for upload matches the local gitignored copy (checksum + visual spot-check on Figures 1a/1b).
+
+---
+
+## Refreshed 2026-04-21
+
+**Reconciliation against current state.** Four deltas since 2026-04-16:
+
+1. **Manuscript file rename.** All references above to `clop_dit_genes.tex` / `clop_dit_genes.pdf` (and the corresponding diff) should be read as `clop_dit_manuscript.tex` / `clop_dit_manuscript.pdf` (diff: `clop_dit_manuscript.diff.{tex,pdf}`). The rename happened between 2026-04-16 and today; the 16/16 reviewer-comment closure table above is unchanged in substance.
+2. **Figure polish 2026-04-20/21.** Commit `cad48ff` ("deep figure polish — 13 user-flagged rendering fixes") plus an additional 2026-04-21 pass fixed 6 further rendering issues in: `fig03c_text_cell_alignment`, `fig05a_expression_analysis`, `fig08b_de_concordance`, `fig09a_variance_matching`, `fig09b_gene_gene_correlation`, and `figS_lane_c_zero_shot`. No scientific claim changed; these were overlap/bbox/legend-placement fixes only. Source scripts regenerated all figures cleanly; manuscript PDF and diff PDF rebuilt with 0 unresolved `\ref`s.
+3. **Figure-internal leakage fixed.** `figS_lane_a2_organism_stratified.pdf` previously embedded the suptitle `"Organism-stratified generation quality (Lane A2)"` — stripped today; see `revision/LEAKAGE_REAUDIT.md` refresh section. The packet is now clean of all internal workflow labels in both body and figure content.
+4. **SHIP decision holds.** Nothing in the 16/16 comment-closure table above has been invalidated. R3.1 (strict OOD via CellxGene Census) remains the documented future-work item with paste-ready limitations language; all new figure edits are orthogonal to R3.1's evidence base.
+
+**Submission packet inventory (current paths):**
+
+- Manuscript: `revision/manuscripts/v2_revision/clop_dit_manuscript.tex` / `clop_dit_manuscript.pdf` (43 pages, 3.80 MB)
+- Diff manuscript: `revision/manuscripts/diff/clop_dit_manuscript.diff.pdf` (3.85 MB, 0 unresolved refs)
+- Rebuttal letter: `revision/response_letter/rebuttal_letter.pdf` (unchanged since 2026-04-16)
+- Cover letter: `revision/response_letter/revision_cover_letter.pdf` (working-tree edits present in .tex; same .pdf as 2026-04-16)
+- Checksums: `revision/SUBMISSION_CHECKSUMS.txt` (refreshed 2026-04-21)
+- Tarball: `revision/submission_bundle_v1.0.0.tar.gz` (5 entries, ~7.45 MB, freshly repacked)
+
+**Refreshed verdict:** **SHIP** still holds. No new reviewer concerns surfaced; only housekeeping closure items addressed since 2026-04-16.
+
