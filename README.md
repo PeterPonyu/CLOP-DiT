@@ -66,7 +66,7 @@ The trained model checkpoints (the CLOP aligner and the DiT generator) and the p
 
 ```bibtex
 @article{fu2026clopdit,
-  author  = {Fu, Zeyu and Zheng, JianXu and Fu, Jiawei},
+  author  = {Fu, Zeyu},
   title   = {{CLOP-DiT}: Text-Conditioned Single-Cell Latent Generation
              via Contrastive Language--Omics Pretraining and
              Diffusion Transformers},
@@ -81,4 +81,3 @@ Released under the MIT License — see `LICENSE`.
 ## Contact
 
 Zeyu Fu — fuzeyu09@gmail.com
-Jiawei Fu — fjw813130855@163.com
