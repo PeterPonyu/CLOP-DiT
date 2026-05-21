@@ -22,6 +22,7 @@ from scivcd.core import (
 
 _BOLD_WEIGHTS = {"bold", "heavy", "semibold", "extra bold", "extra-bold",
                  600, 700, 800, 900}
+_ELLIPSIS_TOKENS = ("\u2026", "...")
 
 
 def _is_bold(artist: Any) -> bool:
@@ -199,6 +200,145 @@ register(CheckSpec(
 
 
 # ---------------------------------------------------------------------------
+# label_string_ellipsis
+# ---------------------------------------------------------------------------
+
+def _looks_like_truncated_label(text: str) -> bool:
+    """Heuristic for pre-truncated label strings.
+
+    We intentionally only flag explicit ellipsis tokens, not every shortened
+    abbreviation. This keeps the rule low-noise and focused on the exact class
+    of publication-polish issues surfaced in visual review.
+    """
+    text = text.strip()
+    if not text:
+        return False
+    return any(token in text for token in _ELLIPSIS_TOKENS)
+
+
+def _fire_label_string_ellipsis(
+    fig: Any, config: ScivcdConfig
+) -> list[Finding]:
+    """Flag text labels that already contain a visible ellipsis marker."""
+    out: list[Finding] = []
+    seen = set()
+    try:
+        artists = list(fig.findobj(Text))
+    except Exception:
+        return out
+    for artist in artists:
+        if id(artist) in seen:
+            continue
+        seen.add(id(artist))
+        if _is_panel_label(artist):
+            continue
+        try:
+            text = (artist.get_text() or "").strip()
+        except Exception:
+            continue
+        if not _looks_like_truncated_label(text):
+            continue
+        out.append(Finding(
+            check_id="label_string_ellipsis",
+            severity=Severity.LOW,
+            category=Category.TYPOGRAPHY,
+            stage=Stage.TIER2,
+            message=(
+                f"text label '{text[:40]}' contains a visible ellipsis marker; "
+                "pre-truncated labels often hide publication-readiness issues"
+            ),
+            call_site=None,
+            fix_suggestion=(
+                "prefer semantic abbreviation, numeric/index indirection, or "
+                "more panel space instead of baking ellipses into the figure label"
+            ),
+            artist=artist,
+        ))
+    return out
+
+
+register(CheckSpec(
+    id="label_string_ellipsis",
+    severity=Severity.LOW,
+    category=Category.TYPOGRAPHY,
+    stage=Stage.TIER2,
+    fire=_fire_label_string_ellipsis,
+    description="Text label contains a visible ellipsis / pre-truncation marker",
+))
+
+
+# ---------------------------------------------------------------------------
+# effective_font_too_small
+# ---------------------------------------------------------------------------
+
+def _text_role(artist: Any) -> str:
+    gid = _gid(artist)
+    if _is_panel_label(artist):
+        return "panel_label"
+    if gid.startswith("tick"):
+        return "tick"
+    if gid.startswith("legend"):
+        return "legend"
+    try:
+        axes = getattr(artist, "axes", None)
+        if axes is not None and artist in (axes.title, axes.xaxis.label, axes.yaxis.label):
+            return "title" if artist is axes.title else "axis_label"
+    except Exception:
+        pass
+    return "annotation"
+
+
+def _fire_effective_font_too_small(fig: Any, config: ScivcdConfig) -> list[Finding]:
+    out: list[Finding] = []
+    composed_scale = float(getattr(config, "composed_scale", 1.0))
+    final_scale = float(getattr(config, "final_print_scale", 1.0))
+    floors = getattr(config, "effective_font_floors", {}) or {}
+    seen = set()
+    try:
+        artists = list(fig.findobj(Text))
+    except Exception:
+        return out
+    for artist in artists:
+        if id(artist) in seen:
+            continue
+        seen.add(id(artist))
+        try:
+            text = (artist.get_text() or "").strip()
+            source = float(artist.get_fontsize())
+        except Exception:
+            continue
+        if not text:
+            continue
+        role = _text_role(artist)
+        floor = float(floors.get(role, floors.get("annotation", 8.0)))
+        effective = source * composed_scale * final_scale
+        if effective >= floor:
+            continue
+        out.append(Finding(
+            check_id="effective_font_too_small",
+            severity=Severity.MEDIUM,
+            category=Category.TYPOGRAPHY,
+            stage=Stage.TIER2,
+            message=f"{role} '{text[:30]}' effective font {effective:.1f}pt below floor {floor:.1f}pt",
+            fix_suggestion="increase source fontsize or reduce composed/final downscaling for this text role",
+            evidence={"role": role, "source_font_pt": source, "component_to_composed_scale": composed_scale, "final_print_scale": final_scale, "effective_font_pt": round(effective, 3), "role_floor_pt": floor},
+            artist=artist,
+        ))
+    return out
+
+
+register(CheckSpec(
+    id="effective_font_too_small",
+    severity=Severity.MEDIUM,
+    category=Category.TYPOGRAPHY,
+    stage=Stage.TIER2,
+    fire=_fire_effective_font_too_small,
+    description="Text effective font size after composition/final scaling is too small",
+    config_keys=("composed_scale", "final_print_scale", "effective_font_floors"),
+))
+
+
+# ---------------------------------------------------------------------------
 # bold_subpanel_title
 # ---------------------------------------------------------------------------
 
@@ -250,5 +390,7 @@ register(CheckSpec(
 __all__ = [
     "_fire_inconsistent_typography",
     "_fire_canvas_scale_font_too_small",
+    "_fire_label_string_ellipsis",
+    "_fire_effective_font_too_small",
     "_fire_bold_subpanel_title",
 ]

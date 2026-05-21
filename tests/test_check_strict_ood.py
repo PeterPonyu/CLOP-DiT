@@ -21,10 +21,7 @@ def write_manifest(path: Path, rows: list[dict[str, str]]) -> None:
         writer.writerows(rows)
 
 
-def test_templates_exist() -> None:
-    assert (REPO_ROOT / "data" / "processed_h5ad_revision" / "README.md").exists()
-    assert (REPO_ROOT / "data" / "processed_h5ad_revision" / "MANIFEST.csv").exists()
-    assert (REPO_ROOT / "data" / "processed_h5ad_revision" / "label_bridge.csv").exists()
+def test_script_exists() -> None:
     assert SCRIPT.exists()
 
 
@@ -44,7 +41,7 @@ def test_strict_ood_check_passes_when_heldout_tissues_are_eval_only(tmp_path: Pa
             },
             {
                 "dataset_id": "eval-kidney",
-                "source_path": "data/processed_h5ad_revision/eval_kidney.h5ad",
+                "source_path": "data/processed_h5ad/eval_kidney.h5ad",
                 "organism": "human",
                 "tissue": "kidney",
                 "split": "heldout",
@@ -81,7 +78,7 @@ def test_strict_ood_check_fails_on_train_leakage(tmp_path: Path) -> None:
             },
             {
                 "dataset_id": "eval-kidney",
-                "source_path": "data/processed_h5ad_revision/eval_kidney.h5ad",
+                "source_path": "data/processed_h5ad/eval_kidney.h5ad",
                 "organism": "human",
                 "tissue": "kidney",
                 "split": "heldout",

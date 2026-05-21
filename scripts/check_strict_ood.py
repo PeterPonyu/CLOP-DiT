@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check strict-OOD tissue separation from a revision-side manifest.
+"""Check strict-OOD tissue separation from a CSV dataset manifest.
 
 The check is intentionally simple and repo-local:
 
@@ -8,7 +8,7 @@ The check is intentionally simple and repo-local:
 
 Example:
     python scripts/check_strict_ood.py \
-        --manifest data/processed_h5ad_revision/MANIFEST.csv \
+        --manifest data/manifest.csv \
         --heldout kidney --heldout "distal airway"
 """
 
@@ -117,7 +117,7 @@ def parse_csv_set(value: str | None, fallback: set[str]) -> set[str]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Check strict-OOD train/eval leakage from a revision manifest.")
+    parser = argparse.ArgumentParser(description="Check strict-OOD train/eval leakage from a dataset manifest.")
     parser.add_argument("--manifest", required=True, type=Path)
     parser.add_argument("--heldout", action="append", default=[], help="Repeatable held-out tissue name.")
     parser.add_argument("--heldout-csv", default="", help="Comma-separated held-out tissue names.")

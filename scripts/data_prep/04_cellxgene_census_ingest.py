@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
-"""CellxGene Census strict-OOD tissue ingester (Lane C).
+"""CellxGene Census tissue ingester for out-of-distribution evaluation.
 
 Pulls healthy, normal-tissue cells from CellxGene Census for a target tissue
-(kidney / testis / cerebellum) that is provably absent from the CLOP-DiT
-training corpus. Writes a single h5ad in the shape the existing
-data_prep pipeline expects (raw counts present, gene symbols, cell_type
-labels), so downstream QC + scGPT caching + CLOP eval can reuse
-scripts/data_prep/00 + 03.
+(kidney / testis / cerebellum). Writes a single h5ad in the shape the
+existing data-preparation pipeline expects: raw counts present, gene symbols,
+and cell_type labels. Downstream QC, scGPT caching, and evaluation can then
+reuse the existing data-preparation scripts.
 
 Usage:
     python scripts/data_prep/04_cellxgene_census_ingest.py \\
         --tissue kidney --max-cells 80000 \\
-        --output data/processed_h5ad_revision/cellxgene_census_kidney.h5ad
+        --output data/processed_h5ad/cellxgene_census_kidney.h5ad
 
 Design choices:
     - Census version pinned (stable snapshot) for reproducibility.

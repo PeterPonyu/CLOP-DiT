@@ -35,6 +35,10 @@ def _skip_if_no_typography(report):
         pytest.skip("No TYPOGRAPHY checks registered yet")
 
 
+def _has_check(report, check_id: str) -> bool:
+    return any(f.check_id == check_id for f in report.findings)
+
+
 # ---------------------------------------------------------------------------
 # minimum_font_size — labels below the publication floor
 # ---------------------------------------------------------------------------
@@ -134,6 +138,33 @@ class TestTypographyTextTruncation:
 
 
 # ---------------------------------------------------------------------------
+# label_string_ellipsis — pre-truncated labels should be visible to QA
+# ---------------------------------------------------------------------------
+
+class TestTypographyLabelStringEllipsis:
+    def test_positive_visible_ellipsis_in_tick_label(self):
+        fig, ax = plt.subplots(figsize=(5, 4))
+        ax.bar(range(3), [1, 2, 3])
+        ax.set_xticks(range(3))
+        ax.set_xticklabels(["B cell", "Antibody-secre…", "T cell"], fontsize=10)
+        fig.canvas.draw()
+        report = check(fig)
+        plt.close(fig)
+        _skip_if_no_typography(report)
+        assert _has_check(report, "label_string_ellipsis")
+
+    def test_negative_abbreviated_but_not_ellipsized_label(self):
+        fig, ax = plt.subplots(figsize=(5, 4))
+        ax.bar(range(3), [1, 2, 3])
+        ax.set_xticks(range(3))
+        ax.set_xticklabels(["B lymph.", "Antibody-sec", "T cell"], fontsize=10)
+        fig.canvas.draw()
+        report = check(fig)
+        plt.close(fig)
+        assert not _has_check(report, "label_string_ellipsis")
+
+
+# ---------------------------------------------------------------------------
 # bold_in_body_text — bold face used for non-panel-label text
 # ---------------------------------------------------------------------------
 
@@ -164,3 +195,26 @@ class TestTypographyBoldUsage:
         report = check(fig)
         plt.close(fig)
         assert len(_typography_findings(report)) == 0
+
+class TestTypographyEffectiveFont:
+    def test_positive_effective_font_scaled_too_small(self):
+        from scivcd import ScivcdConfig
+        fig, ax = plt.subplots(figsize=(5, 4))
+        ax.set_title('Scaled title', fontsize=10)
+        fig.canvas.draw()
+        cfg = ScivcdConfig(composed_scale=0.5, final_print_scale=0.8)
+        report = check(fig, config=cfg)
+        plt.close(fig)
+        findings = [f for f in report.findings if f.check_id == 'effective_font_too_small']
+        assert findings
+        assert findings[0].evidence['effective_font_pt'] == 4.0
+
+    def test_negative_effective_font_large_enough(self):
+        from scivcd import ScivcdConfig
+        fig, ax = plt.subplots(figsize=(5, 4))
+        ax.set_title('Readable title', fontsize=16)
+        fig.canvas.draw()
+        cfg = ScivcdConfig(composed_scale=1.0, final_print_scale=1.0)
+        report = check(fig, config=cfg)
+        plt.close(fig)
+        assert not [f for f in report.findings if f.check_id == 'effective_font_too_small']

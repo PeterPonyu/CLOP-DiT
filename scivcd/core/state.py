@@ -36,6 +36,11 @@ class Finding:
     fix_suggestion:
         Optional actionable suggestion for the caller. Autofix
         routines may key off this.
+    evidence:
+        Optional JSON-serialisable structured details that explain how
+        the finding was derived (thresholds, transforms, export metadata).
+        Omitted from ``to_dict()`` when absent to preserve the historical
+        report schema for callers that do not use it.
     artist:
         Optional matplotlib artist associated with the finding. Kept
         out of equality / repr so findings remain comparable and
@@ -49,6 +54,7 @@ class Finding:
     message: str
     call_site: Optional[str] = None
     fix_suggestion: Optional[str] = None
+    evidence: Optional[dict[str, Any]] = None
     artist: Any = field(default=None, compare=False, repr=False)
 
     def __post_init__(self) -> None:
@@ -60,7 +66,7 @@ class Finding:
 
     def to_dict(self) -> dict:
         """JSON-serialisable representation (drops the live artist)."""
-        return {
+        data = {
             "check_id": self.check_id,
             "severity": self.severity.name,
             "category": self.category.name,
@@ -69,6 +75,9 @@ class Finding:
             "call_site": self.call_site,
             "fix_suggestion": self.fix_suggestion,
         }
+        if self.evidence is not None:
+            data["evidence"] = dict(self.evidence)
+        return data
 
 
 @dataclass
