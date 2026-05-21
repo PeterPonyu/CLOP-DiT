@@ -1,0 +1,4 @@
+dataset_id,source_path,organism,tissue,split,priority,notes
+CENSUS_KIDNEY,data/processed_h5ad_revision/census_kidney_processed.h5ad,human,kidney,heldout,priority-2,Tabula Sapiens kidney via CellxGene Census 2024-07-01 dataset 2423ce2c-3149-4cca-a2ff-cf682ea29b5f; 9641 raw cells; 3406 post-QC; 7 cell types led by kidney epithelial (3140)
+CENSUS_CEREBELLUM,data/processed_h5ad_revision/census_cerebellum_processed.h5ad,human,cerebellum,heldout,priority-2,Human brain atlas cerebellum via CellxGene Census 2024-07-01 dataset b2dda353-0c96-42df-8dcd-1ea7429a6feb; 69174 raw cells; 20000 subsampled; 19981 post-QC; Purkinje cells dominant (7367)
+CENSUS_TESTIS_FETAL,data/processed_h5ad_revision/census_testis_fetal_processed.h5ad,human,testis_fetal,heldout,priority-2,Embryonic fetal sample via CellxGene Census 2024-07-01 dataset 0bcda669-c2ab-484f-a87f-4e21f7a5bcab; 3342 cells; adrenal cortex dominant (3048) plus Leydig (294); both cell types absent from training corpus

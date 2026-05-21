@@ -18,6 +18,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from src.visualization.direct_layout import bind_figure_region
 from src.visualization.style import apply_style, COLORS, add_panel_label, save_with_vcd
+from matplotlib.patches import ConnectionPatch
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -173,13 +174,13 @@ def main():
     )
     from scipy import stats as scipy_stats
 
-    fig = plt.figure(figsize=(14.0, 8.0))
-    layout = bind_figure_region(fig, (0.11, 0.08, 0.99, 0.96))
+    fig = plt.figure(figsize=(14.0, 8.0), dpi=300)
+    layout = bind_figure_region(fig, (0.11, 0.10, 0.99, 0.96))
     # Uses the repository's direct rectangle layout engine, not GridSpec or
     # matplotlib's automatic/constrained layout.
     # - split_rows(..., hspace=...) controls the vertical gap between rows.
     # - split_cols(..., wspace=...) controls the horizontal gap between columns.
-    top_row, bottom_row = layout.split_rows([1.20, 0.92], hspace=0.24)
+    top_row, bottom_row = layout.split_rows([1.20, 0.92], hspace=0.36)
     top_left, top_right = top_row.split_cols([1.2, 1.0], wspace=0.20)
     bottom_left, bottom_right = bottom_row.split_cols([1.16, 1.04], wspace=0.26)
 
@@ -192,7 +193,7 @@ def main():
     swd_std = np.std(swds)
 
     ax = top_left.inset(left=0.02, right=0.01).add_axes(fig)
-    add_panel_label(ax, 'a', x=-0.10, y=1.05)
+    add_panel_label(ax, 'a', x=-0.10, y=0.97)
 
     # Color: orange for outliers (>mean+1σ), blue otherwise; add legend
     colors = [COLORS["generated"] if s > swd_mean + swd_std else COLORS["real"] for s in swds]
@@ -217,11 +218,24 @@ def main():
     ax.axvline(swd_mean + swd_std, color=COLORS["accent"], linestyle=":", alpha=0.6,
                linewidth=1.0, label=f"+1\u03c3 = {swd_mean + swd_std:.4f}")
 
-    # Sample size annotation on right side for top outliers
-    for i, r in enumerate(sorted_results):
-        if r["swd"] > swd_mean + swd_std:
-            ax.text(r["swd"] + 0.0003, i, f"n={r['n_real']:,}",
-                    fontsize=8, va="center", color="#666")
+    # Sample-size callouts: embed the n=... label inline at the bar tip for the
+    # top-2 outlier bars only. Inline text (right-aligned inside the bar) avoids
+    # leader lines that previously crossed into the bar area.
+    outlier_indices = [i for i, s in enumerate(swds) if s > swd_mean + swd_std][:2]
+    for idx in outlier_indices:
+        row = sorted_results[idx]
+        ax.text(
+            row["swd"] * 0.985,
+            idx,
+            f"n={row['n_real']:,}",
+            transform=ax.transData,
+            fontsize=8.5,
+            ha="right",
+            va="center",
+            color="white",
+            zorder=6,
+            clip_on=True,
+        )
 
     ax.legend(fontsize=FONT_ANNOTATION, frameon=False,
               loc="lower right")
@@ -232,7 +246,7 @@ def main():
 
     # ── Panel (b): Variance Ratio — strip + box plot ──
     ax2 = top_right.inset(left=0.02, right=0.02).add_axes(fig)
-    add_panel_label(ax2, 'b', x=-0.10, y=1.05)
+    add_panel_label(ax2, 'b', x=-0.10, y=0.97)
 
     vr_arr = np.array(var_ratios)
     vr_median = np.median(vr_arr)
@@ -260,7 +274,14 @@ def main():
              fontsize=FONT_ANNOTATION, color=COLORS["neutral"])
 
     ax2.set_yticks([])
-    ax2.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="lower left")
+    # Keep the legend INSIDE ax2 (upper-left empty region above the jittered
+    # scatter). Previously bbox_to_anchor=(0.5, -0.18) anchored the legend
+    # below ax2 by 18% of its height; with hspace=0.36 between rows that
+    # protruded into ax4 (Panel D) and collided with the "Inhibitory"
+    # outlier callout at the top of the SWD vs. Training Cells scatter.
+    ax2.legend(fontsize=FONT_ANNOTATION, frameon=False,
+               loc="upper left", bbox_to_anchor=(0.02, 0.97), ncol=1,
+               handlelength=1.4, handletextpad=0.4, borderaxespad=0.2)
     style_axes(ax2, "default",
                xlabel="Variance ratio (gen/real)",
                title="Per-Type Latent Variance Ratio")
@@ -270,7 +291,7 @@ def main():
 
     # ── Panel (c): Per-Dimension Variance Correlation — ECDF + box ──
     ax3 = bottom_left.inset(right=0.02).add_axes(fig)
-    add_panel_label(ax3, 'c', x=-0.10, y=1.05)
+    add_panel_label(ax3, 'c', x=-0.10, y=1.02)
 
     vc_arr = np.array(var_corrs)
     vc_sorted = np.sort(vc_arr)
@@ -304,7 +325,7 @@ def main():
 
     # ── Panel (d): SWD vs. Training Cell Count ──
     ax4 = bottom_right.inset(left=0.05, right=0.02).add_axes(fig)
-    add_panel_label(ax4, 'd', x=-0.10, y=1.05)
+    add_panel_label(ax4, 'd', x=-0.10, y=1.02)
 
     n_reals = np.array([r["n_real"] for r in results])
     swd_arr = np.array(swd_values)
@@ -351,18 +372,48 @@ def main():
              transform=ax4.transAxes, ha="left", va="bottom",
              fontsize=FONT_ANNOTATION, color=COLORS["neutral"])
 
-    # Label top 3 outliers
-    top3 = np.argsort(swd_arr)[-3:]
-    for idx in top3:
+    # Canonical adjacent-offset callout pattern shared across Figs 4E / 5A /
+    # 10D / 10H: label top-3 outliers adjacent to their data points in
+    # display-space offsets so leader lines stay short and labels stay
+    # visually consistent with the other three scatter panels.
+    top3_idx = np.argsort(swd_arr)[-3:][::-1]
+    x_lo, x_hi = ax4.get_xlim()
+    y_lo, y_hi = ax4.get_ylim()
+    # x-axis is log-scaled; place labels using log-space fraction to match
+    # the visual geometry users actually see.
+    log_x_lo = np.log10(max(x_lo, 1e-12))
+    log_x_hi = np.log10(max(x_hi, 1e-12))
+    x_span = (log_x_hi - log_x_lo) + 1e-12
+    y_span = (y_hi - y_lo) + 1e-12
+    placed_positions = []
+    for idx in top3_idx:
         lbl = abbreviate_cell_type(results[idx]["name"], max_len=18)
-        xoff = 8 if n_reals[idx] <= np.median(n_reals) else -8
-        yoff = -10 if swd_arr[idx] >= np.percentile(swd_arr, 75) else 6
-        ax4.annotate(lbl, (n_reals[idx], swd_arr[idx]),
-                     fontsize=7, xytext=(xoff, yoff), textcoords="offset points",
-                     ha="left" if xoff > 0 else "right",
-                     va="top" if yoff < 0 else "bottom",
-                     arrowprops=dict(arrowstyle="->", lw=0.5, color="#888"),
-                     color=COLORS["annotation_dark"])
+        xv = float(n_reals[idx])
+        yv = float(swd_arr[idx])
+        # Skip if too close (in log-x fraction) to an already-placed label
+        xv_log_frac = (np.log10(max(xv, 1e-12)) - log_x_lo) / x_span
+        if any(abs(xv_log_frac - px) < 0.15 for px in placed_positions):
+            continue
+        placed_positions.append(xv_log_frac)
+        x_frac = xv_log_frac
+        y_frac = (yv - y_lo) / y_span
+        dx_pt = -24 if x_frac > 0.62 else 18
+        dy_pt = -16 if y_frac > 0.62 else 14
+        ax4.annotate(
+            lbl,
+            xy=(xv, yv),
+            xycoords="data",
+            xytext=(dx_pt, dy_pt),
+            textcoords="offset points",
+            fontsize=14,
+            ha="right" if dx_pt < 0 else "left",
+            va="center",
+            color="#333",
+            bbox=dict(boxstyle="round,pad=0.18", fc="white", ec="#BBB", lw=0.4, alpha=0.95),
+            arrowprops=dict(arrowstyle="-", lw=0.5, color="#888", alpha=0.65, shrinkA=1, shrinkB=1),
+            zorder=6,
+            annotation_clip=True,
+        )
 
     ax4.legend(fontsize=FONT_ANNOTATION, frameon=False, loc="upper right")
     style_axes(ax4, "scatter",
@@ -373,7 +424,7 @@ def main():
     ax4.set_title("SWD vs. Training Cell Count", fontsize=FONT_TITLE - 2, pad=0, y=0.985)
 
     fig_path = output_dir / "fig09a_variance_matching.png"
-    save_with_vcd(fig, fig_path, dpi=300, layout_rect=(0.08, 0.03, 0.99, 0.96))
+    save_with_vcd(fig, fig_path, dpi=300, layout_rect=(0.08, 0.06, 0.99, 0.96))
     print(f"\n[var_pilot] Figure saved to {fig_path}")
 
     # Also save to results/figures/ with the article-delivery basename

@@ -14,7 +14,6 @@ Usage:
 from __future__ import annotations
 
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -26,7 +25,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from src.visualization.direct_layout import bind_figure_region
 from src.visualization.explicit_positioning import add_axes_next_to
-from src.visualization.style import apply_style, COLORS, FONT_TITLE, FONT_LABEL, add_panel_label, save_with_vcd
+from src.visualization.style import apply_style, COLORS, FONT_TITLE, FONT_LABEL, add_panel_label, save_with_vcd, reserve_annotation_slot
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "results"
@@ -156,20 +155,24 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
         with open(captions_path) as f:
             _cap = json.load(f)
         for k, v in _cap.items():
-            short = v.split(",")[0][:50] if isinstance(v, str) else str(v)[:50]
+            if isinstance(v, str):
+                short = v.split(" are ")[0]
+                short = short.split(",")[0][:50]
+            else:
+                short = str(v)[:50]
             _type_names[int(k)] = short
 
     mantel_vals = [v["mantel_r"] for v in per_type_results.values()]
 
-    fig = plt.figure(figsize=(14.0, 8.0))
+    fig = plt.figure(figsize=(14.0, 8.0), dpi=300)
     layout = bind_figure_region(fig, (0.08, 0.10, 0.93, 0.94))
-    top_row, bottom_row = layout.split_rows([0.92, 1.08], hspace=0.28)
+    top_row, bottom_row = layout.split_rows([0.92, 1.08], hspace=0.40)
     top_left, top_right = top_row.split_cols(2, wspace=0.34)
     bottom_left, bottom_right = bottom_row.split_cols([0.92, 1.08], wspace=0.34)
 
     # ── Panel (a): Distribution with null baseline ──
     ax = top_left.add_axes(fig)
-    add_panel_label(ax, chr(ord('a') + label_offset), x=-0.12, y=1.06)
+    add_panel_label(ax, chr(ord('a') + label_offset), x=-0.12, y=1.02)
 
     # Compute null baseline: permuted gene labels within each type
     rng = np.random.default_rng(42)
@@ -214,19 +217,31 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     ci_lo, ci_hi = np.percentile(boot_means, [2.5, 97.5])
 
     null_mean = np.mean(null_mantels) if null_mantels else 0
+    # Stats box in upper-left corner (where null distribution's right tail
+    # has low density). Keeps clear of the Observed distribution peak.
     ax.text(0.03, 0.97,
             f"Mean 95% CI: [{ci_lo:.3f}, {ci_hi:.3f}]\n"
-            f"Null mean: {null_mean:.3f}"
-            if all(m > null_mean for m in mantel_vals)
-            else f"Mean 95% CI: [{ci_lo:.3f}, {ci_hi:.3f}]\n"
-                 f"Null mean: {null_mean:.3f}",
+            f"Null mean: {null_mean:.3f}",
             transform=ax.transAxes, ha="left", va="top",
-              fontsize=FONT_SMALL, color=COLORS["neutral"],
+            fontsize=FONT_SMALL, color=COLORS["neutral"],
             bbox=dict(boxstyle="round,pad=0.25", facecolor="white", alpha=0.85, edgecolor="none"))
 
-    ax.legend(fontsize=FONT_ANNOTATION - 1, frameon=True,
-              framealpha=0.85, edgecolor="none",
-              loc="upper right", bbox_to_anchor=(0.99, 0.98))
+    # Legend at the top-right of the axes. Previously anchored at
+    # lower-right (0.99, 0.02), which landed directly on top of the
+    # Observed histogram bars (peak density ≈ y=6 at x≈0.65) — the bars
+    # bled through the transparent legend background and made the text
+    # hard to read. The upper-right quadrant (x>0.7, y>0.6 axes frac) is
+    # empty once past both histogram peaks.
+    handles, labels = ax.get_legend_handles_labels()
+    short_map = {
+        f"Permuted null (n={len(null_mantels)})": f"Null (n={len(null_mantels)})",
+    }
+    short_labels = [short_map.get(lbl, lbl) for lbl in labels]
+    ax.legend(handles, short_labels,
+              fontsize=FONT_ANNOTATION - 2, frameon=False,
+              loc="upper right", bbox_to_anchor=(0.99, 0.97), ncol=1,
+              handlelength=1.0, handletextpad=0.3,
+              borderaxespad=0.2)
     style_axes(ax, "default",
                xlabel="Upper-triangle Pearson r (real vs. gen corr. matrix)",
                ylabel="Density",
@@ -252,7 +267,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     heatmap_abs_scale = max(heatmap_abs_scale, 0.08)
 
     # ── Panel (b): Best-preserved cell type ──
-    best_name = abbreviate_cell_type(_type_names.get(best_type, f"Type {best_type}"), max_len=35)
+    best_name = abbreviate_cell_type(_type_names.get(best_type, f"Type {best_type}"), max_len=20)
     best_r = per_type_results[best_type]["mantel_r"]
     best_rmse = per_type_results[best_type]["rmse"]
 
@@ -262,7 +277,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     R_gen = _corr_matrix(gen_sub[g_mask][:, :50])
 
     ax2 = top_right.add_axes(fig)
-    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.12, y=1.06)
+    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.12, y=1.02)
     diff = R_gen - R_real
     im = ax2.imshow(
         diff,
@@ -273,15 +288,17 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
         interpolation="nearest",
         alpha=1.0,
     )
-    ax2.set_title(f"Best: {best_name}", fontsize=FONT_TITLE)
+    ax2.set_ylim(49.5, -0.5)
+    ax2.set_yticks([0, 10, 20, 30, 40, 49])
+    ax2.set_title(f"Best-preserved Type\n{best_name}", fontsize=FONT_TITLE - 1)
     ax2.set_xlabel("Gene index (top 50 HVG)", fontsize=FONT_LABEL)
     ax2.set_ylabel("Gene index", fontsize=FONT_LABEL)
 
     # Summary annotation
     mad = np.nanmean(np.abs(diff))
-    ax2.text(0.97, 0.03,
+    ax2.text(0.03, 0.97,
              f"r = {best_r:.3f}\nMAD = {mad:.3f}\nRMSE = {best_rmse:.3f}",
-             transform=ax2.transAxes, ha="right", va="bottom",
+             transform=ax2.transAxes, ha="left", va="top",
              fontsize=FONT_ANNOTATION, color="black")
     cax2 = add_axes_next_to(
         fig,
@@ -299,7 +316,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     cb2.ax.tick_params(labelsize=FONT_HEATMAP_CELL - 1)
 
     # ── Panel (c): Worst-preserved cell type ──
-    worst_name = abbreviate_cell_type(_type_names.get(worst_type, f"Type {worst_type}"), max_len=35)
+    worst_name = abbreviate_cell_type(_type_names.get(worst_type, f"Type {worst_type}"), max_len=20)
     worst_r = per_type_results[worst_type]["mantel_r"]
     worst_rmse = per_type_results[worst_type]["rmse"]
 
@@ -309,7 +326,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     R_gen_w = _corr_matrix(gen_sub[g_mask][:, :50])
 
     ax3 = bottom_left.add_axes(fig)
-    add_panel_label(ax3, chr(ord('a') + label_offset + 2), x=-0.12, y=1.06)
+    add_panel_label(ax3, chr(ord('a') + label_offset + 2), x=-0.12, y=1.02)
     diff_w = R_gen_w - R_real_w
     im2 = ax3.imshow(
         diff_w,
@@ -320,14 +337,16 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
         interpolation="nearest",
         alpha=1.0,
     )
-    ax3.set_title(f"Worst: {worst_name}", fontsize=FONT_TITLE)
+    ax3.set_ylim(49.5, -0.5)
+    ax3.set_yticks([0, 10, 20, 30, 40, 49])
+    ax3.set_title(f"Weakest-preserved Type\n{worst_name}", fontsize=FONT_TITLE - 1)
     ax3.set_xlabel("Gene index (top 50 HVG)", fontsize=FONT_LABEL)
     ax3.set_ylabel("Gene index", fontsize=FONT_LABEL)
 
     mad_w = np.nanmean(np.abs(diff_w))
-    ax3.text(0.97, 0.03,
+    ax3.text(0.03, 0.97,
              f"r = {worst_r:.3f}\nMAD = {mad_w:.3f}\nRMSE = {worst_rmse:.3f}",
-             transform=ax3.transAxes, ha="right", va="bottom",
+             transform=ax3.transAxes, ha="left", va="top",
              fontsize=FONT_ANNOTATION, color="black")
     cax3 = add_axes_next_to(
         fig,
@@ -347,7 +366,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
     # ── Panel (d): Replace non-informative cell-count panel ──
     # Use Mantel r vs per-type mean expression variance (biological heterogeneity)
     ax4 = bottom_right.add_axes(fig)
-    add_panel_label(ax4, chr(ord('a') + label_offset + 3), x=-0.12, y=1.06)
+    add_panel_label(ax4, chr(ord('a') + label_offset + 3), x=-0.12, y=1.02)
 
     # Compute mean expression variance per type as a proxy for heterogeneity
     type_het = []
@@ -381,16 +400,44 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
         stat_text = (f"Spearman \u03c1 = {spearman_r:.3f}\n"
                  f"Pearson r = {pearson_r:.3f}")
 
-        # Label top 3 outliers by residual
+        # Label outliers using the adjacent-offset pattern: place labels near
+        # their data points with a short offset, avoiding long diagonal leaders.
         residuals = np.abs(type_mantel - (slope * type_het + intercept))
-        top3 = np.argsort(residuals)[-3:]
-        for idx in top3:
+        top3_idx = np.argsort(residuals)[-3:][::-1]
+        x_lo, x_hi = ax4.get_xlim()
+        y_lo, y_hi = ax4.get_ylim()
+        x_span = x_hi - x_lo + 1e-12
+        y_span = y_hi - y_lo + 1e-12
+        placed_points = []
+        for idx in top3_idx:
             t_id = type_labels_d[idx]
-            lbl = abbreviate_cell_type(_type_names.get(t_id, f"Type {t_id}"), max_len=18)
-            ax4.annotate(lbl, (type_het[idx], type_mantel[idx]),
-                         fontsize=9, xytext=(8, 6), textcoords="offset points",
-                         arrowprops=dict(arrowstyle="->", lw=0.5, color="#888"),
-                         color=COLORS["annotation_dark"])
+            lbl = abbreviate_cell_type(_type_names.get(t_id, f"Type {t_id}"), max_len=14)
+            xv = type_het[idx]
+            yv = type_mantel[idx]
+            if any(abs(xv - px) < 0.0008 and abs(yv - py) < 0.04 for px, py in placed_points):
+                continue
+            x_frac = (xv - x_lo) / x_span
+            y_frac = (yv - y_lo) / y_span
+            # Canonical adjacent-offset callout pattern shared across Figs 4E /
+            # 5A / 10D / 10H. 14 pt + slightly larger offsets and padding.
+            dx_pt = -24 if x_frac > 0.62 else 18
+            dy_pt = -16 if y_frac > 0.62 else 14
+            ax4.annotate(
+                lbl,
+                xy=(xv, yv),
+                xycoords="data",
+                xytext=(dx_pt, dy_pt),
+                textcoords="offset points",
+                fontsize=14,
+                ha="right" if dx_pt < 0 else "left",
+                va="center",
+                color="#333",
+                bbox=dict(boxstyle="round,pad=0.18", fc="none", ec="none"),
+                arrowprops=dict(arrowstyle="-", lw=0.5, color="#888", alpha=0.65, shrinkA=1, shrinkB=1),
+                zorder=6,
+                annotation_clip=True,
+            )
+            placed_points.append((xv, yv))
     else:
         stat_text = "Insufficient variance for correlation"
 
@@ -406,7 +453,7 @@ def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
                title="Preservation vs. Expression Heterogeneity")
 
     out_path = FIG_DIR / "fig09b_gene_gene_correlation.png"
-    save_with_vcd(fig, out_path, dpi=300, layout_rect=(0.02, 0.04, 0.98, 0.97))
+    save_with_vcd(fig, out_path, dpi=300, layout_rect=(0.02, 0.04, 0.98, 0.93))
     plt.close(fig)
     print(f"Saved figure to {out_path}")
 

@@ -19,11 +19,10 @@ from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.patches import ConnectionPatch
 
 from .direct_layout import bind_figure_region
 from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
-from .style import COLORS, add_colorbar_safe, add_panel_label, quality_color, save_with_vcd, set_scientific_tickformat
+from .style import COLORS, add_panel_label, quality_color, reserve_annotation_slot, save_with_vcd, set_scientific_tickformat
 from src.utils.paths import load_thresholds
 
 logger = logging.getLogger(__name__)
@@ -79,9 +78,12 @@ def plot_expression_analysis(
 
     overall = metrics.get("overall", {})
 
-    fig = plt.figure(figsize=(12.0, 5.8))
-    layout = bind_figure_region(fig, (0.08, 0.10, 0.985, 0.94))
-    top_row, bottom_row = layout.split_rows([0.90, 1.00], hspace=0.42)
+    fig = plt.figure(figsize=(12.0, 6.2))
+    layout = bind_figure_region(fig, (0.08, 0.09, 0.985, 0.94))
+    # Expanded hspace (0.55) gives panel (a)'s top-right legend and gene-name
+    # callouts enough clearance from panel (c)'s title band below; panels (a)
+    # and (c) previously read as nearly touching in the rendered PDF.
+    top_row, bottom_row = layout.split_rows([0.92, 1.00], hspace=0.55)
     top_left, top_right = top_row.split_cols([1.00, 1.02], gap=0.050)
     bottom_left, bottom_right = bottom_row.split_cols([1.02, 0.98], gap=0.060)
     # Note: Figure-level title removed per revision requirements; stats moved to caption
@@ -92,8 +94,8 @@ def plot_expression_analysis(
     gen_cv = gen.std(axis=0) / (np.abs(gen.mean(axis=0)) + 1e-8)
     cv_diff = np.abs(gen_cv - real_cv)
 
-    sc = ax1.scatter(real_cv, gen_cv, c=cv_diff, cmap="YlOrRd", s=10,
-                     alpha=0.7, edgecolors="none",
+    sc = ax1.scatter(real_cv, gen_cv, c=cv_diff, cmap="YlOrRd", s=6,
+                     alpha=0.55, edgecolors="none",
                      vmin=0, vmax=np.percentile(cv_diff, 95))
     lo = 0
     hi = max(real_cv.max(), gen_cv.max()) * 1.05
@@ -116,53 +118,58 @@ def plot_expression_analysis(
     cbar1.set_label("|\u0394CV|", fontsize=9)
     cbar1.ax.tick_params(labelsize=8, length=2, pad=1)
 
-    # Annotate the most divergent genes with the same compact callout style used in Fig 9.
-    top_cv_idx = np.argsort(cv_diff)[-6:]
+    # Annotate the top-3 most divergent genes with adjacent-offset labels
+    # (display-space) so leader lines stay short and do not cross the scatter
+    # cloud or collide with the colorbar.
+    top_cv_idx = np.argsort(cv_diff)[-3:]
     top_cv_idx = top_cv_idx[np.argsort(cv_diff[top_cv_idx])[::-1]]
-    sorted_by_y = sorted(top_cv_idx, key=lambda idx: gen_cv[idx], reverse=True)
-    left_slots = [(0.12, 0.88, "left"), (0.12, 0.66, "left"), (0.12, 0.44, "left")]
-    right_slots = [(0.88, 0.84, "right"), (0.88, 0.62, "right"), (0.88, 0.40, "right")]
-    label_plan = []
-    for idx, slot in zip(sorted_by_y[::2], left_slots):
-        label_plan.append((idx, *slot))
-    for idx, slot in zip(sorted_by_y[1::2], right_slots):
-        label_plan.append((idx, *slot))
-
-    for i, slot_x, slot_y, ha in label_plan:
-        if i >= len(gene_names):
+    valid_idx = [i for i in top_cv_idx if i < len(gene_names)]
+    x_lo, x_hi = ax1.get_xlim()
+    y_lo, y_hi = ax1.get_ylim()
+    x_span = x_hi - x_lo + 1e-12
+    y_span = y_hi - y_lo + 1e-12
+    placed_points = []
+    for i in valid_idx:
+        xv, yv = real_cv[i], gen_cv[i]
+        # Skip if too close to an already-placed callout in EITHER axis — labels
+        # are ~30-40 pt wide at 14 pt font, so a nearby-x-only check missed pairs
+        # that shared a similar y and collided horizontally.
+        if any(
+            (abs(xv - px) < 0.15 * x_span and abs(yv - py) < 0.08 * y_span)
+            or abs(xv - px) < 0.06 * x_span
+            for px, py in placed_points
+        ):
             continue
-        ax1.text(
-            slot_x,
-            slot_y,
+        x_frac = (xv - x_lo) / x_span
+        y_frac = (yv - y_lo) / y_span
+        # Canonical adjacent-offset callout pattern shared across Figs 4E / 5A /
+        # 10D / 10H. 14 pt + slightly larger offsets and padding per user spec.
+        dx_pt = -24 if x_frac > 0.62 else 18
+        dy_pt = -16 if y_frac > 0.62 else 14
+        ax1.annotate(
             gene_names[i],
-            transform=ax1.transAxes,
-            fontsize=8.0,
-            ha=ha,
+            xy=(xv, yv),
+            xycoords="data",
+            xytext=(dx_pt, dy_pt),
+            textcoords="offset points",
+            fontsize=14,
+            ha="right" if dx_pt < 0 else "left",
             va="center",
             color="#333",
-            bbox=dict(boxstyle="round,pad=0.10", fc="white", ec="none", alpha=0.86),
+            bbox=dict(boxstyle="round,pad=0.18", fc="none", ec="none",
+                      lw=0.4, alpha=0.95),
+            arrowprops=dict(
+                arrowstyle="-",
+                lw=0.5,
+                color="#888",
+                alpha=0.65,
+                shrinkA=1,
+                shrinkB=1,
+            ),
             zorder=6,
-            clip_on=False,
+            annotation_clip=True,
         )
-        connector_x = slot_x + (0.02 if ha == "left" else -0.02)
-        connector = ConnectionPatch(
-            xyA=(real_cv[i], gen_cv[i]),
-            coordsA=ax1.transData,
-            xyB=(connector_x, slot_y),
-            coordsB=ax1.transAxes,
-            axesA=ax1,
-            axesB=ax1,
-            arrowstyle="-",
-            lw=0.55,
-            color="#666",
-            alpha=0.65,
-            shrinkA=0,
-            shrinkB=0,
-            connectionstyle=f"arc3,rad={0.12 if ha == 'left' else -0.12}",
-        )
-        connector.set_zorder(2)
-        connector.set_clip_on(False)
-        ax1.add_artist(connector)
+        placed_points.append((xv, yv))
 
     cv_corr = np.corrcoef(real_cv, gen_cv)[0, 1]
     ax1.legend(fontsize=10, frameon=False)
@@ -173,7 +180,7 @@ def plot_expression_analysis(
     ax1.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
     ax1.yaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
     set_scientific_tickformat(ax1, axis="both", scilimits=(-2, 2))
-    add_panel_label(ax1, 'a', x=-0.12, y=1.08)
+    add_panel_label(ax1, 'a', x=-0.12, y=1.04)
 
     # -- I2: Expression range with percentile bands --
     ax2 = top_right.inset(left=0.10, right=0.02).add_axes(fig)
@@ -204,7 +211,7 @@ def plot_expression_analysis(
     ax2.set_title("Expression Range", fontsize=12)
     ax2.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, 0.98), ncol=2, frameon=False)
     ax2.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="upper"))
-    add_panel_label(ax2, 'b', x=-0.16, y=1.08)
+    add_panel_label(ax2, 'b', x=-0.16, y=1.04)
 
     # -- I3: Per-cell std as overlaid smooth histograms --
     ax3 = bottom_left.add_axes(fig)
@@ -231,7 +238,7 @@ def plot_expression_analysis(
     ax3.set_title("Per-Cell Variability", fontsize=12)
     legend_handles_c, legend_labels_c = ax3.get_legend_handles_labels()
     ax3.xaxis.set_major_locator(MaxNLocator(nbins=3, prune="both"))
-    add_panel_label(ax3, 'c', x=-0.12, y=1.08)
+    add_panel_label(ax3, 'c', x=-0.12, y=1.04)
 
     std_ratio = gen_cell_std.mean() / (real_cell_std.mean() + 1e-8)
     ax3.text(0.02, 0.15,
@@ -267,7 +274,7 @@ def plot_expression_analysis(
     ax4.set_yticklabels(names_show, fontsize=10, ha="right")
     ax4.set_xlabel("Std Ratio (Gen / Real, clipped at 5\u00d7)", fontsize=11)
     ax4.set_title("Most Divergent Genes\n(over- & under-dispersed)", fontsize=11, pad=4)
-    add_panel_label(ax4, 'd', x=-0.12, y=1.08)
+    add_panel_label(ax4, 'd', x=-0.12, y=1.04)
     placed_annotations: list = []
     for i, r in enumerate(ratios_show):
         # Skip annotations within 0.05 of an already-placed one to avoid overlap

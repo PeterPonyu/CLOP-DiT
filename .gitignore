@@ -29,7 +29,15 @@ build/
 *.pickle
 
 # === Data (large files) ===
-data/
+data/*
+# Lane C strict-OOD provenance: tracked text/CSV metadata, h5ad stays ignored
+!data/processed_h5ad_revision/
+data/processed_h5ad_revision/*
+!data/processed_h5ad_revision/MANIFEST.csv
+!data/processed_h5ad_revision/label_bridge.csv
+!data/processed_h5ad_revision/README.md
+!data/processed_h5ad_revision/revision_candidate_metadata_raw.json
+!data/processed_h5ad_revision/.gitignore
 
 # === Model weights ===
 models/scgpt_human/
@@ -37,6 +45,7 @@ models/scgpt_pancancer/
 models/checkpoints/
 !models/checkpoints/.gitkeep
 models/baselines/
+models/revision/
 
 # === Generated outputs ===
 results/
@@ -44,6 +53,8 @@ logs/
 figures/
 figures_v*/
 generated_*.h5ad
+# Root-level experiments workspace (anchored to root so revision/experiments/ stays tracked)
+/experiments/
 
 # === Archives (historical, not for public repo) ===
 configs/archive/
@@ -112,7 +123,9 @@ cover_letter*.pdf
 cover_letter*.tex
 SUBMISSION_AUDIT*.md
 ZENODO_WORKFLOW.md
-revision/
+revision/manuscripts/v1_prerevision/
+revision/manuscripts/v2_revision/
+revision/manuscripts/diff/
 
 # === Intermediate project markdown files ===
 PIPELINE.md
@@ -137,6 +150,8 @@ docs/
 scripts/pipeline/generate_folder_audit_reports.py
 scripts/analysis/audit_data.py
 
-# === VCD tooling (internal development tool) ===
+# === VCD tooling ===
+# scripts/vcd/ — internal-only consumer scripts (not for public repo)
+# scivcd/      — public sub-package (TRACKED; advertised via .pre-commit-hooks.yaml)
 scripts/vcd/
 .omx/

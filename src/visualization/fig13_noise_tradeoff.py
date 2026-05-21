@@ -47,7 +47,7 @@ def plot_panel_l(
     standalone = ax_target is None
     if standalone:
         fig = plt.figure(figsize=(8.2, 4.0))
-        ax1 = bind_figure_region(fig, (0.10, 0.21, 0.92, 0.92)).add_axes(fig)
+        ax1 = bind_figure_region(fig, (0.10, 0.21, 0.92, 0.88)).add_axes(fig)
     else:
         ax1 = ax_target
         fig = ax1.figure

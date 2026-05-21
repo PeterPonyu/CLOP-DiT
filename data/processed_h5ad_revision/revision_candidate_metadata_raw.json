@@ -1,0 +1,983 @@
+{
+  "GSE131685": {
+    "gse_id": "GSE131685",
+    "title": "Single-cell RNA sequencing of human kidney",
+    "summary": "A comprehensive cellular anatomy of normal human kidney is crucial to address the cellular origins of renal disease and renal cancer. Some kidney diseases may be cell type-specific, especially renal tubular cells. To investigate the classification and transcriptomic information of human kidney, we performed a method to obtain single-cell suspension of kidney rapidly, and conducted single-cell RNA sequencing (scRNA-seq). We present scRNA-seq data of 23,366 high quality cells from human kidneys of 3 donors. In this dataset, we show 10 clusters of normal human renal cells. Due to the high quality of single cell transcriptomic information, proximal tubule (PT) cells were classified into 3 subtypes and collecting ducts cells into 2 subtypes. Collectively, our data will provide a reliable reference for the studies of renal cell biology and kidney diseases.",
+    "overall_design": "Primary kidney samples from 3 patients were used for single cell RNA sequencing by 10X Genomics",
+    "organism": "",
+    "type": "Expression profiling by high throughput sequencing",
+    "pubmed_id": [
+      "31896769",
+      "34722263"
+    ],
+    "samples": {
+      "GSM4145204": {
+        "title": "Patient 1 Kidney Homogenate",
+        "source": "Kidney",
+        "characteristics": [
+          "subject id: Patient/donor 1",
+          "subject status: normal",
+          "sample type: Total Kidney Homogenate"
+        ],
+        "description": "",
+        "organism": "Homo sapiens"
+      },
+      "GSM4145205": {
+        "title": "Patient 2 Kidney Homogenate",
+        "source": "Kidney",
+        "characteristics": [
+          "subject id: Patient/donor 2",
+          "subject status: normal",
+          "sample type: Total Kidney Homogenate"
+        ],
+        "description": "",
+        "organism": "Homo sapiens"
+      },
+      "GSM4145206": {
+        "title": "Patient 3 Kidney Homogenate",
+        "source": "Kidney",
+        "characteristics": [
+          "subject id: Patient/donor 3",
+          "subject status: normal",
+          "sample type: Total Kidney Homogenate"
+        ],
+        "description": "",
+        "organism": "Homo sapiens"
+      }
+    }
+  },
+  "GSE140989": {
+    "gse_id": "GSE140989",
+    "title": "­Single Cell Transcriptomics  identifies Focal Segmental Glomerulosclerosis Remission  Endothelial Biomarker",
+    "summary": "Intrinsic nephron cell types and tissue resident immune cells were recovered from renal biopsy specimens using a scRNAseq protocol for the Kidney Precision Medicine Project (KPMP), designed for deployment in a multicenter research network. Combined processing of 24 samples including 16 tumor-nephrectomy, 5 surveillance and 3 pre-perfusion biopsies using the scRNAseq protocol yielded 22,268 cells (4690 from surveillance biopsies, 16,491 from tumor-nephrectomies and 2834 cells from pre-perfusion biopsies) .",
+    "overall_design": "scRNA-seq: Using multiple sources of healthy kidney tissue samples, we generated 22,268 single cell profiles. Unbiased clustering resulted in 31 distinct cell clusters that were successfully linked to intrinsic kidney and immune cell types using specific cell markers. In silico assignment of the three endothelial cell clusters to distinct vascular beds were confirmed by in situ hybridization. Transcripts defining the glomerular endothelial cluster (GEC) were evaluated in biopsies from patients with ten different glomerular diseases in the NEPTUNE and ERCB studies.  Focal segmental glomerulosclerosis (FSGS) samples were associated with higher GEC scores.",
+    "organism": "",
+    "type": "Expression profiling by high throughput sequencing",
+    "pubmed_id": [
+      "32107344",
+      "33568476"
+    ],
+    "samples": {
+      "GSM4191941": {
+        "title": "PREMIERE-17-1606-2-0 [scRNA-seq]",
+        "source": "Tumor-nephrectory",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191942": {
+        "title": "PREMIERE-17-1606-2-1 [scRNA-seq]",
+        "source": "Tumor-nephrectory",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191943": {
+        "title": "PREMIERE-18-139 [scRNA-seq]",
+        "source": "Tumor-nephrectory",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191944": {
+        "title": "PREMIERE-18142-5-1 [scRNA-seq]",
+        "source": "Tumor-nephrectory",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191945": {
+        "title": "PREMIERE-18142-5-2 [scRNA-seq]",
+        "source": "Tumor-nephrectory",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191946": {
+        "title": "PREMIERE-18-162 [scRNA-seq]",
+        "source": "Tumor-nephrectory",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191947": {
+        "title": "PREMIERE-2017-06-28-TN-1 [scRNA-seq]",
+        "source": "Tumor-nephrectory",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191948": {
+        "title": "PREMIERE-2017-06-28-TN-2 [scRNA-seq]",
+        "source": "Tumor-nephrectory",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191949": {
+        "title": "PREMIERE-Hkid-PH-2017-08-25 [scRNA-seq]",
+        "source": "Tumor-nephrectory",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191950": {
+        "title": "PREMIERE-Hkid-YY-2017-08-25 [scRNA-seq]",
+        "source": "Tumor-nephrectory",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191951": {
+        "title": "PREMIERE-KPMP_Pilot_18342 [scRNA-seq]",
+        "source": "Tumor-nephrectory",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191952": {
+        "title": "PREMIERE-SamplePRE027-1 [scRNA-seq]",
+        "source": "Living donor",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191953": {
+        "title": "PREMIERE-SamplePRE038-1 [scRNA-seq]",
+        "source": "Living donor",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191954": {
+        "title": "PREMIERE-SampleTransPRE19025 [scRNA-seq]",
+        "source": "Living donor",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191955": {
+        "title": "PREMIERE-TN109-18-242-Lib [scRNA-seq]",
+        "source": "Tumor-nephrectory",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191956": {
+        "title": "PREMIERE-TN116-17-116-Lib-4a [scRNA-seq]",
+        "source": "Tumor-nephrectory",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191957": {
+        "title": "PREMIERE-TN117-17-116-Lib-4b [scRNA-seq]",
+        "source": "Tumor-nephrectory",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191958": {
+        "title": "PREMIERE-TN120-18-696-4 [scRNA-seq]",
+        "source": "Tumor-nephrectory",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191959": {
+        "title": "PREMIERE-TN121-18-696-10 [scRNA-seq]",
+        "source": "Tumor-nephrectory",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191960": {
+        "title": "PREMIERE-Trans-SV-004 [scRNA-seq]",
+        "source": "Surveillance biopsy",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191961": {
+        "title": "PREMIERE-Trans-SV-005 [scRNA-seq]",
+        "source": "Surveillance biopsy",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191962": {
+        "title": "PREMIERE-Trans-SV-006 [scRNA-seq]",
+        "source": "Surveillance biopsy",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191963": {
+        "title": "PREMIERE-Trans-SV-007 [scRNA-seq]",
+        "source": "Surveillance biopsy",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191964": {
+        "title": "PREMIERE-Trans-SV-008 [scRNA-seq]",
+        "source": "Surveillance biopsy",
+        "characteristics": [
+          "subject status: normal/healthy",
+          "tissue: adult kidney"
+        ],
+        "description": "kidney biospecimen were placed in 1 ml Hypothermasol™ (Stemcell Technologies) and immediately transferred to the laboratory and cryopreserved in DMSO containing Cryostor CS 10 (Stemcell Technologies) solution for long term storage in liquid nitrogen",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191965": {
+        "title": "FSG1 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191966": {
+        "title": "FSG2 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191967": {
+        "title": "FSG3 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191968": {
+        "title": "FSG4 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191969": {
+        "title": "FSG5 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191970": {
+        "title": "FSG6 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191971": {
+        "title": "FSG7 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191972": {
+        "title": "FSG8 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191973": {
+        "title": "FSG9 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191974": {
+        "title": "FSG10 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191975": {
+        "title": "FSG11 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191976": {
+        "title": "FSG12 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191977": {
+        "title": "FSG13 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191978": {
+        "title": "FSG14 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191979": {
+        "title": "FSG15 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191980": {
+        "title": "FSG16 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191981": {
+        "title": "FSG17 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191982": {
+        "title": "FSG18 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191983": {
+        "title": "FSG19 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191984": {
+        "title": "FSG20 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191985": {
+        "title": "FSG21 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191986": {
+        "title": "FSG22 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191987": {
+        "title": "FSG23 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191988": {
+        "title": "FSG24 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191989": {
+        "title": "FSG25 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191990": {
+        "title": "FSG26 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191991": {
+        "title": "FSG27 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191992": {
+        "title": "FSG28 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191993": {
+        "title": "FSG29 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191994": {
+        "title": "FSG30 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191995": {
+        "title": "FSG31 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191996": {
+        "title": "FSG32 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191997": {
+        "title": "FSG33 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191998": {
+        "title": "FSG34 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4191999": {
+        "title": "FSG35 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192000": {
+        "title": "FSG36 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192001": {
+        "title": "FSG37 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192002": {
+        "title": "FSG38 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192003": {
+        "title": "FSG39 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192004": {
+        "title": "FSG40 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192005": {
+        "title": "FSG41 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192006": {
+        "title": "FSG42 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192007": {
+        "title": "FSG43 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192008": {
+        "title": "FSG44 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192009": {
+        "title": "FSG45 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192011": {
+        "title": "FSG47 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192012": {
+        "title": "FSG48 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192013": {
+        "title": "FSG49 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192014": {
+        "title": "FSG50 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192015": {
+        "title": "FSG51 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192016": {
+        "title": "FSG52 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192018": {
+        "title": "FSG54 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192020": {
+        "title": "FSG56 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192021": {
+        "title": "FSG57 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192022": {
+        "title": "FSG58 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192023": {
+        "title": "FSG59 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192024": {
+        "title": "FSG60 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192025": {
+        "title": "FSG61 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192026": {
+        "title": "FSG62 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192027": {
+        "title": "FSG63 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192028": {
+        "title": "FSG64 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192029": {
+        "title": "FSG65 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192030": {
+        "title": "FSG66 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192031": {
+        "title": "FSG67 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192033": {
+        "title": "FSG69 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192034": {
+        "title": "FSG70 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192035": {
+        "title": "FSG71 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      },
+      "GSM4192038": {
+        "title": "FSG74 [bulk RNA-seq]",
+        "source": "disease biopsy",
+        "characteristics": [
+          "subject status: patient with Focal Segmental Glomerulosclerosis (FSGS) glomerular disease",
+          "tissue: adult kidney"
+        ],
+        "description": "Raw reads extracted using HTSeq from the  single end fastq files generated from glomerular fraction of disease biopsy tissue of FSGS patient",
+        "organism": "Homo sapiens"
+      }
+    }
+  }
+}

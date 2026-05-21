@@ -1,0 +1,84 @@
+{
+  "experiment": "conditioning_field_ablation",
+  "description": "Tests which fields in the structured text prompt drive generation quality. Five variants: full (original), no_markers (marker genes removed), shuffled_markers (random markers from other types), external_markers (PanglaoDB/CellMarker curated), metadata_only (cell type + tissue + organism + disease only).",
+  "config": {
+    "num_cells_per_type": 100,
+    "cfg_scale": 2.0,
+    "num_steps": 10
+  },
+  "results": {
+    "full": {
+      "knn_top1_accuracy": 0.0287,
+      "steering_accuracy": 0.998,
+      "mean_centroid_cosine": 0.0501,
+      "num_types": 69,
+      "num_cells_generated": 3450
+    },
+    "no_markers": {
+      "knn_top1_accuracy": 0.0226,
+      "steering_accuracy": 0.98,
+      "mean_centroid_cosine": 0.0349,
+      "num_types": 69,
+      "num_cells_generated": 3450
+    },
+    "shuffled_markers": {
+      "knn_top1_accuracy": 0.0281,
+      "steering_accuracy": 0.979,
+      "mean_centroid_cosine": 0.0352,
+      "num_types": 69,
+      "num_cells_generated": 3450
+    },
+    "metadata_only": {
+      "knn_top1_accuracy": 0.0151,
+      "steering_accuracy": 0.624,
+      "mean_centroid_cosine": 0.025,
+      "num_types": 69,
+      "num_cells_generated": 3450
+    },
+    "external_markers": {
+      "knn_top1_accuracy": 0.1707,
+      "full_variant_knn_same_types": 0.1773,
+      "mean_pairwise_cosine_vs_full": 0.7023,
+      "num_types": 15,
+      "num_cells_generated": 750,
+      "note": "Evaluated on subset of types with curated external markers"
+    }
+  },
+  "example_variants": {
+    "0": {
+      "full": "CD8+ cytotoxic T lymphocytes are effector T cells with direct cytotoxic capacity, critical for anti-viral and anti-tumor immunity. Found across human tissues including peripheral blood, breast, liver, skin, stomach, and vasculature, predominantly in cancer, leukemia, and melanoma contexts. Express CD8A, CD8B, GZMA, GZMB, PRF1, NKG7, GZMK, and IFNG, reflecting cytotoxic granule deployment and IFN-\u03b3 secretion.",
+      "no_markers": "CD8+ cytotoxic T lymphocytes are effector T cells with direct cytotoxic capacity, critical for anti-viral and anti-tumor immunity. Found across human tissues including peripheral blood, breast, liver, skin, stomach, and vasculature, predominantly in cancer, leukemia, and melanoma contexts.",
+      "shuffled_markers": "CD8+ cytotoxic T lymphocytes are effector T cells with direct cytotoxic capacity, critical for anti-viral and anti-tumor immunity. Found across human tissues including peripheral blood, breast, liver, skin, stomach, and vasculature, predominantly in cancer, leukemia, and melanoma contexts. Express VIM, GLUL, TCF7, APOE, CD28, BANK1, and CLU, reflecting cytotoxic granule deployment and IFN-\u03b3 secretion.",
+      "external_markers": "CD8+ cytotoxic T lymphocytes are effector T cells with direct cytotoxic capacity, critical for anti-viral and anti-tumor immunity. Found across human tissues including peripheral blood, breast, liver, skin, stomach, and vasculature, predominantly in cancer, leukemia, and melanoma contexts. Express CD8A, CD8B, GZMB, PRF1, and IFNG, reflecting cytotoxic granule deployment and IFN-\u03b3 secretion.",
+      "metadata_only": "CD8+ cytotoxic T lymphocytes, tissue: peripheral blood, organism: human, context: tumor."
+    },
+    "1": {
+      "full": "MHC-II-high antigen-presenting cells are professional antigen-presenting cells including dendritic cells and activated macrophages with prominent MHC-II surface expression. Found across human and mouse tissues \u2014 peripheral blood, breast, lung, skin, intestine, pancreas, brain, and retina \u2014 predominantly in cancer and melanoma contexts. Defined by high expression of CD74, HLA-DRA, HLA-DPA1, HLA-DPB1, HLA-DQA1, and HLA-DRB1, enabling efficient antigen presentation to CD4+ T cells.",
+      "no_markers": "MHC-II-high antigen-presenting cells are professional antigen-presenting cells including dendritic cells and activated macrophages with prominent MHC-II surface expression. Found across human and mouse tissues \u2014 peripheral blood, breast, lung, skin, intestine, pancreas, brain, and retina \u2014 predominantly in cancer and melanoma contexts. Defined by high expression of CD74, HLA-DRA, HLA-DPA1, HLA-DPB1, HLA-DQA1, and HLA-DRB1, enabling efficient antigen presentation to CD4+ T cells.",
+      "shuffled_markers": "MHC-II-high antigen-presenting cells are professional antigen-presenting cells including dendritic cells and activated macrophages with prominent MHC-II surface expression. Found across human and mouse tissues \u2014 peripheral blood, breast, lung, skin, intestine, pancreas, brain, and retina \u2014 predominantly in cancer and melanoma contexts. Defined by high expression of CD74, HLA-DRA, HLA-DPA1, HLA-DPB1, HLA-DQA1, and HLA-DRB1, enabling efficient antigen presentation to CD4+ T cells.",
+      "external_markers": null,
+      "metadata_only": "MHC-II-high antigen-presenting cells, tissue: tissues \u2014 peripheral blood, organism: human, context: cancer."
+    },
+    "2": {
+      "full": "Heat-shock and stress response cells are cells experiencing proteotoxic or other cellular stress with strongly activated chaperone and unfolded protein responses. Observed across human and mouse tissues including brain, lung, breast, skin, bone marrow, and dental tissue, in contexts of cancer, aging, fibrosis, and autism spectrum disorder. Characterized by upregulation of HSP90AA1, HSP90AB1, HSPA1A, DNAJB1, and the immediate early transcription factors FOS, JUN, and JUNB.",
+      "no_markers": "Heat-shock and stress response cells are cells experiencing proteotoxic or other cellular stress with strongly activated chaperone and unfolded protein responses. Observed across human and mouse tissues including brain, lung, breast, skin, bone marrow, and dental tissue, in contexts of cancer, aging, fibrosis, and autism spectrum disorder. Characterized by upregulation of HSP90AA1, HSP90AB1, HSPA1A, DNAJB1, and the immediate early transcription factors FOS, JUN, and JUNB.",
+      "shuffled_markers": "Heat-shock and stress response cells are cells experiencing proteotoxic or other cellular stress with strongly activated chaperone and unfolded protein responses. Observed across human and mouse tissues including brain, lung, breast, skin, bone marrow, and dental tissue, in contexts of cancer, aging, fibrosis, and autism spectrum disorder. Characterized by upregulation of HSP90AA1, HSP90AB1, HSPA1A, DNAJB1, and the immediate early transcription factors FOS, JUN, and JUNB.",
+      "external_markers": null,
+      "metadata_only": "Heat-shock and stress response cells, tissue: various tissues, organism: human, context: cancer."
+    },
+    "3": {
+      "full": "Fibroblasts and mesenchymal stromal cells are non-contractile mesenchymal cells providing structural support and producing extracellular matrix proteins. Widespread across human and mouse tissues including breast, lung, liver, intestine, spinal cord, bone marrow, pancreas, and dental tissue, in cancer and injury contexts. Characterized by COL1A1, COL1A2, DCN, LUM, and VIM, reflecting active collagen deposition and ECM remodeling.",
+      "no_markers": "Fibroblasts and mesenchymal stromal cells are non-contractile mesenchymal cells providing structural support and producing extracellular matrix proteins. Widespread across human and mouse tissues including breast, lung, liver, intestine, spinal cord, bone marrow, pancreas, and dental tissue, in cancer and injury contexts. Characterized by COL1A1, COL1A2, DCN, LUM, and VIM, reflecting active collagen deposition and ECM remodeling.",
+      "shuffled_markers": "Fibroblasts and mesenchymal stromal cells are non-contractile mesenchymal cells providing structural support and producing extracellular matrix proteins. Widespread across human and mouse tissues including breast, lung, liver, intestine, spinal cord, bone marrow, pancreas, and dental tissue, in cancer and injury contexts. Characterized by COL1A1, COL1A2, DCN, LUM, and VIM, reflecting active collagen deposition and ECM remodeling.",
+      "external_markers": "Fibroblasts and mesenchymal stromal cells are non-contractile mesenchymal cells providing structural support and producing extracellular matrix proteins. Widespread across human and mouse tissues including breast, lung, liver, intestine, spinal cord, bone marrow, pancreas, and dental tissue, in cancer and injury contexts. Characterized by COL1A1, COL1A2, DCN, LUM, and VIM, reflecting active collagen deposition and ECM remodeling.",
+      "metadata_only": "Fibroblasts and mesenchymal stromal cells, tissue: various tissues, organism: human, context: cancer."
+    },
+    "4": {
+      "full": "Actively cycling cells in S/G2/M phase are cells undergoing DNA replication and mitosis. Identified across human and mouse tissues including bone marrow, brain, lung, intestine, skin, spinal cord, and stomach, in diverse disease contexts including cancer, leukemia, melanoma, inflammation, fibrosis, aging, and injury. Defined by MKI67, CDK1, TOP2A, BIRC5, TUBA1B, TUBB, and STMN1.",
+      "no_markers": "Actively cycling cells in S/G2/M phase are cells undergoing DNA replication and mitosis. Identified across human and mouse tissues including bone marrow, brain, lung, intestine, skin, spinal cord, and stomach, in diverse disease contexts including cancer, leukemia, melanoma, inflammation, fibrosis, aging, and injury. Defined by MKI67, CDK1, TOP2A, BIRC5, TUBA1B, TUBB, and STMN1.",
+      "shuffled_markers": "Actively cycling cells in S/G2/M phase are cells undergoing DNA replication and mitosis. Identified across human and mouse tissues including bone marrow, brain, lung, intestine, skin, spinal cord, and stomach, in diverse disease contexts including cancer, leukemia, melanoma, inflammation, fibrosis, aging, and injury. Defined by MKI67, CDK1, TOP2A, BIRC5, TUBA1B, TUBB, and STMN1.",
+      "external_markers": null,
+      "metadata_only": "Actively cycling cells in S/G2/M phase, tissue: various tissues, organism: human, context: cancer."
+    }
+  }
+}

@@ -1,0 +1,508 @@
+{
+  "overall": {
+    "frechet_distance": 0.2303435886035876,
+    "mmd_rbf": 2.2292137145996094e-05,
+    "coverage": 0.079,
+    "density": 0.09892,
+    "mean_kl": 0.028773253228427075,
+    "max_kl": 0.11067351367207787,
+    "median_kl": 0.026126112706681165,
+    "mean_pairwise_cosine_sim": 0.011683293618261814,
+    "knn_mean_cosine_dist": 0.6856932044029236,
+    "mean_variance": 0.0019264454022049904,
+    "diversity_index": 0.9883167147636414
+  },
+  "per_type": {
+    "Type_0": {
+      "type_id": 0,
+      "n_real": 8782,
+      "n_gen": 100,
+      "centroid_cosine": 0.8071233034133911,
+      "frechet_distance": 1.1870546296730409
+    },
+    "Type_1": {
+      "type_id": 1,
+      "n_real": 6827,
+      "n_gen": 100,
+      "centroid_cosine": 0.8123822808265686,
+      "frechet_distance": 1.1874935577546046
+    },
+    "Type_2": {
+      "type_id": 2,
+      "n_real": 8283,
+      "n_gen": 100,
+      "centroid_cosine": 0.8110108375549316,
+      "frechet_distance": 1.1782057944998154
+    },
+    "Type_3": {
+      "type_id": 3,
+      "n_real": 5718,
+      "n_gen": 100,
+      "centroid_cosine": 0.7586357593536377,
+      "frechet_distance": 1.2120708777325806
+    },
+    "Type_4": {
+      "type_id": 4,
+      "n_real": 6145,
+      "n_gen": 100,
+      "centroid_cosine": 0.873276948928833,
+      "frechet_distance": 1.1831408231594287
+    },
+    "Type_5": {
+      "type_id": 5,
+      "n_real": 6191,
+      "n_gen": 100,
+      "centroid_cosine": 0.8514108657836914,
+      "frechet_distance": 1.19588810526072
+    },
+    "Type_6": {
+      "type_id": 6,
+      "n_real": 7061,
+      "n_gen": 100,
+      "centroid_cosine": 0.8881929516792297,
+      "frechet_distance": 1.160433626782226
+    },
+    "Type_7": {
+      "type_id": 7,
+      "n_real": 5523,
+      "n_gen": 100,
+      "centroid_cosine": 0.8561769723892212,
+      "frechet_distance": 1.2025795383575986
+    },
+    "Type_8": {
+      "type_id": 8,
+      "n_real": 5582,
+      "n_gen": 100,
+      "centroid_cosine": 0.7459532022476196,
+      "frechet_distance": 1.191877708617528
+    },
+    "Type_9": {
+      "type_id": 9,
+      "n_real": 5643,
+      "n_gen": 100,
+      "centroid_cosine": 0.8402470946311951,
+      "frechet_distance": 1.186689382235409
+    },
+    "Type_10": {
+      "type_id": 10,
+      "n_real": 4875,
+      "n_gen": 100,
+      "centroid_cosine": 0.8613826632499695,
+      "frechet_distance": 1.2011413588930795
+    },
+    "Type_11": {
+      "type_id": 11,
+      "n_real": 5201,
+      "n_gen": 100,
+      "centroid_cosine": 0.9201502799987793,
+      "frechet_distance": 1.1864210844566483
+    },
+    "Type_12": {
+      "type_id": 12,
+      "n_real": 5144,
+      "n_gen": 100,
+      "centroid_cosine": 0.8885210752487183,
+      "frechet_distance": 1.1789931958921995
+    },
+    "Type_13": {
+      "type_id": 13,
+      "n_real": 4326,
+      "n_gen": 100,
+      "centroid_cosine": 0.8879849314689636,
+      "frechet_distance": 1.18930578050924
+    },
+    "Type_14": {
+      "type_id": 14,
+      "n_real": 4817,
+      "n_gen": 100,
+      "centroid_cosine": 0.8935399651527405,
+      "frechet_distance": 1.1702888985942543
+    },
+    "Type_15": {
+      "type_id": 15,
+      "n_real": 3578,
+      "n_gen": 100,
+      "centroid_cosine": 0.8886635899543762,
+      "frechet_distance": 1.1967179647342916
+    },
+    "Type_16": {
+      "type_id": 16,
+      "n_real": 3559,
+      "n_gen": 100,
+      "centroid_cosine": 0.8824996948242188,
+      "frechet_distance": 1.1590600720626298
+    },
+    "Type_17": {
+      "type_id": 17,
+      "n_real": 3338,
+      "n_gen": 100,
+      "centroid_cosine": 0.8025861978530884,
+      "frechet_distance": 1.190827651668687
+    },
+    "Type_18": {
+      "type_id": 18,
+      "n_real": 3337,
+      "n_gen": 100,
+      "centroid_cosine": 0.6708859205245972,
+      "frechet_distance": 1.2206807128613573
+    },
+    "Type_19": {
+      "type_id": 19,
+      "n_real": 2934,
+      "n_gen": 100,
+      "centroid_cosine": 0.8633683323860168,
+      "frechet_distance": 1.1813968185957249
+    },
+    "Type_20": {
+      "type_id": 20,
+      "n_real": 2870,
+      "n_gen": 100,
+      "centroid_cosine": 0.8132525682449341,
+      "frechet_distance": 1.2134374627242202
+    },
+    "Type_21": {
+      "type_id": 21,
+      "n_real": 2850,
+      "n_gen": 100,
+      "centroid_cosine": 0.9249286651611328,
+      "frechet_distance": 1.117923447475881
+    },
+    "Type_22": {
+      "type_id": 22,
+      "n_real": 2699,
+      "n_gen": 100,
+      "centroid_cosine": 0.9023973941802979,
+      "frechet_distance": 1.147449969163497
+    },
+    "Type_23": {
+      "type_id": 23,
+      "n_real": 2207,
+      "n_gen": 100,
+      "centroid_cosine": 0.9210468530654907,
+      "frechet_distance": 1.0879350819522537
+    },
+    "Type_24": {
+      "type_id": 24,
+      "n_real": 2075,
+      "n_gen": 100,
+      "centroid_cosine": 0.8758660554885864,
+      "frechet_distance": 1.1725755867032044
+    },
+    "Type_25": {
+      "type_id": 25,
+      "n_real": 2018,
+      "n_gen": 100,
+      "centroid_cosine": 0.8625298142433167,
+      "frechet_distance": 1.199151692699646
+    },
+    "Type_26": {
+      "type_id": 26,
+      "n_real": 2004,
+      "n_gen": 100,
+      "centroid_cosine": 0.8399525284767151,
+      "frechet_distance": 1.1458567636731352
+    },
+    "Type_27": {
+      "type_id": 27,
+      "n_real": 1912,
+      "n_gen": 100,
+      "centroid_cosine": 0.9340116381645203,
+      "frechet_distance": 0.9580843584214513
+    },
+    "Type_28": {
+      "type_id": 28,
+      "n_real": 1902,
+      "n_gen": 100,
+      "centroid_cosine": 0.9115368127822876,
+      "frechet_distance": 1.096053186950622
+    },
+    "Type_29": {
+      "type_id": 29,
+      "n_real": 1814,
+      "n_gen": 100,
+      "centroid_cosine": 0.8289209008216858,
+      "frechet_distance": 1.2020390121767541
+    },
+    "Type_30": {
+      "type_id": 30,
+      "n_real": 1790,
+      "n_gen": 100,
+      "centroid_cosine": 0.9330516457557678,
+      "frechet_distance": 1.0862765154767273
+    },
+    "Type_31": {
+      "type_id": 31,
+      "n_real": 1715,
+      "n_gen": 100,
+      "centroid_cosine": 0.9260948896408081,
+      "frechet_distance": 1.136176290029352
+    },
+    "Type_32": {
+      "type_id": 32,
+      "n_real": 1690,
+      "n_gen": 100,
+      "centroid_cosine": 0.7733476161956787,
+      "frechet_distance": 1.2123950355241657
+    },
+    "Type_33": {
+      "type_id": 33,
+      "n_real": 1583,
+      "n_gen": 100,
+      "centroid_cosine": 0.9370824098587036,
+      "frechet_distance": 1.0993728946421155
+    },
+    "Type_34": {
+      "type_id": 34,
+      "n_real": 1530,
+      "n_gen": 100,
+      "centroid_cosine": 0.8710581064224243,
+      "frechet_distance": 1.1965468139195983
+    },
+    "Type_35": {
+      "type_id": 35,
+      "n_real": 1503,
+      "n_gen": 100,
+      "centroid_cosine": 0.9335618615150452,
+      "frechet_distance": 1.173329193162445
+    },
+    "Type_36": {
+      "type_id": 36,
+      "n_real": 1454,
+      "n_gen": 100,
+      "centroid_cosine": 0.9029420018196106,
+      "frechet_distance": 1.1436711276722353
+    },
+    "Type_37": {
+      "type_id": 37,
+      "n_real": 1452,
+      "n_gen": 100,
+      "centroid_cosine": 0.8838334679603577,
+      "frechet_distance": 1.1712759269546182
+    },
+    "Type_38": {
+      "type_id": 38,
+      "n_real": 1420,
+      "n_gen": 100,
+      "centroid_cosine": 0.8883100748062134,
+      "frechet_distance": 1.0324030886101383
+    },
+    "Type_39": {
+      "type_id": 39,
+      "n_real": 1308,
+      "n_gen": 100,
+      "centroid_cosine": 0.8508964776992798,
+      "frechet_distance": 1.1330306030494914
+    },
+    "Type_40": {
+      "type_id": 40,
+      "n_real": 1296,
+      "n_gen": 100,
+      "centroid_cosine": 0.896152913570404,
+      "frechet_distance": 1.090970722294474
+    },
+    "Type_41": {
+      "type_id": 41,
+      "n_real": 1235,
+      "n_gen": 100,
+      "centroid_cosine": 0.8553364276885986,
+      "frechet_distance": 1.2182384079166153
+    },
+    "Type_42": {
+      "type_id": 42,
+      "n_real": 1228,
+      "n_gen": 100,
+      "centroid_cosine": 0.8608106970787048,
+      "frechet_distance": 1.1581461173710883
+    },
+    "Type_43": {
+      "type_id": 43,
+      "n_real": 1222,
+      "n_gen": 100,
+      "centroid_cosine": 0.9103603959083557,
+      "frechet_distance": 1.119731891279419
+    },
+    "Type_44": {
+      "type_id": 44,
+      "n_real": 1220,
+      "n_gen": 100,
+      "centroid_cosine": 0.761900007724762,
+      "frechet_distance": 1.2038663994327332
+    },
+    "Type_45": {
+      "type_id": 45,
+      "n_real": 1170,
+      "n_gen": 100,
+      "centroid_cosine": 0.9364716410636902,
+      "frechet_distance": 1.047737851670465
+    },
+    "Type_46": {
+      "type_id": 46,
+      "n_real": 1149,
+      "n_gen": 100,
+      "centroid_cosine": 0.2615259289741516,
+      "frechet_distance": 1.344587177092385
+    },
+    "Type_47": {
+      "type_id": 47,
+      "n_real": 1074,
+      "n_gen": 100,
+      "centroid_cosine": 0.8135883808135986,
+      "frechet_distance": 1.165696846093647
+    },
+    "Type_48": {
+      "type_id": 48,
+      "n_real": 1032,
+      "n_gen": 100,
+      "centroid_cosine": 0.9192623496055603,
+      "frechet_distance": 1.1447780319687717
+    },
+    "Type_49": {
+      "type_id": 49,
+      "n_real": 1002,
+      "n_gen": 100,
+      "centroid_cosine": 0.9564546346664429,
+      "frechet_distance": 1.0207963050346744
+    },
+    "Type_50": {
+      "type_id": 50,
+      "n_real": 970,
+      "n_gen": 100,
+      "centroid_cosine": 0.9277733564376831,
+      "frechet_distance": 1.054659777208068
+    },
+    "Type_51": {
+      "type_id": 51,
+      "n_real": 967,
+      "n_gen": 100,
+      "centroid_cosine": 0.8691936731338501,
+      "frechet_distance": 1.1990734182577873
+    },
+    "Type_52": {
+      "type_id": 52,
+      "n_real": 935,
+      "n_gen": 100,
+      "centroid_cosine": 0.9291499853134155,
+      "frechet_distance": 1.038960289122756
+    },
+    "Type_53": {
+      "type_id": 53,
+      "n_real": 887,
+      "n_gen": 100,
+      "centroid_cosine": 0.9359471797943115,
+      "frechet_distance": 1.0649172536440006
+    },
+    "Type_54": {
+      "type_id": 54,
+      "n_real": 853,
+      "n_gen": 100,
+      "centroid_cosine": 0.8952558040618896,
+      "frechet_distance": 1.0873213265984887
+    },
+    "Type_55": {
+      "type_id": 55,
+      "n_real": 727,
+      "n_gen": 100,
+      "centroid_cosine": 0.9284572601318359,
+      "frechet_distance": 0.9672483997080417
+    },
+    "Type_56": {
+      "type_id": 56,
+      "n_real": 713,
+      "n_gen": 100,
+      "centroid_cosine": 0.935681939125061,
+      "frechet_distance": 1.029500149496083
+    },
+    "Type_57": {
+      "type_id": 57,
+      "n_real": 673,
+      "n_gen": 100,
+      "centroid_cosine": 0.9398475885391235,
+      "frechet_distance": 1.0059104358268982
+    },
+    "Type_58": {
+      "type_id": 58,
+      "n_real": 669,
+      "n_gen": 100,
+      "centroid_cosine": 0.9671552777290344,
+      "frechet_distance": 0.8811176545325774
+    },
+    "Type_59": {
+      "type_id": 59,
+      "n_real": 656,
+      "n_gen": 100,
+      "centroid_cosine": 0.7055235505104065,
+      "frechet_distance": 1.1570640305803532
+    },
+    "Type_60": {
+      "type_id": 60,
+      "n_real": 492,
+      "n_gen": 100,
+      "centroid_cosine": 0.9005292654037476,
+      "frechet_distance": 1.15467439344211
+    },
+    "Type_61": {
+      "type_id": 61,
+      "n_real": 489,
+      "n_gen": 100,
+      "centroid_cosine": 0.9107251763343811,
+      "frechet_distance": 1.0735566143502717
+    },
+    "Type_62": {
+      "type_id": 62,
+      "n_real": 396,
+      "n_gen": 100,
+      "centroid_cosine": 0.9017046689987183,
+      "frechet_distance": 1.1703513056722932
+    },
+    "Type_63": {
+      "type_id": 63,
+      "n_real": 394,
+      "n_gen": 100,
+      "centroid_cosine": 0.8948246836662292,
+      "frechet_distance": 1.119702879274598
+    },
+    "Type_64": {
+      "type_id": 64,
+      "n_real": 384,
+      "n_gen": 100,
+      "centroid_cosine": 0.5079552531242371,
+      "frechet_distance": 1.3619216516244694
+    },
+    "Type_65": {
+      "type_id": 65,
+      "n_real": 295,
+      "n_gen": 100,
+      "centroid_cosine": 0.890642523765564,
+      "frechet_distance": 1.1077977869307338
+    },
+    "Type_66": {
+      "type_id": 66,
+      "n_real": 242,
+      "n_gen": 100,
+      "centroid_cosine": 0.9316803812980652,
+      "frechet_distance": 0.9515616029340941
+    },
+    "Type_67": {
+      "type_id": 67,
+      "n_real": 138,
+      "n_gen": 100,
+      "centroid_cosine": 0.8524563312530518,
+      "frechet_distance": 1.128807341659678
+    },
+    "Type_68": {
+      "type_id": 68,
+      "n_real": 77,
+      "n_gen": 100,
+      "centroid_cosine": 0.3790830075740814,
+      "frechet_distance": 1.545443621707541
+    }
+  },
+  "summary": {
+    "mean_centroid_cosine": 0.8535371729429218,
+    "min_centroid_cosine": 0.2615259289741516,
+    "max_centroid_cosine": 0.9671552777290344,
+    "std_centroid_cosine": 0.117912129898011,
+    "num_types_evaluated": 69,
+    "mean_fd": 1.146367990087648
+  }
+}

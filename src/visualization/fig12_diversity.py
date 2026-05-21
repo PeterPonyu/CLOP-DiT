@@ -15,8 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .direct_layout import bind_figure_region
-from .explicit_positioning import add_shared_legend_axes
-from .style import COLORS, FONT_DENSE_YTICK, apply_style, save_with_vcd, add_panel_label, abbreviate_cell_type
+from .style import COLORS, apply_style, save_with_vcd, add_panel_label, abbreviate_cell_type
 from .fig14_expr_diversity import plot_expression_diversity_panel
 from src.utils.paths import load_thresholds
 
@@ -89,10 +88,11 @@ def plot_diagnostics(
         [top_left.add_axes(fig), top_right.add_axes(fig)],
         [bottom_left.add_axes(fig), bottom_right.add_axes(fig)],
     ], dtype=object)
-    add_panel_label(axes[0, 0], 'a', x=-0.14, y=1.08)
-    add_panel_label(axes[0, 1], 'b', x=-0.14, y=1.08)
-    add_panel_label(axes[1, 0], 'c', x=-0.14, y=1.08)
-    add_panel_label(axes[1, 1], 'd', x=-0.14, y=1.08)
+    _lbl_y = 1.06
+    add_panel_label(axes[0, 0], 'a', x=-0.10, y=_lbl_y)
+    add_panel_label(axes[0, 1], 'b', x=-0.18, y=_lbl_y)
+    add_panel_label(axes[1, 0], 'c', x=-0.10, y=_lbl_y)
+    add_panel_label(axes[1, 1], 'd', x=-0.10, y=_lbl_y)
 
     ax = axes[0, 0]
     t1 = all_results.get("test1_intratype_diversity", {}).get("per_type", {})
@@ -159,9 +159,9 @@ def plot_diagnostics(
         ax.set_title("CFG Scale vs Diversity & Norm")
         ax.xaxis.set_major_locator(plt.MaxNLocator(nbins=4, prune="both"))
         ax.text(0.03, 0.05, "● Div.", transform=ax.transAxes,
-            fontsize=8.5, color=COLORS["real"], ha="left", va="bottom")
+            fontsize=9, color=COLORS["real"], ha="left", va="bottom")
         ax.text(0.03, 0.13, "■ Norm", transform=ax.transAxes,
-            fontsize=8.5, color=COLORS["generated"], ha="left", va="bottom")
+            fontsize=9, color=COLORS["generated"], ha="left", va="bottom")
     else:
         ax.set_title("CFG Scale vs Diversity")
 
@@ -184,8 +184,6 @@ def plot_diagnostics(
         ax.set_xticklabels(_displayed_labels, fontsize=8, rotation=45, ha="right")
         ax.set_xlabel("Cell Type")
         ax.set_ylabel("Intra-Type Div.")
-        gain = t5["summary"]["mean_diversity_gain"]
-        eps = t5["summary"].get("noise_scale", "?")
         ax.set_title("Centroid vs Noisy Conditioning")
     else:
         ax.set_title("Centroid vs Noisy Conditioning")

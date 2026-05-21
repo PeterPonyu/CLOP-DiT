@@ -14,11 +14,12 @@ from pathlib import Path
 from typing import Optional, List, Dict
 
 from ..utils.constants import RANDOM_SEED
+from ..visualization.style import VIS_STYLE, register_project_fonts
 
 # Publication-quality style (Nature/Cell convention)
-matplotlib.rcParams.update({
-    "font.family": "sans-serif",
-    "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+register_project_fonts()
+_EVAL_VIS_STYLE = dict(VIS_STYLE)
+_EVAL_VIS_STYLE.update({
     "font.size": 9,
     "axes.titlesize": 11,
     "axes.labelsize": 10,
@@ -32,6 +33,7 @@ matplotlib.rcParams.update({
     "savefig.bbox": "tight",
     "savefig.pad_inches": 0.05,
 })
+matplotlib.rcParams.update(_EVAL_VIS_STYLE)
 
 
 class EmbeddingVisualizer:

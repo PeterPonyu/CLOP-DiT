@@ -23,7 +23,7 @@ from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
 from .style import (
     COLORS, FONT_SMALL, FONT_ANNOTATION, METHOD_COLORS, abbreviate_cell_type,
     add_panel_label, save_panel, save_with_vcd,
-    set_figure_suptitle, style_axes
+    style_axes
 )
 from src.utils.paths import RESULTS_DIR, FIG_DIR
 
@@ -101,15 +101,15 @@ def plot_benchmark_panel(
         ("gene_spearman_rho",    "\u03c1 \u2191",     "higher"),
     ]
 
-    fig = plt.figure(figsize=(16.2, 8.0))
+    fig = plt.figure(figsize=(16.2, 8.8))
     layout = bind_figure_region(fig, (0.05, 0.12, 0.96, 0.95))
-    top_row, bottom_row = layout.split_rows([1.05, 1.12], hspace=0.32)
+    top_row, bottom_row = layout.split_rows([1.00, 1.28], hspace=0.26)
     top_left, top_right = top_row.split_cols(2, wspace=0.44)
     bottom_left, bottom_right = bottom_row.split_cols([1.04, 0.96], wspace=0.28)
 
     # ── S1: Heatmap (methods x metrics) ──
     ax1 = top_left.inset(left=0.04).add_axes(fig)
-    add_panel_label(ax1, chr(ord('a') + label_offset), x=-0.12, y=1.08)
+    add_panel_label(ax1, chr(ord('a') + label_offset), x=-0.08, y=1.02)
     metric_labels = [m[1] for m in heatmap_metrics]
     metric_keys = [m[0] for m in heatmap_metrics]
     directions = [m[2] for m in heatmap_metrics]
@@ -143,7 +143,10 @@ def plot_benchmark_panel(
     cmap = matplotlib.colormaps.get_cmap("PiYG")
     im = ax1.imshow(norm, cmap=cmap, aspect="auto", vmin=0, vmax=1)
 
-    short_method_names = [abbreviate_cell_type(n, 14) for n in method_names]
+    short_method_names = [abbreviate_cell_type(n, 12) for n in method_names]
+    assert len(set(short_method_names)) == len(short_method_names), (
+        f"abbreviate_cell_type(max_len=12) collision: {short_method_names}"
+    )
     ax1.set_xticks(range(len(metric_labels)))
     ax1.set_xticklabels(metric_labels, rotation=20, ha="right", fontsize=8)
     ax1.set_yticks(range(n_methods))
@@ -172,13 +175,16 @@ def plot_benchmark_panel(
 
     # ── S2: Composite score bars ──
     ax2 = top_right.inset(left=0.05, right=0.01).add_axes(fig)
-    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.12, y=1.08)
+    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.08, y=1.02)
     composite_common = report.get("composite_score_common_metrics_only", composite)
     sorted_methods = sorted(composite_common.keys(), key=lambda k: composite_common.get(k, 0.0), reverse=True)
     scores = [composite[m] for m in sorted_methods]
     scores_common = [composite_common.get(m, 0.0) for m in sorted_methods]
     bar_colors = [METHOD_COLORS.get(m, COLORS["neutral"]) for m in sorted_methods]
-    short_sorted = [abbreviate_cell_type(m, 16) for m in sorted_methods]
+    short_sorted = [abbreviate_cell_type(m, 14) for m in sorted_methods]
+    assert len(set(short_sorted)) == len(short_sorted), (
+        f"abbreviate_cell_type(max_len=14) collision: {short_sorted}"
+    )
 
     ranked_labels = []
     for i, name in enumerate(short_sorted):
@@ -203,7 +209,7 @@ def plot_benchmark_panel(
                  color=COLORS["neutral"])
     for bar, score in zip(bars_common, scores_common):
         ax2.text(bar.get_width() + 0.01, bar.get_y() + bar.get_height() / 2,
-                 f"{score:.3f}", va="center", fontsize=FONT_SMALL, fontstyle="italic",
+                 f"{score:.3f}", va="center", fontsize=FONT_SMALL, fontstyle="normal",
                  color=COLORS["neutral"])
 
     ax2.set_xlim(0, max(scores) * 1.25)
@@ -216,7 +222,7 @@ def plot_benchmark_panel(
     ax3 = bottom_left.add_axes(fig)
     target_label_x = ax1.get_position().x0 - 0.12 * ax1.get_position().width
     ax3_label_x = (target_label_x - ax3.get_position().x0) / ax3.get_position().width
-    add_panel_label(ax3, chr(ord('a') + label_offset + 2), x=ax3_label_x, y=1.08)
+    add_panel_label(ax3, chr(ord('a') + label_offset + 2), x=ax3_label_x, y=1.02)
     key_metrics = [
         ("frechet_distance",     "FD \u2193"),
         ("mean_centroid_cosine", "Cent Cos \u2191"),
@@ -244,7 +250,7 @@ def plot_benchmark_panel(
 
     # ── S4: CI comparison — error-bar plot ──
     ax4 = bottom_right.add_axes(fig)
-    add_panel_label(ax4, chr(ord('a') + label_offset + 3), x=-0.12, y=1.08)
+    add_panel_label(ax4, chr(ord('a') + label_offset + 3), x=-0.08, y=1.02)
     ci_metrics = [
         ("frechet_distance",     "fd_ci",              "Fr\u00e9chet Distance"),
         ("mean_centroid_cosine", "centroid_cosine_ci",  "Centroid Cosine"),
@@ -252,15 +258,17 @@ def plot_benchmark_panel(
     ]
 
     group_positions = []
-    group_labels = []
+    ytick_labels = []
+    group_ranges = []
     all_y = 0
 
     for mi, (metric_key, ci_key, label) in enumerate(ci_metrics):
         # Add metric group title
         if mi > 0:
             ax4.axhline(y=all_y - 0.8, color="#DDD", linewidth=1, linestyle="--")
-            all_y += 0.6
+            all_y += 1.0
 
+        group_start = all_y
         for mname in method_names:
             val = methods_data[mname].get(metric_key, 0)
             ci = methods_data[mname].get(ci_key, None)
@@ -276,20 +284,43 @@ def plot_benchmark_panel(
                          markerfacecolor=color if has_ci else "none",
                          markersize=7,
                          capsize=4, capthick=1.5, linewidth=1.5,
-                         label=mname[:18] if mi == 0 else None)
+                         label=mname[:18])
             group_positions.append(all_y)
-            group_labels.append(f"{mname[:14]}")
+            ytick_labels.append(abbreviate_cell_type(mname, 10))
             all_y += 1.6
+        group_ranges.append((group_start - 0.75, all_y - 1.6 + 0.75, label))
 
+    _ytick_unique = [abbreviate_cell_type(m, 10) for m in method_names]
+    assert len(set(_ytick_unique)) == len(_ytick_unique), (
+        f"abbreviate_cell_type(max_len=10) collision: {_ytick_unique}"
+    )
+    for gi, (lo, hi, _label) in enumerate(group_ranges):
+        if gi % 2 == 0:
+            ax4.axhspan(lo, hi, color=COLORS["bg_gauge"], alpha=0.30, zorder=0)
     ax4.set_yticks(group_positions)
-    ax4.set_yticklabels([
-        label if i % 2 == 0 else ""
-        for i, label in enumerate(group_labels)
-    ], fontsize=7)
+    ax4.set_yticklabels(ytick_labels, fontsize=7)
     ax4.invert_yaxis()
+    group_span = len(method_names)
+    for gi, (_, _, label) in enumerate(ci_metrics):
+        center = gi * (group_span * 1.6 + 1.0) + ((group_span - 1) * 1.6) / 2.0
+        ax4.text(
+            -0.18,
+            center,
+            label.replace("Distance", "Dist.").replace("Cosine", "Cos."),
+            transform=ax4.get_yaxis_transform(),
+            ha="right",
+            va="center",
+            fontsize=FONT_SMALL,
+            fontweight="bold",
+            color=COLORS["neutral"],
+            bbox=dict(boxstyle="round,pad=0.15", facecolor="white", edgecolor="none", alpha=0.86),
+            clip_on=False,
+        )
 
-    ax4.legend(fontsize=FONT_SMALL, loc="lower right", ncol=1, frameon=False)
-    style_axes(ax4, "default", title="95% Bootstrap CI Comparison",
+    handles, labels = ax4.get_legend_handles_labels()
+    by_label = dict(zip(labels, handles))
+    ax4.legend(by_label.values(), by_label.keys(), fontsize=FONT_SMALL, loc="lower right", ncol=1, frameon=False)
+    style_axes(ax4, "default", title="95% Bootstrap CI by Metric",
                xlabel="Metric Value")
 
     legend_ax_s3 = add_shared_legend_axes(fig, (ax3.get_position().x0, ax3.get_position().y0 - 0.110, ax3.get_position().width, 0.055))

@@ -1,0 +1,69 @@
+{
+  "metadata": {
+    "n_bootstrap": 1000,
+    "n_types": 69,
+    "n_gen_per_type": 100,
+    "resampling_unit": "cell_types",
+    "ci_method": "percentile",
+    "seed": 42,
+    "generation_config": {
+      "cfg_scale": 1.5,
+      "num_steps": 20,
+      "solver": "midpoint"
+    },
+    "note": "CIs computed by resampling cell types with replacement. Classifier weights are fixed; only the set of types included in each bootstrap varies.",
+    "real_data_baseline_knn1": 0.7681246076115877,
+    "random_chance": 0.014492753623188406,
+    "elapsed_seconds": 544.32599401474
+  },
+  "metrics": {
+    "knn_top1": {
+      "point_estimate": 0.5085507246376811,
+      "ci_95_lower": 0.42143478260869566,
+      "ci_95_upper": 0.5862608695652174,
+      "bootstrap_std": 0.042852228535073644,
+      "bootstrap_median": 0.5075362318840579,
+      "n_bootstrap": 1000
+    },
+    "knn_top5": {
+      "point_estimate": 0.7282608695652174,
+      "ci_95_lower": 0.6583731884057972,
+      "ci_95_upper": 0.7941123188405796,
+      "bootstrap_std": 0.03530377089079056,
+      "bootstrap_median": 0.7288405797101449,
+      "n_bootstrap": 1000
+    },
+    "steering": {
+      "point_estimate": 1.0,
+      "ci_95_lower": 1.0,
+      "ci_95_upper": 1.0,
+      "bootstrap_std": 0.0,
+      "bootstrap_median": 1.0,
+      "n_bootstrap": 1000
+    },
+    "diversity_ratio": {
+      "point_estimate": 0.9688611599519839,
+      "ci_95_lower": 0.9631701268793532,
+      "ci_95_upper": 0.9744515740760804,
+      "bootstrap_std": 0.0029254629094836474,
+      "bootstrap_median": 0.9686721739103135,
+      "n_bootstrap": 1000
+    },
+    "linear_acc": {
+      "point_estimate": 0.5830434782608696,
+      "ci_95_lower": 0.518394927536232,
+      "ci_95_upper": 0.645945652173913,
+      "bootstrap_std": 0.03360594419245146,
+      "bootstrap_median": 0.5839130434782609,
+      "n_bootstrap": 1000
+    },
+    "centroid_cosine": {
+      "point_estimate": 0.8977097618407097,
+      "ci_95_lower": 0.8754131545407186,
+      "ci_95_upper": 0.9126509786300037,
+      "bootstrap_std": 0.009174632956624879,
+      "bootstrap_median": 0.898323103569556,
+      "n_bootstrap": 1000
+    }
+  }
+}

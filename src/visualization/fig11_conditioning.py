@@ -23,7 +23,6 @@ from .style import (
     COLORS, TYPE_PALETTE, apply_style, save_with_vcd,
     add_panel_label, abbreviate_cell_type,
     FONT_LABEL, FONT_TITLE, FONT_TICK, FONT_TICK_DENSE, FONT_ANNOTATION,
-    FONT_HEATMAP_CELL,
 )
 
 logger = logging.getLogger(__name__)
@@ -64,10 +63,10 @@ def plot_panel_m(
     _fw = 15.0  # Fixed width for reproducible layout
     has_row3 = full_dim_data is not None and len(full_dim_data) > 0
     if has_row3:
-        fig = plt.figure(figsize=(_fw, 9.0))
+        fig = plt.figure(figsize=(_fw, 9.8))
         row_regions = bind_figure_region(fig, (0.05, 0.12, 0.97, 0.95)).split_rows(
-            [1.34, 1.02, 0.70],
-            gap=[0.108, 0.074],
+            [1.22, 1.06, 0.92],
+            gap=[0.096, 0.062],
         )
     else:
         fig = plt.figure(figsize=(_fw, 6.7))
@@ -78,11 +77,11 @@ def plot_panel_m(
     top_widths = [1.0] * n_modes
     if n_modes > 1:
         top_widths[-1] = 1.04
-    axes = [region.add_axes(fig) for region in row_regions[0].split_cols(top_widths, wspace=0.36)]
+    axes = [region.add_axes(fig) for region in row_regions[0].split_cols(top_widths, wspace=0.22)]
 
     # Panel labels: placed with enough clearance for single-line titles
-    _panel_label_y = 1.09
-    add_panel_label(axes[0], chr(ord('a') + label_offset), x=-0.14, y=_panel_label_y)
+    _panel_label_y = 1.06
+    add_panel_label(axes[0], chr(ord('a') + label_offset), x=-0.18, y=_panel_label_y)
 
     type_to_color = {tid: TYPE_PALETTE[i % len(TYPE_PALETTE)] for i, tid in enumerate(selected_types)}
     type_to_name = {
@@ -133,13 +132,13 @@ def plot_panel_m(
         )
 
     # ── Row 2: Quantitative summaries ──
-    bottom_regions = row_regions[1].split_cols([1.08, 1.02, 0.92], wspace=0.28)
+    bottom_regions = row_regions[1].split_cols([1.08, 1.02, 0.92], wspace=0.18)
     ax_b1 = bottom_regions[0].add_axes(fig)
-    add_panel_label(ax_b1, chr(ord('a') + label_offset + 1), x=-0.18, y=_panel_label_y)
+    add_panel_label(ax_b1, chr(ord('a') + label_offset + 1), x=-0.14, y=_panel_label_y)
     ax_b2 = bottom_regions[1].add_axes(fig)
-    add_panel_label(ax_b2, chr(ord('a') + label_offset + 2), x=-0.18, y=_panel_label_y)
+    add_panel_label(ax_b2, chr(ord('a') + label_offset + 2), x=-0.10, y=_panel_label_y)
     ax_b3 = bottom_regions[2].add_axes(fig)
-    add_panel_label(ax_b3, chr(ord('a') + label_offset + 3), x=-0.18, y=_panel_label_y)
+    add_panel_label(ax_b3, chr(ord('a') + label_offset + 3), x=-0.12, y=_panel_label_y)
     _adjust_axes_rect(ax_b1, width_scale=0.90)
     _adjust_axes_rect(ax_b3, dx=ax_b3.get_position().width * 0.08, width_scale=0.92)
 
@@ -228,13 +227,18 @@ def plot_panel_m(
         from sklearn.decomposition import PCA as _PCA
         from sklearn.neighbors import KNeighborsClassifier
 
-        row3_regions = row_regions[2].split_cols([0.98, 1.00, 0.94], wspace=0.34)
+        # Widen the gap between the diversity heatmap (panel J) and the
+        # pairwise-cosine violin (panel K) so K's y-tick labels do not crowd
+        # J's colorbar tick labels on the page. The first gap (c1→c2) stays
+        # close to the previous matplotlib-style wspace=0.18 geometry; the
+        # second gap (c2→c3) is widened to give K's ylabels clearance.
+        row3_regions = row_regions[2].split_cols([1.00, 0.96, 1.16], gap=[0.049, 0.082])
         ax_c1 = row3_regions[0].add_axes(fig)
-        add_panel_label(ax_c1, chr(ord('a') + label_offset + 4), x=-0.18, y=_panel_label_y)
+        add_panel_label(ax_c1, chr(ord('a') + label_offset + 4), x=-0.14, y=_panel_label_y)
         ax_c2 = row3_regions[1].add_axes(fig)
-        add_panel_label(ax_c2, chr(ord('a') + label_offset + 5), x=-0.18, y=_panel_label_y)
+        add_panel_label(ax_c2, chr(ord('a') + label_offset + 5), x=-0.14, y=_panel_label_y)
         ax_c3 = row3_regions[2].add_axes(fig)
-        add_panel_label(ax_c3, chr(ord('a') + label_offset + 6), x=-0.04, y=_panel_label_y)
+        add_panel_label(ax_c3, chr(ord('a') + label_offset + 6), x=-0.10, y=_panel_label_y)
         _adjust_axes_rect(ax_c1, width_scale=0.90)
         _adjust_axes_rect(ax_c3, dx=ax_c3.get_position().width * 0.08, width_scale=0.92)
 
@@ -302,7 +306,7 @@ def plot_panel_m(
         type_short_names = [
             abbreviate_cell_type(
                 type_names.get(int(tid), f"T{tid}") if type_names else f"T{tid}",
-                max_len=16,
+                max_len=12,
             )
             for tid in selected_types
         ]
@@ -315,14 +319,8 @@ def plot_panel_m(
         ax_c2.set_yticks(np.arange(n_types_sel))
         ax_c2.set_yticklabels(type_short_names, fontsize=FONT_TICK_DENSE)
         ax_c2.set_title("Per-Type Diversity (1\u2212cos)", fontsize=FONT_TITLE)
-        # Annotate cells
-        for i in range(n_types_sel):
-            for j in range(len(all_mode_names)):
-                val = div_matrix[i, j]
-                if not np.isnan(val):
-                    ax_c2.text(j, i, f"{val:.2f}", ha="center", va="center",
-                               fontsize=FONT_HEATMAP_CELL,
-                               color="white" if val > np.nanmedian(div_matrix) else "black")
+        # The colorbar carries the quantitative scale; omitting per-cell numbers
+        # keeps the composed page readable at manuscript size.
         cax = add_axes_next_to(
             fig,
             ax_c2,
@@ -367,7 +365,7 @@ def plot_panel_m(
             ax_c3.set_xticks(np.arange(1, len(violin_labels_list) + 1))
             ax_c3.set_xticklabels(violin_labels_list, rotation=0, ha="center",
                                    fontsize=FONT_TICK)
-        ax_c3.set_ylabel("Pairwise Cosine Similarity", fontsize=FONT_LABEL)
+        ax_c3.set_ylabel("Pairwise cosine", fontsize=FONT_LABEL - 1, labelpad=3)
         ax_c3.set_title("Cluster Tightness", fontsize=FONT_TITLE)
 
     # ── Legend: cell-type keys — place just below the top-row scatter plots ──

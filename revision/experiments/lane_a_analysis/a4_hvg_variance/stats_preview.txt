@@ -1,0 +1,30 @@
+A4 HVG variance summary
+=======================
+
+POOLED (across all 69 cell types) — dominated by cell-type means
+-----------------------------------------------------------------
+  genes scored                : 1790 / 1790 (HVGs = top 25%, n = 448)
+  r_var Pearson (pooled)      : +0.988
+  median std ratio            : 1.326
+  frac in tolerance [0.5,2.0]  :  84.6%
+  frac with >2-fold deficit   :   0.0%
+  frac with >2-fold excess    :  15.4%
+
+  HVG subset  std ratio=1.331  in-band=81.5%  deficit>2x=0.0%
+  nonHVG subset std ratio=1.325  in-band=85.7%  deficit>2x=0.0%
+
+WITHIN-TYPE (the slice R2.8 cares about)
+-----------------------------------------
+  types scored                : 69 / 69
+  median r_var across types   : +0.848
+  mean   r_var across types   : +0.827
+  frac types w/ positive r_var: 100.0%
+  pooled-within median ratio  : 1.134
+  pooled-within frac in band  :  75.2%
+  pooled-within frac >2x def. :   8.7%
+
+INTERPRETATION
+--------------
+Pooled r_var is high because cross-type mean expression dominates
+variance when all 69 types are mixed. Within-type variance is the
+correct scope for R2.8 and shows a much weaker recovery.

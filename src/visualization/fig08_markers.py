@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .direct_layout import bind_figure_region
-from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
+from .explicit_positioning import add_axes_next_to
 from .style import COLORS, abbreviate_cell_type, add_colorbar_safe, add_panel_label, save_with_vcd
 from src.utils.paths import load_marker_genes
 
@@ -190,7 +190,9 @@ def plot_marker_gene_comparison(
     ax1.grid(axis="x", linestyle=":", linewidth=0.7, alpha=0.35)
     ax1.set_axisbelow(True)
     handles_top, labels_top = ax1.get_legend_handles_labels()
-    add_panel_label(ax1, "a", x=-0.14, y=1.03)
+    _label_x = -0.16
+    _label_y = 1.05
+    add_panel_label(ax1, "a", x=_label_x, y=_label_y)
 
     # -- N2, N3, N4 --
     if n_sel_types >= 2 and real_labels is not None and gen_labels is not None:
@@ -249,7 +251,7 @@ def plot_marker_gene_comparison(
             color=COLORS["generated"],
         )
         add_colorbar_safe(im, ax=ax2, label="Expr.", shrink=0.6, pad=0.05)
-        add_panel_label(ax2, "b", x=-0.14, y=1.03)
+        add_panel_label(ax2, "b", x=_label_x, y=_label_y)
         ax1.legend(
             handles_top,
             labels_top,
@@ -286,7 +288,7 @@ def plot_marker_gene_comparison(
         cbar3.set_label("")
         cbar3.ax.set_title("Δ", fontsize=10, pad=2)
         cbar3.ax.tick_params(labelsize=8)
-        add_panel_label(ax3, "c", x=-0.14, y=1.03)
+        add_panel_label(ax3, "c", x=_label_x, y=_label_y)
         for i in range(n_sel_types):
             for j in range(n_markers):
                 if abs(diff[i, j]) > max_abs * 0.3:
@@ -318,7 +320,7 @@ def plot_marker_gene_comparison(
         ax4.set_yticklabels(names_sorted, fontsize=10)
         ax4.set_xlabel("log$_2$ Fold Change (Gen / Real)", fontsize=11)
         ax4.set_title("Marker Fold Change", fontsize=12)
-        add_panel_label(ax4, "d", x=-0.14, y=1.03)
+        add_panel_label(ax4, "d", x=_label_x, y=_label_y)
         for i, lfc in enumerate(log2fc_sorted):
             if abs(lfc) < 0.005:
                 continue
@@ -333,7 +335,7 @@ def plot_marker_gene_comparison(
             )
     else:
         ax_fallback = top_right.add_axes(fig)
-        add_panel_label(ax_fallback, "b", x=-0.12, y=1.08)
+        add_panel_label(ax_fallback, "b", x=-0.12, y=1.04)
         ax_fallback.text(0.5, 0.5, "Per-type labels not available", ha="center", va="center", transform=ax_fallback.transAxes)
 
     if save:

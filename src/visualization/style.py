@@ -39,13 +39,28 @@ from .panel_geometry import (
 # ──────────────────────────────────────────────────────────────
 # Publication rcParams — Nature/Cell conventions
 # ──────────────────────────────────────────────────────────────
-# Calibrated for MDPI column: half-width panels at figsize=(4.5,3.2) scale ~0.71x
-# at 0.48\linewidth (3.21" print on A4 170mm text width).
+# Calibrated for a typical two-column page: half-width panels at figsize=(4.5,3.2)
+# scale ~0.71x at 0.48\linewidth (3.21" print on A4 170mm text width).
 # With composed_scale=0.70, sizes must satisfy: size * 0.70 >= 7pt.
 # → min body text ~11pt, titles ~14pt, ticks ~11pt, legends ~11pt.
 VIS_STYLE: dict = {
-    "font.family": "sans-serif",
+    "font.family": "Arial",
     "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+    "mathtext.fontset": "custom",
+    "mathtext.rm": "Arial",
+    "mathtext.it": "Arial",
+    "mathtext.bf": "Arial:weight=bold",
+    "mathtext.bfit": "Arial:weight=bold",
+    "mathtext.sf": "Arial",
+    "mathtext.tt": "Arial",
+    "mathtext.cal": "Arial",
+    "mathtext.default": "regular",
+    "mathtext.fallback": "none",
+    "pdf.fonttype": 42,
+    "ps.fonttype": 42,
+    "svg.fonttype": "none",
+    "text.usetex": False,
+    "axes.unicode_minus": False,
     "font.size": 12,
     "axes.titlesize": 14,
     "axes.titleweight": "normal",
@@ -69,7 +84,7 @@ VIS_STYLE: dict = {
     "lines.linewidth": 1.5,
     "savefig.dpi": 300,
     "savefig.bbox": None,
-    "savefig.pad_inches": 0.10,
+    "savefig.pad_inches": 0.04,
     "figure.constrained_layout.use": False,
     "figure.facecolor": "white",
 }
@@ -148,13 +163,36 @@ FONT_LEGEND = 11
 # Dense multi-panel figures where 11pt legends would crowd the layout
 FONT_LEGEND_DENSE = 10
 # Architecture diagram (Fig 1) — diagram-specific labels (min 5.5pt per VCD)
-FONT_ARCH_LABEL = 11
-FONT_ARCH_SUBLABEL = 10
+FONT_ARCH_LABEL = 12
+FONT_ARCH_SUBLABEL = 11
+FONT_ARCH_TITLE = 13
+FONT_ARCH_LEGEND = 11
 # Centralized font sizes for publication figures
 FONT_SUPTITLE = 15
 FONT_TITLE = 14
 FONT_LABEL = 12
-PANEL_LABEL_FONT_SIZE = 14
+PANEL_LABEL_FONT_SIZE = 20
+# Shared Fig 1 panel-label base — A/B/C (fig01a) and D (fig01b) are produced
+# by separate scripts but composed side-by-side in LaTeX at matching widths.
+# Keep both sub-figures consistent by computing D's label fontsize from the
+# same base so future edits in one place propagate to the composed figure.
+FIG01_REFERENCE_WIDTH_IN = 10.0     # fig01a source width
+FIG01_PANEL_LABEL_BASE   = 20        # A/B/C label fontsize at the reference width
+
+
+def compute_composed_panel_label_fontsize(source_width_in: float,
+                                           reference_width_in: float = FIG01_REFERENCE_WIDTH_IN,
+                                           base_fontsize: int = FIG01_PANEL_LABEL_BASE) -> int:
+    """Compute the source-side panel-label fontsize for a wider/narrower
+    sub-figure so its on-page rendered size matches a reference sub-figure
+    after LaTeX scales both to the same ``\\includegraphics`` width.
+
+    If reference sub-figure has width ``W_ref`` and panel-label ``F_ref`` at
+    source, and the other sub-figure has width ``W``, LaTeX scales both to
+    textwidth ``tw`` giving on-page fonts ``F_ref × tw/W_ref`` and
+    ``F × tw/W``. Setting these equal: ``F = F_ref × W / W_ref``.
+    """
+    return int(round(base_fontsize * (source_width_in / reference_width_in)))
 FONT_TICK = 11
 FONT_TICK_DENSE = 10
 FONT_ANNOTATION = 10
@@ -162,6 +200,17 @@ FONT_SMALL = 9
 # Minimum-size fonts for dense contexts (replaces illegal sub-7pt values)
 FONT_HEATMAP_CELL = 9      # Heatmap cell annotations
 FONT_DENSE_YTICK = 9       # Dense y-axis tick labels
+
+# Canonical panel-label offsets (x, y axes-fraction). Allowlist-scoped per
+# .omc/plans/revision-figure-polish-2026-04-19.md §A2-partial: Figures 2/3/4/5/7
+# sub-blocks consume these; the remaining ~145 ``add_panel_label`` call sites
+# keep their bespoke literals until a dedicated A2-full migration PR.
+PANEL_OFFSET_STD      = (-0.12, 1.04)  # default — most panels with ylabel at standard position
+PANEL_OFFSET_LEFT     = (-0.18, 1.04)  # panels with long y-tick strings or left-shifted axes
+PANEL_OFFSET_FARLEFT  = (-0.22, 1.04)  # panels with wide numeric ticks (e.g. "2.25", "120", "1.2")
+PANEL_OFFSET_WIDE     = (-0.14, 1.06)  # heatmaps / wider panels that need extra headroom
+PANEL_OFFSET_TIGHT    = (-0.08, 1.02)  # constrained layouts where STD collides with ticks
+
 _FONTS_REGISTERED = False
 
 
@@ -192,12 +241,30 @@ def register_project_fonts(font_dir: Optional[Path | str] = None) -> list[str]:
             root / "articles" / "fonts",
         ])
 
+    def _usable_font_file(fpath: Path) -> bool:
+        try:
+            from fontTools.ttLib import TTFont
+
+            font = TTFont(str(fpath), lazy=False)
+            if "glyf" in font:
+                _ = font["glyf"]
+            font.close()
+            return True
+        except Exception:
+            return False
+
     registered: list[str] = []
+    seen_names: set[str] = set()
     for base in candidates:
         if not base.exists() or not base.is_dir():
             continue
         for ext in ("*.ttf", "*.otf", "*.ttc"):
             for fpath in sorted(base.glob(ext)):
+                if fpath.name in seen_names:
+                    continue
+                seen_names.add(fpath.name)
+                if not _usable_font_file(fpath):
+                    continue
                 try:
                     fm.fontManager.addfont(str(fpath))
                     registered.append(str(fpath))
@@ -267,21 +334,24 @@ def set_figure_suptitle(
 def add_panel_label(
     ax: plt.Axes,
     label: str,
-    x: float = -0.10,
-    y: float = 1.05,
+    x: float = -0.12,
+    y: float = 1.08,
     *,
     fontsize: int = PANEL_LABEL_FONT_SIZE,
-    fontweight: str = "semibold",
+    fontweight: str = "bold",
     color: str = "black",
     stroke_linewidth: float = 3.0,
     stroke_foreground: str = "white",
     **kwargs,
 ) -> None:
-    """Add a panel label (a, b, c, etc.) outside the top-left corner of a subplot.
+    """Add a bold uppercase panel label (A, B, C, ...) above the top-left
+    corner of a subplot.
 
-    The label is placed outside the axes border (default x=-0.10, y=1.05
-    in axes coordinates) so it never overlaps with plot content.  A white
-    outline stroke (path_effects) ensures readability over any background.
+    Labels are rendered as bold uppercase letters (e.g. ``A``) with no
+    surrounding parentheses for better on-page prominence. Default
+    position (x=-0.12, y=1.08 in axes coordinates) keeps the label
+    clear of plot content, and a white outline stroke guarantees
+    readability over any background.
 
     Parameters
     ----------
@@ -305,8 +375,9 @@ def add_panel_label(
     **kwargs
         Additional keyword arguments passed to ``ax.text()``.
     """
+    rendered_label = str(label).strip().upper()
     ax.text(
-        x, y, f"({label})",
+        x, y, rendered_label,
         transform=ax.transAxes,
         fontsize=fontsize,
         fontweight=fontweight,
@@ -315,7 +386,7 @@ def add_panel_label(
         ha="left",
         zorder=120,
         clip_on=False,
-        gid=f"panel_label:{label}",
+        gid=f"panel_label:{rendered_label}",
         path_effects=[
             pe.withStroke(linewidth=stroke_linewidth, foreground=stroke_foreground),
             pe.Normal(),
@@ -566,12 +637,25 @@ def save_with_vcd(
             _scripts = Path(__file__).resolve().parent.parent.parent / "scripts"
             if str(_scripts) not in sys.path:
                 sys.path.insert(0, str(_scripts))
-            from vcd import detect_all_conflicts
-            issues = detect_all_conflicts(fig, label=basename, verbose=False)
+            from vcd import detect_all_conflicts, count_by_severity_level
+            # US-307: honor adaptive profile selection via env var
+            _profile = os.environ.get("CLOPDIT_VCD_PROFILE", "full")
+            issues = detect_all_conflicts(fig, label=basename, verbose=False, profile=_profile)
             warnings_only, info_only, issue_counts = _summarize_vcd_issues(issues)
             live_vcd_payload["warnings"] = [_format_vcd_issue(x) for x in warnings_only]
             live_vcd_payload["info"] = [_format_vcd_issue(x) for x in info_only]
             live_vcd_payload["counts_by_type"] = dict(issue_counts)
+            # US-202: structured findings + severity-level counts (backward-compatible)
+            live_vcd_payload["findings"] = [
+                {
+                    "type": str(x.get("type", "")),
+                    "detail": str(x.get("detail", "")),
+                    "severity": str(x.get("severity", "")),
+                    "severity_level": str(x.get("severity_level", "")),
+                }
+                for x in issues
+            ]
+            live_vcd_payload["severity_counts"] = count_by_severity_level(issues)
             _log_vcd_issues(_logging.getLogger(__name__), basename, warnings_only, info_only, issue_counts)
         except Exception as exc:
             live_vcd_payload["error"] = str(exc)
@@ -788,5 +872,106 @@ def abbreviate_cell_type(name: str, max_len: int = 20) -> str:
             break
         result = result.replace(full, short)
     if len(result) > max_len:
-        result = result[:max_len - 1] + "\u2026"
+        # Stage 2 label-handling policy: never emit U+2026.
+        # Truncate at the last word boundary when available, otherwise hard cut.
+        cut = result.rfind(" ", 0, max_len)
+        if cut < max(4, max_len // 2):
+            cut = max_len
+        result = result[:cut].rstrip(" -_,.;:")
     return result
+
+
+def safe_tick_labels(
+    labels,
+    max_chars: int = 20,
+    strategy: str = "index_on_overflow",
+):
+    """Return (display_labels, legend_lines) that never contain U+2026.
+
+    This is the Stage 2 Producer-side Label Helper. Use it in place of
+    per-figure ellipsis truncation to guarantee that the rendered PDF
+    does not contain the HORIZONTAL ELLIPSIS codepoint, which the
+    Stage 2 VCD gate asserts against.
+
+    Parameters
+    ----------
+    labels
+        Full (unshortened) tick labels. May contain existing U+2026
+        characters; those are stripped before processing.
+    max_chars
+        Soft budget used by the biology-aware abbreviator and for the
+        overflow check. Labels longer than this after abbreviation
+        trigger the overflow strategy.
+    strategy
+        ``"index_on_overflow"`` (default): if any abbreviated label
+        still exceeds ``max_chars``, swap the entire set for 1-based
+        numeric indices and return the originals as ``"N: <label>"``
+        legend lines.  Pass these lines to ``ax.legend(handles, lines)``
+        or render them in a side-panel slot.
+
+        ``"abbreviate"``: biology-aware abbreviation only. No swap, no
+        ellipsis — if still long, accept the overflow.
+
+    Returns
+    -------
+    (display_labels, legend_lines)
+        ``display_labels`` are what to hand to ``ax.set_xticklabels`` /
+        ``set_yticklabels``. ``legend_lines`` is empty unless a swap
+        happened.
+    """
+    cleaned = [str(label).replace("\u2026", "").rstrip() for label in labels]
+    abbreviated = [abbreviate_cell_type(s, max_chars) for s in cleaned]
+    # "Overflow" means the original label would have required truncation
+    # after biology-aware abbreviation. Comparing original lengths to the
+    # budget is more reliable than comparing abbreviated lengths, because
+    # abbreviate_cell_type now clean-cuts on its own fallback.
+    overflow = any(len(orig) > max_chars for orig in cleaned)
+    if strategy == "index_on_overflow" and overflow:
+        display = [str(i + 1) for i in range(len(cleaned))]
+        legend = [f"{i + 1}: {s}" for i, s in enumerate(cleaned)]
+        return display, legend
+    if strategy not in {"index_on_overflow", "abbreviate"}:
+        raise ValueError(f"unknown strategy: {strategy!r}")
+    return abbreviated, []
+
+
+def reserve_annotation_slot(
+    ax,
+    k: int = 3,
+    side: str = "right",
+    margin: float = 0.08,
+):
+    """Return ``k`` anchor points in axes-fraction coords for external
+    leader-line annotations.
+
+    Use to place outlier callouts outside the axis body so leader lines
+    do not cross one another or mask data (fig09b-style use case).
+    The caller must place text at the returned coordinates with
+    ``transform=ax.transAxes`` and set ``clip_on=False``.
+
+    Parameters
+    ----------
+    ax
+        Target matplotlib Axes.
+    k
+        Number of slots to reserve. Must be >= 1.
+    side
+        ``"right" | "left" | "top" | "bottom"``.
+    margin
+        Distance outside the axis body in axes-fraction units.
+    """
+    if k < 1:
+        raise ValueError("k must be >= 1")
+    if side == "right":
+        x = 1.0 + margin
+        return [(x, 1.0 - (i + 0.5) / k) for i in range(k)]
+    if side == "left":
+        x = -margin
+        return [(x, 1.0 - (i + 0.5) / k) for i in range(k)]
+    if side == "top":
+        y = 1.0 + margin
+        return [((i + 0.5) / k, y) for i in range(k)]
+    if side == "bottom":
+        y = -margin
+        return [((i + 0.5) / k, y) for i in range(k)]
+    raise ValueError(f"unknown side: {side!r}")

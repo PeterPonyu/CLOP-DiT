@@ -13,14 +13,18 @@ class TestArticleFigureManifest:
 
     @staticmethod
     def _article_tex_basenames() -> set[str]:
-        tex_path = Path(__file__).parent.parent / "articles" / "clop_dit_genes.tex"
+        from src.utils.paths import ARTICLE_DIR, ARTICLE_TEX
+
+        tex_path = ARTICLE_DIR / ARTICLE_TEX
+        if not tex_path.exists():
+            pytest.skip(f"{tex_path} not present in this workspace")
         tex = tex_path.read_text()
         matches = re.findall(r"\\includegraphics\[[^\]]*\]\{figures/([^}]+)\.pdf\}", tex)
         return set(matches)
 
     def test_manifest_length(self):
         from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
-        assert len(ARTICLE_FIGURE_BASENAMES) == 21
+        assert len(ARTICLE_FIGURE_BASENAMES) == 25
 
     def test_manifest_contains_expected_basenames(self):
         from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
@@ -44,8 +48,12 @@ class TestArticleFigureManifest:
             "fig08b_de_concordance",
             "fig09a_variance_matching",
             "fig09b_gene_gene_correlation",
+            "figS_lane_c_zero_shot",
             "figS01_supplementary_validation",
             "figS02_expression_diagnostics",
+            "figS_lane_a1_knn_family_heatmap",
+            "figS_lane_a2_organism_stratified",
+            "figS_lane_b3_forced_scarcity",
         }
         for name in expected:
             assert name in ARTICLE_FIGURE_BASENAMES, f"Missing basename: {name}"
@@ -127,6 +135,109 @@ class TestDeliverFigures:
             assert pdf_file.is_file(), f"Missing file: {pdf_file}"
             assert not pdf_file.is_symlink(), f"Expected copy, got symlink: {pdf_file}"
             assert pdf_file.read_bytes() == b"%PDF-1.0 dummy\n"
+
+    def test_live_sidecar_count_matches_manifest(self):
+        """Stage 3 gate: every article-manifest basename has a live VCD
+        sidecar. Legitimate extras from non-article figures (fig13, fig21–31,
+        figS02*) are allowed — the orchestrator renders them as part of the
+        same regeneration pipeline and their sidecars coexist safely.
+
+        Skipped unless ``CLOPDIT_ENFORCE_SIDECAR_COVERAGE=1`` is set, because
+        in a fresh clone the live-sidecar directory may not exist yet.
+        """
+        import os
+
+        if os.environ.get("CLOPDIT_ENFORCE_SIDECAR_COVERAGE") != "1":
+            pytest.skip(
+                "set CLOPDIT_ENFORCE_SIDECAR_COVERAGE=1 to enforce the Stage 3 gate"
+            )
+
+        from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
+        from src.utils.paths import FIG_DIR
+
+        sidecar_dir = FIG_DIR / "_live_vcd"
+        assert sidecar_dir.exists(), f"live-sidecar dir missing: {sidecar_dir}"
+
+        sidecars = {p.stem for p in sidecar_dir.glob("*.json")}
+        manifest = set(ARTICLE_FIGURE_BASENAMES)
+
+        missing = manifest - sidecars
+        assert not missing, (
+            f"Stage 3 sidecar-coverage gate: article-manifest figures with "
+            f"no live VCD sidecar: {sorted(missing)}"
+        )
+
+    def test_workspace_delivery_target_matches_generated_pdfs_when_present(self):
+        from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
+        from src.utils.paths import FIG_DIR, ARTICLE_FIGURES_DIR
+
+        if not FIG_DIR.exists() or not ARTICLE_FIGURES_DIR.exists():
+            pytest.skip("Generated/source figure directories not present in this workspace")
+
+        missing = []
+        mismatched = []
+        for base in ARTICLE_FIGURE_BASENAMES:
+            src = FIG_DIR / f"{base}.pdf"
+            dst = ARTICLE_FIGURES_DIR / f"{base}.pdf"
+            if not src.exists() or not dst.exists():
+                missing.append((base, src.exists(), dst.exists()))
+                continue
+            if src.read_bytes() != dst.read_bytes():
+                mismatched.append(base)
+
+        assert not missing, (
+            "Workspace delivery target is missing article PDFs. "
+            + "; ".join(f"{b}: src={s} dst={d}" for b, s, d in missing)
+        )
+        assert not mismatched, (
+            "Workspace delivery target is out of sync with generated figure PDFs: "
+            + ", ".join(mismatched)
+        )
+
+
+class TestFigureOrganizationPolicy:
+    """Docs and figure policy helpers must stay in sync."""
+
+    def test_display_group_constants_cover_all_article_components(self):
+        from src.visualization.article_delivery import (
+            ARTICLE_DISPLAY_FIGURE_COMPONENTS,
+            ARTICLE_FIGURE_BASENAMES,
+            COMPOSED_MULTI_PANEL_STEMS,
+            MAIN_ARTICLE_DISPLAY_STEMS,
+            SUPPLEMENTARY_DISPLAY_STEMS,
+            UNIFIED_POLICY_STEMS,
+        )
+
+        flattened = [
+            basename
+            for basenames in ARTICLE_DISPLAY_FIGURE_COMPONENTS.values()
+            for basename in basenames
+        ]
+        assert flattened == ARTICLE_FIGURE_BASENAMES
+        assert set(MAIN_ARTICLE_DISPLAY_STEMS).isdisjoint(SUPPLEMENTARY_DISPLAY_STEMS)
+        assert set(MAIN_ARTICLE_DISPLAY_STEMS) | set(SUPPLEMENTARY_DISPLAY_STEMS) == set(
+            ARTICLE_DISPLAY_FIGURE_COMPONENTS
+        )
+        assert set(COMPOSED_MULTI_PANEL_STEMS).issubset(ARTICLE_DISPLAY_FIGURE_COMPONENTS)
+        assert set(UNIFIED_POLICY_STEMS).issubset(ARTICLE_DISPLAY_FIGURE_COMPONENTS)
+
+    def test_figure_organization_doc_mentions_current_manifest(self):
+        from src.visualization.article_delivery import (
+            ARTICLE_DISPLAY_FIGURE_COMPONENTS,
+            ARTICLE_FIGURE_BASENAMES,
+        )
+
+        doc_path = Path(__file__).parent.parent / "docs" / "figure_organization.md"
+        assert doc_path.exists(), f"Missing figure organization doc: {doc_path}"
+        doc = doc_path.read_text()
+
+        assert "**25 article-facing component PDFs**" in doc
+        for stem, components in ARTICLE_DISPLAY_FIGURE_COMPONENTS.items():
+            assert f"`{stem}`" in doc, f"Display group missing from doc: {stem}"
+            for basename in components:
+                assert f"`{basename}`" in doc, f"Component missing from doc: {basename}"
+        for basename in ARTICLE_FIGURE_BASENAMES:
+            assert basename.startswith("fig")
 
 
 class TestArticlePresentationPolicy:

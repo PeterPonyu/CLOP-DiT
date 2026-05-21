@@ -15,7 +15,7 @@ from scipy import stats as scipy_stats
 from .direct_layout import bind_figure_region
 from .explicit_positioning import add_axes_next_to
 from .style import (
-    COLORS, save_panel, set_figure_suptitle, style_axes,
+    COLORS, save_panel, style_axes,
     add_panel_label, abbreviate_cell_type,
     FONT_TITLE, FONT_LABEL, FONT_TICK, FONT_TICK_DENSE, FONT_ANNOTATION,
     FONT_HEATMAP_CELL,
@@ -48,6 +48,15 @@ def plot_de_concordance_panel(
     R2 (b): concordance heatmap across all contrasts
     R3 (c): summary bars per contrast
     """
+    # C3 font override — Fig 8 panels render at two-column print size; global
+    # FONT_TICK=11 is correct for most figures but *too small* here due to the 2×3
+    # dense grid. Locals below intentionally diverge by +0 to +2 pt. Do NOT
+    # "normalize" back to FONT_TICK without re-running run_regeneration.py and
+    # diffing vcd_report.json at print scale (7.2" wide @ 300dpi).
+    _F_TICK   = 12
+    _F_LABEL  = 13
+    _F_ANNOT  = 11
+
     if not de_data:
         logger.info("No DE data — skipping Fig 18")
         return None
@@ -57,7 +66,7 @@ def plot_de_concordance_panel(
     contrasts = list(de_data.keys())
     n_contrasts = len(contrasts)
 
-    fig = plt.figure(figsize=(15.8, 6.8))
+    fig = plt.figure(figsize=(15.8, 7.2))
     panel_a, panel_b, panel_c = bind_figure_region(fig, (0.06, 0.10, 0.98, 0.94)).split_cols(
         [1.26, 0.92, 0.98],
         gap=[0.060, 0.055],
@@ -143,7 +152,11 @@ def plot_de_concordance_panel(
                                     connectionstyle="arc3,rad=0.15"),
                     color=COLORS["annotation_dark"],
                     ha="center",
-                    bbox=dict(boxstyle="round,pad=0.15", fc="none", ec="none"),
+                    # White backing — the dense y≈0 scatter cluster made the
+                    # first gene label (e.g. ORM2) unreadable against the
+                    # orange/purple points at the zero line.
+                    bbox=dict(boxstyle="round,pad=0.18", fc="white", ec="none", alpha=0.92),
+                    zorder=7,
                 )
                 placed_points.append((x_pt, y_pt))
 
@@ -169,7 +182,7 @@ def plot_de_concordance_panel(
         max_lfc = max(abs(real_logfc).max(), abs(gen_logfc).max())
         ax.text(0.03, 0.20, f"Log FC (scGPT space)\nmax |logFC| \u2248 {max_lfc:.1e}",
                 transform=ax.transAxes, ha="left", va="bottom",
-                fontsize=FONT_ANNOTATION - 1, style="italic", color=COLORS["neutral"],
+                fontsize=FONT_ANNOTATION - 1, style="normal", color=COLORS["neutral"],
                 bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8, edgecolor="none"))
 
         # Horizontal colorbar below scatter
@@ -222,7 +235,7 @@ def plot_de_concordance_panel(
         cd = de_data[cname]
         for j, mk in enumerate(metric_keys):
             heatmap_data[i, j] = cd.get(mk, 0)
-        contrast_labels.append(_abbrev_contrast(cname, max_len=16))
+        contrast_labels.append(_abbrev_contrast(cname, max_len=12))
 
     im = ax2.imshow(heatmap_data, cmap="PiYG", aspect="auto", vmin=0, vmax=1)
     ax2.set_xticks(range(len(metric_names)))
@@ -231,13 +244,8 @@ def plot_de_concordance_panel(
     ax2.set_yticks(range(n_contrasts))
     ax2.set_yticklabels(contrast_labels, fontsize=FONT_TICK_DENSE)
 
-    # Annotate every cell (dark text on light cells, white on dark)
-    for i in range(n_contrasts):
-        for j in range(len(metric_names)):
-            val   = heatmap_data[i, j]
-            color = "white" if val < 0.35 or val > 0.72 else "black"
-            ax2.text(j, i, f"{val:.2f}", ha="center", va="center",
-                     fontsize=FONT_HEATMAP_CELL, fontweight="bold", color=color)
+    # The heatmap is easier to read on-page without a second layer of numeric
+    # text in every cell; the colorbar and caption carry the quantitative scale.
 
     cax2 = add_axes_next_to(
         fig,
@@ -272,7 +280,7 @@ def plot_de_concordance_panel(
     # Build short x-labels from contrast names (biology-aware)
     xs_labels = [_abbrev_contrast(c, max_len=8) for c in contrasts]
     ax3.set_xticks(x)
-    ax3.set_xticklabels(xs_labels, fontsize=6,
+    ax3.set_xticklabels(xs_labels, fontsize=_F_ANNOT,
                          rotation=0, ha="center", multialignment="center")
     ax3.set_ylim(0, 1.12)
     ax3.legend(fontsize=FONT_ANNOTATION, ncol=2,

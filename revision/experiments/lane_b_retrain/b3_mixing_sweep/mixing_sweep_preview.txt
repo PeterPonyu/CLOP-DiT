@@ -1,0 +1,22 @@
+B3 — rare-cell mixing sweep (latent scale)
+==========================================
+seed=0, majority_cap=300, test_frac=0.3, ratios=[1, 2, 5, 10]
+
+=== gid 51  (n_real=967, train=676, test=291, clop_rare_available=100) ===
+  baseline                  rare-F1=0.917  macro-F1=0.830
+  strategy                    1x          2x          5x         10x
+  oversampling            0.886      0.877      0.837      0.807
+  smote                   0.892      0.883      0.858      0.833
+  clop                    0.916      0.916      0.914      0.917
+  clop+oversamp           0.903      0.894      0.874      0.844
+  clop+smote              0.907      0.899      0.882      0.851
+
+=== gid 64  (n_real=384, train=268, test=116, clop_rare_available=100) ===
+  baseline                  rare-F1=0.937  macro-F1=0.830
+  strategy                    1x          2x          5x         10x
+  oversampling            0.930      0.916      0.882      0.859
+  smote                   0.934      0.919      0.895      0.879
+  clop                    0.937      0.937      0.933      0.929
+  clop+oversamp           0.934      0.926      0.912      0.896
+  clop+smote              0.929      0.929      0.912      0.895
+

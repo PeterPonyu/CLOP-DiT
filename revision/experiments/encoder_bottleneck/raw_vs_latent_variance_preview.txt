@@ -1,0 +1,27 @@
+A — Raw-HVG vs scGPT-latent within-type variance
+================================================
+datasets: 50
+
+Tightness ratio (latent / raw):   median=0.6467  mean=0.6576  IQR=[0.5831, 0.7311]
+Within-type L2 ratio (latent/raw): median=0.1675  IQR=[0.1317, 0.2135]
+Between-type L2 ratio (latent/raw): median=0.2738  IQR=[0.2366, 0.2991]
+
+Reading:
+  tightness_ratio > 1 : latent space makes clusters MORE mixed
+                        (i.e. encoder compresses within-type structure)
+  tightness_ratio < 1 : latent space tightens within-type
+                        distribution (encoder sharpens labels)
+
+Top 5 datasets where encoder compresses most heavily:
+  GSE167597_spineMm                        n= 2226 t_ratio=1.115
+  GSE142653pitHmDev                        n= 2869 t_ratio=0.871
+  GSE262288_breastMetasisHmCancer          n= 2290 t_ratio=0.814
+  GSE183904_GastricHmCancer                n= 2983 t_ratio=0.813
+  GSE145929_ProgastinMmDev                 n= 2746 t_ratio=0.792
+
+Top 5 where encoder preserves/sharpens:
+  GSE115571_LPSMmDev                       n=  366 t_ratio=0.493
+  GSE155109_bcECHmCancer                   n= 3000 t_ratio=0.459
+  dentate                                  n= 3000 t_ratio=0.458
+  setty                                    n= 2995 t_ratio=0.395
+  GSE117988_MCCPBMCCancer                  n= 2612 t_ratio=0.385

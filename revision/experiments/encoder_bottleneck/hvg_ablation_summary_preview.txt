@@ -1,0 +1,13 @@
+B — HVG-count ablation summary
+==============================
+  n_top_genes=  500  pairs= 522  median_var=  11.178  median_L2=3.2438
+  n_top_genes= 1000  pairs= 522  median_var=  10.126  median_L2=3.0912
+  n_top_genes= 2000  pairs= 522  median_var=   9.185  median_L2=2.9370
+  n_top_genes= 4000  pairs= 522  median_var=   8.486  median_L2=2.8051
+  n_top_genes= 8000  pairs= 522  median_var=   8.782  median_L2=2.8548
+
+Ratios vs n=2000 baseline:
+  hvg=  500  var_ratio=1.217  L2_ratio=1.105
+  hvg= 1000  var_ratio=1.102  L2_ratio=1.052
+  hvg= 4000  var_ratio=0.924  L2_ratio=0.955
+  hvg= 8000  var_ratio=0.956  L2_ratio=0.972

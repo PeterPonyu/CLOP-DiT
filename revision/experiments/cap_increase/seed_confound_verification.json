@@ -1,0 +1,112 @@
+{
+  "n_pairs": 50,
+  "comparison": "cap3k_seed0 / cap3k_historical_unseeded",
+  "both_same_cap": 3000,
+  "only_difference": "sc.pp.subsample random_state",
+  "variance_ratio": {
+    "median": 1.006,
+    "mean": 1.237,
+    "IQR": [
+      0.717,
+      1.448
+    ],
+    "n_gt_1_5": 12,
+    "n_lt_0_67": 10,
+    "min": 0.151,
+    "max": 5.035
+  },
+  "top_gains_by_seed_alone": [
+    {
+      "text_prefix": "Single-cell RNA sequencing of human intrahepatic cholangioca",
+      "n_hist": 2531,
+      "n_seed": 2739,
+      "var_hist": 4.781,
+      "var_seed": 24.073,
+      "ratio_seed_over_hist": 5.035,
+      "L2_ratio": 2.232
+    },
+    {
+      "text_prefix": "Single-cell RNA sequencing of lung development. This dataset",
+      "n_hist": 2639,
+      "n_seed": 2798,
+      "var_hist": 5.144,
+      "var_seed": 20.658,
+      "ratio_seed_over_hist": 4.016,
+      "L2_ratio": 2.027
+    },
+    {
+      "text_prefix": "Single-cell RNA sequencing of human gastric cancer (stomach ",
+      "n_hist": 2998,
+      "n_seed": 2608,
+      "var_hist": 6.602,
+      "var_seed": 23.004,
+      "ratio_seed_over_hist": 3.484,
+      "L2_ratio": 1.897
+    },
+    {
+      "text_prefix": "Single-cell RNA sequencing of human ascending aortic wall ti",
+      "n_hist": 2454,
+      "n_seed": 3000,
+      "var_hist": 10.376,
+      "var_seed": 23.027,
+      "ratio_seed_over_hist": 2.219,
+      "L2_ratio": 1.537
+    },
+    {
+      "text_prefix": "Single-cell RNA sequencing of human basal cell carcinoma (BC",
+      "n_hist": 2992,
+      "n_seed": 2885,
+      "var_hist": 9.816,
+      "var_seed": 21.332,
+      "ratio_seed_over_hist": 2.173,
+      "L2_ratio": 1.436
+    }
+  ],
+  "top_losses_by_seed_alone": [
+    {
+      "text_prefix": "Single-cell RNA sequencing of endothelial cells isolated fro",
+      "n_hist": 2622,
+      "n_seed": 2778,
+      "var_hist": 20.817,
+      "var_seed": 10.701,
+      "ratio_seed_over_hist": 0.514,
+      "L2_ratio": 0.72
+    },
+    {
+      "text_prefix": "Single-cell RNA sequencing of mouse Lin-Sca-1+c-Kit+ (LSK) h",
+      "n_hist": 2753,
+      "n_seed": 2963,
+      "var_hist": 20.879,
+      "var_seed": 10.157,
+      "ratio_seed_over_hist": 0.486,
+      "L2_ratio": 0.677
+    },
+    {
+      "text_prefix": "Single-cell RNA sequencing of adult mouse prostate tissue. T",
+      "n_hist": 2556,
+      "n_seed": 2881,
+      "var_hist": 20.053,
+      "var_seed": 5.425,
+      "ratio_seed_over_hist": 0.271,
+      "L2_ratio": 0.519
+    },
+    {
+      "text_prefix": "Single-cell RNA sequencing of human multiple myeloma (MM) bo",
+      "n_hist": 2885,
+      "n_seed": 2531,
+      "var_hist": 21.366,
+      "var_seed": 4.769,
+      "ratio_seed_over_hist": 0.223,
+      "L2_ratio": 0.481
+    },
+    {
+      "text_prefix": "Single-cell RNA sequencing of mouse cells under lipopolysacc",
+      "n_hist": 2964,
+      "n_seed": 3000,
+      "var_hist": 21.714,
+      "var_seed": 3.279,
+      "ratio_seed_over_hist": 0.151,
+      "L2_ratio": 0.378
+    }
+  ]
+}

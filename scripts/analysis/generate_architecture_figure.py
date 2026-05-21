@@ -23,16 +23,17 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 import matplotlib
 matplotlib.use("Agg")
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
 from src.visualization.direct_layout import bind_figure_region
 from src.visualization.style import (
     COLORS,
+    FIG01_PANEL_LABEL_BASE,
     FONT_ARCH_LABEL,
     FONT_ARCH_SUBLABEL,
     apply_style,
-    add_panel_label,
     save_panel,
 )
 
@@ -77,7 +78,7 @@ C_WHITE = "#FFFFFF"
 # ---------------------------------------------------------------------------
 
 def draw_box(ax, xy, w, h, label, sublabel=None, facecolor=C_WHITE,
-             edgecolor=C_GREY, fontsize=10, sublabel_size=9.0,
+             edgecolor=C_GREY, fontsize=10.5, sublabel_size=10.5,
              textcolor="black", bold=False, linewidth=1.0, zorder=3,
              boxstyle="round,pad=0.08"):
     """Draw a rounded box with centred label text."""
@@ -112,7 +113,7 @@ def draw_box(ax, xy, w, h, label, sublabel=None, facecolor=C_WHITE,
     return box
 
 
-def draw_arrow(ax, start, end, color=C_GREY, linewidth=1.2,
+def draw_arrow(ax, start, end, color=C_GREY, linewidth=1.4,
                style="->", connectionstyle="arc3,rad=0", zorder=2,
                shrinkA=2, shrinkB=2):
     """Draw an arrow between two points."""
@@ -149,7 +150,7 @@ def draw_stage_bg(ax, xy, w, h, label, color, alpha=0.10, label_color=None):
         x + w / 2, y + h + 0.02,
         label,
         ha="center", va="bottom",
-        fontsize=10, fontweight="normal",
+        fontsize=10.5, fontweight="normal",
         color=lc,
         zorder=1,
     )
@@ -164,41 +165,57 @@ def create_architecture_figure(output_dir=None):
         from src.utils.paths import FIG_DIR
         output_dir = Path(FIG_DIR)
     output_dir = Path(output_dir)
-    fig = plt.figure(figsize=(10.0, 3.6))
+    fig = plt.figure(figsize=(10.2, 4.2))
     ax = bind_figure_region(fig, (0.01, 0.02, 0.99, 0.97)).add_axes(fig)
-    ax.set_xlim(-0.20, 7.65)
-    ax.set_ylim(-0.18, 3.30)
+    # xlim right extended from 7.92 → 8.15 so the Stage 3 Gene Expr. Profile
+    # box and the Decoding legend swatch no longer graze the right edge.
+    ax.set_xlim(-0.20, 8.15)
+    ax.set_ylim(-0.18, 3.80)
     ax.axis("off")
     ax.set_xticks([])
     ax.set_yticks([])
     fig.patch.set_facecolor(C_WHITE)
 
-    BW = 0.78
-    BH = 0.38
+    BW = 0.85
+    BH = 0.44
     SBW = 0.55
     SBH = 0.32
-    gap = 0.12
+    gap = 0.15
 
     # Stage backgrounds
     draw_stage_bg(ax, (-0.05, -0.05), 3.55, 3.00,
                   "Stage 1: CLOP Alignment",
-                  C_TEXT_DARK, alpha=0.15, label_color="black")
+                  C_TEXT_DARK, alpha=0.20, label_color="black")
     draw_stage_bg(ax, (3.60, -0.05), 2.48, 3.00,
                   "Stage 2: DiT Generation",
-                  C_GEN_DARK, alpha=0.15, label_color="black")
+                  C_GEN_DARK, alpha=0.20, label_color="black")
     draw_stage_bg(ax, (6.18, -0.05), 1.27, 3.00,
                   "Stage 3: Decoding",
-                  C_DECODE_DARK, alpha=0.15, label_color="black")
+                  C_DECODE_DARK, alpha=0.20, label_color="black")
 
-    # Panel labels (data coordinates — track stage backgrounds regardless of bind_figure_region)
-    ax.text(-0.05, 3.10, "(a)", ha="left", va="bottom", fontsize=14, fontweight="bold", color="black",
-            clip_on=False, zorder=10)
-    ax.text(3.60, 3.10, "(b)", ha="left", va="bottom", fontsize=14, fontweight="bold", color="black",
-            clip_on=False, zorder=10)
-    ax.text(6.18, 3.10, "(c)", ha="left", va="bottom", fontsize=14, fontweight="bold", color="black",
-            clip_on=False, zorder=10)
+    # Panel labels stay in data coordinates so they track the stage backgrounds.
+    # They mirror the shared panel-label treatment: bold uppercase, slightly
+    # larger than before, and tagged for VCD recognition.
+    for _x, _ltr in ((-0.05, "A"), (3.60, "B"), (6.18, "C")):
+        ax.text(
+            _x,
+            3.16,
+            _ltr,
+            ha="left",
+            va="bottom",
+            fontsize=FIG01_PANEL_LABEL_BASE,
+            fontweight="bold",
+            color="black",
+            clip_on=False,
+            zorder=10,
+            gid=f"panel_label:{_ltr}",
+            path_effects=[
+                pe.withStroke(linewidth=3.0, foreground="white"),
+                pe.Normal(),
+            ],
+        )
 
-    ax.text(1.68, 2.80, "train: align text and cell latents",
+    ax.text(1.68, 2.86, "train: align text and cell latents",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=2)
     ax.text(4.80, 2.82, "ODE latent sampling",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=2)
@@ -258,7 +275,7 @@ def create_architecture_figure(output_dir=None):
     draw_arrow(ax, (cx1 + BW, cy + SBH / 2 - 0.02),
                (cx2, cy + SBH / 2 - 0.02), color=C_CELL_MID, linewidth=1.2)
 
-    shared_w = 0.62
+    shared_w = 0.56
     shared_h = 0.72
     shared_x = tx3 + BW + gap + 0.02
     shared_y = 1.22
@@ -292,29 +309,29 @@ def create_architecture_figure(output_dir=None):
     draw_box(ax, (loss_x, loss_y), loss_w, SBH, "PrototypeSigLIP",
              facecolor="#FFF9C4", edgecolor="#F9A825", fontsize=FONT_ARCH_LABEL,
              textcolor="black", linewidth=0.8)
-    ax.text(loss_x + loss_w / 2, loss_y + SBH + 0.08, "training only",
+    ax.text(loss_x + loss_w / 2, loss_y + SBH + 0.03, "training only",
             ha="center", va="bottom", fontsize=FONT_ARCH_SUBLABEL,
             color="black", zorder=6)
     draw_arrow(ax, (loss_x + loss_w, loss_y + SBH / 2),
                (shared_x, shared_y + shared_h / 2),
                color="#F9A825", linewidth=0.8, style="<->")
 
-    ax.text(cx1 + BW / 2, cy + BH + 0.16,
+    ax.text(cx1 + BW / 2, cy + BH + 0.08,
             "scGPT latent =\nDiT training target",
             ha="center", va="bottom", fontsize=FONT_ARCH_SUBLABEL, color=C_MID_GREY,
             fontweight="normal", zorder=5)
 
-    # Stage 2: DiT
-    dit_x0 = 3.80
+    # Stage 2: DiT — anchor to shared box right edge with 0.20 clearance.
+    dit_x0 = shared_x + shared_w + 0.20
     dit_y_mid = 1.40
     z0_w = 0.50
     draw_box(ax, (dit_x0, dit_y_mid), z0_w, SBH,
              r"$z_0$", sublabel="512-d",
              facecolor=C_GEN_BOX, edgecolor=C_GEN_DARK, fontsize=FONT_ARCH_SUBLABEL,
              textcolor="black")
-    ax.text(dit_x0 + z0_w / 2, dit_y_mid + SBH + 0.03,
-            r"$\sim\mathcal{N}(0,I)$",
-            ha="center", va="bottom", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=5)
+    ax.text(dit_x0 + z0_w / 2, dit_y_mid - 0.08,
+            "~N(0,I)",
+            ha="center", va="top", fontsize=FONT_ARCH_SUBLABEL, color="black", zorder=5)
 
     dit_bx = dit_x0 + z0_w + 0.12
     dit_bw = 1.00
@@ -326,7 +343,7 @@ def create_architecture_figure(output_dir=None):
 
     cx_dit = dit_bx + dit_bw / 2
     ax.text(cx_dit, dit_by + dit_bh - 0.14, "DiT1D",
-            ha="center", va="center", fontsize=10,
+            ha="center", va="center", fontsize=10.5,
             color="black", zorder=5)
     ax.text(cx_dit, dit_by + dit_bh - 0.32, "8 AdaLN-Zero",
             ha="center", va="center", fontsize=FONT_ARCH_SUBLABEL,
@@ -420,8 +437,8 @@ def create_architecture_figure(output_dir=None):
             ha="center", va="center", fontsize=FONT_ARCH_LABEL,
             color="black", zorder=5)
 
-    # Stage 3: decoder
-    dec_x0 = 6.18
+    # Stage 3: decoder — anchor to ODE right edge with 0.12 clearance.
+    dec_x0 = ode_x + ode_w + 0.12
     dec_y_mid = 1.40
     z1_w = 0.40
     draw_box(ax, (dec_x0, dec_y_mid), z1_w, SBH,
@@ -464,7 +481,7 @@ def create_architecture_figure(output_dir=None):
     ax.add_patch(decoder_box)
     ax.text(
         dec_bx + dec_w / 2,
-        decoder_y + dec_h * 0.66,
+        decoder_y + dec_h * 0.56,
         "scGPT\nDecoder",
         ha="center",
         va="center",

@@ -1,0 +1,15 @@
+Pre-revision baseline — frozen reference
+=======================================
+
+Date:     2026-04-15
+Tag:      pre-revision-2026-04-15
+Purpose:  Immutable anchor for the major-revision diff base. Points to
+          the commit that represents the submitted-version repository
+          tree at the time revision work began.
+
+Verification:
+  git cat-file -e pre-revision-2026-04-15^{commit} && echo "tag present"
+  sha256sum -c revision/prerevision_baseline/artifact_hashes.txt | \
+    grep -v ': OK$' | head
+  # the second command prints nothing if all baseline artifacts are
+  # unchanged relative to the freeze.

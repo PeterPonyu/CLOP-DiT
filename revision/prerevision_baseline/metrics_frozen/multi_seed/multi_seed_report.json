@@ -1,0 +1,228 @@
+{
+  "high_fidelity_regime": {
+    "config": "CFG=2.0, Euler, 10 steps",
+    "per_seed": [
+      {
+        "seed": 42,
+        "knn_top1": 0.369,
+        "knn_top5": 0.553,
+        "steering_accuracy": 0.81,
+        "diversity_ratio": 0.513,
+        "linear_accuracy": 0.511,
+        "centroid_cosine": 0.897,
+        "frechet_distance": 3.17
+      },
+      {
+        "seed": 123,
+        "knn_top1": 0.4185,
+        "knn_top5": 0.5284,
+        "steering_accuracy": 0.8165,
+        "diversity_ratio": 0.4956,
+        "linear_accuracy": 0.4872,
+        "centroid_cosine": 0.9003,
+        "frechet_distance": 2.596
+      },
+      {
+        "seed": 456,
+        "knn_top1": 0.2577,
+        "knn_top5": 0.5235,
+        "steering_accuracy": 0.7978,
+        "diversity_ratio": 0.5248,
+        "linear_accuracy": 0.4647,
+        "centroid_cosine": 0.8779,
+        "frechet_distance": 3.6097
+      }
+    ],
+    "aggregated": {
+      "n_seeds": 3,
+      "seeds": [
+        42,
+        123,
+        456
+      ],
+      "knn_top1": {
+        "mean": 0.3484,
+        "std": 0.0824,
+        "min": 0.2577,
+        "max": 0.4185,
+        "values": [
+          0.369,
+          0.4185,
+          0.2577
+        ]
+      },
+      "knn_top5": {
+        "mean": 0.535,
+        "std": 0.0158,
+        "min": 0.5235,
+        "max": 0.553,
+        "values": [
+          0.553,
+          0.5284,
+          0.5235
+        ]
+      },
+      "steering_accuracy": {
+        "mean": 0.8081,
+        "std": 0.0095,
+        "min": 0.7978,
+        "max": 0.8165,
+        "values": [
+          0.81,
+          0.8165,
+          0.7978
+        ]
+      },
+      "diversity_ratio": {
+        "mean": 0.5111,
+        "std": 0.0147,
+        "min": 0.4956,
+        "max": 0.5248,
+        "values": [
+          0.513,
+          0.4956,
+          0.5248
+        ]
+      },
+      "linear_accuracy": {
+        "mean": 0.4876,
+        "std": 0.0232,
+        "min": 0.4647,
+        "max": 0.511,
+        "values": [
+          0.511,
+          0.4872,
+          0.4647
+        ]
+      },
+      "centroid_cosine": {
+        "mean": 0.8917,
+        "std": 0.0121,
+        "min": 0.8779,
+        "max": 0.9003,
+        "values": [
+          0.897,
+          0.9003,
+          0.8779
+        ]
+      },
+      "frechet_distance": {
+        "mean": 3.1252,
+        "std": 0.5083,
+        "min": 2.596,
+        "max": 3.6097,
+        "values": [
+          3.17,
+          2.596,
+          3.6097
+        ]
+      }
+    }
+  },
+  "high_diversity_regime": {
+    "config": "CFG=1.0, Midpoint, 10 steps",
+    "per_seed": [
+      {
+        "seed": 42,
+        "knn_top1": 0.288,
+        "knn_top5": 0.461,
+        "steering_accuracy": 0.807,
+        "diversity_ratio": 0.929,
+        "linear_accuracy": 0.357,
+        "centroid_cosine": 0.898
+      },
+      {
+        "seed": 123,
+        "knn_top1": 0.3122,
+        "knn_top5": 0.4295,
+        "steering_accuracy": 0.8035,
+        "diversity_ratio": 0.9064,
+        "linear_accuracy": 0.4515,
+        "centroid_cosine": 0.8978
+      },
+      {
+        "seed": 456,
+        "knn_top1": 0.2198,
+        "knn_top5": 0.5042,
+        "steering_accuracy": 0.7923,
+        "diversity_ratio": 0.9368,
+        "linear_accuracy": 0.2571,
+        "centroid_cosine": 0.8801
+      }
+    ],
+    "aggregated": {
+      "n_seeds": 3,
+      "seeds": [
+        42,
+        123,
+        456
+      ],
+      "knn_top1": {
+        "mean": 0.2733,
+        "std": 0.0479,
+        "min": 0.2198,
+        "max": 0.3122,
+        "values": [
+          0.288,
+          0.3122,
+          0.2198
+        ]
+      },
+      "knn_top5": {
+        "mean": 0.4649,
+        "std": 0.0375,
+        "min": 0.4295,
+        "max": 0.5042,
+        "values": [
+          0.461,
+          0.4295,
+          0.5042
+        ]
+      },
+      "steering_accuracy": {
+        "mean": 0.8009,
+        "std": 0.0077,
+        "min": 0.7923,
+        "max": 0.807,
+        "values": [
+          0.807,
+          0.8035,
+          0.7923
+        ]
+      },
+      "diversity_ratio": {
+        "mean": 0.9241,
+        "std": 0.0158,
+        "min": 0.9064,
+        "max": 0.9368,
+        "values": [
+          0.929,
+          0.9064,
+          0.9368
+        ]
+      },
+      "linear_accuracy": {
+        "mean": 0.3552,
+        "std": 0.0972,
+        "min": 0.2571,
+        "max": 0.4515,
+        "values": [
+          0.357,
+          0.4515,
+          0.2571
+        ]
+      },
+      "centroid_cosine": {
+        "mean": 0.892,
+        "std": 0.0103,
+        "min": 0.8801,
+        "max": 0.898,
+        "values": [
+          0.898,
+          0.8978,
+          0.8801
+        ]
+      }
+    }
+  }
+}

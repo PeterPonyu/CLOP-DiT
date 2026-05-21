@@ -14,10 +14,11 @@ from __future__ import annotations
 
 import json
 import logging
-import textwrap
 from pathlib import Path
 from typing import Dict, List, Optional
 
+import matplotlib.colors as mcolors
+import matplotlib.patheffects as mpe
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -36,7 +37,6 @@ from .style import (
     quality_color,
     save_panel,
     set_dense_tick_labels,
-    set_figure_suptitle,
     style_axes,
 )
 from ._plot_helpers import plot_umap_overlay, plot_confusion_matrix, plot_roc_curve
@@ -115,22 +115,48 @@ def _plot_classifier_metric_heatmap(
         rows_truncated = True
         display_mode = "worst+best"
 
-    im = ax.imshow(display_matrix, cmap="inferno", aspect="auto", vmin=0, vmax=1)
-    # Add numeric annotations on heatmap cells
-    for _ri in range(display_matrix.shape[0]):
-        for _ci in range(display_matrix.shape[1]):
-            _val = display_matrix[_ri, _ci]
-            _color = "white" if _val < 0.5 else "black"
-            ax.text(_ci, _ri, f"{_val:.2f}", ha="center", va="center",
-                    fontsize=max(FONT_HEATMAP_CELL - 1, 6), color=_color, fontweight="normal")
+    # Use a light floor instead of inferno's near-black zero.  The previous
+    # black block accurately encoded low P/R/F1 but visually read like a
+    # rendering failure at article scale.  This ramp keeps low values clearly
+    # "low" while making zeros legible and less visually alarming.
+    prf_cmap = mcolors.LinearSegmentedColormap.from_list(
+        "prf_readable",
+        ["#f3f4f6", "#b8b0d9", "#f08a4b", "#fff2a6"],
+        N=256,
+    )
+    im = ax.imshow(display_matrix, cmap=prf_cmap, aspect="auto", vmin=0, vmax=1)
+
+    # Numeric overlays are intentionally retained for this compact diagnostic:
+    # they disambiguate true zero performance from missing or failed rendering.
+    for row in range(display_matrix.shape[0]):
+        for col in range(display_matrix.shape[1]):
+            value = float(display_matrix[row, col])
+            color = "white" if 0.35 <= value <= 0.72 else COLORS["annotation_dark"]
+            ax.text(
+                col,
+                row,
+                f"{value:.2f}",
+                ha="center",
+                va="center",
+                fontsize=7,
+                color=color,
+                path_effects=[
+                    mpe.withStroke(
+                        linewidth=1.2,
+                        foreground="black" if color == "white" else "white",
+                        alpha=0.80,
+                    )
+                ],
+            )
     ax.set_xticks(range(3))
     ax.set_xticklabels(["Prec.", "Rec.", "F1"], fontsize=8)
+    # Use biology-aware abbreviation (e.g. "CD8+ cytotoxic T" → "CD8+ cyt. T")
+    # so two distinct types that both start with "Actively cycling …" don't
+    # collapse to the same "Actively cycling…" ellipsis.
+    from .style import abbreviate_cell_type as _abbr
     ax.set_yticks(range(len(display_names)))
     ax.set_yticklabels(
-        [
-            textwrap.shorten(str(name).replace("_", " "), width=18, placeholder="…")
-            for name in display_names
-        ],
+        [_abbr(str(name).replace("_", " "), max_len=22) for name in display_names],
         fontsize=7,
     )
     default_title = "Per-Type P/R/F1"
@@ -142,6 +168,11 @@ def _plot_classifier_metric_heatmap(
     ax.set_title(title or default_title, fontsize=10)
     ax.set_ylabel("")
     # ax.set_xlabel("Metric")  # Removed to reduce label density
+
+    if rows_truncated and display_mode == "worst+best":
+        split_at = max_rows // 2
+        ax.axhline(split_at - 0.5, color="white", linewidth=1.8, linestyle="-", alpha=0.95)
+        ax.axhline(split_at - 0.5, color=COLORS["border_light"], linewidth=0.8, linestyle="--")
 
     cax = add_axes_next_to(
         fig,
@@ -201,7 +232,7 @@ def plot_clustering_panel(
                       legend_loc="upper left", legend_fontsize=9)
 
     ax2 = ax_rect_2.add_axes(fig)
-    add_panel_label(ax2, 'b', x=-0.12, y=1.08)
+    add_panel_label(ax2, 'b', x=-0.12, y=1.05)
     mixing = clustering_data.get("per_type_mixing", {})
     if mixing:
         sorted_types = sorted(mixing.keys(), key=lambda k: mixing[k])
@@ -227,7 +258,7 @@ def plot_clustering_panel(
         ax2.set_title("kNN Mixing Score")
 
     ax3 = ax_rect_3.add_axes(fig)
-    add_panel_label(ax3, 'c', x=-0.12, y=1.08)
+    add_panel_label(ax3, 'c', x=-0.12, y=1.05)
     ax3.axis("off")
 
     gauge_items = [
@@ -324,14 +355,10 @@ def plot_classifier_panel(
             color = "white" if val > 0.5 else "black"
             ax.text(i + 0.25, i, f"{val:.2f}", ha="left", va="center",
                     fontsize=8, color=color)
-    else:
-        diag_step = max(1, n_classes // 8)
-        safe_end = max(0, n_classes - diag_step)
-        for i in range(0, min(safe_end, cm_norm.shape[0]), diag_step):
-            val = cm_norm[i, i]
-            color = "white" if val > 0.5 else "black"
-            ax.text(i, i, f"{val:.1f}", ha="center", va="center",
-                    fontsize=FONT_HEATMAP_CELL, color=color)
+    # For n_classes > 30 (the 69-type panel) diagonal annotations were
+    # dropped: sampling every diag_step produced a handful of scattered
+    # "0.0 / 0.1 / 0.2" labels that looked like rendering debris against
+    # the heatmap. The colorbar already communicates the recall scale.
 
     add_colorbar_safe(im, ax=ax, shrink=0.5, pad=0.10, label="Recall",
                       orientation="horizontal", aspect=20)
@@ -339,7 +366,7 @@ def plot_classifier_panel(
                xlabel="Predicted", ylabel="True Type")
 
     ax2 = ax_rect_2.add_axes(fig)
-    add_panel_label(ax2, 'b', x=-0.12, y=1.08)
+    add_panel_label(ax2, 'b', x=-0.12, y=1.05)
     if per_type_acc:
         summary = _plot_classifier_metric_heatmap(fig, ax2, cm, class_names)
         f1 = summary["f1"]
@@ -361,7 +388,7 @@ def plot_classifier_panel(
         ax2.set_title("Per-Type Summary")
 
     ax3 = ax_rect_3.add_axes(fig)
-    add_panel_label(ax3, 'c', x=-0.12, y=1.08)
+    add_panel_label(ax3, 'c', x=-0.12, y=1.05)
     disc_proba = classifier_data.get("_disc_proba")
     disc_y = classifier_data.get("_disc_y")
 
@@ -420,11 +447,19 @@ def plot_clustering_and_classifier_merged(
     save: bool = True,
 ) -> Optional[plt.Figure]:
     """Merged figure: clustering + classifier alignment (former P + Q)."""
+    # C3 font override — Fig 8 panels render at two-column print size; global
+    # FONT_TICK=11 is correct for most figures but *too small* here due to the 2×3
+    # dense grid. Locals below intentionally diverge by +0 to +2 pt. Do NOT
+    # "normalize" back to FONT_TICK without re-running run_regeneration.py and
+    # diffing vcd_report.json at print scale (7.2" wide @ 300dpi).
+    _F_TICK   = 12
+    _F_LABEL  = 13
+    _F_ANNOT  = 11
     apply_style()
 
-    fig = plt.figure(figsize=(16.0, 9.0))
-    layout = bind_figure_region(fig, (0.03, 0.10, 0.98, 0.96))
-    top_row, bottom_row = layout.split_rows([0.98, 1.10], hspace=0.32)
+    fig = plt.figure(figsize=(16.0, 9.6))
+    layout = bind_figure_region(fig, (0.03, 0.10, 0.98, 0.94))
+    top_row, bottom_row = layout.split_rows([0.94, 1.20], hspace=0.28)
     top_rects = top_row.split_cols([1.10, 1.34, 0.82], gap=[0.060, 0.050])
     bottom_rects = bottom_row.split_cols([1.10, 1.34, 0.82], gap=[0.060, 0.050])
     # Title moved to LaTeX caption
@@ -447,7 +482,7 @@ def plot_clustering_and_classifier_merged(
                    transform=ax_p1.transAxes)
 
     ax_p2 = top_rects[1].inset(left=0.090, right=0.040).add_axes(fig)
-    add_panel_label(ax_p2, 'b', x=-0.12, y=1.05)
+    add_panel_label(ax_p2, 'b', x=-0.12, y=1.00)
     mixing = clustering_data.get("per_type_mixing", {})
     if mixing:
         sorted_types = sorted(mixing.keys(), key=lambda k: mixing[k])
@@ -472,7 +507,7 @@ def plot_clustering_and_classifier_merged(
                    transform=ax_p2.transAxes)
 
     ax_ps = top_rects[2].add_axes(fig)
-    add_panel_label(ax_ps, 'c', x=-0.12, y=1.05)
+    add_panel_label(ax_ps, 'c', x=-0.12, y=1.00)
     summary_items = [
         ("ARI", clustering_data.get("ari_gt_vs_leiden", 0), (0.7, 0.4)),
         ("NMI", clustering_data.get("nmi_gt_vs_leiden", 0), (0.7, 0.4)),
@@ -492,13 +527,13 @@ def plot_clustering_and_classifier_merged(
                edgecolor="white", linewidth=0.8, zorder=2)
     for i, val in enumerate(metric_vals):
         ax_ps.text(min(val + 0.03, 0.98), i, f"{val:.3f}",
-                   va="center", fontsize=9, zorder=3)
+                   va="center", fontsize=_F_ANNOT, zorder=3)
     ax_ps.set_yticks(y_pos)
-    ax_ps.set_yticklabels(metric_names, fontsize=10)
+    ax_ps.set_yticklabels(metric_names, fontsize=_F_TICK)
     ax_ps.set_xlim(0, 1.15)
     ax_ps.invert_yaxis()
     n_cl = clustering_data.get("n_leiden_clusters", "?")
-    ax_ps.set_xlabel(f"Leiden clusters: {n_cl}", fontsize=9)
+    ax_ps.set_xlabel(f"Leiden clusters: {n_cl}", fontsize=_F_ANNOT)
     ax_ps.tick_params(axis="x", labelbottom=False, bottom=False)
     style_axes(ax_ps, "bar", title="Clustering Metrics")
 
@@ -509,7 +544,9 @@ def plot_clustering_and_classifier_merged(
     gen_f1 = classifier_data.get("gen_f1", 0)
     disc_auc = classifier_data.get("discriminator_auc", 0)
 
-    ax_q1 = bottom_rects[0].inset(bottom=-0.006).add_axes(fig)
+    # Use the bottom row region as-is so panels D/E/F share the same top and
+    # bottom y-bounds and read as a horizontally-aligned triplet on page.
+    ax_q1 = bottom_rects[0].add_axes(fig)
     add_panel_label(ax_q1, 'd', x=-0.08, y=1.05)
     if cm is not None:
         cm = np.array(cm)
@@ -521,12 +558,19 @@ def plot_clustering_and_classifier_merged(
             colorbar_pad=0.18,
         )
         if cm.shape[0] > 30:
-            tick_step = max(4, cm.shape[0] // 3)
-            tick_positions = list(range(0, cm.shape[0], tick_step))
+            tick_positions = sorted(
+                {
+                    0,
+                    cm.shape[0] // 4,
+                    cm.shape[0] // 2,
+                    (3 * cm.shape[0]) // 4,
+                    cm.shape[0] - 1,
+                }
+            )
             ax_q1.set_xticks(tick_positions)
             ax_q1.set_yticks(tick_positions)
-            ax_q1.set_xticklabels([str(i) for i in tick_positions], fontsize=7, rotation=45, ha="right")
-            ax_q1.set_yticklabels([str(i) for i in tick_positions], fontsize=7)
+            ax_q1.set_xticklabels([str(i) for i in tick_positions], fontsize=_F_ANNOT, rotation=45, ha="right")
+            ax_q1.set_yticklabels([str(i) for i in tick_positions], fontsize=_F_ANNOT)
     else:
         ax_q1.text(0.5, 0.5, "No confusion matrix", ha="center", va="center",
                    transform=ax_q1.transAxes)
@@ -540,7 +584,7 @@ def plot_clustering_and_classifier_merged(
             ax_q2,
             np.array(cm),
             class_names or [f"C{i}" for i in range(np.array(cm).shape[0])],
-            max_rows=18,
+            max_rows=14,
         )
         note_ax = add_shared_legend_axes(fig, (ax_q2.get_position().x0, ax_q2.get_position().y0 - 0.07, ax_q2.get_position().width, 0.05))
         note_ax.text(
@@ -550,7 +594,7 @@ def plot_clustering_and_classifier_merged(
             transform=note_ax.transAxes,
             ha="center",
             va="center",
-            fontsize=8,
+            fontsize=_F_ANNOT,
             color=COLORS["neutral"],
         )
     else:

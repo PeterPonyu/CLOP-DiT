@@ -143,14 +143,14 @@ def plot_embedding_space_merged(
 
     apply_style()
     n_rows = (1 if has_b else 0) + (1 if has_e else 0)
-    fig = plt.figure(figsize=(14.8, 4.0 * n_rows))
-    layout = bind_figure_region(fig, (0.05, 0.08, 0.97, 0.96))
-    row_regions = layout.split_rows(n_rows, hspace=0.22)
+    fig = plt.figure(figsize=(14.8, 4.6 * n_rows))
+    layout = bind_figure_region(fig, (0.05, 0.08, 0.97, 0.97))
+    row_regions = layout.split_rows(n_rows, hspace=0.18)
     # suptitle removed per revision; title information moved to LaTeX caption
     row = 0
 
     if has_b:
-        b_slots = row_regions[row].split_cols([0.92, 0.88, 1.24], gap=[0.042, 0.048])
+        b_slots = row_regions[row].split_cols([0.86, 0.92, 1.48], gap=[0.036, 0.042])
         proj_text = np.load(proj_text_path)
         cell_proj = np.load(proj_cell_path)
         if gid_text_path.exists() and proj_text.shape[0] != group_ids.shape[0]:
@@ -215,7 +215,7 @@ def plot_embedding_space_merged(
         _set_umap_limits_from_points(ax, np.vstack([cell_coords, proto_coords]), pad_frac=0.03)
         _set_interior_umap_ticks(ax)
 
-        ax_b2 = b_slots[2].inset(left=0.130, right=0.050).add_axes(fig)
+        ax_b2 = b_slots[2].inset(left=0.090, right=0.030).add_axes(fig)
         ax = ax_b2
         add_panel_label(ax, chr(ord('a') + label_offset + 2), x=-0.18, y=1.06)
         so = np.argsort(type_counts)[::-1]
@@ -223,9 +223,9 @@ def plot_embedding_space_merged(
         y_pos = np.arange(n_types)
         ax.barh(y_pos, type_counts[so], color=bar_c, height=0.8)
         ax.set_yticks(y_pos)
-        bar_labels = [abbreviate_cell_type(type_names.get(int(t), f"T{t}"), 22) for t in unique_types[so]]
+        bar_labels = [abbreviate_cell_type(type_names.get(int(t), f"T{t}"), 18) for t in unique_types[so]]
         ax.set_yticklabels(bar_labels, fontsize=FONT_DENSE_YTICK)
-        set_dense_tick_labels(ax, axis="y", max_labels=14, fontsize=FONT_DENSE_YTICK, rotation=0)
+        set_dense_tick_labels(ax, axis="y", max_labels=10, fontsize=max(FONT_DENSE_YTICK + 1, 10), rotation=0)
         ax.invert_yaxis()
         ax.set_xlabel("Cells")
         ax.set_title("Cells per Type", x=0.58)
@@ -237,7 +237,7 @@ def plot_embedding_space_merged(
         row += 1
 
     if has_e:
-        e_slots = row_regions[row].split_cols([0.90, 0.90, 1.24], gap=[0.040, 0.048])
+        e_slots = row_regions[row].split_cols([0.96, 0.96, 1.40], gap=[0.036, 0.042])
         cell_path = cache / "cell_embeddings_dedup_preprocessed.npy"
         if not cell_path.exists():
             logger.warning("Missing cell embeddings for E row")
@@ -268,7 +268,7 @@ def plot_embedding_space_merged(
 
             ax_e0 = e_slots[0].inset(right=0.012).add_axes(fig)
             ax = ax_e0
-            add_panel_label(ax, chr(ord('a') + label_offset + 3), x=-0.12, y=1.08)
+            add_panel_label(ax, chr(ord('a') + label_offset + 3), x=-0.12, y=1.04)
             for t in np.unique(r_gids):
                 m = r_gids == t
                 ax.scatter(rc[m, 0], rc[m, 1],
@@ -282,7 +282,7 @@ def plot_embedding_space_merged(
 
             ax_e1 = e_slots[1].inset(left=0.008, right=0.012).add_axes(fig)
             ax = ax_e1
-            add_panel_label(ax, chr(ord('a') + label_offset + 4), x=-0.12, y=1.08)
+            add_panel_label(ax, chr(ord('a') + label_offset + 4), x=-0.12, y=1.04)
             if g_gids is not None:
                 for t in np.unique(g_gids):
                     m = g_gids == t
@@ -300,7 +300,7 @@ def plot_embedding_space_merged(
 
             ax_e2 = e_slots[2].inset(left=0.006, right=0.028).add_axes(fig)
             ax = ax_e2
-            add_panel_label(ax, chr(ord('a') + label_offset + 5), x=-0.12, y=1.08)
+            add_panel_label(ax, chr(ord('a') + label_offset + 5), x=-0.12, y=1.04)
             all_types = np.unique(np.concatenate([r_gids, g_gids])) if g_gids is not None else np.unique(r_gids)
             for t in all_types:
                 color = TYPE_PALETTE[int(t) % len(TYPE_PALETTE)]
@@ -447,7 +447,7 @@ def plot_clop_embedding_space(
         gap=[0.020, 0.048],
     )
     # REMOVED: set_figure_suptitle(fig, "CLOP Alignment Space...", ...)
-    # Title information moved to LaTeX caption per MDPI style guidelines
+    # Title information moved to LaTeX caption per publication style guidelines
 
     ax_b0 = ax_rect_1.add_axes(fig)
     add_panel_label(ax_b0, 'a', x=-0.18, y=1.02)

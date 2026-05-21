@@ -13,6 +13,7 @@ from typing import Dict, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.ticker import MaxNLocator
 
 from .direct_layout import bind_figure_region
 from .style import COLORS, apply_style, save_with_vcd, add_panel_label
@@ -58,8 +59,8 @@ def plot_expression_diversity_panel(
     fig = plt.figure(figsize=(15.2, 3.6))
     left_rect, right_rect = bind_figure_region(fig, (0.06, 0.14, 0.96, 0.90)).split_cols(2, wspace=0.38)
     axes = [left_rect.add_axes(fig), right_rect.add_axes(fig)]
-    add_panel_label(axes[0], chr(ord('a') + label_offset), x=-0.08, y=1.05)
-    add_panel_label(axes[1], chr(ord('a') + label_offset + 1), x=-0.08, y=1.05)
+    add_panel_label(axes[0], chr(ord('a') + label_offset), x=-0.08, y=1.02)
+    add_panel_label(axes[1], chr(ord('a') + label_offset + 1), x=-0.08, y=1.02)
 
     ax = axes[0]
     labels = ["Cell Std\n(across genes)", "Gene Std\n(across cells)"]
@@ -84,10 +85,12 @@ def plot_expression_diversity_panel(
             ann_y = max_h * y_offset
             annotation_tops.append(ann_y)
             ax.text(_bi, ann_y + 0.02, f"ratio={ratio:.2f}",
-                    ha="center", fontsize=8, fontweight="normal",
+                    ha="center", fontsize=9, fontweight="normal",
                     color=COLORS["annotation_dark"])
     if annotation_tops:
         ax.set_ylim(0, max(max(real_vals + gen_vals) * 1.08, max(annotation_tops) * 1.10))
+    # Prune the upper y-tick so the label does not extend past the figure border.
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=4, prune='upper'))
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=10)
     ax.set_ylabel("Standard Deviation", fontsize=11)

@@ -1,0 +1,14 @@
+{
+  "condition_mode": "condition_noise",
+  "noise_scale": 0.03,
+  "cfg_scale": 1.5,
+  "num_per_type": 100,
+  "num_steps": 20,
+  "variant_blend": null,
+  "normalize": true,
+  "seed": 42,
+  "dit_checkpoint": "models/revision/b4_bridge/no_cell_noise/dit_best.pth",
+  "total_cells": 6900,
+  "num_types": 69,
+  "latent_dim": 512
+}

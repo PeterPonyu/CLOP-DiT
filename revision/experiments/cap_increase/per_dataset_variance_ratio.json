@@ -1,0 +1,413 @@
+{
+  "n_paired_datasets": 50,
+  "median_var_ratio_cap10k_over_cap3k": 0.989,
+  "mean_var_ratio": 1.247,
+  "p25_p75": [
+    0.744,
+    1.445
+  ],
+  "n_ratio_gt_1": 25,
+  "n_ratio_gt_1_5": 11,
+  "per_dataset": [
+    {
+      "text": "Single-cell RNA sequencing of human intrahepatic cholangioca",
+      "n3": 2531,
+      "n10": 9105,
+      "v3": 4.780852317810059,
+      "v10": 24.709163665771484,
+      "ratio": 5.168359535751125
+    },
+    {
+      "text": "Single-cell RNA sequencing of lung development. This dataset",
+      "n3": 2639,
+      "n10": 9327,
+      "v3": 5.144129276275635,
+      "v10": 19.452228546142578,
+      "ratio": 3.781442398007939
+    },
+    {
+      "text": "Single-cell RNA sequencing of human gastric cancer (stomach ",
+      "n3": 2998,
+      "n10": 8743,
+      "v3": 6.601888656616211,
+      "v10": 22.57084083557129,
+      "ratio": 3.4188460317263125
+    },
+    {
+      "text": "Single-cell RNA sequencing of human ascending aortic wall ti",
+      "n3": 2454,
+      "n10": 10000,
+      "v3": 10.37636661529541,
+      "v10": 23.619661331176758,
+      "ratio": 2.276294025344084
+    },
+    {
+      "text": "Single-cell RNA sequencing of human basal cell carcinoma (BC",
+      "n3": 2992,
+      "n10": 4967,
+      "v3": 9.815558433532715,
+      "v10": 21.773658752441406,
+      "ratio": 2.218280182414935
+    },
+    {
+      "text": "Single-cell RNA sequencing of human fetal lung during develo",
+      "n3": 3000,
+      "n10": 7749,
+      "v3": 9.892786026000977,
+      "v10": 20.95547866821289,
+      "ratio": 2.1182585586240417
+    },
+    {
+      "text": "Single-cell RNA sequencing of human early-stage lung adenoca",
+      "n3": 2745,
+      "n10": 9485,
+      "v3": 12.897701263427734,
+      "v10": 23.744483947753906,
+      "ratio": 1.8409857278275568
+    },
+    {
+      "text": "Single-cell RNA sequencing of natural killer (NK) cells from",
+      "n3": 2087,
+      "n10": 5063,
+      "v3": 21.467130661010742,
+      "v10": 38.7911376953125,
+      "ratio": 1.8070015181752328
+    },
+    {
+      "text": "Single-cell RNA sequencing of the dentate gyrus in the hippo",
+      "n3": 2995,
+      "n10": 9640,
+      "v3": 13.22057056427002,
+      "v10": 23.234935760498047,
+      "ratio": 1.7574835857154987
+    },
+    {
+      "text": "Single-cell RNA sequencing of stromal cells from human breas",
+      "n3": 2332,
+      "n10": 9466,
+      "v3": 18.975231170654297,
+      "v10": 31.917442321777344,
+      "ratio": 1.6820581543764548
+    },
+    {
+      "text": "Single-cell RNA sequencing of T cells isolated from human ca",
+      "n3": 2963,
+      "n10": 9458,
+      "v3": 10.111346244812012,
+      "v10": 15.438297271728516,
+      "ratio": 1.5268290589544085
+    },
+    {
+      "text": "Single-cell RNA sequencing of human stomach cancer. This dat",
+      "n3": 2881,
+      "n10": 7412,
+      "v3": 5.424778938293457,
+      "v10": 8.080472946166992,
+      "ratio": 1.4895487978555253
+    },
+    {
+      "text": "Single-cell RNA sequencing of hematopoiesis. This dataset pr",
+      "n3": 3000,
+      "n10": 5773,
+      "v3": 9.016435623168945,
+      "v10": 13.09361457824707,
+      "ratio": 1.4521940959242547
+    },
+    {
+      "text": "Single-cell RNA sequencing of hepatoblastoma tumor tissue. T",
+      "n3": 2991,
+      "n10": 9646,
+      "v3": 12.07336711883545,
+      "v10": 17.195695877075195,
+      "ratio": 1.4242667938299076
+    },
+    {
+      "text": "Single-cell RNA sequencing of mouse astrocytes following spi",
+      "n3": 2778,
+      "n10": 9883,
+      "v3": 10.745576858520508,
+      "v10": 14.804098129272461,
+      "ratio": 1.3776922657748079
+    },
+    {
+      "text": "Single-cell RNA sequencing of bone marrow during hematopoiet",
+      "n3": 2638,
+      "n10": 8998,
+      "v3": 10.649295806884766,
+      "v10": 14.396051406860352,
+      "ratio": 1.3518313011413685
+    },
+    {
+      "text": "Single-cell RNA sequencing of brain metastases originating f",
+      "n3": 2994,
+      "n10": 5646,
+      "v3": 13.600799560546875,
+      "v10": 18.055940628051758,
+      "ratio": 1.3275646440984492
+    },
+    {
+      "text": "Single-cell RNA sequencing of T cells from human hepatocellu",
+      "n3": 2864,
+      "n10": 7825,
+      "v3": 14.52812385559082,
+      "v10": 18.281673431396484,
+      "ratio": 1.2583643705901637
+    },
+    {
+      "text": "Single-cell RNA sequencing of interferon-treated hematopoiet",
+      "n3": 2787,
+      "n10": 10000,
+      "v3": 19.523502349853516,
+      "v10": 24.358720779418945,
+      "ratio": 1.2476614258507623
+    },
+    {
+      "text": "Single-cell RNA sequencing of the human bone marrow niche. T",
+      "n3": 2833,
+      "n10": 10000,
+      "v3": 15.46908187866211,
+      "v10": 19.182418823242188,
+      "ratio": 1.2400489553101544
+    },
+    {
+      "text": "Single-cell RNA sequencing of mouse dental tissue during too",
+      "n3": 3000,
+      "n10": 9409,
+      "v3": 8.986082077026367,
+      "v10": 10.546475410461426,
+      "ratio": 1.1736455687873504
+    },
+    {
+      "text": "Single-cell RNA sequencing of human lung adenocarcinoma. Thi",
+      "n3": 2716,
+      "n10": 8239,
+      "v3": 20.030128479003906,
+      "v10": 22.42440414428711,
+      "ratio": 1.1195337148133095
+    },
+    {
+      "text": "Single-cell RNA sequencing of human cutaneous squamous cell ",
+      "n3": 3000,
+      "n10": 10000,
+      "v3": 8.866971969604492,
+      "v10": 9.514564514160156,
+      "ratio": 1.0730342383821192
+    },
+    {
+      "text": "Single-cell RNA sequencing of human lung adenocarcinoma. Thi",
+      "n3": 2960,
+      "n10": 9958,
+      "v3": 16.197683334350586,
+      "v10": 17.217967987060547,
+      "ratio": 1.0629895418776483
+    },
+    {
+      "text": "Single-cell RNA sequencing of Merkel cell carcinoma (MCC) tu",
+      "n3": 2467,
+      "n10": 8227,
+      "v3": 18.975461959838867,
+      "v10": 19.012439727783203,
+      "ratio": 1.0019487150311597
+    },
+    {
+      "text": "Single-cell RNA sequencing of human leptomeningeal brain met",
+      "n3": 2321,
+      "n10": 8776,
+      "v3": 20.292179107666016,
+      "v10": 19.80644416809082,
+      "ratio": 0.9760629483409353
+    },
+    {
+      "text": "Single-cell RNA sequencing of human pituitary gland during d",
+      "n3": 2991,
+      "n10": 9159,
+      "v3": 13.568916320800781,
+      "v10": 13.164833068847656,
+      "ratio": 0.9702199319091034
+    },
+    {
+      "text": "Single-cell RNA sequencing of human breast cancer. This data",
+      "n3": 2962,
+      "n10": 8433,
+      "v3": 14.67547607421875,
+      "v10": 13.911767959594727,
+      "ratio": 0.9479602494146222
+    },
+    {
+      "text": "Single-cell RNA sequencing of aged blood cells. This dataset",
+      "n3": 2983,
+      "n10": 9863,
+      "v3": 18.595081329345703,
+      "v10": 17.551454544067383,
+      "ratio": 0.9438761914081372
+    },
+    {
+      "text": "Single-cell RNA sequencing of mouse spinal cord during devel",
+      "n3": 1361,
+      "n10": 6995,
+      "v3": 22.964052200317383,
+      "v10": 21.25507354736328,
+      "ratio": 0.9255802661461254
+    },
+    {
+      "text": "Single-cell RNA sequencing of human retina during developmen",
+      "n3": 3000,
+      "n10": 9406,
+      "v3": 13.116106986999512,
+      "v10": 11.902711868286133,
+      "ratio": 0.907488165511605
+    },
+    {
+      "text": "Single-cell RNA sequencing of human colorectal cancer liver ",
+      "n3": 2644,
+      "n10": 9624,
+      "v3": 17.9938907623291,
+      "v10": 16.170150756835938,
+      "ratio": 0.8986467112876314
+    },
+    {
+      "text": "Single-cell RNA sequencing of human breast cancer tissue. Th",
+      "n3": 2999,
+      "n10": 10000,
+      "v3": 12.29556655883789,
+      "v10": 11.016536712646484,
+      "ratio": 0.8959763391080131
+    },
+    {
+      "text": "Single-cell RNA sequencing of bone marrow mononuclear cells ",
+      "n3": 2984,
+      "n10": 9965,
+      "v3": 16.488262176513672,
+      "v10": 14.053864479064941,
+      "ratio": 0.8523557139383462
+    },
+    {
+      "text": "Single-cell RNA sequencing of human breast cancer tumor tiss",
+      "n3": 2921,
+      "n10": 10000,
+      "v3": 10.971670150756836,
+      "v10": 9.316157341003418,
+      "ratio": 0.8491102277952441
+    },
+    {
+      "text": "Single-cell RNA sequencing of B cells from human patients wi",
+      "n3": 2448,
+      "n10": 9519,
+      "v3": 21.716129302978516,
+      "v10": 17.810659408569336,
+      "ratio": 0.8201581027667985
+    },
+    {
+      "text": "Single-cell RNA sequencing of endoderm differentiation. This",
+      "n3": 3000,
+      "n10": 9093,
+      "v3": 24.032913208007812,
+      "v10": 19.424659729003906,
+      "ratio": 0.8082523979045358
+    },
+    {
+      "text": "Single-cell RNA sequencing of peripheral blood mononuclear c",
+      "n3": 2728,
+      "n10": 10000,
+      "v3": 16.25889015197754,
+      "v10": 11.738222122192383,
+      "ratio": 0.7219571577439241
+    },
+    {
+      "text": "Single-cell RNA sequencing of human bone marrow samples from",
+      "n3": 2972,
+      "n10": 9216,
+      "v3": 30.815109252929688,
+      "v10": 20.24647331237793,
+      "ratio": 0.6570307165291985
+    },
+    {
+      "text": "Single-cell RNA sequencing of human embryonic stem cells (hE",
+      "n3": 2798,
+      "n10": 8799,
+      "v3": 20.64874267578125,
+      "v10": 11.591338157653809,
+      "ratio": 0.5613580613433281
+    },
+    {
+      "text": "Single-cell RNA sequencing of aged mouse hematopoietic stem ",
+      "n3": 2953,
+      "n10": 1505,
+      "v3": 16.59027862548828,
+      "v10": 9.266499519348145,
+      "ratio": 0.5585499634172307
+    },
+    {
+      "text": "Single-cell RNA sequencing of metastatic breast cancer in hu",
+      "n3": 3000,
+      "n10": 9948,
+      "v3": 34.27208709716797,
+      "v10": 19.035457611083984,
+      "ratio": 0.5554216046753965
+    },
+    {
+      "text": "Single-cell RNA sequencing of human hematopoiesis from the S",
+      "n3": 2895,
+      "n10": 10000,
+      "v3": 16.721729278564453,
+      "v10": 9.25745964050293,
+      "ratio": 0.55361855740423
+    },
+    {
+      "text": "Single-cell RNA sequencing of adult mouse urethra. This data",
+      "n3": 2739,
+      "n10": 10000,
+      "v3": 24.165050506591797,
+      "v10": 13.22842788696289,
+      "ratio": 0.547419831932667
+    },
+    {
+      "text": "Single-cell RNA sequencing of endothelial cells isolated fro",
+      "n3": 2622,
+      "n10": 9181,
+      "v3": 20.817012786865234,
+      "v10": 10.977849960327148,
+      "ratio": 0.5273499167591311
+    },
+    {
+      "text": "Single-cell RNA sequencing time-series of human embryonic st",
+      "n3": 2835,
+      "n10": 10000,
+      "v3": 32.640499114990234,
+      "v10": 17.09122085571289,
+      "ratio": 0.523620082998783
+    },
+    {
+      "text": "Single-cell RNA sequencing of mouse Lin-Sca-1+c-Kit+ (LSK) h",
+      "n3": 2753,
+      "n10": 6683,
+      "v3": 20.87881851196289,
+      "v10": 10.150619506835938,
+      "ratio": 0.4861682906539927
+    },
+    {
+      "text": "Single-cell RNA sequencing of adult mouse prostate tissue. T",
+      "n3": 2556,
+      "n10": 9639,
+      "v3": 20.052824020385742,
+      "v10": 5.261410713195801,
+      "ratio": 0.26237754382360506
+    },
+    {
+      "text": "Single-cell RNA sequencing of human multiple myeloma (MM) bo",
+      "n3": 2885,
+      "n10": 2531,
+      "v3": 21.36643409729004,
+      "v10": 4.768807411193848,
+      "ratio": 0.22319154377747516
+    },
+    {
+      "text": "Single-cell RNA sequencing of mouse cells under lipopolysacc",
+      "n3": 2964,
+      "n10": 10000,
+      "v3": 21.71372413635254,
+      "v10": 3.4173827171325684,
+      "ratio": 0.15738353751171028
+    }
+  ]
+}

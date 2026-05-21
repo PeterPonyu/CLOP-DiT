@@ -1,0 +1,87 @@
+{
+  "CD8+ T cells vs CD4+ T cells": {
+    "de_overlap": {
+      "n_real_de": 100,
+      "n_gen_de": 100,
+      "n_overlap": 17,
+      "jaccard": 0.09289617486338798,
+      "overlap_genes": [
+        "ADH4",
+        "APOA2",
+        "BIRC3",
+        "CHRNA1",
+        "HSPE1",
+        "LCP1",
+        "LGALS4",
+        "NFKBIA",
+        "PATL2",
+        "S100A9",
+        "SAA1",
+        "SAA2",
+        "SLC2A3",
+        "SPINK1",
+        "TFF2",
+        "TUBB2A",
+        "ZFAS1"
+      ]
+    },
+    "lfc_pearson": 0.17523699405317886,
+    "lfc_spearman": 0.14625732954783516,
+    "sign_agreement": 0.48044692737430167,
+    "go_enrichment_overlap": {
+      "n_real_terms": 22,
+      "n_gen_terms": 50,
+      "n_shared": 9,
+      "jaccard": 0.14285714285714285,
+      "shared_terms": [
+        "Acylglycerol Catabolic Process (GO:0046464)",
+        "Acylglycerol Metabolic Process (GO:0006639)",
+        "Phospholipid Efflux (GO:0033700)",
+        "Positive Regulation Of CoA-transferase Activity (GO:1905920)",
+        "Positive Regulation Of Cytokine Production (GO:0001819)",
+        "Positive Regulation Of Response To External Stimulus (GO:0032103)",
+        "Regulation Of CoA-transferase Activity (GO:1905918)",
+        "Regulation Of Inflammatory Response (GO:0050727)",
+        "Triglyceride Metabolic Process (GO:0006641)"
+      ]
+    }
+  },
+  "Macrophages vs Monocytes": {
+    "de_overlap": {
+      "n_real_de": 1,
+      "n_gen_de": 15,
+      "n_overlap": 1,
+      "jaccard": 0.06666666666666667,
+      "overlap_genes": [
+        "SLC7A8"
+      ]
+    },
+    "lfc_pearson": 0.5560341239190072,
+    "lfc_spearman": 0.465685733218582,
+    "sign_agreement": 0.5631284916201117,
+    "go_enrichment_overlap": null
+  },
+  "Epithelial cells vs Fibroblasts": {
+    "de_overlap": {
+      "n_real_de": 100,
+      "n_gen_de": 4,
+      "n_overlap": 3,
+      "jaccard": 0.0297029702970297,
+      "overlap_genes": [
+        "EHF",
+        "EZR",
+        "SPINK1"
+      ]
+    },
+    "lfc_pearson": 0.4605891912933317,
+    "lfc_spearman": 0.3510083852556954,
+    "sign_agreement": 0.517877094972067,
+    "go_enrichment_overlap": {
+      "n_real_terms": 37,
+      "n_gen_terms": 50,
+      "n_shared": 0,
+      "jaccard": 0.0,
+      "shared_terms": []
+    }
+  }
+}

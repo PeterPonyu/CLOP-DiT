@@ -17,7 +17,7 @@ import numpy as np
 
 from ..utils.constants import RANDOM_SEED
 from .direct_layout import bind_figure_region
-from .style import COLORS, FONT_LEGEND_DENSE, FONT_LABEL, FONT_SMALL, FONT_TITLE, FONT_TICK_DENSE, FONT_ANNOTATION, abbreviate_cell_type, add_panel_label, apply_style, save_with_vcd, set_figure_suptitle
+from .style import COLORS, FONT_LEGEND_DENSE, FONT_LABEL, FONT_SMALL, FONT_TITLE, FONT_TICK_DENSE, FONT_ANNOTATION, PANEL_OFFSET_STD, abbreviate_cell_type, add_panel_label, apply_style, save_with_vcd, set_figure_suptitle
 from ._utils import sample_pairwise_cosines
 from src.utils.paths import CACHE_DIR, RESULTS_DIR, FIG_DIR, CHECKPOINT_DIR
 
@@ -467,7 +467,7 @@ def plot_metrics_summary(
                  ha="center", va="center", transform=ax1.transAxes,
                  fontsize=10, color=COLORS["neutral"])
         ax1.set_title("Training Convergence", fontsize=12)
-    add_panel_label(ax1, 'a', x=-0.10, y=1.05)
+    add_panel_label(ax1, 'a', x=PANEL_OFFSET_STD[0], y=PANEL_OFFSET_STD[1])
 
     # ── D2: Generation quality bar chart (replaces radar for clarity) ──
     ax2 = top_right.add_axes(fig)
@@ -538,12 +538,12 @@ def plot_metrics_summary(
             if gauss_bl:
                 ax2.legend(fontsize=FONT_LEGEND_DENSE, frameon=False, loc="upper left", ncol=2)
         ax2.set_title("Quality Profile", fontsize=FONT_TITLE)
-        add_panel_label(ax2, 'b', x=-0.10, y=1.05)
+        add_panel_label(ax2, 'b', x=PANEL_OFFSET_STD[0], y=PANEL_OFFSET_STD[1])
     else:
         ax2.text(0.5, 0.5, "No generation data", ha="center",
                  va="center", transform=ax2.transAxes)
         ax2.set_title("Generation Quality Profile")
-        add_panel_label(ax2, 'b', x=-0.10, y=1.05)
+        add_panel_label(ax2, 'b', x=PANEL_OFFSET_STD[0], y=PANEL_OFFSET_STD[1])
 
     # ── D3: Diversity gauges ──
     ax3 = bottom_left.add_axes(fig)
@@ -613,7 +613,7 @@ def plot_metrics_summary(
         ax3.text(0.5, 0.5, "No diversity data", ha="center", va="center",
                  transform=ax3.transAxes)
         ax3.set_title("Diversity Health")
-    add_panel_label(ax3, 'c', x=-0.10, y=1.05)
+    add_panel_label(ax3, 'c', x=PANEL_OFFSET_STD[0], y=PANEL_OFFSET_STD[1])
 
     # ── D4: Expression fidelity + config ──
     ax4 = bottom_right.add_axes(fig)
@@ -642,13 +642,13 @@ def plot_metrics_summary(
         ax4.grid(axis='both', alpha=0.15, linestyle='--')
         ax4.text(0.98, 0.02, "Lower = better (log scale)",
                  transform=ax4.transAxes, ha="right", va="bottom",
-                 fontsize=FONT_SMALL, color=COLORS["neutral"], style="italic")
+                 fontsize=FONT_SMALL, color=COLORS["neutral"], style="normal")
 
     else:
         ax4.text(0.5, 0.5, "No expression data", ha="center", va="center",
                  transform=ax4.transAxes)
         ax4.set_title("Expression Fidelity")
-    add_panel_label(ax4, 'd', x=-0.10, y=1.05)
+    add_panel_label(ax4, 'd', x=PANEL_OFFSET_STD[0], y=PANEL_OFFSET_STD[1])
 
     if save:
         path = Path(output_dir) / "fig03a_metrics_summary.png"

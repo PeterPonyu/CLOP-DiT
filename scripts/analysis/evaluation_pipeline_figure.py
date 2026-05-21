@@ -15,19 +15,28 @@ from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from src.visualization.direct_layout import bind_figure_region
-from src.visualization.style import apply_style
+from src.visualization.style import (
+    apply_style,
+    compute_composed_panel_label_fontsize,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 FIG_DIR = ROOT / "results" / "figures"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
+# Source width used everywhere in this module; threaded through
+# compute_composed_panel_label_fontsize() so panel-label D stays in
+# visual parity with A/B/C in fig01a after LaTeX scaling.
+FIG01B_WIDTH_IN = 14.4
 
-def _rounded_box(ax, xy, w, h, text, fc="#E8F4FD", ec="#2C3E50", fontsize=12,
+
+def _rounded_box(ax, xy, w, h, text, fc="#E8F4FD", ec="#2C3E50", fontsize=16,
                  lw=1.2, text_color="#2C3E50", bold=False):
     """Draw a rounded rectangle with centered text."""
     box = mpatches.FancyBboxPatch(
@@ -41,7 +50,7 @@ def _rounded_box(ax, xy, w, h, text, fc="#E8F4FD", ec="#2C3E50", fontsize=12,
     return box
 
 
-def _arrow(ax, start, end, color="#555", lw=1.8, style="-|>"):
+def _arrow(ax, start, end, color="#555", lw=2.0, style="-|>"):
     ax.annotate("", xy=end, xytext=start,
                 arrowprops=dict(arrowstyle=style + ",head_length=0.6,head_width=0.3",
                                 color=color, lw=lw),
@@ -50,7 +59,7 @@ def _arrow(ax, start, end, color="#555", lw=1.8, style="-|>"):
 
 def make_figure():
     apply_style()
-    fig = plt.figure(figsize=(14.4, 7.6))
+    fig = plt.figure(figsize=(FIG01B_WIDTH_IN, 8.2))
     ax = bind_figure_region(fig, (0.03, 0.04, 0.97, 0.97)).add_axes(fig)
     ax.set_xlim(-0.12, 10.36)
     ax.set_ylim(-0.22, 7.18)
@@ -58,15 +67,31 @@ def make_figure():
     ax.set_xticks([])
     ax.set_yticks([])
 
-    # Panel label (d) — this figure is merged with the architecture figure (a–c) in the article.
-    # fig01b (14.4" wide) is scaled to 0.95\textwidth while fig01a (10.0") is scaled to
-    # \textwidth, so (d) needs a larger fontsize (~21pt) to match (a)–(c) at 14pt after
-    # LaTeX scaling.
-    ax.text(-0.05, 6.96, "(d)", fontsize=21, fontweight="bold", color="black",
-            ha="left", va="center", zorder=10)
+    # Panel label D fontsize is computed from the shared Fig 1 base so it
+    # matches A/B/C on-page after LaTeX scales both sub-figures to the same
+    # \includegraphics width. Source of truth: src/visualization/style.py
+    # (compute_composed_panel_label_fontsize). Any change to A/B/C size
+    # propagates automatically to D.
+    _D_LABEL_SIZE = compute_composed_panel_label_fontsize(source_width_in=FIG01B_WIDTH_IN)
+    ax.text(
+        -0.05,
+        6.96,
+        "D",
+        fontsize=_D_LABEL_SIZE,
+        fontweight="bold",
+        color="black",
+        ha="left",
+        va="center",
+        zorder=10,
+        gid="panel_label:D",
+        path_effects=[
+            pe.withStroke(linewidth=3.0, foreground="white"),
+            pe.Normal(),
+        ],
+    )
 
     # Title
-    ax.text(5.0, 6.96, "Evaluation Pipeline Schematic", fontsize=16,
+    ax.text(5.0, 6.96, "Evaluation Pipeline Schematic", fontsize=17,
             ha="center", va="center", weight="bold", color="#2C3E50")
 
     # ── Row 1: Data Sources ──
@@ -182,7 +207,7 @@ def make_figure():
 
     # ── Row 6: Bootstrap ──
     ax.text(9.5, y5 + 0.35, "Bootstrap\n95% CI\n(B=1000)",
-            ha="center", va="center", fontsize=12, style="italic",
+            ha="center", va="center", fontsize=14, style="normal",
             color="#7F8C8D",
             bbox=dict(boxstyle="round,pad=0.3", fc="#F9F9F9", ec="#BDC3C7", lw=0.8))
 
@@ -202,7 +227,7 @@ def make_figure():
                                      boxstyle="round,pad=0.03",
                                      facecolor=color, edgecolor="#666", lw=0.5)
         ax.add_patch(p)
-        ax.text(x + 0.38, -0.055, label, fontsize=11.5, va="center", color="#333")
+        ax.text(x + 0.38, -0.055, label, fontsize=14, va="center", color="#333")
 
     out_png = FIG_DIR / "fig01b_evaluation_pipeline.png"
     from src.visualization.style import save_with_vcd

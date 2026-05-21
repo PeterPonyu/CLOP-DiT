@@ -1,0 +1,1144 @@
+{
+  "n_datasets_analyzed": 50,
+  "notes": {
+    "raw_space": "adata.X (log1p-normalised HVG, 2000-d)",
+    "latent_space": "scGPT 512-d cached_latents_cap3k_seed0",
+    "tightness": "mean_within_L2 / mean_between_centroid_L2",
+    "interpretation": "larger tightness = clusters overlap more"
+  },
+  "tightness_ratio_latent_over_raw": {
+    "median": 0.6467,
+    "mean": 0.6576,
+    "IQR": [
+      0.5831,
+      0.7311
+    ],
+    "min": 0.3848,
+    "max": 1.1147,
+    "n": 50
+  },
+  "within_L2_ratio": {
+    "median": 0.1675,
+    "mean": 0.1774,
+    "IQR": [
+      0.1317,
+      0.2135
+    ],
+    "min": 0.0801,
+    "max": 0.3155,
+    "n": 50
+  },
+  "between_L2_ratio": {
+    "median": 0.2738,
+    "mean": 0.2711,
+    "IQR": [
+      0.2366,
+      0.2991
+    ],
+    "min": 0.0736,
+    "max": 0.4097,
+    "n": 50
+  },
+  "per_dataset": [
+    {
+      "dataset": "GSE167597_spineMm",
+      "n_cells": 2226,
+      "n_types": 9,
+      "raw": {
+        "mean_within_L2": 17.8908445570204,
+        "mean_between_centroid_L2": 18.62231159210205,
+        "tightness": 0.9607209324436461,
+        "n_types": 9,
+        "n_cells": 2226
+      },
+      "latent": {
+        "mean_within_L2": 1.4688069025675456,
+        "mean_between_centroid_L2": 1.3715019557211134,
+        "tightness": 1.0709477273732875,
+        "n_types": 9,
+        "n_cells": 2226
+      },
+      "within_L2_ratio_latent_over_raw": 0.08209824292454562,
+      "between_L2_ratio_latent_over_raw": 0.07364831959437217,
+      "tightness_ratio_latent_over_raw": 1.1147334165492506
+    },
+    {
+      "dataset": "GSE142653pitHmDev",
+      "n_cells": 2869,
+      "n_types": 14,
+      "raw": {
+        "mean_within_L2": 14.523608412061419,
+        "mean_between_centroid_L2": 16.143737347571406,
+        "tightness": 0.8996435025775669,
+        "n_types": 14,
+        "n_cells": 2869
+      },
+      "latent": {
+        "mean_within_L2": 3.510760477610997,
+        "mean_between_centroid_L2": 4.48071026474565,
+        "tightness": 0.7835276708770383,
+        "n_types": 14,
+        "n_cells": 2869
+      },
+      "within_L2_ratio_latent_over_raw": 0.24172783911575418,
+      "between_L2_ratio_latent_over_raw": 0.277550988861926,
+      "tightness_ratio_latent_over_raw": 0.8709312840387939
+    },
+    {
+      "dataset": "GSE262288_breastMetasisHmCancer",
+      "n_cells": 2290,
+      "n_types": 15,
+      "raw": {
+        "mean_within_L2": 14.395307477315267,
+        "mean_between_centroid_L2": 14.97250106448219,
+        "tightness": 0.9614497548084239,
+        "n_types": 15,
+        "n_cells": 2290
+      },
+      "latent": {
+        "mean_within_L2": 3.294228172302246,
+        "mean_between_centroid_L2": 4.209312945320493,
+        "tightness": 0.782604718417159,
+        "n_types": 15,
+        "n_cells": 2290
+      },
+      "within_L2_ratio_latent_over_raw": 0.22884041744113004,
+      "between_L2_ratio_latent_over_raw": 0.2811362595462315,
+      "tightness_ratio_latent_over_raw": 0.8139840012472611
+    },
+    {
+      "dataset": "GSE183904_GastricHmCancer",
+      "n_cells": 2983,
+      "n_types": 14,
+      "raw": {
+        "mean_within_L2": 14.084737164633614,
+        "mean_between_centroid_L2": 17.51099186677199,
+        "tightness": 0.804336914310384,
+        "n_types": 14,
+        "n_cells": 2983
+      },
+      "latent": {
+        "mean_within_L2": 3.266657676015581,
+        "mean_between_centroid_L2": 4.993377413068499,
+        "tightness": 0.6541980318704119,
+        "n_types": 14,
+        "n_cells": 2983
+      },
+      "within_L2_ratio_latent_over_raw": 0.23192890558285095,
+      "between_L2_ratio_latent_over_raw": 0.285156743322101,
+      "tightness_ratio_latent_over_raw": 0.813338316607417
+    },
+    {
+      "dataset": "GSE145929_ProgastinMmDev",
+      "n_cells": 2746,
+      "n_types": 7,
+      "raw": {
+        "mean_within_L2": 17.21479184286935,
+        "mean_between_centroid_L2": 16.478535334269207,
+        "tightness": 1.0446797299435346,
+        "n_types": 7,
+        "n_cells": 2746
+      },
+      "latent": {
+        "mean_within_L2": 2.713733400617327,
+        "mean_between_centroid_L2": 3.2811714666230336,
+        "tightness": 0.8270623550832863,
+        "n_types": 7,
+        "n_cells": 2746
+      },
+      "within_L2_ratio_latent_over_raw": 0.15763962906942727,
+      "between_L2_ratio_latent_over_raw": 0.19911790702656812,
+      "tightness_ratio_latent_over_raw": 0.7916898656854282
+    },
+    {
+      "dataset": "GSE189070_astrocytesSCIMmDev",
+      "n_cells": 2960,
+      "n_types": 18,
+      "raw": {
+        "mean_within_L2": 14.821123917897543,
+        "mean_between_centroid_L2": 17.03573634266074,
+        "tightness": 0.8700019547016946,
+        "n_types": 18,
+        "n_cells": 2960
+      },
+      "latent": {
+        "mean_within_L2": 2.7990634441375732,
+        "mean_between_centroid_L2": 4.109755048564836,
+        "tightness": 0.6810779258279716,
+        "n_types": 18,
+        "n_cells": 2960
+      },
+      "within_L2_ratio_latent_over_raw": 0.18885635526989344,
+      "between_L2_ratio_latent_over_raw": 0.24124317058566022,
+      "tightness_ratio_latent_over_raw": 0.7828464317203734
+    },
+    {
+      "dataset": "GSE163558_stomachHmCancer",
+      "n_cells": 2467,
+      "n_types": 12,
+      "raw": {
+        "mean_within_L2": 13.895059903462728,
+        "mean_between_centroid_L2": 13.52856326825691,
+        "tightness": 1.0270905807171524,
+        "n_types": 12,
+        "n_cells": 2467
+      },
+      "latent": {
+        "mean_within_L2": 3.3818434476852417,
+        "mean_between_centroid_L2": 4.230172886992946,
+        "tightness": 0.7994575016269024,
+        "n_types": 12,
+        "n_cells": 2467
+      },
+      "within_L2_ratio_latent_over_raw": 0.24338458928431586,
+      "between_L2_ratio_latent_over_raw": 0.3126845625151135,
+      "tightness_ratio_latent_over_raw": 0.7783709797715133
+    },
+    {
+      "dataset": "GSE168181_BreastHmCancer",
+      "n_cells": 2863,
+      "n_types": 11,
+      "raw": {
+        "mean_within_L2": 15.005936709317295,
+        "mean_between_centroid_L2": 14.544722227616743,
+        "tightness": 1.0317100921202071,
+        "n_types": 11,
+        "n_cells": 2863
+      },
+      "latent": {
+        "mean_within_L2": 3.2079892375252466,
+        "mean_between_centroid_L2": 4.015152194283226,
+        "tightness": 0.7989707693005467,
+        "n_types": 11,
+        "n_cells": 2863
+      },
+      "within_L2_ratio_latent_over_raw": 0.21378133865734505,
+      "between_L2_ratio_latent_over_raw": 0.2760556118878275,
+      "tightness_ratio_latent_over_raw": 0.7744140290986478
+    },
+    {
+      "dataset": "GSE98638_TcellLiverHmCancer",
+      "n_cells": 2932,
+      "n_types": 6,
+      "raw": {
+        "mean_within_L2": 16.420978546142578,
+        "mean_between_centroid_L2": 10.913501930236816,
+        "tightness": 1.504647971944442,
+        "n_types": 6,
+        "n_cells": 2932
+      },
+      "latent": {
+        "mean_within_L2": 5.180270433425903,
+        "mean_between_centroid_L2": 4.4495113054911295,
+        "tightness": 1.1642335703323072,
+        "n_types": 6,
+        "n_cells": 2932
+      },
+      "within_L2_ratio_latent_over_raw": 0.3154666099142302,
+      "between_L2_ratio_latent_over_raw": 0.40770701594539216,
+      "tightness_ratio_latent_over_raw": 0.7737581095648435
+    },
+    {
+      "dataset": "GSE275119_TeethMmDev",
+      "n_cells": 2873,
+      "n_types": 12,
+      "raw": {
+        "mean_within_L2": 16.816793123881023,
+        "mean_between_centroid_L2": 18.367984865650985,
+        "tightness": 0.9155491605031336,
+        "n_types": 12,
+        "n_cells": 2873
+      },
+      "latent": {
+        "mean_within_L2": 2.508235921462377,
+        "mean_between_centroid_L2": 3.5754128161704903,
+        "tightness": 0.7015234465006107,
+        "n_types": 12,
+        "n_cells": 2873
+      },
+      "within_L2_ratio_latent_over_raw": 0.1491506676085886,
+      "between_L2_ratio_latent_over_raw": 0.19465460377510896,
+      "tightness_ratio_latent_over_raw": 0.7662324173997314
+    },
+    {
+      "dataset": "GSE253355_bmNicheHm",
+      "n_cells": 2835,
+      "n_types": 13,
+      "raw": {
+        "mean_within_L2": 15.228442925673265,
+        "mean_between_centroid_L2": 16.11118276302631,
+        "tightness": 0.9452094951477522,
+        "n_types": 13,
+        "n_cells": 2835
+      },
+      "latent": {
+        "mean_within_L2": 3.9820015613849344,
+        "mean_between_centroid_L2": 5.575437255394765,
+        "tightness": 0.7142043536642745,
+        "n_types": 13,
+        "n_cells": 2835
+      },
+      "within_L2_ratio_latent_over_raw": 0.26148448536861074,
+      "between_L2_ratio_latent_over_raw": 0.346060083694779,
+      "tightness_ratio_latent_over_raw": 0.7556042944243089
+    },
+    {
+      "dataset": "GSE123902_LungAdreHmCancer",
+      "n_cells": 2723,
+      "n_types": 10,
+      "raw": {
+        "mean_within_L2": 16.644205856323243,
+        "mean_between_centroid_L2": 14.87771257824368,
+        "tightness": 1.1187341984723367,
+        "n_types": 10,
+        "n_cells": 2723
+      },
+      "latent": {
+        "mean_within_L2": 3.522664523124695,
+        "mean_between_centroid_L2": 4.248548213640849,
+        "tightness": 0.8291454741679634,
+        "n_types": 10,
+        "n_cells": 2723
+      },
+      "within_L2_ratio_latent_over_raw": 0.21164509460728712,
+      "between_L2_ratio_latent_over_raw": 0.2855646115824071,
+      "tightness_ratio_latent_over_raw": 0.7411460875158595
+    },
+    {
+      "dataset": "GSE225600_breast_CancerHm",
+      "n_cells": 2314,
+      "n_types": 11,
+      "raw": {
+        "mean_within_L2": 16.95560186559504,
+        "mean_between_centroid_L2": 13.789512300491333,
+        "tightness": 1.2296012720472278,
+        "n_types": 11,
+        "n_cells": 2314
+      },
+      "latent": {
+        "mean_within_L2": 3.2561634237116035,
+        "mean_between_centroid_L2": 3.6118141434409403,
+        "tightness": 0.9015312788518759,
+        "n_types": 11,
+        "n_cells": 2314
+      },
+      "within_L2_ratio_latent_over_raw": 0.19204056862875224,
+      "between_L2_ratio_latent_over_raw": 0.26192471965177827,
+      "tightness_ratio_latent_over_raw": 0.7331899367271059
+    },
+    {
+      "dataset": "GSE149655_CAHmCancer",
+      "n_cells": 2087,
+      "n_types": 14,
+      "raw": {
+        "mean_within_L2": 15.62007440839495,
+        "mean_between_centroid_L2": 16.646005447094257,
+        "tightness": 0.9383677338109729,
+        "n_types": 14,
+        "n_cells": 2087
+      },
+      "latent": {
+        "mean_within_L2": 3.2494497299194336,
+        "mean_between_centroid_L2": 4.778321483633021,
+        "tightness": 0.6800399975283442,
+        "n_types": 14,
+        "n_cells": 2087
+      },
+      "within_L2_ratio_latent_over_raw": 0.20803036176146697,
+      "between_L2_ratio_latent_over_raw": 0.2870551435790338,
+      "tightness_ratio_latent_over_raw": 0.724705222723838
+    },
+    {
+      "dataset": "hemato",
+      "n_cells": 2886,
+      "n_types": 11,
+      "raw": {
+        "mean_within_L2": 9.426931077783758,
+        "mean_between_centroid_L2": 13.44308662848039,
+        "tightness": 0.7012475139312094,
+        "n_types": 11,
+        "n_cells": 2886
+      },
+      "latent": {
+        "mean_within_L2": 2.788554321635853,
+        "mean_between_centroid_L2": 5.507422930544073,
+        "tightness": 0.5063265263632794,
+        "n_types": 11,
+        "n_cells": 2886
+      },
+      "within_L2_ratio_latent_over_raw": 0.29580722492048106,
+      "between_L2_ratio_latent_over_raw": 0.4096844037942968,
+      "tightness_ratio_latent_over_raw": 0.7220368219557762
+    },
+    {
+      "dataset": "GSE165784_RetinaHmDev",
+      "n_cells": 2622,
+      "n_types": 12,
+      "raw": {
+        "mean_within_L2": 15.80466342076086,
+        "mean_between_centroid_L2": 16.395559331977083,
+        "tightness": 0.9639600028732311,
+        "n_types": 12,
+        "n_cells": 2622
+      },
+      "latent": {
+        "mean_within_L2": 3.420703570048014,
+        "mean_between_centroid_L2": 4.920076043316812,
+        "tightness": 0.6952542074414741,
+        "n_types": 12,
+        "n_cells": 2622
+      },
+      "within_L2_ratio_latent_over_raw": 0.21643634407010587,
+      "between_L2_ratio_latent_over_raw": 0.30008589177686307,
+      "tightness_ratio_latent_over_raw": 0.7212479826643865
+    },
+    {
+      "dataset": "GSE228499_breastHmCancer",
+      "n_cells": 2346,
+      "n_types": 16,
+      "raw": {
+        "mean_within_L2": 15.347246825695038,
+        "mean_between_centroid_L2": 15.727696951230367,
+        "tightness": 0.9758101820810092,
+        "n_types": 16,
+        "n_cells": 2346
+      },
+      "latent": {
+        "mean_within_L2": 3.2661479711532593,
+        "mean_between_centroid_L2": 4.722252309322357,
+        "tightness": 0.6916504577075322,
+        "n_types": 16,
+        "n_cells": 2346
+      },
+      "within_L2_ratio_latent_over_raw": 0.21281654020738952,
+      "between_L2_ratio_latent_over_raw": 0.3002507184596368,
+      "tightness_ratio_latent_over_raw": 0.7087961064646005
+    },
+    {
+      "dataset": "GSE123813_bccHmCancer",
+      "n_cells": 2981,
+      "n_types": 12,
+      "raw": {
+        "mean_within_L2": 14.905646800994873,
+        "mean_between_centroid_L2": 15.386279539628463,
+        "tightness": 0.9687622509784977,
+        "n_types": 12,
+        "n_cells": 2981
+      },
+      "latent": {
+        "mean_within_L2": 3.169346729914347,
+        "mean_between_centroid_L2": 4.62303094069163,
+        "tightness": 0.6855560281930961,
+        "n_types": 12,
+        "n_cells": 2981
+      },
+      "within_L2_ratio_latent_over_raw": 0.21262725276053168,
+      "between_L2_ratio_latent_over_raw": 0.30046450987613244,
+      "tightness_ratio_latent_over_raw": 0.7076617895677197
+    },
+    {
+      "dataset": "GSE189357_lungAdreHmCancer",
+      "n_cells": 2868,
+      "n_types": 12,
+      "raw": {
+        "mean_within_L2": 16.522627751032513,
+        "mean_between_centroid_L2": 16.459081877361644,
+        "tightness": 1.0038608395136712,
+        "n_types": 12,
+        "n_cells": 2868
+      },
+      "latent": {
+        "mean_within_L2": 2.9519780476888022,
+        "mean_between_centroid_L2": 4.195672586108699,
+        "tightness": 0.7035768371112654,
+        "n_types": 12,
+        "n_cells": 2868
+      },
+      "within_L2_ratio_latent_over_raw": 0.1786627461545474,
+      "between_L2_ratio_latent_over_raw": 0.25491534809602984,
+      "tightness_ratio_latent_over_raw": 0.7008708870963819
+    },
+    {
+      "dataset": "hESC_GSE144024",
+      "n_cells": 2865,
+      "n_types": 11,
+      "raw": {
+        "mean_within_L2": 12.991624918850986,
+        "mean_between_centroid_L2": 13.733277017419988,
+        "tightness": 0.9459959849620558,
+        "n_types": 11,
+        "n_cells": 2865
+      },
+      "latent": {
+        "mean_within_L2": 3.347106868570501,
+        "mean_between_centroid_L2": 5.074360413984819,
+        "tightness": 0.6596115757457732,
+        "n_types": 11,
+        "n_cells": 2865
+      },
+      "within_L2_ratio_latent_over_raw": 0.25763573759844416,
+      "between_L2_ratio_latent_over_raw": 0.3694937783275064,
+      "tightness_ratio_latent_over_raw": 0.6972667814993215
+    },
+    {
+      "dataset": "ifnHSPC_GSE226824",
+      "n_cells": 2586,
+      "n_types": 10,
+      "raw": {
+        "mean_within_L2": 13.209266185760498,
+        "mean_between_centroid_L2": 10.86554307937622,
+        "tightness": 1.215702343570187,
+        "n_types": 10,
+        "n_cells": 2586
+      },
+      "latent": {
+        "mean_within_L2": 3.406289887428284,
+        "mean_between_centroid_L2": 4.022805849711101,
+        "tightness": 0.8467447882608871,
+        "n_types": 10,
+        "n_cells": 2586
+      },
+      "within_L2_ratio_latent_over_raw": 0.2578712427720051,
+      "between_L2_ratio_latent_over_raw": 0.37023513876142544,
+      "tightness_ratio_latent_over_raw": 0.6965066677211693
+    },
+    {
+      "dataset": "GSE283205_hepatoblastomaCancer",
+      "n_cells": 2994,
+      "n_types": 10,
+      "raw": {
+        "mean_within_L2": 21.854955673217773,
+        "mean_between_centroid_L2": 15.906907505459255,
+        "tightness": 1.3739286323075146,
+        "n_types": 10,
+        "n_cells": 2994
+      },
+      "latent": {
+        "mean_within_L2": 2.989281916618347,
+        "mean_between_centroid_L2": 3.195391445689731,
+        "tightness": 0.9354978779362367,
+        "n_types": 10,
+        "n_cells": 2994
+      },
+      "within_L2_ratio_latent_over_raw": 0.13677821915152966,
+      "between_L2_ratio_latent_over_raw": 0.20088074596480002,
+      "tightness_ratio_latent_over_raw": 0.680892628582219
+    },
+    {
+      "dataset": "GSE138709_LiverCancer",
+      "n_cells": 2891,
+      "n_types": 14,
+      "raw": {
+        "mean_within_L2": 17.598174571990967,
+        "mean_between_centroid_L2": 21.51154098405943,
+        "tightness": 0.8180806100795679,
+        "n_types": 14,
+        "n_cells": 2891
+      },
+      "latent": {
+        "mean_within_L2": 3.107145973614284,
+        "mean_between_centroid_L2": 5.719970758144672,
+        "tightness": 0.5432101150499792,
+        "n_types": 14,
+        "n_cells": 2891
+      },
+      "within_L2_ratio_latent_over_raw": 0.17656069729866064,
+      "between_L2_ratio_latent_over_raw": 0.2659024177943974,
+      "tightness_ratio_latent_over_raw": 0.6640056106416526
+    },
+    {
+      "dataset": "GSE213740_ADHm",
+      "n_cells": 2674,
+      "n_types": 12,
+      "raw": {
+        "mean_within_L2": 15.26494057973226,
+        "mean_between_centroid_L2": 17.639003688638862,
+        "tightness": 0.8654083217616357,
+        "n_types": 12,
+        "n_cells": 2674
+      },
+      "latent": {
+        "mean_within_L2": 2.9245647192001343,
+        "mean_between_centroid_L2": 5.191449299003139,
+        "tightness": 0.5633426333878881,
+        "n_types": 12,
+        "n_cells": 2674
+      },
+      "within_L2_ratio_latent_over_raw": 0.19158703592224727,
+      "between_L2_ratio_latent_over_raw": 0.2943164699459136,
+      "tightness_ratio_latent_over_raw": 0.6509558773841474
+    },
+    {
+      "dataset": "GSE226131_HSCMmAged",
+      "n_cells": 2608,
+      "n_types": 13,
+      "raw": {
+        "mean_within_L2": 15.037609980656551,
+        "mean_between_centroid_L2": 11.743771174015142,
+        "tightness": 1.280475390556785,
+        "n_types": 13,
+        "n_cells": 2608
+      },
+      "latent": {
+        "mean_within_L2": 3.6480141236231876,
+        "mean_between_centroid_L2": 4.399896072271543,
+        "tightness": 0.8291137026197577,
+        "n_types": 13,
+        "n_cells": 2608
+      },
+      "within_L2_ratio_latent_over_raw": 0.24259268117179303,
+      "between_L2_ratio_latent_over_raw": 0.3746578511344783,
+      "tightness_ratio_latent_over_raw": 0.6475045976941711
+    },
+    {
+      "dataset": "GSE222002_TcellsHmCancer",
+      "n_cells": 2962,
+      "n_types": 12,
+      "raw": {
+        "mean_within_L2": 17.14855448404948,
+        "mean_between_centroid_L2": 17.310267354502823,
+        "tightness": 0.9906579796174392,
+        "n_types": 12,
+        "n_cells": 2962
+      },
+      "latent": {
+        "mean_within_L2": 2.836705962816874,
+        "mean_between_centroid_L2": 4.432992844870596,
+        "tightness": 0.6399076339812321,
+        "n_types": 12,
+        "n_cells": 2962
+      },
+      "within_L2_ratio_latent_over_raw": 0.1654195381573066,
+      "between_L2_ratio_latent_over_raw": 0.25609037423199976,
+      "tightness_ratio_latent_over_raw": 0.645942037663033
+    },
+    {
+      "dataset": "GSE145929_UrineMmDev",
+      "n_cells": 2542,
+      "n_types": 10,
+      "raw": {
+        "mean_within_L2": 17.9252947807312,
+        "mean_between_centroid_L2": 13.702084573109945,
+        "tightness": 1.3082166209884019,
+        "n_types": 10,
+        "n_cells": 2542
+      },
+      "latent": {
+        "mean_within_L2": 2.760147178173065,
+        "mean_between_centroid_L2": 3.294168716006809,
+        "tightness": 0.8378888320932497,
+        "n_types": 10,
+        "n_cells": 2542
+      },
+      "within_L2_ratio_latent_over_raw": 0.15398057392841796,
+      "between_L2_ratio_latent_over_raw": 0.24041369022575926,
+      "tightness_ratio_latent_over_raw": 0.6404817204204273
+    },
+    {
+      "dataset": "GSE132509_acutelymluekPBMCHmCancer",
+      "n_cells": 2984,
+      "n_types": 10,
+      "raw": {
+        "mean_within_L2": 16.422274017333983,
+        "mean_between_centroid_L2": 13.91278199089898,
+        "tightness": 1.180373129405505,
+        "n_types": 10,
+        "n_cells": 2984
+      },
+      "latent": {
+        "mean_within_L2": 2.7850141525268555,
+        "mean_between_centroid_L2": 3.699838423728943,
+        "tightness": 0.7527393992843432,
+        "n_types": 10,
+        "n_cells": 2984
+      },
+      "within_L2_ratio_latent_over_raw": 0.1695876070261175,
+      "between_L2_ratio_latent_over_raw": 0.26593088471803733,
+      "tightness_ratio_latent_over_raw": 0.6377130930314047
+    },
+    {
+      "dataset": "lung",
+      "n_cells": 2986,
+      "n_types": 6,
+      "raw": {
+        "mean_within_L2": 22.88933277130127,
+        "mean_between_centroid_L2": 14.250990676879884,
+        "tightness": 1.6061573044487225,
+        "n_types": 6,
+        "n_cells": 2986
+      },
+      "latent": {
+        "mean_within_L2": 2.95475165049235,
+        "mean_between_centroid_L2": 2.943312430381775,
+        "tightness": 1.0038865123499958,
+        "n_types": 6,
+        "n_cells": 2986
+      },
+      "within_L2_ratio_latent_over_raw": 0.1290885881215825,
+      "between_L2_ratio_latent_over_raw": 0.2065338822484013,
+      "tightness_ratio_latent_over_raw": 0.6250237816491813
+    },
+    {
+      "dataset": "GSE120505_bloodAged",
+      "n_cells": 3000,
+      "n_types": 10,
+      "raw": {
+        "mean_within_L2": 17.26698246002197,
+        "mean_between_centroid_L2": 14.882843187120226,
+        "tightness": 1.160193804565851,
+        "n_types": 10,
+        "n_cells": 3000
+      },
+      "latent": {
+        "mean_within_L2": 2.226895785331726,
+        "mean_between_centroid_L2": 3.08263906372918,
+        "tightness": 0.7223991324620955,
+        "n_types": 10,
+        "n_cells": 3000
+      },
+      "within_L2_ratio_latent_over_raw": 0.128968439649929,
+      "between_L2_ratio_latent_over_raw": 0.2071270270721477,
+      "tightness_ratio_latent_over_raw": 0.6226538442277064
+    },
+    {
+      "dataset": "GSE143423_lbm_CancerBrainHm",
+      "n_cells": 2789,
+      "n_types": 12,
+      "raw": {
+        "mean_within_L2": 18.740700483322144,
+        "mean_between_centroid_L2": 15.2950459429712,
+        "tightness": 1.22527912326634,
+        "n_types": 12,
+        "n_cells": 2789
+      },
+      "latent": {
+        "mean_within_L2": 2.5876548290252686,
+        "mean_between_centroid_L2": 3.422898485805049,
+        "tightness": 0.7559835150695872,
+        "n_types": 12,
+        "n_cells": 2789
+      },
+      "within_L2_ratio_latent_over_raw": 0.13807674005185092,
+      "between_L2_ratio_latent_over_raw": 0.2237913176964358,
+      "tightness_ratio_latent_over_raw": 0.6169888156212863
+    },
+    {
+      "dataset": "GSE148218_bmALLHmCancer",
+      "n_cells": 2807,
+      "n_types": 9,
+      "raw": {
+        "mean_within_L2": 16.543466991848415,
+        "mean_between_centroid_L2": 13.732913931210836,
+        "tightness": 1.2046581719448504,
+        "n_types": 9,
+        "n_cells": 2807
+      },
+      "latent": {
+        "mean_within_L2": 2.527395248413086,
+        "mean_between_centroid_L2": 3.4067920313941107,
+        "tightness": 0.741869543289626,
+        "n_types": 9,
+        "n_cells": 2807
+      },
+      "within_L2_ratio_latent_over_raw": 0.15277301001406948,
+      "between_L2_ratio_latent_over_raw": 0.2480749568852597,
+      "tightness_ratio_latent_over_raw": 0.6158340685905287
+    },
+    {
+      "dataset": "GSE192857_hESCHmTimes",
+      "n_cells": 2696,
+      "n_types": 9,
+      "raw": {
+        "mean_within_L2": 14.2178922229343,
+        "mean_between_centroid_L2": 15.113659156693352,
+        "tightness": 0.9407312997817378,
+        "n_types": 9,
+        "n_cells": 2696
+      },
+      "latent": {
+        "mean_within_L2": 2.557526455985175,
+        "mean_between_centroid_L2": 4.439568993118074,
+        "tightness": 0.5760753937937857,
+        "n_types": 9,
+        "n_cells": 2696
+      },
+      "within_L2_ratio_latent_over_raw": 0.17988084421259953,
+      "between_L2_ratio_latent_over_raw": 0.29374547534055856,
+      "tightness_ratio_latent_over_raw": 0.6123697531138199
+    },
+    {
+      "dataset": "GSE222369_NKsLymphomaHmCancer",
+      "n_cells": 2575,
+      "n_types": 6,
+      "raw": {
+        "mean_within_L2": 15.16218900680542,
+        "mean_between_centroid_L2": 11.654792245229086,
+        "tightness": 1.3009403074526784,
+        "n_types": 6,
+        "n_cells": 2575
+      },
+      "latent": {
+        "mean_within_L2": 2.396761894226074,
+        "mean_between_centroid_L2": 3.042813849449158,
+        "tightness": 0.7876794351583358,
+        "n_types": 6,
+        "n_cells": 2575
+      },
+      "within_L2_ratio_latent_over_raw": 0.15807492527301353,
+      "between_L2_ratio_latent_over_raw": 0.2610783431763651,
+      "tightness_ratio_latent_over_raw": 0.6054693137309742
+    },
+    {
+      "dataset": "GSE155109_bcStromaHmCancer",
+      "n_cells": 3000,
+      "n_types": 11,
+      "raw": {
+        "mean_within_L2": 18.207247127186168,
+        "mean_between_centroid_L2": 17.200909267772328,
+        "tightness": 1.058504922254274,
+        "n_types": 11,
+        "n_cells": 3000
+      },
+      "latent": {
+        "mean_within_L2": 2.7793785442005503,
+        "mean_between_centroid_L2": 4.383291634646329,
+        "tightness": 0.6340847873848594,
+        "n_types": 11,
+        "n_cells": 3000
+      },
+      "within_L2_ratio_latent_over_raw": 0.15265232161596348,
+      "between_L2_ratio_latent_over_raw": 0.2548290655110237,
+      "tightness_ratio_latent_over_raw": 0.5990381093688855
+    },
+    {
+      "dataset": "GSE117988_MCCTumorCancer",
+      "n_cells": 2961,
+      "n_types": 6,
+      "raw": {
+        "mean_within_L2": 19.652344067891438,
+        "mean_between_centroid_L2": 16.58613135019938,
+        "tightness": 1.1848660578499035,
+        "n_types": 6,
+        "n_cells": 2961
+      },
+      "latent": {
+        "mean_within_L2": 2.4522131284077964,
+        "mean_between_centroid_L2": 3.49275762240092,
+        "tightness": 0.702085112542721,
+        "n_types": 6,
+        "n_cells": 2961
+      },
+      "within_L2_ratio_latent_over_raw": 0.12477967615142116,
+      "between_L2_ratio_latent_over_raw": 0.21058301955138764,
+      "tightness_ratio_latent_over_raw": 0.5925438642547897
+    },
+    {
+      "dataset": "GSE235787_bcellsALLHmCancer",
+      "n_cells": 2798,
+      "n_types": 9,
+      "raw": {
+        "mean_within_L2": 20.078577253553604,
+        "mean_between_centroid_L2": 16.65502432982127,
+        "tightness": 1.2055567650899417,
+        "n_types": 9,
+        "n_cells": 2798
+      },
+      "latent": {
+        "mean_within_L2": 3.261604812410143,
+        "mean_between_centroid_L2": 4.608958664867613,
+        "tightness": 0.7076663189175789,
+        "n_types": 9,
+        "n_cells": 2798
+      },
+      "within_L2_ratio_latent_over_raw": 0.16244202819863088,
+      "between_L2_ratio_latent_over_raw": 0.27673082750261424,
+      "tightness_ratio_latent_over_raw": 0.5870037308983811
+    },
+    {
+      "dataset": "GSE123813_sccHmCancer",
+      "n_cells": 3000,
+      "n_types": 8,
+      "raw": {
+        "mean_within_L2": 19.18106436729431,
+        "mean_between_centroid_L2": 11.275896191596985,
+        "tightness": 1.701067838988125,
+        "n_types": 8,
+        "n_cells": 3000
+      },
+      "latent": {
+        "mean_within_L2": 2.468285247683525,
+        "mean_between_centroid_L2": 2.4939453644411906,
+        "tightness": 0.9897110349234074,
+        "n_types": 8,
+        "n_cells": 3000
+      },
+      "within_L2_ratio_latent_over_raw": 0.1286834348928105,
+      "between_L2_ratio_latent_over_raw": 0.2211749134671643,
+      "tightness_ratio_latent_over_raw": 0.5818174985379383
+    },
+    {
+      "dataset": "endo",
+      "n_cells": 2531,
+      "n_types": 9,
+      "raw": {
+        "mean_within_L2": 18.2120844523112,
+        "mean_between_centroid_L2": 14.91295067469279,
+        "tightness": 1.2212260906365784,
+        "n_types": 9,
+        "n_cells": 2531
+      },
+      "latent": {
+        "mean_within_L2": 1.458121617635091,
+        "mean_between_centroid_L2": 2.0749547249741025,
+        "tightness": 0.7027245462684926,
+        "n_types": 9,
+        "n_cells": 2531
+      },
+      "within_L2_ratio_latent_over_raw": 0.08006341182159676,
+      "between_L2_ratio_latent_over_raw": 0.13913777160782081,
+      "tightness_ratio_latent_over_raw": 0.5754254283104853
+    },
+    {
+      "dataset": "GSE143423_tnbc_CancerBrainHm",
+      "n_cells": 2107,
+      "n_types": 9,
+      "raw": {
+        "mean_within_L2": 15.415594736735025,
+        "mean_between_centroid_L2": 10.616437594095865,
+        "tightness": 1.4520496729814643,
+        "n_types": 9,
+        "n_cells": 2107
+      },
+      "latent": {
+        "mean_within_L2": 3.3521596325768366,
+        "mean_between_centroid_L2": 4.048548503054513,
+        "tightness": 0.8279904835147038,
+        "n_types": 9,
+        "n_cells": 2107
+      },
+      "within_L2_ratio_latent_over_raw": 0.21745250117329,
+      "between_L2_ratio_latent_over_raw": 0.3813471766938128,
+      "tightness_ratio_latent_over_raw": 0.5702218725166666
+    },
+    {
+      "dataset": "GSE124310_MMHmCancer",
+      "n_cells": 2833,
+      "n_types": 10,
+      "raw": {
+        "mean_within_L2": 16.639280986785888,
+        "mean_between_centroid_L2": 13.697416135999891,
+        "tightness": 1.2147751679277754,
+        "n_types": 10,
+        "n_cells": 2833
+      },
+      "latent": {
+        "mean_within_L2": 2.842904472351074,
+        "mean_between_centroid_L2": 4.151511695649889,
+        "tightness": 0.6847877787096148,
+        "n_types": 10,
+        "n_cells": 2833
+      },
+      "within_L2_ratio_latent_over_raw": 0.17085500717301255,
+      "between_L2_ratio_latent_over_raw": 0.30308721399934563,
+      "tightness_ratio_latent_over_raw": 0.5637156543772296
+    },
+    {
+      "dataset": "GSE225857_liverColonMetasisHmCancer",
+      "n_cells": 2793,
+      "n_types": 9,
+      "raw": {
+        "mean_within_L2": 18.429626570807564,
+        "mean_between_centroid_L2": 17.524282375971477,
+        "tightness": 1.0516622692680104,
+        "n_types": 9,
+        "n_cells": 2793
+      },
+      "latent": {
+        "mean_within_L2": 2.8056211206648083,
+        "mean_between_centroid_L2": 4.759712033801609,
+        "tightness": 0.5894518619488714,
+        "n_types": 9,
+        "n_cells": 2793
+      },
+      "within_L2_ratio_latent_over_raw": 0.15223429025463261,
+      "between_L2_ratio_latent_over_raw": 0.27160667305429387,
+      "tightness_ratio_latent_over_raw": 0.5604953977850211
+    },
+    {
+      "dataset": "bm_GSE120446",
+      "n_cells": 2890,
+      "n_types": 12,
+      "raw": {
+        "mean_within_L2": 15.190924247105917,
+        "mean_between_centroid_L2": 14.593938206181381,
+        "tightness": 1.0409064388577223,
+        "n_types": 12,
+        "n_cells": 2890
+      },
+      "latent": {
+        "mean_within_L2": 2.488228360811869,
+        "mean_between_centroid_L2": 4.320443146156542,
+        "tightness": 0.5759197093069938,
+        "n_types": 12,
+        "n_cells": 2890
+      },
+      "within_L2_ratio_latent_over_raw": 0.16379703567318568,
+      "between_L2_ratio_latent_over_raw": 0.29604367821199784,
+      "tightness_ratio_latent_over_raw": 0.5532867199274902
+    },
+    {
+      "dataset": "GSE130148_LungHmDev",
+      "n_cells": 3000,
+      "n_types": 13,
+      "raw": {
+        "mean_within_L2": 20.057852965134842,
+        "mean_between_centroid_L2": 13.967474460601807,
+        "tightness": 1.4360400673516336,
+        "n_types": 13,
+        "n_cells": 3000
+      },
+      "latent": {
+        "mean_within_L2": 2.4979339562929592,
+        "mean_between_centroid_L2": 3.2877536293787832,
+        "tightness": 0.7597692034986638,
+        "n_types": 13,
+        "n_cells": 3000
+      },
+      "within_L2_ratio_latent_over_raw": 0.12453645764753299,
+      "between_L2_ratio_latent_over_raw": 0.23538640708830952,
+      "tightness_ratio_latent_over_raw": 0.5290724268577279
+    },
+    {
+      "dataset": "GSE165844_LSKMmBatch",
+      "n_cells": 1451,
+      "n_types": 4,
+      "raw": {
+        "mean_within_L2": 17.875118494033813,
+        "mean_between_centroid_L2": 12.75910758972168,
+        "tightness": 1.4009693364787852,
+        "n_types": 4,
+        "n_cells": 1451
+      },
+      "latent": {
+        "mean_within_L2": 2.3043785095214844,
+        "mean_between_centroid_L2": 3.143162488937378,
+        "tightness": 0.7331401152921417,
+        "n_types": 4,
+        "n_cells": 1451
+      },
+      "within_L2_ratio_latent_over_raw": 0.12891542566784203,
+      "between_L2_ratio_latent_over_raw": 0.24634657767674967,
+      "tightness_ratio_latent_over_raw": 0.5233091804384711
+    },
+    {
+      "dataset": "GSE115571_LPSMmDev",
+      "n_cells": 366,
+      "n_types": 2,
+      "raw": {
+        "mean_within_L2": 26.273972511291504,
+        "mean_between_centroid_L2": 8.476571083068848,
+        "tightness": 3.0995991485013663,
+        "n_types": 2,
+        "n_cells": 366
+      },
+      "latent": {
+        "mean_within_L2": 2.9301456212997437,
+        "mean_between_centroid_L2": 1.9192091226577759,
+        "tightness": 1.5267464012686611,
+        "n_types": 2,
+        "n_cells": 366
+      },
+      "within_L2_ratio_latent_over_raw": 0.11152274822699476,
+      "between_L2_ratio_latent_over_raw": 0.22641338152536883,
+      "tightness_ratio_latent_over_raw": 0.4925625308701068
+    },
+    {
+      "dataset": "GSE155109_bcECHmCancer",
+      "n_cells": 3000,
+      "n_types": 8,
+      "raw": {
+        "mean_within_L2": 21.971111297607422,
+        "mean_between_centroid_L2": 12.53927915436881,
+        "tightness": 1.7521829626029553,
+        "n_types": 8,
+        "n_cells": 3000
+      },
+      "latent": {
+        "mean_within_L2": 2.8569070994853973,
+        "mean_between_centroid_L2": 3.55332236630576,
+        "tightness": 0.8040101079980547,
+        "n_types": 8,
+        "n_cells": 3000
+      },
+      "within_L2_ratio_latent_over_raw": 0.13003015918436975,
+      "between_L2_ratio_latent_over_raw": 0.2833753298384578,
+      "tightness_ratio_latent_over_raw": 0.4588619597143312
+    },
+    {
+      "dataset": "dentate",
+      "n_cells": 3000,
+      "n_types": 8,
+      "raw": {
+        "mean_within_L2": 20.70251202583313,
+        "mean_between_centroid_L2": 18.244080305099487,
+        "tightness": 1.1347522966146162,
+        "n_types": 8,
+        "n_cells": 3000
+      },
+      "latent": {
+        "mean_within_L2": 2.041004717350006,
+        "mean_between_centroid_L2": 3.9276069487844194,
+        "tightness": 0.5196560511182744,
+        "n_types": 8,
+        "n_cells": 3000
+      },
+      "within_L2_ratio_latent_over_raw": 0.09858729775416566,
+      "between_L2_ratio_latent_over_raw": 0.21528116973298983,
+      "tightness_ratio_latent_over_raw": 0.4579466837552122
+    },
+    {
+      "dataset": "setty",
+      "n_cells": 2995,
+      "n_types": 13,
+      "raw": {
+        "mean_within_L2": 17.02656657879169,
+        "mean_between_centroid_L2": 12.85887500567314,
+        "tightness": 1.3241101240411646,
+        "n_types": 13,
+        "n_cells": 2995
+      },
+      "latent": {
+        "mean_within_L2": 2.194157077715947,
+        "mean_between_centroid_L2": 4.1924945910771685,
+        "tightness": 0.5233535858068232,
+        "n_types": 13,
+        "n_cells": 2995
+      },
+      "within_L2_ratio_latent_over_raw": 0.1288666782913821,
+      "between_L2_ratio_latent_over_raw": 0.3260389877985052,
+      "tightness_ratio_latent_over_raw": 0.3952492895451594
+    },
+    {
+      "dataset": "GSE117988_MCCPBMCCancer",
+      "n_cells": 2612,
+      "n_types": 8,
+      "raw": {
+        "mean_within_L2": 18.667100429534912,
+        "mean_between_centroid_L2": 14.233018909181867,
+        "tightness": 1.311534857688735,
+        "n_types": 8,
+        "n_cells": 2612
+      },
+      "latent": {
+        "mean_within_L2": 2.110454633831978,
+        "mean_between_centroid_L2": 4.181740435106414,
+        "tightness": 0.5046833170500867,
+        "n_types": 8,
+        "n_cells": 2612
+      },
+      "within_L2_ratio_latent_over_raw": 0.11305744252025537,
+      "between_L2_ratio_latent_over_raw": 0.29380558416940833,
+      "tightness_ratio_latent_over_raw": 0.3848035864936673
+    }
+  ]
+}

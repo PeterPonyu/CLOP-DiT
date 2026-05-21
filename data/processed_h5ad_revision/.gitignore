@@ -1,0 +1,5 @@
+# h5ad binaries are large and re-fetchable via scripts/data_prep/04*.py
+*.h5ad
+raw/
+manifest.json
+*.manifest.json

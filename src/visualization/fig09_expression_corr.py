@@ -15,14 +15,14 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Callable, Dict, List, Optional
+from typing import Callable, List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 from .direct_layout import bind_figure_region
-from .explicit_positioning import add_axes_next_to, add_shared_legend_axes
-from .style import COLORS, FONT_DENSE_YTICK, abbreviate_cell_type, add_panel_label, save_with_vcd
+from .explicit_positioning import add_axes_next_to
+from .style import COLORS, FONT_DENSE_YTICK, abbreviate_cell_type, add_panel_label, reserve_annotation_slot, save_with_vcd
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +94,7 @@ def plot_expression_correlation(
     abs_res = np.abs(residuals)
     resid_vmax = float(np.percentile(abs_res, 95)) if len(abs_res) else 1.0
     sc = ax1.scatter(real_means, gen_means, c=abs_res, cmap="magma_r",
-                     s=18, alpha=0.7, edgecolors="none",
+                     s=10, alpha=0.55, edgecolors="none",
                      vmin=0, vmax=resid_vmax)
     lo = min(real_means.min(), gen_means.min()) - 0.2
     hi = max(real_means.max(), gen_means.max()) + 0.2
@@ -105,7 +105,6 @@ def plot_expression_correlation(
     ax1.set_xlabel("Real Mean Expression", fontsize=11)
     ax1.set_ylabel("Generated Mean Expression", fontsize=11)
     ax1.set_title("Per-Gene Correlation", fontsize=12)
-    from matplotlib.patches import ConnectionPatch
     from matplotlib.ticker import MaxNLocator as _MaxNLoc, ScalarFormatter as _ScalarFormatter
     ax1.xaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
     ax1.yaxis.set_major_locator(_MaxNLoc(nbins=3, prune="both"))
@@ -114,7 +113,7 @@ def plot_expression_correlation(
         ax1,
         side="right",
         width=0.012,
-        height=ax1.get_position().height * 0.40,
+        height=ax1.get_position().height * 0.32,
         pad=0.014,
         align="bottom",
         y_offset=0.018,
@@ -136,55 +135,57 @@ def plot_expression_correlation(
     cbar.ax.tick_params(labelsize=7, length=2, pad=1)
     cbar.ax.yaxis.get_offset_text().set_fontsize(7)
     cbar.ax.yaxis.get_offset_text().set_visible(True)
-    add_panel_label(ax1, 'e', x=-0.12, y=1.08)
+    add_panel_label(ax1, 'e', x=-0.12, y=1.04)
 
-    # Annotate outlier genes with staggered offsets
-    outlier_idx = np.argsort(abs_res)[-5:]
+    # Gene callouts for top-3 residual outliers. Labels placed adjacent to
+    # their data points using display-space offsets (not axes-fraction slots)
+    # so leader lines stay short and labels do not collide with the colorbar.
+    outlier_idx = np.argsort(abs_res)[-3:]
     outlier_idx = outlier_idx[np.argsort(abs_res[outlier_idx])[::-1]]
-    sorted_by_y = sorted(outlier_idx, key=lambda idx: gen_means[idx], reverse=True)
-    left_slots = [(0.20, 0.82, "left"), (0.20, 0.60, "left"), (0.20, 0.42, "left")]
-    right_slots = [(0.80, 0.76, "right"), (0.80, 0.54, "right")]
-    label_plan = []
-    for idx, slot in zip(sorted_by_y[::2], left_slots):
-        label_plan.append((idx, *slot))
-    for idx, slot in zip(sorted_by_y[1::2], right_slots):
-        label_plan.append((idx, *slot))
-
-    for i, slot_x, slot_y, ha in label_plan:
-        if i >= len(gene_names):
-            continue
-        ax1.text(
-            slot_x,
-            slot_y,
+    valid_idx = [i for i in outlier_idx if i < len(gene_names)]
+    x_lo, x_hi = ax1.get_xlim()
+    y_lo, y_hi = ax1.get_ylim()
+    x_span = x_hi - x_lo + 1e-12
+    y_span = y_hi - y_lo + 1e-12
+    callout_offsets = [(-34, 30), (34, 4), (34, -26), (-34, -30)]
+    for rank, i in enumerate(valid_idx):
+        xv, yv = real_means[i], gen_means[i]
+        x_frac = (xv - x_lo) / x_span
+        y_frac = (yv - y_lo) / y_span
+        # Canonical adjacent-offset callout pattern shared across Figs 4E / 5A /
+        # 10D / 10H. 14 pt + slightly larger offsets and padding per user spec.
+        dx_pt, dy_pt = callout_offsets[rank % len(callout_offsets)]
+        if x_frac > 0.82 and dx_pt > 0:
+            dx_pt = -abs(dx_pt)
+        if x_frac < 0.28 and dx_pt < 0:
+            dx_pt = abs(dx_pt)
+        if y_frac > 0.82 and dy_pt > 0:
+            dy_pt = -abs(dy_pt)
+        if y_frac < 0.18 and dy_pt < 0:
+            dy_pt = abs(dy_pt)
+        ax1.annotate(
             gene_names[i],
-            transform=ax1.transAxes,
-            fontsize=9.5,
-            ha=ha,
+            xy=(xv, yv),
+            xycoords="data",
+            xytext=(dx_pt, dy_pt),
+            textcoords="offset points",
+            fontsize=12,
+            ha="right" if dx_pt < 0 else "left",
             va="center",
             color="#333",
-            bbox=dict(boxstyle="round,pad=0.10", fc="white", ec="none", alpha=0.86),
+            bbox=dict(boxstyle="round,pad=0.18", fc="white", ec="#BBB",
+                      lw=0.4, alpha=0.95),
+            arrowprops=dict(
+                arrowstyle="-",
+                lw=0.5,
+                color="#888",
+                alpha=0.65,
+                shrinkA=1,
+                shrinkB=1,
+            ),
             zorder=6,
-            clip_on=False,
+            annotation_clip=True,
         )
-        connector_x = slot_x + (0.02 if ha == "left" else -0.02)
-        connector = ConnectionPatch(
-            xyA=(real_means[i], gen_means[i]),
-            coordsA=ax1.transData,
-            xyB=(connector_x, slot_y),
-            coordsB=ax1.transAxes,
-            axesA=ax1,
-            axesB=ax1,
-            arrowstyle="-",
-            lw=0.55,
-            color="#666",
-            alpha=0.65,
-            shrinkA=0,
-            shrinkB=0,
-            connectionstyle=f"arc3,rad={0.12 if ha == 'left' else -0.12}",
-        )
-        connector.set_zorder(2)
-        connector.set_clip_on(False)
-        ax1.add_artist(connector)
 
     # -- H2: Per-type deviation lollipop chart (1 - r, log scale) --
     ax2 = top_right.inset(left=0.17, right=0.05).add_axes(fig)
@@ -218,12 +219,12 @@ def plot_expression_correlation(
         # Annotation about expression space
         ax2.text(0.95, 0.05, "Expression in scGPT binned space",
                  transform=ax2.transAxes, ha="right", va="bottom",
-                 fontsize=9, style="italic", color=COLORS["neutral"])
+                 fontsize=9, style="normal", color=COLORS["neutral"])
     else:
         ax2.text(0.5, 0.5, "No per-type data", ha="center", va="center",
                  transform=ax2.transAxes)
     ax2.set_title("Per-Type Expression Fidelity", fontsize=12)
-    add_panel_label(ax2, 'f', x=-0.12, y=1.08)
+    add_panel_label(ax2, 'f', x=-0.12, y=1.04)
 
     # -- H3: Marker gene expression with error bars --
     ax3 = bottom_left.add_axes(fig)
@@ -285,7 +286,7 @@ def plot_expression_correlation(
     # Note: do NOT set xaxis MaxNLocator here -- it would override the explicit
     # gene-name tick labels set above (set_xticks / set_xticklabels).
     ax3.yaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
-    add_panel_label(ax3, 'g', x=-0.12, y=1.08)
+    add_panel_label(ax3, 'g', x=-0.12, y=1.04)
 
     # -- H4: Residual distribution --
     ax4 = bottom_right.inset(left=0.07, right=0.02).add_axes(fig)
@@ -301,7 +302,7 @@ def plot_expression_correlation(
     ax4.legend(fontsize=10, frameon=False)
     ax4.xaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
     ax4.yaxis.set_major_locator(_MaxNLoc(nbins=4, prune="both"))
-    add_panel_label(ax4, 'h', x=-0.12, y=1.08)
+    add_panel_label(ax4, 'h', x=-0.12, y=1.04)
 
     pct_within_01 = (np.abs(residuals) < 0.1).mean() * 100
     pct_within_001 = (np.abs(residuals) < 0.01).mean() * 100

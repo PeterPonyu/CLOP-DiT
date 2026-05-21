@@ -1,0 +1,4 @@
+dataset_id,source_label,target_label,status,reviewer_a,reviewer_b,notes
+PROPOSAL_HCA_KIDNEY_V2,proximal tubule cell,Kidney proximal tubule cells,reviewed,leader_single_author__label_bridge_review,,provisional single-review exact vocabulary mapping backed by existing kidney proximal tubule baseline label
+PROPOSAL_GTEX_TESTIS,Sertoli cells,novel__testis_supporting_cells,novel,leader_single_author__label_bridge_review,,provisional single-review novel-bucket mapping backed by current taxonomy entry for Sertoli cells
+PROPOSAL_ALLEN_CEREBELLUM,Purkinje neurons,novel__purkinje_neurons,novel,leader_single_author__label_bridge_review,,provisional single-review novel-bucket mapping backed by existing OOD prompt artifact for Purkinje cells

@@ -1,0 +1,49 @@
+B4 — Projected text space diagnostic
+==================================================
+Text groups: 1088
+Variants: production, abl_baseline, no_cohesion, no_cell_noise, fixed_temperature
+
+Pairwise cosine similarity (per-group, then aggregated):
+pair                                         mean   median      min
+----------------------------------------------------------------
+production vs abl_baseline                 0.2670   0.2682   0.1197
+production vs no_cohesion                  0.3465   0.3468   0.2799
+production vs no_cell_noise                0.2918   0.2924   0.1584
+production vs fixed_temperature            0.0704   0.0718  -0.1394
+abl_baseline vs no_cohesion                0.7782   0.7794   0.6537
+abl_baseline vs no_cell_noise              0.8838   0.8861   0.7480
+abl_baseline vs fixed_temperature          0.6455   0.6472   0.4716
+no_cohesion vs no_cell_noise               0.8206   0.8213   0.6970
+no_cohesion vs fixed_temperature           0.2619   0.2612   0.1420
+no_cell_noise vs fixed_temperature         0.5103   0.5146   0.2713
+
+Pairwise L2 distance:
+pair                                         mean   median      max
+----------------------------------------------------------------
+production vs abl_baseline                 1.2101   1.2098   1.3269
+production vs no_cohesion                  1.1431   1.1430   1.2001
+production vs no_cell_noise                1.1894   1.1896   1.2974
+production vs fixed_temperature            1.3629   1.3625   1.5096
+abl_baseline vs no_cohesion                0.6636   0.6642   0.8322
+abl_baseline vs no_cell_noise              0.4788   0.4773   0.7099
+abl_baseline vs fixed_temperature          0.8392   0.8400   1.0280
+no_cohesion vs no_cell_noise               0.5962   0.5978   0.7785
+no_cohesion vs fixed_temperature           1.2143   1.2156   1.3100
+no_cell_noise vs fixed_temperature         0.9871   0.9853   1.2072
+
+Structural similarity (Pearson r of inter-type similarity matrices):
+pair                                      pearson spearman
+--------------------------------------------------------
+production vs abl_baseline                 0.0533   0.0469
+production vs no_cohesion                  0.0639   0.0619
+production vs no_cell_noise                0.0356   0.0358
+production vs fixed_temperature            0.0403   0.0360
+abl_baseline vs no_cohesion                0.5487   0.5197
+abl_baseline vs no_cell_noise              0.7562   0.7353
+abl_baseline vs fixed_temperature          0.7381   0.7156
+no_cohesion vs no_cell_noise               0.5526   0.5219
+no_cohesion vs fixed_temperature           0.3645   0.3340
+no_cell_noise vs fixed_temperature         0.5853   0.5627
+
+VERDICT: STRUCTURALLY_DIFFERENT
+Structural Pearson r: min=0.0356. Ablation variants produce different inter-type similarity patterns. Full DiT retraining per variant is needed for B4.

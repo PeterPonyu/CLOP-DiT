@@ -104,14 +104,10 @@ def plot_confusion_matrix(
         ax.set_yticks(ticks)
         ax.set_xticklabels([str(i) for i in ticks], fontsize=8)
         ax.set_yticklabels([str(i) for i in ticks], fontsize=8)
-        # Sparse diagonal annotations
-        diag_step = max(1, n_classes // 8)
-        safe_end = max(0, n_classes - diag_step)
-        for i in range(0, min(safe_end, cm_norm.shape[0]), diag_step):
-            val = cm_norm[i, i]
-            color = "white" if val > 0.5 else "black"
-            ax.text(i, i, f"{val:.1f}", ha="center", va="center",
-                    fontsize=FONT_HEATMAP_CELL, color=color)
+        # Diagonal annotations dropped for large n_classes: the every-8th
+        # sampling produced scattered "0.0 / 0.1 / 0.2" labels over the
+        # heatmap that looked like rendering debris; the Recall colorbar
+        # carries the quantitative scale.
     else:
         short = [n[:18] for n in class_names]
         ax.set_xticks(range(n_classes))

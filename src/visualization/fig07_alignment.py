@@ -1,10 +1,10 @@
 """
 fig07_alignment.py -- Article Figure 7: Text-Cell Alignment Heatmap.
 
-  F1: Clustered heatmap with diagonal highlight, off-diagonal confusions annotated,
-      inset zoom on diagonal, and statistical summary text box
-  F2: Sorted per-type alignment bars with threshold bands, value annotations,
-      quality-tier counts, and median marker
+  F1: Clustered text-prototype x cell-centroid heatmap with a diagonal guide,
+      inset zoom, and compact color scale
+  F2: Sorted per-type matched-lift bars relative to the row-wise off-diagonal
+      median baseline
   F3: Distribution of diagonal vs off-diagonal similarities with KDE overlay,
       Mann-Whitney U p-value, Cohen's d effect size, median markers, and
       bootstrap CI annotation
@@ -27,15 +27,13 @@ import numpy as np
 from .direct_layout import bind_figure_region
 from .style import (
     COLORS, FONT_HEATMAP_CELL, FONT_SMALL, FONT_TITLE,
+    PANEL_OFFSET_LEFT, PANEL_OFFSET_WIDE,
     add_colorbar_safe,
     abbreviate_cell_type, add_panel_label,
-    quality_color, save_with_vcd, set_adaptive_ytick_labels, style_axes,
+    save_with_vcd, set_adaptive_ytick_labels, style_axes,
 )
 from .explicit_positioning import add_axes_next_to
-from src.utils.paths import FIG_DIR, load_thresholds
-
-_viz_thresh = load_thresholds().get("visualization", {})
-_COSINE_QUALITY_BANDS = tuple(_viz_thresh.get("cosine_quality_bands", [0.9, 0.7]))
+from src.utils.paths import FIG_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -51,10 +49,10 @@ def plot_text_cell_heatmap(
 ) -> Optional[plt.Figure]:
     """Enhanced 69x69 text-cell alignment heatmap with rich annotations.
 
-    F1: Clustered heatmap with diagonal highlight, off-diagonal confusions annotated,
-        inset zoom on diagonal, and statistical summary text box
-    F2: Sorted per-type alignment bars with threshold bands, value annotations,
-        quality-tier counts, and median marker
+    F1: Clustered text-prototype x cell-centroid heatmap with diagonal guide and
+        inset zoom.
+    F2: Sorted per-type matched-lift bars relative to each row's off-diagonal
+        median baseline.
     F3: Distribution of diagonal vs off-diagonal similarities with KDE overlay,
         Mann-Whitney U p-value, Cohen's d effect size, median markers, and
         bootstrap CI annotation
@@ -124,6 +122,13 @@ def plot_text_cell_heatmap(
     mean_off = off_diag.mean()
     std_off = off_diag.std()
     median_off = float(np.median(off_diag))
+    row_off = sim_matrix.copy()
+    np.fill_diagonal(row_off, np.nan)
+    row_off_median = np.nanmedian(row_off, axis=1)
+    matched_lift = diag - row_off_median
+    mean_lift = float(np.mean(matched_lift))
+    median_lift = float(np.median(matched_lift))
+    n_positive_lift = int(np.sum(matched_lift > 0))
 
     # --- Compute statistics for annotations ---
     # Cohen's d: effect size between diagonal and off-diagonal distributions
@@ -137,11 +142,6 @@ def plot_text_cell_heatmap(
         _u_stat, p_value = mannwhitneyu(diag, off_diag, alternative="greater")
     except ImportError:
         p_value = None
-
-    # Quality tier counts
-    n_excellent = int(np.sum(diag >= 0.9))
-    n_good = int(np.sum((diag >= 0.7) & (diag < 0.9)))
-    n_poor = int(np.sum(diag < 0.7))
 
     # Try to load bootstrap CIs for centroid cosine
     bootstrap_ci = None
@@ -167,17 +167,17 @@ def plot_text_cell_heatmap(
     x_labels_sorted = [x_labels[i] for i in sort_order]
     y_labels_sorted = [y_labels[i] for i in sort_order]
 
-    fig = plt.figure(figsize=(15.2, 6.8))
+    fig = plt.figure(figsize=(15.2, 7.4))
     # Title moved to LaTeX caption
     layout = bind_figure_region(fig, (0.12, 0.14, 0.985, 0.92))
-    ax1_slot, ax2_slot, ax3_slot = layout.split_cols([1.42, 1.02, 0.60], gap=[0.060, 0.028])
+    ax1_slot, ax2_slot, ax3_slot = layout.split_cols([1.56, 0.92, 0.68], gap=[0.048, 0.028])
     ax1_rect = ax1_slot.inset(right=0.004)
     ax2_rect = ax2_slot.inset(left=0.110, right=0.010)
     ax3_rect = ax3_slot.inset(left=0.012)
 
     # ── F1: Clustered heatmap with annotations ──
     ax1 = ax1_rect.add_axes(fig)
-    add_panel_label(ax1, chr(ord('a') + label_offset), x=-0.14, y=1.06)
+    add_panel_label(ax1, chr(ord('a') + label_offset), x=PANEL_OFFSET_WIDE[0], y=PANEL_OFFSET_WIDE[1])
     cmap = mcolors.LinearSegmentedColormap.from_list(
         "custom_heat",
         [
@@ -191,14 +191,14 @@ def plot_text_cell_heatmap(
         aspect="auto", interpolation="nearest",
     )
     im.set_rasterized(True)
-    step_x = max(8, int(np.ceil(n_types / 8)))
-    step_y = max(4, int(np.ceil(n_types / 14)))
+    step_x = max(10, int(np.ceil(n_types / 6)))
+    step_y = max(5, int(np.ceil(n_types / 12)))
     _xtl = [x_labels_sorted[i] if i % step_x == 0 else "" for i in range(n_types)]
     _ytl = [y_labels_sorted[i] if i % step_y == 0 else "" for i in range(n_types)]
     ax1.set_xticks(range(n_types))
     ax1.set_yticks(range(n_types))
-    ax1.set_xticklabels(_xtl, rotation=55, fontsize=7.5, ha="right")
-    ax1.set_yticklabels(_ytl, fontsize=10, ha="right")
+    ax1.set_xticklabels(_xtl, rotation=55, fontsize=8, ha="right")
+    ax1.set_yticklabels(_ytl, fontsize=10.5, ha="right")
     ax1.set_ylabel("Cell Type (text prototypes)", fontsize=11)
     ax1.set_title("Cosine Similarity (sorted by diagonal)", fontsize=12)
 
@@ -245,63 +245,36 @@ def plot_text_cell_heatmap(
 
     style_axes(ax1, kind="heatmap")
 
-    # ── F2: Per-type alignment bars with threshold bands ──
+    # ── F2: Per-type matched lift over row-wise off-diagonal baseline ──
     ax2 = ax2_rect.add_axes(fig)
-    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=-0.14, y=1.06)
-    sorted_idx_asc = np.argsort(diag)
-    d_asc = diag[sorted_idx_asc]
+    add_panel_label(ax2, chr(ord('a') + label_offset + 1), x=PANEL_OFFSET_LEFT[0], y=PANEL_OFFSET_LEFT[1])
+    sorted_idx_asc = np.argsort(matched_lift)
+    d_asc = matched_lift[sorted_idx_asc]
     labels_asc = [y_labels[i] for i in sorted_idx_asc]
 
-    # Draw threshold bands (background shading for quality tiers)
-    ax2.axvspan(0.9, 1.08, color=COLORS["good"], alpha=0.06, zorder=0)
-    ax2.axvspan(0.7, 0.9, color=COLORS["warn"], alpha=0.06, zorder=0)
-    ax2.axvspan(0.0, 0.7, color=COLORS["bad"], alpha=0.06, zorder=0)
-
-    # Alignment quality bands (from configs/thresholds.yaml → visualization.cosine_quality_bands)
-    color_map = [quality_color(v, _COSINE_QUALITY_BANDS) for v in d_asc]
+    # Raw text-cell cosines are centred near zero after whitening/projection.
+    # Plotting a diagonal lift is more faithful than borrowing thresholds from
+    # the generated-cell centroid-fidelity panels.
+    color_map = [COLORS["real"] if v >= 0 else COLORS["generated"] for v in d_asc]
     ax2.barh(range(n_types), d_asc, color=color_map, height=0.8,
              edgecolor="white", linewidth=0.3)
     set_adaptive_ytick_labels(ax2, labels_asc, max_visible=18, fontsize=10)
-    ax2.set_xlabel("Cosine Similarity", fontsize=11)
+    ax2.set_xlabel("Matched Lift (diag - row off-diag median)", fontsize=11)
 
-    # Annotate values on the worst 3 and best 3 bars (with collision avoidance)
-    _ann_indices = list(range(min(4, n_types)))
-    _prev_y = -999
-    for idx_bar in _ann_indices:
-        val_bar = d_asc[idx_bar]
-        # Skip if too close to previous annotation vertically
-        if abs(idx_bar - _prev_y) < 1.5 and idx_bar != _ann_indices[0] and idx_bar < n_types - 3:
-            continue
-        _prev_y = idx_bar
-        ax2.text(
-            val_bar + 0.01, idx_bar, f"{val_bar:.3f}",
-            va="center", ha="left", fontsize=10, color=COLORS["annotation_medium"],
-        )
-
-    # Reference lines with annotations
-    ax2.axvline(x=mean_diag, color=COLORS["bad"], linestyle="--", alpha=0.7, linewidth=1.5)
-    ax2.axvline(x=0.9, color=COLORS["good"], linestyle=":", alpha=0.5, linewidth=1.0)
-    ax2.axvline(x=0.7, color=COLORS["warn"], linestyle=":", alpha=0.5, linewidth=1.0)
-
-    # Title with quality-tier counts
-    ax2.set_title(
-        f"Per-Type Alignment\n"
-        f"[{n_excellent} excellent / {n_good} good / {n_poor} poor]",
-        fontsize=FONT_TITLE,
-    )
-    ax2.set_xlim(0, 1.08)
-
-    # Add median marker (offset from mean label to avoid overlap)
-    ax2.axvline(
-        x=median_diag, color=COLORS["heatmap_purple"], linestyle="-.", alpha=0.6, linewidth=1.0,
-    )
-    # Place median label below the bar area to avoid colliding with the mean label
+    ax2.axvline(x=0, color=COLORS["annotation_dark"], linestyle="-", alpha=0.75, linewidth=1.0)
+    ax2.axvline(x=mean_lift, color=COLORS["bad"], linestyle="--", alpha=0.7, linewidth=1.3)
+    ax2.axvline(x=median_lift, color=COLORS["heatmap_purple"], linestyle="-.", alpha=0.65, linewidth=1.0)
+    x_abs = float(np.nanmax(np.abs(d_asc))) if len(d_asc) else 0.05
+    x_abs = max(x_abs, 0.035)
+    ax2.set_xlim(-x_abs * 1.20, x_abs * 1.20)
+    ax2.set_title("Per-Type Matched Lift", fontsize=FONT_TITLE, pad=8, x=0.58)
     ax2.text(
-        0.98, 0.02,
-        f"\u03bc={mean_diag:.3f} | med={median_diag:.3f}",
+        0.98, 0.98,
+        f"\u0394\u03bc={mean_lift:.3f} | med={median_lift:.3f}\n"
+        f"{n_positive_lift}/{n_types} positive lifts",
         transform=ax2.transAxes,
         ha="right",
-        va="bottom",
+        va="top",
         fontsize=FONT_SMALL - 1,
         color=COLORS["annotation_dark"],
         bbox=dict(boxstyle="round,pad=0.24", facecolor="white", edgecolor="none", alpha=0.85),
@@ -312,7 +285,12 @@ def plot_text_cell_heatmap(
 
     # ── F3: Distribution comparison with statistics ──
     ax3 = ax3_rect.add_axes(fig)
-    add_panel_label(ax3, chr(ord('a') + label_offset + 2), x=-0.14, y=1.06)
+    add_panel_label(
+        ax3,
+        chr(ord('a') + label_offset + 2),
+        x=PANEL_OFFSET_WIDE[0],
+        y=PANEL_OFFSET_LEFT[1],
+    )
 
     # Histograms with concise legend entries
     ax3.hist(

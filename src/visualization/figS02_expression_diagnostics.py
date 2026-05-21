@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 _TITLE_SIZE = max(FONT_TITLE - 1, 12)
-_LABEL_SIZE = 15
+_LABEL_SIZE = 18
 _LABEL_Y = 1.08
 _TIER_COLORS = {"pass": "#1B5E20", "warn": "#F9A825", "fail": "#D84315"}
 _VARIANT_DISPLAY = {
@@ -60,7 +60,7 @@ def _placeholder(ax: plt.Axes, title: str) -> None:
         transform=ax.transAxes,
         fontsize=FONT_LABEL,
         color=COLORS["neutral"],
-        style="italic",
+        style="normal",
     )
     ax.set_title(title, fontsize=_TITLE_SIZE, fontweight="normal")
     ax.set_xticks([])
@@ -215,7 +215,8 @@ def _panel_d(ax: plt.Axes, analysis_path: Path, tiers_path: Path) -> None:
 
     ax.scatter(n_reals, scores, c=point_colors, s=30, alpha=0.7, edgecolors="white", linewidth=0.3, zorder=3)
     ax.set_xscale("log")
-    ax.xaxis.set_major_locator(plt.MaxNLocator(nbins=3))
+    ax.set_xticks([10, 100, 1000, 10000])
+    ax.set_xticklabels([r"$10^1$", r"$10^2$", r"$10^3$", r"$10^4$"])
 
     from scipy import stats as scipy_stats
 
@@ -315,7 +316,16 @@ def _panel_g(ax: plt.Axes, results_path: Path) -> None:
     order = ["full", "markers_only", "celltype_only", "no_markers", "no_celltype", "tissue_only", "organism_only", "disease_only"]
     present_variants = [v for v in order if v in results]
     ret_variants = [v for v in present_variants if v != "full"]
-    ret_labels = [_VARIANT_DISPLAY.get(v, v) for v in ret_variants]
+    compact_labels = {
+        "markers_only": "Markers",
+        "celltype_only": "Cell type",
+        "tissue_only": "Tissue",
+        "organism_only": "Organism",
+        "disease_only": "Disease",
+        "no_markers": "No markers",
+        "no_celltype": "No cell type",
+    }
+    ret_labels = [compact_labels.get(v, _VARIANT_DISPLAY.get(v, v)) for v in ret_variants]
     ret_vals = [results[v].get("knn_retention_pct", 0) for v in ret_variants]
     ret_y = np.arange(len(ret_labels))
     ret_colors = [COLORS["good"] if r >= 80 else (COLORS["warn"] if r >= 50 else COLORS["bad"]) for r in ret_vals]
@@ -328,6 +338,9 @@ def _panel_g(ax: plt.Axes, results_path: Path) -> None:
     for i, (bar, val) in enumerate(zip(bars, ret_vals)):
         ax.text(val + 1.0, i, f"{val:.1f}%", va="center", fontsize=FONT_ANNOTATION, color=COLORS["neutral"])
 
+    xmax = max(125, min(max(ret_vals) * 1.15 if ret_vals else 100, 150))
+    ax.set_xlim(0, xmax)
+    ax.set_xticks([0, 50, 100] + ([150] if xmax >= 150 else []))
     style_axes(ax, "bar", xlabel="Retention (%)", title="Field Contribution")
 
 
@@ -353,8 +366,13 @@ def _panel_h(ax: plt.Axes, results_path: Path) -> None:
         ax.text(bar.get_x() + bar.get_width() / 2, val + 0.01, f"r={val:.3f}", ha="center", fontsize=FONT_ANNOTATION, color=COLORS["neutral"])
 
     driver = "Mean shift" if r_mean > r_var else "Variance shift"
-    ax.text(0.5, 0.95, f"Primary driver: {driver}", transform=ax.transAxes, ha="center", va="top", fontsize=max(FONT_SMALL + 1, 10), fontweight="bold", color=COLORS["annotation_dark"])
-    ax.set_ylim(0, max(vals) * 1.32 if max(vals) > 0 else 1.0)
+    ax.text(0.97, 0.95, f"Primary driver\n{driver}", transform=ax.transAxes,
+            ha="right", va="top",
+            fontsize=max(FONT_SMALL, 9), fontweight="bold",
+            color=COLORS["annotation_dark"],
+            bbox=dict(boxstyle="round,pad=0.22", facecolor="white",
+                      edgecolor="none", alpha=0.85))
+    ax.set_ylim(0, max(vals) * 1.42 if max(vals) > 0 else 1.0)
     style_axes(ax, "bar", ylabel="|Pearson r|", title="Separability Driver")
 
 
@@ -395,17 +413,18 @@ def _panel_j(ax: plt.Axes, results_path: Path) -> None:
         _placeholder(ax, "Per-Type Separability")
         return
 
-    type_names = [abbreviate_cell_type(n, max_len=14) for n, _ in sorted_types]
+    type_names = [abbreviate_cell_type(n, max_len=12) for n, _ in sorted_types]
     auc_vals = [v["auc"] for _, v in sorted_types]
     n_types = len(type_names)
-    step = max(1, n_types // 10)
+    step = max(1, int(np.ceil(n_types / 8)))
     thin = [type_names[i] if i % step == 0 or i == n_types - 1 else "" for i in range(n_types)]
     pt_colors = [COLORS["bad"] if a > 0.7 else (COLORS["warn"] if a > 0.6 else COLORS["good"]) for a in auc_vals]
 
     ax.barh(range(n_types), auc_vals, color=pt_colors, height=0.7, edgecolor="white", linewidth=0.3)
     ax.set_yticks(range(n_types))
-    ax.set_yticklabels(thin, fontsize=max(FONT_TICK - 1, 9))
+    ax.set_yticklabels(thin, fontsize=max(FONT_TICK - 2, 8))
     ax.invert_yaxis()
+    ax.set_xticks([0.0, 0.5, 1.0])
     ax.axvline(0.5, color="#999", linestyle=":", linewidth=1.0, alpha=0.5, label="Chance (0.5)")
     auc_mean = float(np.mean(auc_vals))
     ax.axvline(auc_mean, color="#555", linestyle="--", linewidth=1.2, label=f"Mean = {auc_mean:.3f}")
@@ -429,18 +448,25 @@ def plot_expression_diagnostics(output_dir: str | Path = "results/figures", dpi:
     field_ablation = val_dir / "field_ablation_results.json"
     discriminator = val_dir / "discriminator_analysis.json"
 
-    fig = plt.figure(figsize=(13.0, 10.0))
-    layout = bind_figure_region(fig, (0.055, 0.05, 0.988, 0.965))
-    top, bottom = layout.split_rows([1.0, 1.0], gap=0.14)
+    fig = plt.figure(figsize=(14.8, 10.5))
+    layout = bind_figure_region(fig, (0.06, 0.09, 0.99, 0.945))
+    top, bottom = layout.split_rows([1.0, 1.0], gap=0.15)
 
-    # Top row: wider gap before barh panel c (col 2)
-    top_weights = [1.55, 1.05, 1.10, 1.08, 1.55]
-    top_cols = top.split_cols(top_weights, gap=[0.05, 0.10, 0.06, 0.06])
-    # Bottom row: wider gap before g (col 1) barh; narrower j (col 4)
-    bot_weights = [1.50, 1.15, 1.08, 1.08, 1.35]
-    bottom_cols = bottom.split_cols(bot_weights, gap=[0.10, 0.06, 0.06, 0.10])
+    # Top row: wider gap before b (col 1) to separate high-precision xticks
+    # (1.0 vs 0.99990) and before c (col 2) barh yticklabels; extra right
+    # gap before e (col 4) so panel e xticks don't run off the page edge
+    # Widened gap between B and C from 0.06 → 0.11: Panel B's x-axis
+    # 0.99990/0.99995/1.000 tick labels were extending right past the axis
+    # and touching Panel C's left edge (stacked-bar family labels).
+    top_weights = [1.72, 1.16, 1.18, 1.14, 1.68]
+    top_cols = top.split_cols(top_weights, gap=[0.08, 0.11, 0.07, 0.08])
+    # Bottom row: wider gap before g (col 1) barh; between g/h (col 1/2)
+    # where retention xtick '200' collides with adjacent bar labels; and
+    # between i/j (col 3/4) for the per-type AUC yticks
+    bot_weights = [1.56, 1.18, 1.10, 1.12, 1.44]
+    bottom_cols = bottom.split_cols(bot_weights, gap=[0.08, 0.08, 0.07, 0.08])
 
-    _lbl_x = -0.12  # consistent x-offset for all panel labels
+    _lbl_x = -0.10  # consistent x-offset for all panel labels
 
     ax_a = top_cols[0].add_axes(fig)
     _panel_a(ax_a, pseudobulk_summary, pseudobulk_per_type)
@@ -448,7 +474,7 @@ def plot_expression_diagnostics(output_dir: str | Path = "results/figures", dpi:
 
     ax_b = top_cols[1].add_axes(fig)
     _panel_b(ax_b, pseudobulk_summary, pseudobulk_per_type)
-    add_panel_label(ax_b, "b", x=_lbl_x, y=_LABEL_Y, fontsize=_LABEL_SIZE)
+    add_panel_label(ax_b, "b", x=-0.04, y=_LABEL_Y, fontsize=_LABEL_SIZE)
 
     ax_c = top_cols[2].add_axes(fig)
     _panel_c(ax_c, failure_analysis, failure_tiers)
