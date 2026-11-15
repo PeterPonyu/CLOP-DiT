@@ -64,15 +64,23 @@ The trained model checkpoints (the CLOP aligner and the DiT generator) and the p
 
 ## Citation
 
+If you use CLOP-DiT, please cite the article:
+
+> Fu Z, Liu Y, Wang J, Wang S. CLOP-DiT: Structured-metadata-conditioned single-cell latent generation via contrastive language-omics pretraining and Diffusion Transformers. *Array*. 2026;30:100934. https://doi.org/10.1016/j.array.2026.100934
+
 ```bibtex
 @article{fu2026clopdit,
-  author  = {Fu, Zeyu},
-  title   = {{CLOP-DiT}: Text-Conditioned Single-Cell Latent Generation
-             via Contrastive Language--Omics Pretraining and
-             Diffusion Transformers},
-  year    = {2026}
+  author  = {Fu, Zeyu and Liu, Yiyao and Wang, Junping and Wang, Song},
+  title   = {CLOP-DiT: Structured-metadata-conditioned single-cell latent generation via contrastive language-omics pretraining and Diffusion Transformers},
+  journal = {Array},
+  volume  = {30},
+  pages   = {100934},
+  year    = {2026},
+  doi     = {10.1016/j.array.2026.100934}
 }
 ```
+
+GitHub's "Cite this repository" button reads the same record from `CITATION.cff`.
 
 ## License
 
