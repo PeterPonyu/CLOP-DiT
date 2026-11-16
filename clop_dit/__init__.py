@@ -18,5 +18,5 @@ genes, disease context):
 See the top-level README for installation, usage, and citation.
 """
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 __author__ = "Zeyu Fu"

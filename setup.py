@@ -12,7 +12,7 @@ _long_description = (
 
 setup(
     name="clop-dit",
-    version="1.1.0",
+    version="1.1.1",
     author="Zeyu Fu",
     author_email="fuzeyu09@gmail.com",
     maintainer="Zeyu Fu",
