@@ -1,6 +1,6 @@
 # clop_dit/
 
-Main Python package for CLOP-DiT: text-conditioned single-cell generation via contrastive alignment and flow-matching diffusion.
+Main Python package for CLOP-DiT: structured-metadata-conditioned single-cell generation via contrastive alignment and flow-matching diffusion.
 
 ## Subpackages
 

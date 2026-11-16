@@ -1,4 +1,4 @@
-"""CLOP-DiT — text-conditioned single-cell latent generation.
+"""CLOP-DiT — structured-metadata-conditioned single-cell latent generation.
 
 A three-stage pipeline that generates single-cell expression embeddings from
 a structured five-field text prompt (cell type, tissue, organism, marker
@@ -19,4 +19,4 @@ See the top-level README for installation, usage, and citation.
 """
 
 __version__ = "1.1.0"
-__author__ = "Zeyu Fu, JianXu Zheng, Jiawei Fu"
+__author__ = "Zeyu Fu"

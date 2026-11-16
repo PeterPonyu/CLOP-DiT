@@ -7,7 +7,7 @@ _readme_path = _this_dir / "README.md"
 _long_description = (
     _readme_path.read_text(encoding="utf-8")
     if _readme_path.exists()
-    else "CLOP-DiT: Text-conditioned single-cell latent generation."
+    else "CLOP-DiT: Structured-metadata-conditioned single-cell latent generation."
 )
 
 setup(
@@ -18,7 +18,7 @@ setup(
     maintainer="Zeyu Fu",
     maintainer_email="fuzeyu09@gmail.com",
     description=(
-        "CLOP-DiT: Text-conditioned single-cell latent generation via "
+        "CLOP-DiT: Structured-metadata-conditioned single-cell latent generation via "
         "contrastive language-omics pretraining and diffusion transformers."
     ),
     long_description=_long_description,
@@ -26,6 +26,7 @@ setup(
     url="https://github.com/PeterPonyu/CLOP-DiT",
     project_urls={
         "Source": "https://github.com/PeterPonyu/CLOP-DiT",
+        "Paper": "https://doi.org/10.1016/j.array.2026.100934",
         "Issue Tracker": "https://github.com/PeterPonyu/CLOP-DiT/issues",
     },
     license="MIT",

@@ -1,8 +1,9 @@
 # CLOP-DiT
 
-> Text-conditioned single-cell latent generation via contrastive language–omics pretraining and diffusion transformers.
+> Structured-metadata-conditioned single-cell latent generation via contrastive language–omics pretraining and diffusion transformers.
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19643738.svg)](https://doi.org/10.5281/zenodo.19643738)
+[![PyPI](https://img.shields.io/pypi/v/clop-dit.svg)](https://pypi.org/project/clop-dit/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19584068.svg)](https://doi.org/10.5281/zenodo.19584068)
 
 CLOP-DiT is a three-stage pipeline that samples single-cell expression embeddings conditioned on a structured five-field text prompt (cell type, tissue, organism, marker genes, disease context). The first stage is a prototype-aware contrastive aligner that maps frozen BiomedBERT text embeddings and frozen scGPT cell embeddings into a shared 512-dimensional latent space. The second stage is a 1-D Diffusion Transformer trained with conditional flow matching and classifier-free guidance, which samples a latent vector from a Gaussian prior toward the conditioned region of that space. The third stage is the frozen scGPT decoder, used to map the generated latent back to per-gene expression for downstream inspection.
 
@@ -22,7 +23,7 @@ The headline metrics, evaluated on 69 deduplicated cell types:
 
 KNN-1 is reported over the 69-class problem with random chance ≈ 0.0145; CLOP-DiT at CFG = 2.0 is therefore about 25× above random. DivR ideal = 1.0.
 
-The reported strength of CLOP-DiT is controllable text-conditioned generation. The reported limitations are that within-type variance and gene–gene correlation are only weakly preserved, and that a Gaussian mean-matching baseline outperforms CLOP-DiT on the nine shared distributional metrics.
+The reported strength of CLOP-DiT is controllable structured-metadata-conditioned generation. The reported limitations are that within-type variance and gene–gene correlation are only weakly preserved, and that a Gaussian mean-matching baseline outperforms CLOP-DiT on the nine shared distributional metrics.
 
 ## Installation
 
