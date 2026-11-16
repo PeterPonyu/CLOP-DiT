@@ -40,8 +40,8 @@ from sklearn.preprocessing import LabelEncoder
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(_PROJECT_ROOT))
 
-from src.utils.paths import CACHE_DIR, RESULTS_DIR, CHECKPOINT_DIR
-from src.utils.helpers import seed_everything, get_device
+from clop_dit.utils.paths import CACHE_DIR, RESULTS_DIR, CHECKPOINT_DIR
+from clop_dit.utils.helpers import seed_everything, get_device
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s [%(levelname)s] %(message)s")
@@ -166,8 +166,8 @@ def build_single_field_captions(fields: dict) -> dict:
 
 def load_models(device):
     """Load CLOP and DiT for inference."""
-    from src.architecture.dit import DiT1D
-    from src.architecture.clop import CLOPAligner
+    from clop_dit.architecture.dit import DiT1D
+    from clop_dit.architecture.clop import CLOPAligner
 
     # CLOP — try subdirectory first, then flat
     clop_path = CHECKPOINT_DIR / "CLOP" / "best" / "clop_best.pth"

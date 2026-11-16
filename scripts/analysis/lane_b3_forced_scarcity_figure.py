@@ -26,7 +26,7 @@ import numpy as np
 REPO = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO))
 
-from src.visualization.style import apply_style, save_with_vcd  # noqa: E402
+from clop_dit.visualization.style import apply_style, save_with_vcd  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -126,7 +126,7 @@ def make_figure(
         # 18pt label does not clip against the compact supplementary canvas.
         # so the 18pt bold "A"/"B" does not extend beyond the figure border on
         # the 3.4 in-tall layout.
-        from src.visualization.style import add_panel_label
+        from clop_dit.visualization.style import add_panel_label
         _letter = str(PANEL_LABELS[ax_idx]).strip("()").lower()
         add_panel_label(ax, _letter, x=-0.12, y=0.99)
 

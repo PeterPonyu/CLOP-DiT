@@ -26,9 +26,9 @@ import numpy as np
 import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-from src.utils.logging_config import setup_logging
-from src.visualization.direct_layout import bind_figure_region
-from src.visualization.style import apply_style, save_with_vcd
+from clop_dit.utils.logging_config import setup_logging
+from clop_dit.visualization.direct_layout import bind_figure_region
+from clop_dit.visualization.style import apply_style, save_with_vcd
 
 logger = logging.getLogger(__name__)
 
@@ -118,8 +118,8 @@ def _make_direct_axes(figsize, *, rect=(0.08, 0.10, 0.98, 0.92)):
 
 def load_inference_pipeline(clop_ckpt, dit_ckpt, scgpt_dir, device="cuda"):
     """Load full inference pipeline."""
-    from src.architecture.clop import CLOPAligner
-    from src.architecture.dit import DiT1D
+    from clop_dit.architecture.clop import CLOPAligner
+    from clop_dit.architecture.dit import DiT1D
     from transformers import AutoTokenizer, AutoModel
 
     ckpt = torch.load(clop_ckpt, map_location=device, weights_only=False)
@@ -632,7 +632,7 @@ def main():
 
     # ── Load scGPT decoder ──
     import scanpy as sc
-    from src.architecture.decoder import ScGPTDecoder
+    from clop_dit.architecture.decoder import ScGPTDecoder
 
     ref_adata = sc.read_h5ad(args.reference_h5ad)
     logger.info(f"Reference: {ref_adata.shape}")

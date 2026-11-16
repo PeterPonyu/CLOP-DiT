@@ -45,10 +45,10 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.evaluation.run_metrics import run_embedding_metrics
-from src.evaluation.visualizer import EmbeddingVisualizer
-from src.architecture.decoder import ScGPTDecoder
-from src.utils.logging_config import setup_logging
+from clop_dit.evaluation.run_metrics import run_embedding_metrics
+from clop_dit.evaluation.visualizer import EmbeddingVisualizer
+from clop_dit.architecture.decoder import ScGPTDecoder
+from clop_dit.utils.logging_config import setup_logging
 
 logger = logging.getLogger(__name__)
 

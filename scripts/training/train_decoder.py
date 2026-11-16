@@ -26,7 +26,7 @@ from torch.amp import GradScaler, autocast
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from src.architecture.decoder import ScGPTDecoder, apply_lora_to_model
+from clop_dit.architecture.decoder import ScGPTDecoder, apply_lora_to_model
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)

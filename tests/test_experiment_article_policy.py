@@ -20,7 +20,7 @@ SANDBOX_POLICY_PATH = (
     REPO_ROOT
     / "experiments"
     / "scivcd-lifetime"
-    / "src"
+    / "clop_dit"
     / "visualization"
     / "figure_asset_policy.py"
 )
@@ -33,7 +33,7 @@ SANDBOX_POLICY_SHIM_PATH = (
     REPO_ROOT
     / "experiments"
     / "scivcd-lifetime"
-    / "src"
+    / "clop_dit"
     / "visualization"
     / "article_figure_policy.py"
 )
@@ -41,7 +41,7 @@ SANDBOX_COMPOSE_PATH = (
     REPO_ROOT
     / "experiments"
     / "scivcd-lifetime"
-    / "src"
+    / "clop_dit"
     / "visualization"
     / "composed"
     / "compose_figures.py"
@@ -50,7 +50,7 @@ SANDBOX_UNIFIED_RUNNER_PATH = (
     REPO_ROOT
     / "experiments"
     / "scivcd-lifetime"
-    / "src"
+    / "clop_dit"
     / "visualization"
     / "unified"
     / "run_unified.py"
@@ -85,7 +85,7 @@ def _load_sandbox_policy():
 
 class TestSandboxArticleFigurePolicy:
     def test_policy_components_match_main_article_manifest(self):
-        from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
+        from clop_dit.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
 
         policy = _load_sandbox_policy()
         assert policy.flattened_article_component_basenames() == tuple(

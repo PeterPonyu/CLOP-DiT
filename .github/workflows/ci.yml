@@ -22,6 +22,6 @@ jobs:
           pip install -e .
           pip install pytest flake8
       - name: Lint
-        run: flake8 src/ --max-line-length 120 --ignore E501,W503,E402,W504
+        run: flake8 clop_dit/ --max-line-length 120 --ignore E501,W503,E402,W504
       - name: Unit tests
         run: pytest tests/ -v --tb=short -x

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Print ARTICLE_DIR and ARTICLE_TEX for use by build_article.sh.
 
-Does not import src.utils so it can run in environments without torch.
+Does not import clop_dit.utils so it can run in environments without torch.
 Reads configs/pipeline.yaml and respects CLOPDIT_ARTICLE_DIR / CLOPDIT_ARTICLE_TEX env.
 """
 from __future__ import annotations

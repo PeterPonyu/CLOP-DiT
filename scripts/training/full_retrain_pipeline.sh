@@ -169,7 +169,7 @@ log_info "Config: $CLOP_CONFIG"
 CLOP_VERSION="polished_texts"
 log_info "Version: $CLOP_VERSION"
 
-python3 -m src.training.train_clop \
+python3 -m clop_dit.training.train_clop \
     --config "$CLOP_CONFIG" \
     --version_id "$CLOP_VERSION" \
     --cache_dir "$CACHE_DIR" \
@@ -203,7 +203,7 @@ python3 << EOF
 import torch
 import numpy as np
 from pathlib import Path
-from src.architecture.clop import CLOPAligner
+from clop_dit.architecture.clop import CLOPAligner
 import yaml
 
 # Load config
@@ -266,7 +266,7 @@ log_info "Using classifier-free guidance (10% dropout)"
 DIT_VERSION="polished_clop"
 log_info "Version: $DIT_VERSION"
 
-python3 -m src.training.train_dit \
+python3 -m clop_dit.training.train_dit \
     --config "$DIT_CONFIG" \
     --version_id "$DIT_VERSION" \
     --clop_proj_dir "$CACHE_DIR" \
@@ -301,8 +301,8 @@ import sys
 sys.path.append(".")
 import torch
 import numpy as np
-from src.architecture.dit import DiT1D
-from src.evaluation.generative_metrics import GenerativeEvaluator, print_metrics_summary
+from clop_dit.architecture.dit import DiT1D
+from clop_dit.evaluation.generative_metrics import GenerativeEvaluator, print_metrics_summary
 import yaml
 
 # Load DiT config

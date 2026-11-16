@@ -26,7 +26,13 @@ The reported strength of CLOP-DiT is controllable text-conditioned generation. T
 
 ## Installation
 
-The code targets Python 3.10. The full dependency list is in `requirements.txt`.
+The model code is published on PyPI as `clop-dit`; the import name is `clop_dit`.
+
+```bash
+pip install clop-dit
+```
+
+The training, inference and figure scripts live in this repository. To run them, install from a clone; the code targets Python 3.10 and the full dependency list is in `requirements.txt`.
 
 ```bash
 conda create -n clopdit python=3.10

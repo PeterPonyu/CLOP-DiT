@@ -2,7 +2,7 @@
 
 import torch
 import pytest
-from src.evaluation.embedding_quality import (
+from clop_dit.evaluation.embedding_quality import (
     compute_alignment,
     compute_uniformity,
     compute_mean_cosine_sim,

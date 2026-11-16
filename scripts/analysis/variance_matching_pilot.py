@@ -16,8 +16,8 @@ from pathlib import Path
 import numpy as np
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from src.visualization.direct_layout import bind_figure_region
-from src.visualization.style import apply_style, COLORS, add_panel_label, save_with_vcd
+from clop_dit.visualization.direct_layout import bind_figure_region
+from clop_dit.visualization.style import apply_style, COLORS, add_panel_label, save_with_vcd
 from matplotlib.patches import ConnectionPatch
 import matplotlib
 matplotlib.use("Agg")
@@ -168,7 +168,7 @@ def main():
 
     # ── Generate figure ──
     apply_style()
-    from src.visualization.style import (
+    from clop_dit.visualization.style import (
         abbreviate_cell_type, FONT_TITLE, FONT_LABEL, FONT_TICK,
         FONT_ANNOTATION, FONT_SMALL, style_axes,
     )

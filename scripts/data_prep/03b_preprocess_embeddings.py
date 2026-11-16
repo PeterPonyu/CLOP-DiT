@@ -28,8 +28,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.utils.logging_config import setup_logging
-from src.data_pipeline.embedding_preprocessor import preprocess_cached_embeddings
+from clop_dit.utils.logging_config import setup_logging
+from clop_dit.data_pipeline.embedding_preprocessor import preprocess_cached_embeddings
 
 logger = logging.getLogger(__name__)
 

@@ -29,11 +29,11 @@ import anndata as ad
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.architecture.dit import DiT1D
-from src.architecture.clop import CLOPAligner
-from src.architecture.decoder import ScGPTDecoder, LinearDecoder
-from src.utils.helpers import seed_everything, get_device
-from src.utils.logging_config import setup_logging
+from clop_dit.architecture.dit import DiT1D
+from clop_dit.architecture.clop import CLOPAligner
+from clop_dit.architecture.decoder import ScGPTDecoder, LinearDecoder
+from clop_dit.utils.helpers import seed_everything, get_device
+from clop_dit.utils.logging_config import setup_logging
 
 logger = logging.getLogger(__name__)
 

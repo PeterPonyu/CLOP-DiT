@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """run_pipeline.py — Single entry point for the full CLOP-DiT pipeline.
 
-Runs stages in order; paths come from configs/pipeline.yaml and src.utils.paths.
+Runs stages in order; paths come from configs/pipeline.yaml and clop_dit.utils.paths.
 Override with env: CLOPDIT_CACHE_DIR, CLOPDIT_RESULTS_DIR, CLOPDIT_FIG_DIR, etc.
 
 Stages (in order):
@@ -39,7 +39,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.utils.paths import (
+from clop_dit.utils.paths import (
     CACHE_DIR,
     CHECKPOINT_DIR,
     RESULTS_DIR,
@@ -112,16 +112,16 @@ def run_stage(stage: str, extra: list[str] | None = None) -> int:
     if stage == "conditioning":
         return run(["python", "scripts/analysis/conditioning_analysis.py", "--num-per-type", "100", "--cfg-scale", "1.5", "--noise-scale", "0.03", *extra])
     if stage == "downstream":
-        return run(["python", "-m", "src.evaluation.downstream_biology", "--output-dir", str(RESULTS_DIR / "downstream"), *extra])
+        return run(["python", "-m", "clop_dit.evaluation.downstream_biology", "--output-dir", str(RESULTS_DIR / "downstream"), *extra])
     if stage == "benchmark":
-        return run(["python", "-m", "src.evaluation.model_benchmarking", *extra])
+        return run(["python", "-m", "clop_dit.evaluation.model_benchmarking", *extra])
     if stage == "figures":
         code = run(["python", "scripts/analysis/generate_architecture_figure.py"])
         if code != 0:
             return code
-        return run(["python", "-m", "src.visualization.results_visualizer", *extra])
+        return run(["python", "-m", "clop_dit.visualization.results_visualizer", *extra])
     if stage == "article_delivery":
-        return run(["python", "-m", "src.visualization.article_delivery", *extra])
+        return run(["python", "-m", "clop_dit.visualization.article_delivery", *extra])
     print(f"Unknown stage: {stage}", file=sys.stderr)
     return 1
 

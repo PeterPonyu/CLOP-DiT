@@ -12,7 +12,7 @@ _long_description = (
 
 setup(
     name="clop-dit",
-    version="1.0.0",
+    version="1.1.0",
     author="Zeyu Fu",
     author_email="fuzeyu09@gmail.com",
     maintainer="Zeyu Fu",
@@ -29,7 +29,7 @@ setup(
         "Issue Tracker": "https://github.com/PeterPonyu/CLOP-DiT/issues",
     },
     license="MIT",
-    packages=find_packages(include=["src", "src.*"]),
+    packages=find_packages(include=["clop_dit", "clop_dit.*"]),
     python_requires=">=3.10",
     install_requires=[
         "torch>=2.0.0",
@@ -56,7 +56,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "clopdit-generate=src.cli:generate_main",
+            "clopdit-generate=clop_dit.cli:generate_main",
         ],
     },
     classifiers=[

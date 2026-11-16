@@ -22,9 +22,9 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.training.train_dit import DiTTrainer
-from src.utils.helpers import seed_everything
-from src.utils.logging_config import setup_logging
+from clop_dit.training.train_dit import DiTTrainer
+from clop_dit.utils.helpers import seed_everything
+from clop_dit.utils.logging_config import setup_logging
 
 
 DEFAULT_SEEDS = [42, 123, 456]

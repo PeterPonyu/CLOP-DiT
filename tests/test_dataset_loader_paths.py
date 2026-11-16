@@ -15,10 +15,10 @@ import json
 from pathlib import Path
 import sys
 
-# Add src to path for imports
+# Add the repository root to the path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.data_pipeline.dataset import CLOPDataset
+from clop_dit.data_pipeline.dataset import CLOPDataset
 
 
 class TestDatasetCustomPaths:

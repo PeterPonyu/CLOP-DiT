@@ -161,7 +161,7 @@ def per_type_discriminator(real_emb, gen_emb, real_labels, gen_labels, type_name
 def main():
     import sys
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-    from src.utils.paths import RESULTS_DIR, CACHE_DIR
+    from clop_dit.utils.paths import RESULTS_DIR, CACHE_DIR
 
     output_dir = RESULTS_DIR / "validation"
     output_dir.mkdir(parents=True, exist_ok=True)

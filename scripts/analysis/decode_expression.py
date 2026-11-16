@@ -26,10 +26,10 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.architecture.decoder import ScGPTDecoder
-from src.utils.paths import CACHE_DIR, RESULTS_DIR, SCGPT_DIR, PROCESSED_H5AD_DIR, CHECKPOINT_DIR
-from src.data_pipeline.embedding_preprocessor import EmbeddingPreprocessor
-from src.utils.helpers import seed_everything, get_device
+from clop_dit.architecture.decoder import ScGPTDecoder
+from clop_dit.utils.paths import CACHE_DIR, RESULTS_DIR, SCGPT_DIR, PROCESSED_H5AD_DIR, CHECKPOINT_DIR
+from clop_dit.data_pipeline.embedding_preprocessor import EmbeddingPreprocessor
+from clop_dit.utils.helpers import seed_everything, get_device
 
 logger = logging.getLogger(__name__)
 

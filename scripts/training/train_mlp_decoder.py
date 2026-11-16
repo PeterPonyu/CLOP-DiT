@@ -24,11 +24,11 @@ from torch.utils.data import DataLoader, TensorDataset
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.architecture.decoder import LinearDecoder
-from src.utils.paths import (
+from clop_dit.architecture.decoder import LinearDecoder
+from clop_dit.utils.paths import (
     CACHE_DIR, CHECKPOINT_DIR, PROCESSED_H5AD_DIR, SCGPT_DIR,
 )
-from src.utils.helpers import seed_everything, get_device
+from clop_dit.utils.helpers import seed_everything, get_device
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ def load_training_data(cache_dir, h5ad_dir, max_cells=20000, seed=42):
     labels = np.load(cache / "text_group_ids_dedup.npy")
 
     # Load the embedding preprocessor for inverse transform
-    from src.data_pipeline.embedding_preprocessor import EmbeddingPreprocessor
+    from clop_dit.data_pipeline.embedding_preprocessor import EmbeddingPreprocessor
     preprocessor = EmbeddingPreprocessor.load(
         str(cache / "cell_preprocessor_preprocessed.npz")
     )
@@ -71,7 +71,7 @@ def load_training_data(cache_dir, h5ad_dir, max_cells=20000, seed=42):
     raw_space = preprocessor.inverse_transform(embeddings, target_norm=pre_norm_scale)
 
     # Decode via scGPT to get "ground truth" expression
-    from src.architecture.decoder import ScGPTDecoder
+    from clop_dit.architecture.decoder import ScGPTDecoder
     device = get_device()
     scgpt = ScGPTDecoder(model_dir=str(SCGPT_DIR), device=device, batch_size=64)
     scgpt._load_encoder()

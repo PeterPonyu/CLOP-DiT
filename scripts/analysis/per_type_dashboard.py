@@ -27,7 +27,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from src.visualization.style import apply_style, FONT_TITLE, FONT_LABEL, FONT_SMALL, save_with_vcd
+from clop_dit.visualization.style import apply_style, FONT_TITLE, FONT_LABEL, FONT_SMALL, save_with_vcd
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "results"

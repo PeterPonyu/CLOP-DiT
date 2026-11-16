@@ -29,10 +29,10 @@ import torch
 import torch.nn.functional as F
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.architecture.dit import DiT1D
-from src.utils.helpers import seed_everything, get_device
-from src.utils.paths import CACHE_DIR, RESULTS_DIR, CHECKPOINT_DIR, FIG_DIR
-from src.visualization.panels_diversity import plot_diagnostics
+from clop_dit.architecture.dit import DiT1D
+from clop_dit.utils.helpers import seed_everything, get_device
+from clop_dit.utils.paths import CACHE_DIR, RESULTS_DIR, CHECKPOINT_DIR, FIG_DIR
+from clop_dit.visualization.panels_diversity import plot_diagnostics
 
 logger = logging.getLogger(__name__)
 

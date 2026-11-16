@@ -63,9 +63,9 @@ fi
 
 # Pre-flight check: plan's preflight greps must still match source.
 step "Pre-flight: grep-n verification"
-grep -qn 'get_position().height \* 0.32' src/visualization/fig09_expression_corr.py \
+grep -qn 'get_position().height \* 0.32' clop_dit/visualization/fig09_expression_corr.py \
   || fail "fig09_expression_corr.py cbar height drifted; expected '* 0.32' at ~L116"
-grep -qn 'abbreviate_cell_type' src/visualization/fig16_benchmark.py \
+grep -qn 'abbreviate_cell_type' clop_dit/visualization/fig16_benchmark.py \
   || fail "fig16_benchmark.py abbreviate_cell_type calls missing"
 
 # ---- Step 1: regenerate figures ---------------------------------------

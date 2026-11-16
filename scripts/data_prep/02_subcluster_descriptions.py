@@ -19,8 +19,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.utils.logging_config import setup_logging
-from src.data_pipeline.subcluster_annotation import run_subcluster_pipeline
+from clop_dit.utils.logging_config import setup_logging
+from clop_dit.data_pipeline.subcluster_annotation import run_subcluster_pipeline
 
 
 def main():

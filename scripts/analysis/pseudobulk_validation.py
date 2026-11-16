@@ -154,7 +154,7 @@ def cross_type_correlation(real_pb: dict, gen_pb: dict) -> dict:
 def main():
     import sys
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-    from src.utils.paths import RESULTS_DIR, CACHE_DIR
+    from clop_dit.utils.paths import RESULTS_DIR, CACHE_DIR
 
     parser = argparse.ArgumentParser(description="Pseudobulk validation")
     parser.add_argument("--real-expr", default=None)

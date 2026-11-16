@@ -24,7 +24,7 @@ import torch
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(_PROJECT_ROOT))
 
-from src.utils.logging_config import setup_logging
+from clop_dit.utils.logging_config import setup_logging
 
 # Load CLOPDiTInference from numbered script
 _INFERENCE_SCRIPT = _PROJECT_ROOT / "scripts" / "inference" / "05_inference.py"

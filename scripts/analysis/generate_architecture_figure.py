@@ -27,8 +27,8 @@ import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
-from src.visualization.direct_layout import bind_figure_region
-from src.visualization.style import (
+from clop_dit.visualization.direct_layout import bind_figure_region
+from clop_dit.visualization.style import (
     COLORS,
     FIG01_PANEL_LABEL_BASE,
     FONT_ARCH_LABEL,
@@ -162,7 +162,7 @@ def draw_stage_bg(ax, xy, w, h, label, color, alpha=0.10, label_color=None):
 
 def create_architecture_figure(output_dir=None):
     if output_dir is None:
-        from src.utils.paths import FIG_DIR
+        from clop_dit.utils.paths import FIG_DIR
         output_dir = Path(FIG_DIR)
     output_dir = Path(output_dir)
     fig = plt.figure(figsize=(10.2, 4.2))
@@ -545,7 +545,7 @@ def create_architecture_figure(output_dir=None):
 
 if __name__ == "__main__":
     import argparse
-    from src.utils.paths import FIG_DIR
+    from clop_dit.utils.paths import FIG_DIR
 
     parser = argparse.ArgumentParser(description="Generate CLOP-DiT architecture figure (Fig 1).")
     parser.add_argument("--output-dir", type=Path, default=None,

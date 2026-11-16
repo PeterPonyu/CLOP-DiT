@@ -43,10 +43,10 @@ _REPO_ROOT = Path(__file__).parent.parent.resolve()
 # migrated to PANEL_OFFSET_* subscripts in Phase 3.
 # ---------------------------------------------------------------------------
 _STRICT_SCAN_FILES = [
-    _REPO_ROOT / "src/visualization/fig03_training.py",
-    _REPO_ROOT / "src/visualization/fig05_metrics.py",
-    _REPO_ROOT / "src/visualization/fig06_fidelity.py",
-    _REPO_ROOT / "src/visualization/fig07_alignment.py",
+    _REPO_ROOT / "clop_dit/visualization/fig03_training.py",
+    _REPO_ROOT / "clop_dit/visualization/fig05_metrics.py",
+    _REPO_ROOT / "clop_dit/visualization/fig06_fidelity.py",
+    _REPO_ROOT / "clop_dit/visualization/fig07_alignment.py",
 ]
 
 # ---------------------------------------------------------------------------

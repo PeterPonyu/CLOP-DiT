@@ -144,7 +144,7 @@ def compare_enrichments(real_enr, gen_enr):
 def main():
     import sys
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-    from src.utils.paths import RESULTS_DIR, CACHE_DIR
+    from clop_dit.utils.paths import RESULTS_DIR, CACHE_DIR
 
     parser = argparse.ArgumentParser(description="Pathway enrichment validation")
     parser.add_argument("--gene-sets", default="GO_Biological_Process_2021",

@@ -10,9 +10,9 @@ set -euo pipefail
 
 cd "$(dirname "$0")/../.."
 
-# Run the delivery script by path so we don't load the rest of src.visualization (e.g. torch)
+# Run the delivery script by path so we don't load the rest of clop_dit.visualization (e.g. torch)
 if [[ "${1:-}" == "--check" ]]; then
-    exec python src/visualization/article_delivery.py --check-only
+    exec python clop_dit/visualization/article_delivery.py --check-only
 else
-    exec python src/visualization/article_delivery.py
+    exec python clop_dit/visualization/article_delivery.py
 fi

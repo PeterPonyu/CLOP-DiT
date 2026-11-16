@@ -7,7 +7,7 @@
 # article-facing figure assets and creates symlinks in articles/figures/ so
 # the LaTeX article builds correctly.
 #
-# Paths come from configs/pipeline.yaml and src.utils.paths; override via env:
+# Paths come from configs/pipeline.yaml and clop_dit.utils.paths; override via env:
 #   CLOPDIT_CACHE_DIR, CLOPDIT_RESULTS_DIR, CLOPDIT_FIG_DIR,
 #   CLOPDIT_ARTICLE_FIGURES_DIR, CLOPDIT_CKPT_DIR
 #
@@ -76,18 +76,18 @@ python scripts/analysis/conditioning_analysis.py \
 # ── Step 5: Downstream biology (clustering, classifier, DE → P/Q/R data) ──
 echo ""
 echo "▶ Step 5/8: Running downstream biology analysis..."
-python -m src.evaluation.downstream_biology \
+python -m clop_dit.evaluation.downstream_biology \
     --output-dir results/downstream
 
 # ── Step 6: Model benchmarking (CLOP-DiT vs 4 baselines) ──
 echo ""
 echo "▶ Step 6/8: Running model benchmarking..."
-python -m src.evaluation.model_benchmarking
+python -m clop_dit.evaluation.model_benchmarking
 
 # ── Step 7: Generate Figs 3–18 + combined report ──
 echo ""
 echo "▶ Step 7/10: Generating Figs 3–18 + combined PDF..."
-python -m src.visualization.results_visualizer $UMAP_FLAG
+python -m clop_dit.visualization.results_visualizer $UMAP_FLAG
 
 # ── Step 8: External figures (Figs 19, 20) ──
 echo ""
@@ -98,8 +98,8 @@ python scripts/analysis/gene_gene_correlation.py
 # ── Step 8b: Python-composed supplementary appendix figures ──
 echo ""
 echo "▶ Step 8b/10: Generating Python-composed supplementary figures..."
-python -m src.visualization.figS01_supplementary_validation
-python -m src.visualization.figS02_expression_diagnostics
+python -m clop_dit.visualization.figS01_supplementary_validation
+python -m clop_dit.visualization.figS02_expression_diagnostics
 
 # ── Step 9: Verify article figures + create symlinks ──
 echo ""

@@ -109,7 +109,7 @@ def escape_latex(s: str) -> str:
 
 def compute_dataset_split(n_datasets: int = 80, val_split: float = 0.1,
                            seed: int = 42):
-    """Replicate the dataset-level split from src/data_pipeline/dataset.py.
+    """Replicate the dataset-level split from clop_dit/data_pipeline/dataset.py.
 
     Returns (train_ids, val_ids) as sorted lists of integer dataset indices.
     """

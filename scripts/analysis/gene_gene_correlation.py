@@ -23,9 +23,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from src.visualization.direct_layout import bind_figure_region
-from src.visualization.explicit_positioning import add_axes_next_to
-from src.visualization.style import apply_style, COLORS, FONT_TITLE, FONT_LABEL, add_panel_label, save_with_vcd, reserve_annotation_slot
+from clop_dit.visualization.direct_layout import bind_figure_region
+from clop_dit.visualization.explicit_positioning import add_axes_next_to
+from clop_dit.visualization.style import apply_style, COLORS, FONT_TITLE, FONT_LABEL, add_panel_label, save_with_vcd, reserve_annotation_slot
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "results"
@@ -142,7 +142,7 @@ def analyse():
 
 def _make_figure(per_type_results, gen_sub, real_sub, gen_labels, real_labels,
                  gene_subset, types, label_offset: int = 0):
-    from src.visualization.style import (
+    from clop_dit.visualization.style import (
         abbreviate_cell_type, FONT_TITLE, FONT_LABEL, FONT_TICK,
         FONT_ANNOTATION, FONT_SMALL, FONT_HEATMAP_CELL, style_axes,
     )

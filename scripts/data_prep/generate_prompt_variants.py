@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import Dict, List
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-from src.utils.logging_config import setup_logging
+from clop_dit.utils.logging_config import setup_logging
 
 logger = logging.getLogger(__name__)
 

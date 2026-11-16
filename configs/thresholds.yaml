@@ -2,7 +2,7 @@
 #
 # All numeric cutoffs used across analysis, evaluation, and visualization
 # should be defined here rather than hardcoded in scripts.
-# Import via: from src.utils.paths import load_thresholds
+# Import via: from clop_dit.utils.paths import load_thresholds
 
 # ──────────────────────────────────────────────────────────────
 # Statistical significance

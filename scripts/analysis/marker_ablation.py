@@ -24,7 +24,7 @@ from scipy import stats
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(_PROJECT_ROOT))
 
-from src.utils.logging_config import setup_logging
+from clop_dit.utils.logging_config import setup_logging
 
 _INFERENCE_SCRIPT = _PROJECT_ROOT / "scripts" / "inference" / "05_inference.py"
 _spec = importlib.util.spec_from_file_location("inference", str(_INFERENCE_SCRIPT))

@@ -20,8 +20,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from src.visualization.direct_layout import bind_figure_region
-from src.visualization.style import (
+from clop_dit.visualization.direct_layout import bind_figure_region
+from clop_dit.visualization.style import (
     apply_style,
     compute_composed_panel_label_fontsize,
 )
@@ -69,7 +69,7 @@ def make_figure():
 
     # Panel label D fontsize is computed from the shared Fig 1 base so it
     # matches A/B/C on-page after LaTeX scales both sub-figures to the same
-    # \includegraphics width. Source of truth: src/visualization/style.py
+    # \includegraphics width. Source of truth: clop_dit/visualization/style.py
     # (compute_composed_panel_label_fontsize). Any change to A/B/C size
     # propagates automatically to D.
     _D_LABEL_SIZE = compute_composed_panel_label_fontsize(source_width_in=FIG01B_WIDTH_IN)
@@ -230,7 +230,7 @@ def make_figure():
         ax.text(x + 0.38, -0.055, label, fontsize=14, va="center", color="#333")
 
     out_png = FIG_DIR / "fig01b_evaluation_pipeline.png"
-    from src.visualization.style import save_with_vcd
+    from clop_dit.visualization.style import save_with_vcd
     save_with_vcd(fig, out_png, dpi=300)
     plt.close(fig)
     print(f"Saved evaluation pipeline figure to {out_png}")

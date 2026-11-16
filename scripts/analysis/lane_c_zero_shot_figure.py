@@ -19,7 +19,7 @@ import numpy as np
 REPO = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO))
 
-from src.visualization.style import apply_style, add_panel_label, save_with_vcd  # noqa: E402
+from clop_dit.visualization.style import apply_style, add_panel_label, save_with_vcd  # noqa: E402
 
 
 def main() -> None:

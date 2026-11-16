@@ -30,7 +30,7 @@ import numpy as np
 from scipy import stats
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from src.visualization.style import (
+from clop_dit.visualization.style import (
     apply_style, COLORS, FONT_TITLE, FONT_LABEL, FONT_SMALL,
     add_panel_label, save_with_vcd,
 )

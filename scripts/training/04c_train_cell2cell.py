@@ -26,9 +26,9 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.training.train_cell2cell import Cell2CellTrainer
-from src.utils.helpers import seed_everything, get_device
-from src.utils.logging_config import setup_logging
+from clop_dit.training.train_cell2cell import Cell2CellTrainer
+from clop_dit.utils.helpers import seed_everything, get_device
+from clop_dit.utils.logging_config import setup_logging
 
 
 def main():

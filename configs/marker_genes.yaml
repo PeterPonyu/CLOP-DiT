@@ -2,7 +2,7 @@
 #
 # Used by fig08_markers.py for marker gene comparison figures.
 # Edit this file to add or modify marker panels without touching code.
-# Import via: from src.utils.paths import load_marker_genes
+# Import via: from clop_dit.utils.paths import load_marker_genes
 
 # Maps lineage labels → list of marker genes
 marker_panel_genes:

@@ -32,7 +32,7 @@ import numpy as np
 import scipy.sparse as sp
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-from src.utils.logging_config import setup_logging  # noqa: E402
+from clop_dit.utils.logging_config import setup_logging  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

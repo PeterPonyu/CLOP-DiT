@@ -28,8 +28,8 @@ from matplotlib.ticker import FixedLocator, FuncFormatter, MaxNLocator, NullLoca
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-from src.utils.paths import FIG_DIR
-from src.visualization.style import apply_style, save_with_vcd
+from clop_dit.utils.paths import FIG_DIR
+from clop_dit.visualization.style import apply_style, save_with_vcd
 
 DATA_DIR = REPO_ROOT / "revision/experiments/lane_a_analysis/a2_organism_split"
 CSV_PATH = DATA_DIR / "organism_per_type_table.csv"
@@ -205,7 +205,7 @@ def make_figure(df: pd.DataFrame, pairwise_pvalues: dict[str, float] | None = No
         # so the bold "A"/"B"/... does not visually collide with either the
         # subplot title (y ~= 1.05) or the p-value annotation pinned at the
         # top-right of the axes.
-        from src.visualization.style import add_panel_label
+        from clop_dit.visualization.style import add_panel_label
         add_panel_label(ax, panel["panel"], x=-0.10, y=1.05, fontsize=15)
 
     # ---- figure-level legend ----

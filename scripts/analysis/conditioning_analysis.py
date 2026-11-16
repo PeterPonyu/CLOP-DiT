@@ -34,10 +34,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from scripts.inference.generate_embeddings import (
     load_dit, load_clop, load_variant_conditions, generate_all_types,
 )
-from src.utils.helpers import seed_everything, get_device
-from src.utils.paths import CACHE_DIR, CHECKPOINT_DIR, FIG_DIR
-from src.evaluation.metrics import GenerationMetrics
-from src.visualization.panels_conditioning import plot_panel_l, plot_panel_m
+from clop_dit.utils.helpers import seed_everything, get_device
+from clop_dit.utils.paths import CACHE_DIR, CHECKPOINT_DIR, FIG_DIR
+from clop_dit.evaluation.metrics import GenerationMetrics
+from clop_dit.visualization.panels_conditioning import plot_panel_l, plot_panel_m
 
 logger = logging.getLogger(__name__)
 

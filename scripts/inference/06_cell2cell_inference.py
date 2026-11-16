@@ -47,11 +47,11 @@ import anndata as ad
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.architecture.cell2cell import Cell2CellDiT
-from src.architecture.clop import CLOPAligner
-from src.architecture.decoder import ScGPTDecoder
-from src.utils.helpers import seed_everything, get_device
-from src.utils.logging_config import setup_logging
+from clop_dit.architecture.cell2cell import Cell2CellDiT
+from clop_dit.architecture.clop import CLOPAligner
+from clop_dit.architecture.decoder import ScGPTDecoder
+from clop_dit.utils.helpers import seed_everything, get_device
+from clop_dit.utils.logging_config import setup_logging
 
 logger = logging.getLogger(__name__)
 

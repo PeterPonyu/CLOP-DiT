@@ -53,9 +53,9 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-from src.utils.logging_config import setup_logging
-from src.architecture.decoder import ScGPTDecoder
-from src.visualization.style import COLORS as VIZ_COLORS, apply_style, save_with_vcd
+from clop_dit.utils.logging_config import setup_logging
+from clop_dit.architecture.decoder import ScGPTDecoder
+from clop_dit.visualization.style import COLORS as VIZ_COLORS, apply_style, save_with_vcd
 
 logger = logging.getLogger(__name__)
 
@@ -242,7 +242,7 @@ def select_nonredundant_markers(
 
 def frechet_distance(real: np.ndarray, gen: np.ndarray) -> float:
     """Frechet Distance -- delegates to canonical implementation."""
-    from src.evaluation.metrics import GenerationMetrics
+    from clop_dit.evaluation.metrics import GenerationMetrics
     return GenerationMetrics.frechet_distance(real, gen)
 
 

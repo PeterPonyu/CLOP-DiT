@@ -26,7 +26,7 @@ import numpy as np
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(_PROJECT_ROOT))
 
-from src.utils.logging_config import setup_logging
+from clop_dit.utils.logging_config import setup_logging
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ CELLMARKER_MARKERS: dict[str, list[str]] = {
     "NK cells":         ["NKG7", "GNLY", "FCGR3A", "NCAM1", "KLRC1"],
 }
 
-# Training-set DE markers (from src/evaluation/biological_validation/constants.py)
+# Training-set DE markers (from clop_dit/evaluation/biological_validation/constants.py)
 TRAINING_DE_MARKERS: dict[str, list[str]] = {
     "CD8+ T cells":     ["CD8A", "CD8B", "GZMB", "PRF1"],
     "Macrophages":      ["CD68", "CD163", "CSF1R", "MSR1"],

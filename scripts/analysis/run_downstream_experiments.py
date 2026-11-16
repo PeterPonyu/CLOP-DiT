@@ -27,7 +27,7 @@ import numpy as np
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(_PROJECT_ROOT))
 
-from src.utils.paths import RESULTS_DIR, CACHE_DIR
+from clop_dit.utils.paths import RESULTS_DIR, CACHE_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -166,7 +166,7 @@ def run_cross_dataset_validation() -> dict:
 
 def run_expanded_de() -> dict:
     """Run DE concordance on all 5 contrasts (including 2 previously unused)."""
-    from src.evaluation.downstream_biology import run_all_downstream
+    from clop_dit.evaluation.downstream_biology import run_all_downstream
 
     contrasts_path = _PROJECT_ROOT / "configs" / "downstream_contrasts_extended.json"
     with open(contrasts_path) as f:

@@ -29,10 +29,10 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.utils.paths import (
+from clop_dit.utils.paths import (
     CACHE_DIR, RESULTS_DIR, SCGPT_DIR, PROCESSED_H5AD_DIR, CHECKPOINT_DIR,
 )
-from src.utils.helpers import seed_everything, get_device
+from clop_dit.utils.helpers import seed_everything, get_device
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +150,7 @@ def decode_with_approach(approach, generated_emb, real_emb, gen_labels,
     Returns (gen_expression, real_expression) numpy arrays.
     """
     import torch
-    from src.architecture.decoder import ScGPTDecoder
+    from clop_dit.architecture.decoder import ScGPTDecoder
 
     if approach == "baseline":
         # scgpt_human, no LoRA
@@ -183,7 +183,7 @@ def decode_with_approach(approach, generated_emb, real_emb, gen_labels,
                 "Run: python scripts/training/train_mlp_decoder.py first."
             )
         ckpt = torch.load(mlp_path, map_location=device, weights_only=False)
-        from src.architecture.decoder import LinearDecoder
+        from clop_dit.architecture.decoder import LinearDecoder
         cfg = ckpt.get("config", {})
         num_genes = cfg.get("num_genes", 1790)
         hidden_dims = cfg.get("hidden_dims", [1024, 2048])
@@ -217,7 +217,7 @@ def run_ablation(approach, n_real=2000, n_gen=2000, batch_size=32, seed=42):
     logger.info(f"=== Decoder Ablation: {approach} ===")
 
     # Load preprocessor
-    from src.data_pipeline.embedding_preprocessor import EmbeddingPreprocessor
+    from clop_dit.data_pipeline.embedding_preprocessor import EmbeddingPreprocessor
     prep_path = cache / "cell_preprocessor_preprocessed.npz"
     preprocessor = EmbeddingPreprocessor.load(str(prep_path))
 
@@ -266,7 +266,7 @@ def run_ablation(approach, n_real=2000, n_gen=2000, batch_size=32, seed=42):
 
     if approach in ("baseline", "lora_light"):
         # Need scGPT gene ref from h5ad
-        from src.architecture.decoder import ScGPTDecoder
+        from clop_dit.architecture.decoder import ScGPTDecoder
         tmp_decoder = ScGPTDecoder(model_dir=str(SCGPT_DIR), device=device)
         tmp_decoder._load_encoder()
         import anndata as ad

@@ -20,8 +20,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.data_pipeline.cache_builder import LatentCacheBuilder
-from src.utils.logging_config import setup_logging
+from clop_dit.data_pipeline.cache_builder import LatentCacheBuilder
+from clop_dit.utils.logging_config import setup_logging
 
 
 def main():

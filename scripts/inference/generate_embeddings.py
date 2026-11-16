@@ -33,10 +33,10 @@ import torch.nn.functional as F
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.architecture.dit import DiT1D
-from src.utils.paths import CACHE_DIR, RESULTS_DIR, CHECKPOINT_DIR
-from src.architecture.clop import CLOPAligner
-from src.utils.helpers import seed_everything, get_device
+from clop_dit.architecture.dit import DiT1D
+from clop_dit.utils.paths import CACHE_DIR, RESULTS_DIR, CHECKPOINT_DIR
+from clop_dit.architecture.clop import CLOPAligner
+from clop_dit.utils.helpers import seed_everything, get_device
 
 logger = logging.getLogger(__name__)
 
@@ -298,7 +298,7 @@ def compute_per_type_metrics(
 
     Returns dict with overall + per-type Frechet distances, cosine sims, etc.
     """
-    from src.evaluation.metrics import GenerationMetrics
+    from clop_dit.evaluation.metrics import GenerationMetrics
 
     results = {"overall": {}, "per_type": {}}
 

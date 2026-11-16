@@ -313,7 +313,7 @@ def analyze_failure_patterns(metrics: dict, tiers: dict) -> dict:
 def main():
     import sys
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-    from src.utils.paths import RESULTS_DIR, CACHE_DIR
+    from clop_dit.utils.paths import RESULTS_DIR, CACHE_DIR
 
     output_dir = RESULTS_DIR / "validation"
     output_dir.mkdir(parents=True, exist_ok=True)

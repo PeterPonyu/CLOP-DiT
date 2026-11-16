@@ -27,12 +27,12 @@ matplotlib.use("Agg")  # headless
 # ── paths ──────────────────────────────────────────────────────────────────
 REPO = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO))
-sys.path.insert(0, str(REPO / "src"))
+sys.path.insert(0, str(REPO / "clop_dit"))
 sys.path.insert(0, str(REPO / "scripts"))
 sys.path.insert(0, str(REPO / "scripts" / "vcd"))
 
 import matplotlib.pyplot as plt
-from src.utils.paths import FIG_DIR, RESULTS_DIR, ARTICLE_FIGURES_DIR
+from clop_dit.utils.paths import FIG_DIR, RESULTS_DIR, ARTICLE_FIGURES_DIR
 
 logging.basicConfig(
     level=logging.INFO,
@@ -55,7 +55,7 @@ def _env_flag(name: str, default: bool = True) -> bool:
 def run_results_visualizer():
     """Generate all figures A–S via the ResultsVisualizer."""
     log.info("── Initialising ResultsVisualizer ──")
-    from src.visualization.results_visualizer import ResultsVisualizer
+    from clop_dit.visualization.results_visualizer import ResultsVisualizer
 
     clop_hist_path = str(CLOP_HIST) if CLOP_HIST.exists() else None
     dit_hist_path  = str(DIT_HIST) if DIT_HIST and DIT_HIST.exists() else None
@@ -98,7 +98,7 @@ def run_architecture_figure():
 def _run_external_script(script_relpath: str, label: str, expected_pdf: str):
     """Run an external figure script and return the output PDF path (or None).
 
-    Scripts under src/ are run as modules (-m) to support relative imports.
+    Scripts under clop_dit/ are run as modules (-m) to support relative imports.
     Scripts under scripts/ are run as plain scripts.
     """
     import subprocess, sys
@@ -107,8 +107,8 @@ def _run_external_script(script_relpath: str, label: str, expected_pdf: str):
         log.warning("%s script not found: %s", label, script)
         return None
     log.info("── Generating %s ──", label)
-    if script_relpath.startswith("src/"):
-        # Convert path to module: src/visualization/fig25_cross_dataset.py → src.visualization.fig25_cross_dataset
+    if script_relpath.startswith("clop_dit/"):
+        # Convert path to module: clop_dit/visualization/fig25_cross_dataset.py → clop_dit.visualization.fig25_cross_dataset
         module_name = script_relpath.replace("/", ".").removesuffix(".py")
         cmd = [sys.executable, "-m", module_name]
     else:
@@ -176,7 +176,7 @@ def run_conditioning_figures():
         try:
             with open(l_data_path) as f:
                 l_data = json.load(f)
-            from src.visualization.fig13_noise_tradeoff import plot_panel_l
+            from clop_dit.visualization.fig13_noise_tradeoff import plot_panel_l
             p = plot_panel_l(
                 noise_scales=l_data["noise_scales"],
                 fds=l_data["fds"],
@@ -213,7 +213,7 @@ def run_conditioning_figures():
             full_dim_source = np.load(m_full_source_path) if m_full_source_path.exists() else None
 
             type_names = {int(k): v for k, v in m_meta["type_names"].items()}
-            from src.visualization.fig11_conditioning import plot_panel_m
+            from clop_dit.visualization.fig11_conditioning import plot_panel_m
             p = plot_panel_m(
                 coords=coords,
                 combined_labels=combined_labels,
@@ -274,7 +274,7 @@ def run_diversity_figures():
         else:
             log.warning("Noise tradeoff data not found (%s); Fig 12 panel (e) will be omitted", l_data_path)
 
-        from src.visualization.fig12_diversity import plot_diagnostics
+        from clop_dit.visualization.fig12_diversity import plot_diagnostics
         saved = plot_diagnostics(
             all_results,
             output_dir=str(FIG_DIR),
@@ -603,7 +603,7 @@ def run_article_delivery():
     log.info("── Running article_delivery.py ──")
     import subprocess, sys
     result = subprocess.run(
-        [sys.executable, str(REPO / "src" / "visualization" / "article_delivery.py"), "--copy"],
+        [sys.executable, str(REPO / "clop_dit" / "visualization" / "article_delivery.py"), "--copy"],
         capture_output=True, text=True, cwd=str(REPO)
     )
     for line in result.stdout.splitlines():
@@ -714,8 +714,8 @@ def main():
 
     # 8. Python-composed supplementary appendix figures (replace LaTeX stitching)
     _supp_figs = [
-        ("src/visualization/figS01_supplementary_validation.py", "figS01_supplementary_validation.pdf"),
-        ("src/visualization/figS02_expression_diagnostics.py",    "figS02_expression_diagnostics.pdf"),
+        ("clop_dit/visualization/figS01_supplementary_validation.py", "figS01_supplementary_validation.pdf"),
+        ("clop_dit/visualization/figS02_expression_diagnostics.py",    "figS02_expression_diagnostics.pdf"),
     ]
     for _script_rel, _expected_pdf in _supp_figs:
         _fig = _run_external_script(_script_rel, _expected_pdf, _expected_pdf)
@@ -724,13 +724,13 @@ def main():
 
     # 9. Figs 25–31: extended analysis figures (not article-facing, kept for diagnostics until delivery cleanup)
     _ext_figs = [
-        ("src/visualization/experimental/fig25_cross_dataset.py",          "fig25_cross_dataset.pdf"),
-        ("src/visualization/experimental/fig26_expanded_de.py",            "fig26_expanded_de.pdf"),
-        ("src/visualization/experimental/fig27_ood_robustness.py",         "fig27_ood_robustness.pdf"),
-        ("src/visualization/experimental/fig28_marker_completeness.py",    "fig28_marker_completeness.pdf"),
-        ("src/visualization/experimental/fig29_embedding_augmentation.py", "fig29_embedding_augmentation.pdf"),
-        ("src/visualization/experimental/fig30_validation_summary.py",     "fig30_validation_summary.pdf"),
-        ("src/visualization/experimental/fig31_decoder_ablation.py",       "fig31_decoder_ablation.pdf"),
+        ("clop_dit/visualization/experimental/fig25_cross_dataset.py",          "fig25_cross_dataset.pdf"),
+        ("clop_dit/visualization/experimental/fig26_expanded_de.py",            "fig26_expanded_de.pdf"),
+        ("clop_dit/visualization/experimental/fig27_ood_robustness.py",         "fig27_ood_robustness.pdf"),
+        ("clop_dit/visualization/experimental/fig28_marker_completeness.py",    "fig28_marker_completeness.pdf"),
+        ("clop_dit/visualization/experimental/fig29_embedding_augmentation.py", "fig29_embedding_augmentation.pdf"),
+        ("clop_dit/visualization/experimental/fig30_validation_summary.py",     "fig30_validation_summary.pdf"),
+        ("clop_dit/visualization/experimental/fig31_decoder_ablation.py",       "fig31_decoder_ablation.pdf"),
     ]
     for _script_rel, _expected_pdf in _ext_figs:
         _fig = _run_external_script(_script_rel, _expected_pdf, _expected_pdf)

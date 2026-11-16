@@ -15,9 +15,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from src.training.train_clop import CLOPTrainer
-from src.utils.helpers import seed_everything, get_device
-from src.utils.logging_config import setup_logging
+from clop_dit.training.train_clop import CLOPTrainer
+from clop_dit.utils.helpers import seed_everything, get_device
+from clop_dit.utils.logging_config import setup_logging
 
 
 def main():

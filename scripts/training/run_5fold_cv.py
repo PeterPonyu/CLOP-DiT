@@ -19,7 +19,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
-from src.utils.paths import CACHE_DIR, CHECKPOINT_DIR, RESULTS_DIR, LOG_DIR
+from clop_dit.utils.paths import CACHE_DIR, CHECKPOINT_DIR, RESULTS_DIR, LOG_DIR
 
 PYTHON = sys.executable
 
@@ -58,8 +58,8 @@ def evaluate_fold(fold_idx: int, ckpt_dir: Path, cache_dir: Path,
     """Evaluate a single fold using saved checkpoints."""
     import torch
 
-    from src.evaluation.run_metrics import load_clop, load_dit
-    from src.evaluation.metrics import GenerationMetrics
+    from clop_dit.evaluation.run_metrics import load_clop, load_dit
+    from clop_dit.evaluation.metrics import GenerationMetrics
 
     clop_path = ckpt_dir / "clop_best.pth"
     dit_path = ckpt_dir / "dit_best.pth"

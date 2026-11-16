@@ -163,7 +163,7 @@ def evaluate_augmentation(X_train, y_train, X_test, y_test):
 def main():
     import sys
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-    from src.utils.paths import RESULTS_DIR, CACHE_DIR
+    from clop_dit.utils.paths import RESULTS_DIR, CACHE_DIR
 
     np.random.seed(42)
     output_dir = RESULTS_DIR / "validation"

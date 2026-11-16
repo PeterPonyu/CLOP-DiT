@@ -1,4 +1,4 @@
-"""Tests for article figure manifest and delivery (src.visualization.article_delivery)."""
+"""Tests for article figure manifest and delivery (clop_dit.visualization.article_delivery)."""
 
 import re
 import pytest
@@ -13,7 +13,7 @@ class TestArticleFigureManifest:
 
     @staticmethod
     def _article_tex_basenames() -> set[str]:
-        from src.utils.paths import ARTICLE_DIR, ARTICLE_TEX
+        from clop_dit.utils.paths import ARTICLE_DIR, ARTICLE_TEX
 
         tex_path = ARTICLE_DIR / ARTICLE_TEX
         if not tex_path.exists():
@@ -23,11 +23,11 @@ class TestArticleFigureManifest:
         return set(matches)
 
     def test_manifest_length(self):
-        from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
+        from clop_dit.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
         assert len(ARTICLE_FIGURE_BASENAMES) == 25
 
     def test_manifest_contains_expected_basenames(self):
-        from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
+        from clop_dit.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
         expected = {
             "fig01a_architecture",
             "fig01b_evaluation_pipeline",
@@ -60,7 +60,7 @@ class TestArticleFigureManifest:
         assert len(set(ARTICLE_FIGURE_BASENAMES)) == len(ARTICLE_FIGURE_BASENAMES), "Duplicate basenames"
 
     def test_manifest_matches_article_tex(self):
-        from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
+        from clop_dit.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
 
         manifest = set(ARTICLE_FIGURE_BASENAMES)
         tex_basenames = self._article_tex_basenames()
@@ -80,7 +80,7 @@ class TestDeliverFigures:
         (root / f"{base}.pdf").write_bytes(b"%PDF-1.0 dummy\n")
 
     def test_check_only_all_present(self, tmp_path):
-        from src.visualization.article_delivery import (
+        from clop_dit.visualization.article_delivery import (
             _SOURCE_BASENAMES,
             deliver_figures,
         )
@@ -91,7 +91,7 @@ class TestDeliverFigures:
         assert not (tmp_path / "out").exists()
 
     def test_check_only_missing_returns_false(self, tmp_path):
-        from src.visualization.article_delivery import (
+        from clop_dit.visualization.article_delivery import (
             _SOURCE_BASENAMES,
             deliver_figures,
         )
@@ -102,7 +102,7 @@ class TestDeliverFigures:
         assert ok is False
 
     def test_deliver_symlink(self, tmp_path):
-        from src.visualization.article_delivery import (
+        from clop_dit.visualization.article_delivery import (
             ARTICLE_FIGURE_BASENAMES,
             _SOURCE_BASENAMES,
             deliver_figures,
@@ -120,7 +120,7 @@ class TestDeliverFigures:
             assert link.resolve().exists(), f"Broken symlink: {link}"
 
     def test_deliver_copy(self, tmp_path):
-        from src.visualization.article_delivery import (
+        from clop_dit.visualization.article_delivery import (
             ARTICLE_FIGURE_BASENAMES,
             _SOURCE_BASENAMES,
             deliver_figures,
@@ -152,8 +152,8 @@ class TestDeliverFigures:
                 "set CLOPDIT_ENFORCE_SIDECAR_COVERAGE=1 to enforce the Stage 3 gate"
             )
 
-        from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
-        from src.utils.paths import FIG_DIR
+        from clop_dit.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
+        from clop_dit.utils.paths import FIG_DIR
 
         sidecar_dir = FIG_DIR / "_live_vcd"
         assert sidecar_dir.exists(), f"live-sidecar dir missing: {sidecar_dir}"
@@ -168,8 +168,8 @@ class TestDeliverFigures:
         )
 
     def test_workspace_delivery_target_matches_generated_pdfs_when_present(self):
-        from src.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
-        from src.utils.paths import FIG_DIR, ARTICLE_FIGURES_DIR
+        from clop_dit.visualization.article_delivery import ARTICLE_FIGURE_BASENAMES
+        from clop_dit.utils.paths import FIG_DIR, ARTICLE_FIGURES_DIR
 
         if not FIG_DIR.exists() or not ARTICLE_FIGURES_DIR.exists():
             pytest.skip("Generated/source figure directories not present in this workspace")
@@ -199,7 +199,7 @@ class TestFigureOrganizationPolicy:
     """Docs and figure policy helpers must stay in sync."""
 
     def test_display_group_constants_cover_all_article_components(self):
-        from src.visualization.article_delivery import (
+        from clop_dit.visualization.article_delivery import (
             ARTICLE_DISPLAY_FIGURE_COMPONENTS,
             ARTICLE_FIGURE_BASENAMES,
             COMPOSED_MULTI_PANEL_STEMS,
@@ -222,7 +222,7 @@ class TestFigureOrganizationPolicy:
         assert set(UNIFIED_POLICY_STEMS).issubset(ARTICLE_DISPLAY_FIGURE_COMPONENTS)
 
     def test_figure_organization_doc_mentions_current_manifest(self):
-        from src.visualization.article_delivery import (
+        from clop_dit.visualization.article_delivery import (
             ARTICLE_DISPLAY_FIGURE_COMPONENTS,
             ARTICLE_FIGURE_BASENAMES,
         )
@@ -261,7 +261,7 @@ class TestArticlePresentationPolicy:
 
     def test_article_panels_no_statistics_in_legend_title(self):
         """Article figure producer source must not use legend(title=...) with statistical content."""
-        from src.visualization.article_delivery import ARTICLE_FIGURE_PRODUCERS
+        from clop_dit.visualization.article_delivery import ARTICLE_FIGURE_PRODUCERS
 
         repo_root = Path(__file__).parent.parent
         violations = []

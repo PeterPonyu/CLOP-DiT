@@ -15,17 +15,17 @@ class TestVisualizationImports:
     """Verify all visualization modules import without error."""
 
     def test_import_style(self):
-        from src.visualization.style import apply_style, save_with_vcd, style_axes
+        from clop_dit.visualization.style import apply_style, save_with_vcd, style_axes
 
     def test_import_panels_training(self):
-        from src.visualization.panels_training import (
+        from clop_dit.visualization.panels_training import (
             plot_clop_training,
             plot_dit_training,
             plot_training_dynamics_combined,
         )
 
     def test_import_panels_quality(self):
-        from src.visualization.panels_quality import (
+        from clop_dit.visualization.panels_quality import (
             plot_metrics_summary,
             plot_real_vs_generated,
             plot_text_cell_heatmap,
@@ -35,17 +35,17 @@ class TestVisualizationImports:
         )
 
     def test_import_panels_expression(self):
-        from src.visualization.panels_expression import (
+        from clop_dit.visualization.panels_expression import (
             plot_expression_correlation,
             plot_expression_analysis,
             plot_marker_gene_comparison,
         )
 
     def test_import_baseline_panels(self):
-        from src.visualization.baseline_panels import plot_baseline_comparison
+        from clop_dit.visualization.baseline_panels import plot_baseline_comparison
 
     def test_import_downstream_panels(self):
-        from src.visualization.downstream_panels import (
+        from clop_dit.visualization.downstream_panels import (
             plot_clustering_panel,
             plot_classifier_panel,
             plot_de_concordance_panel,
@@ -53,25 +53,25 @@ class TestVisualizationImports:
         )
 
     def test_import_results_visualizer(self):
-        from src.visualization.results_visualizer import ResultsVisualizer
+        from clop_dit.visualization.results_visualizer import ResultsVisualizer
 
 
 class TestPathsModule:
     """Verify centralized paths resolve correctly."""
 
     def test_import_paths(self):
-        from src.utils.paths import (
+        from clop_dit.utils.paths import (
             PROJECT_ROOT, CACHE_DIR, RESULTS_DIR,
             FIG_DIR, CHECKPOINT_DIR, CONFIG_DIR,
         )
 
     def test_project_root_exists(self):
-        from src.utils.paths import PROJECT_ROOT
+        from clop_dit.utils.paths import PROJECT_ROOT
         assert PROJECT_ROOT.exists()
         assert (PROJECT_ROOT / "README.md").exists()
 
     def test_config_dir_has_yamls(self):
-        from src.utils.paths import CONFIG_DIR
+        from clop_dit.utils.paths import CONFIG_DIR
         yamls = list(CONFIG_DIR.glob("*.yaml"))
         assert len(yamls) >= 2, "Expected at least clop and dit configs"
 
@@ -80,15 +80,15 @@ class TestStyleConstants:
     """Verify style module constants are set correctly."""
 
     def test_legend_frameon_false(self):
-        from src.visualization.style import VIS_STYLE
+        from clop_dit.visualization.style import VIS_STYLE
         assert VIS_STYLE.get("legend.frameon") is False
 
     def test_suptitle_y(self):
-        from src.visualization.style import SUPTITLE_Y
+        from clop_dit.visualization.style import SUPTITLE_Y
         assert SUPTITLE_Y == 0.96
 
     def test_panel_label_defaults_are_publication_scale(self):
-        from src.visualization.style import PANEL_LABEL_FONT_SIZE
+        from clop_dit.visualization.style import PANEL_LABEL_FONT_SIZE
         assert PANEL_LABEL_FONT_SIZE == 20
 
 
@@ -96,7 +96,7 @@ class TestPanelLabelHelper:
     """Verify the shared panel-label helper contract."""
 
     def test_add_panel_label_renders_uppercase_gid_and_defaults(self):
-        from src.visualization.style import PANEL_LABEL_FONT_SIZE, add_panel_label
+        from clop_dit.visualization.style import PANEL_LABEL_FONT_SIZE, add_panel_label
 
         fig, ax = plt.subplots()
         add_panel_label(ax, "a")
@@ -116,13 +116,13 @@ class TestSafeTickLabelsHelper:
     """Contract for the Stage 2 producer-side label helper."""
 
     def test_abbreviate_cell_type_never_emits_horizontal_ellipsis(self):
-        from src.visualization.style import abbreviate_cell_type
+        from clop_dit.visualization.style import abbreviate_cell_type
         over_budget = "CD8+ cytotoxic T lymphocytes memory resident"
         out = abbreviate_cell_type(over_budget, max_len=18)
         assert "\u2026" not in out, out
 
     def test_safe_tick_labels_passes_short_labels_through(self):
-        from src.visualization.style import safe_tick_labels
+        from clop_dit.visualization.style import safe_tick_labels
         display, legend = safe_tick_labels(
             ["Alveolar", "Cycling", "Hepatocyte"], max_chars=20
         )
@@ -130,7 +130,7 @@ class TestSafeTickLabelsHelper:
         assert legend == []
 
     def test_safe_tick_labels_swaps_to_numeric_index_on_overflow(self):
-        from src.visualization.style import safe_tick_labels
+        from clop_dit.visualization.style import safe_tick_labels
         labels = ["A" * 40, "B" * 40, "Short"]
         display, legend = safe_tick_labels(labels, max_chars=18)
         assert display == ["1", "2", "3"]
@@ -139,14 +139,14 @@ class TestSafeTickLabelsHelper:
             assert "\u2026" not in line
 
     def test_safe_tick_labels_strips_preexisting_ellipsis_from_input(self):
-        from src.visualization.style import safe_tick_labels
+        from clop_dit.visualization.style import safe_tick_labels
         dirty = "CD8+ cytotoxic T lymp\u2026"
         display, _ = safe_tick_labels([dirty, "Short"], max_chars=30)
         for label in display:
             assert "\u2026" not in label
 
     def test_safe_tick_labels_abbreviate_strategy_does_not_swap(self):
-        from src.visualization.style import safe_tick_labels
+        from clop_dit.visualization.style import safe_tick_labels
         labels = ["CD8+ cytotoxic T lymphocytes", "Short"]
         display, legend = safe_tick_labels(
             labels, max_chars=14, strategy="abbreviate"
@@ -157,7 +157,7 @@ class TestSafeTickLabelsHelper:
             assert "\u2026" not in label
 
     def test_safe_tick_labels_rejects_unknown_strategy(self):
-        from src.visualization.style import safe_tick_labels
+        from clop_dit.visualization.style import safe_tick_labels
         with pytest.raises(ValueError):
             safe_tick_labels(["Short"], strategy="bogus")
 
@@ -166,7 +166,7 @@ class TestReserveAnnotationSlot:
     """Contract for the Stage 2 annotation-slot helper."""
 
     def test_reserve_annotation_slot_returns_k_right_side_points(self):
-        from src.visualization.style import reserve_annotation_slot
+        from clop_dit.visualization.style import reserve_annotation_slot
         fig, ax = plt.subplots()
         slots = reserve_annotation_slot(ax, k=3, side="right", margin=0.1)
         plt.close(fig)
@@ -177,7 +177,7 @@ class TestReserveAnnotationSlot:
         assert ys == sorted(ys, reverse=True)
 
     def test_reserve_annotation_slot_accepts_all_four_sides(self):
-        from src.visualization.style import reserve_annotation_slot
+        from clop_dit.visualization.style import reserve_annotation_slot
         fig, ax = plt.subplots()
         for side in ("right", "left", "top", "bottom"):
             slots = reserve_annotation_slot(ax, k=2, side=side)
@@ -185,7 +185,7 @@ class TestReserveAnnotationSlot:
         plt.close(fig)
 
     def test_reserve_annotation_slot_rejects_k_below_one(self):
-        from src.visualization.style import reserve_annotation_slot
+        from clop_dit.visualization.style import reserve_annotation_slot
         fig, ax = plt.subplots()
         with pytest.raises(ValueError):
             reserve_annotation_slot(ax, k=0)
@@ -216,7 +216,7 @@ class TestMigratedFigureLabels:
         except ImportError:
             pytest.skip("pdfplumber not installed")
 
-        from src.utils.paths import FIG_DIR
+        from clop_dit.utils.paths import FIG_DIR
 
         offenders: list[tuple[str, str]] = []
         for base in migrated:

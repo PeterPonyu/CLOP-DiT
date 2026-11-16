@@ -375,7 +375,7 @@ def test_duplicate_tick_labels_detected():
 # ---------------------------------------------------------------------------
 
 def test_panel_label_overlap_detects_helper_gid_labels():
-    from src.visualization.style import add_panel_label
+    from clop_dit.visualization.style import add_panel_label
     from vcd.vcd_core import _collect_artists
     from vcd.vcd_checks_text import _check_panel_label_overlap
 
@@ -433,7 +433,7 @@ def test_panel_label_overlap_skips_spine_patch():
     Spine-skip policy already applied across the other VCD checks).
     This test locks the skip in.
     """
-    from src.visualization.style import add_panel_label
+    from clop_dit.visualization.style import add_panel_label
     from vcd.vcd_core import _collect_artists
     from vcd.vcd_checks_text import _check_panel_label_overlap
 
@@ -611,7 +611,7 @@ def test_vcd_warn_count_regression():
 # gate silently.
 #
 # This test iterates the ``COMPOSITE_VCD_REGISTRY`` maintained in
-# ``src/visualization/article_composition.py`` and enforces
+# ``clop_dit/visualization/article_composition.py`` and enforces
 #
 #     len(current[composite]["warnings"]) <= sum(len(current[slice]["warnings"])
 #                                                for slice in slices)
@@ -631,7 +631,7 @@ def test_composite_vcd_coverage():
     its constituent legacy slice PDFs. Vacuously green while the registry
     is empty (Step 0 state of the single-producer migration plan).
     """
-    from src.visualization.article_composition import COMPOSITE_VCD_REGISTRY
+    from clop_dit.visualization.article_composition import COMPOSITE_VCD_REGISTRY
 
     if not COMPOSITE_VCD_REGISTRY:
         # Step 0 state: no composites registered yet. The gate is live but

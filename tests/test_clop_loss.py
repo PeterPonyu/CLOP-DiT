@@ -1,6 +1,6 @@
 import torch
 
-from src.architecture.clop import PrototypeSigLIPLoss
+from clop_dit.architecture.clop import PrototypeSigLIPLoss
 
 
 def test_positive_bag_loss_and_backward():

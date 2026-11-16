@@ -1,4 +1,4 @@
-"""Explicit-enumeration import smoke test for src/visualization/ subdirs.
+"""Explicit-enumeration import smoke test for clop_dit/visualization/ subdirs.
 
 Plan `.omc/plans/viz-cleanup-2026-04-20.md` §1.4 Pre-mortem Scenario 2
 mandated this check to catch silent-swallow import failures that slip past
@@ -14,13 +14,13 @@ import pytest
 
 @pytest.mark.parametrize("subpackage_name", ["experimental", "supplementary"])
 def test_subpackage_modules_importable(subpackage_name: str) -> None:
-    """Every module under `src/visualization/<subpackage_name>/` must import cleanly.
+    """Every module under `clop_dit/visualization/<subpackage_name>/` must import cleanly.
 
     Parameterized over the two subdirs created by Track A of the viz-cleanup
     plan. Any future subdir relocation should add its name to the parametrize
     list so the same guard applies.
     """
-    pkg = importlib.import_module(f"src.visualization.{subpackage_name}")
+    pkg = importlib.import_module(f"clop_dit.visualization.{subpackage_name}")
     failures = []
     for _, mod_name, _ in pkgutil.iter_modules(pkg.__path__):
         qual = f"{pkg.__name__}.{mod_name}"

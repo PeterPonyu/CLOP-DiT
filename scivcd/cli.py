@@ -14,10 +14,10 @@ Usage examples::
     scivcd list-checks --format table
     scivcd list-checks --category LAYOUT --stage TIER2 --format json
     scivcd check figures/fig01.pdf
-    scivcd check src/visualization/fig07_alignment.py
+    scivcd check clop_dit/visualization/fig07_alignment.py
     scivcd audit-export figures/fig01.png --json
-    scivcd lint src/visualization/
-    scivcd run src/visualization/fig07_alignment.py
+    scivcd lint clop_dit/visualization/
+    scivcd run clop_dit/visualization/fig07_alignment.py
     scivcd version
 
 Exit codes

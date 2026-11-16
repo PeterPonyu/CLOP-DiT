@@ -35,7 +35,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-from src.utils.logging_config import setup_logging
+from clop_dit.utils.logging_config import setup_logging
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +113,7 @@ def rebuild_primary_texts(cache_dir: str, device: str = "cuda"):
     """
     cache_dir = Path(cache_dir)
 
-    from src.data_pipeline.cache_builder import LatentCacheBuilder
+    from clop_dit.data_pipeline.cache_builder import LatentCacheBuilder
 
     # ── Load metadata ──
     template_meta_path = cache_dir.parent / "processed_h5ad" / "subcluster_metadata.json"
@@ -242,7 +242,7 @@ def rebuild_variant_texts(cache_dir: str, device: str = "cuda"):
     """
     cache_dir = Path(cache_dir)
 
-    from src.data_pipeline.cache_builder import LatentCacheBuilder
+    from clop_dit.data_pipeline.cache_builder import LatentCacheBuilder
 
     # ── Load enriched metadata ──
     enriched_meta_path = cache_dir.parent / "processed_h5ad" / "subcluster_metadata_enriched.json"
@@ -348,7 +348,7 @@ def apply_whitening(cache_dir: str):
     """
     cache_dir = Path(cache_dir)
 
-    from src.data_pipeline.embedding_preprocessor import (
+    from clop_dit.data_pipeline.embedding_preprocessor import (
         EmbeddingPreprocessor,
         preprocess_cached_embeddings,
     )

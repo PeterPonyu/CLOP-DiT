@@ -3,7 +3,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pytest
 
-from src.visualization.direct_layout import LayoutRegion, bind_figure_region
+from clop_dit.visualization.direct_layout import LayoutRegion, bind_figure_region
 
 
 def test_bind_figure_region_sets_metadata():
